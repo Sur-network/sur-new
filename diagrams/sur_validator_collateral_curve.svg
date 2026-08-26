@@ -1,0 +1,69 @@
+<svg width="100%" viewBox="0 0 720 420" role="img" xmlns="http://www.w3.org/2000/svg">
+<title style="fill:rgb(0,0,0);font-family:anthropic-sans, sans-serif;font-size:16px;">وثیقه‌ی لازم برای عضویت ولیدیتور بر حسب تعداد ولیدیتور فعال</title>
+<desc style="fill:rgb(0,0,0);font-family:anthropic-sans, sans-serif;font-size:16px;">با فرض ۲,۰۰۰,۰۰۰ سورن وثیقه‌ی پایه و رشد مرکب ۲برابرشونده هر ۱۶ ولیدیتور فعال، وثیقه‌ی لازم برای عضویت ولیدیتور جدید از حدود ۳.۱ میلیون سورن در ۱۰ ولیدیتور تا حدود ۱۵۲ میلیون سورن در ۱۰۰ ولیدیتور رشد می‌کند. نقاط علامت‌گذاری‌شده هر ۱۰ ولیدیتور (مضرب ۱۰) هستند.</desc>
+
+<line x1="90" y1="30" x2="90" y2="360" style="stroke:rgb(120,113,108);stroke-width:1px;"/>
+<line x1="90" y1="360" x2="690" y2="360" style="stroke:rgb(120,113,108);stroke-width:1px;"/>
+
+<line x1="90" y1="360" x2="690" y2="360" style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+<line x1="90" y1="292" x2="690" y2="292" style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+<line x1="90" y1="224" x2="690" y2="224" style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+<line x1="90" y1="156" x2="690" y2="156" style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+<line x1="90" y1="88"  x2="690" y2="88"  style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+<line x1="90" y1="30"  x2="690" y2="30"  style="stroke:rgb(230,228,225);stroke-width:1px;"/>
+
+<text x="80" y="360" text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۰</text>
+<text x="80" y="292" text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۳۲M</text>
+<text x="80" y="224" text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۶۴M</text>
+<text x="80" y="156" text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۹۶M</text>
+<text x="80" y="88"  text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۱۲۸M</text>
+<text x="80" y="30"  text-anchor="end" dominant-baseline="central" style="fill:rgb(120,113,108);font-size:11px;font-family:anthropic-sans, sans-serif;">۱۶۰M سورن</text>
+
+<text x="60" y="200" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 60 200)" style="fill:rgb(99,56,6);font-size:12px;font-weight:500;font-family:anthropic-sans, sans-serif;">وثیقه‌ی لازم (سورن)</text>
+<text x="390" y="400" text-anchor="middle" style="fill:rgb(99,56,6);font-size:12px;font-weight:500;font-family:anthropic-sans, sans-serif;">تعداد ولیدیتور فعال (N)</text>
+
+<path d="M 90.00,354.64 L 96.38,354.41 L 102.77,354.16 L 109.15,353.90 L 115.53,353.63 L 121.91,353.35 L 128.30,353.06 L 134.68,352.75 L 141.06,352.43 L 147.45,352.09 L 153.83,351.74 L 160.21,351.38 L 166.60,350.99 L 172.98,350.59 L 179.36,350.18 L 185.74,349.74 L 192.13,349.29 L 198.51,348.82 L 204.89,348.32 L 211.28,347.80 L 217.66,347.26 L 224.04,346.70 L 230.43,346.11 L 236.81,345.50 L 243.19,344.85 L 249.57,344.18 L 255.96,343.48 L 262.34,342.75 L 268.72,341.99 L 275.11,341.19 L 281.49,340.36 L 287.87,339.49 L 294.26,338.58 L 300.64,337.63 L 307.02,336.64 L 313.40,335.61 L 319.79,334.53 L 326.17,333.40 L 332.55,332.22 L 338.94,330.99 L 345.32,329.71 L 351.70,328.37 L 358.09,326.96 L 364.47,325.50 L 370.85,323.97 L 377.23,322.38 L 383.62,320.71 L 390.00,318.97 L 396.38,317.16 L 402.77,315.26 L 409.15,313.28 L 415.53,311.21 L 421.91,309.05 L 428.30,306.80 L 434.68,304.44 L 441.06,301.98 L 447.45,299.41 L 453.83,296.73 L 460.21,293.93 L 466.60,291.00 L 472.98,287.95 L 479.36,284.76 L 485.74,281.43 L 492.13,277.95 L 498.51,274.32 L 504.89,270.52 L 511.28,266.56 L 517.66,262.43 L 524.04,258.11 L 530.43,253.59 L 536.81,248.88 L 543.19,243.96 L 549.57,238.83 L 555.96,233.46 L 562.34,227.86 L 568.72,222.01 L 575.11,215.90 L 581.49,209.52 L 587.87,202.86 L 594.26,195.90 L 600.64,188.63 L 607.02,181.05 L 613.40,173.12 L 619.79,164.85 L 626.17,156.21 L 632.55,147.19 L 638.94,137.77 L 645.32,127.93 L 651.70,117.65 L 658.09,106.92 L 664.47,95.72 L 670.85,84.02 L 677.23,71.80 L 683.62,59.04 L 690.00,45.71 L 690.00,360.00 L 90.00,360.00 Z" style="fill:rgb(250,238,218);stroke:none;opacity:0.7;"/>
+<path d="M 90.00,354.64 L 96.38,354.41 L 102.77,354.16 L 109.15,353.90 L 115.53,353.63 L 121.91,353.35 L 128.30,353.06 L 134.68,352.75 L 141.06,352.43 L 147.45,352.09 L 153.83,351.74 L 160.21,351.38 L 166.60,350.99 L 172.98,350.59 L 179.36,350.18 L 185.74,349.74 L 192.13,349.29 L 198.51,348.82 L 204.89,348.32 L 211.28,347.80 L 217.66,347.26 L 224.04,346.70 L 230.43,346.11 L 236.81,345.50 L 243.19,344.85 L 249.57,344.18 L 255.96,343.48 L 262.34,342.75 L 268.72,341.99 L 275.11,341.19 L 281.49,340.36 L 287.87,339.49 L 294.26,338.58 L 300.64,337.63 L 307.02,336.64 L 313.40,335.61 L 319.79,334.53 L 326.17,333.40 L 332.55,332.22 L 338.94,330.99 L 345.32,329.71 L 351.70,328.37 L 358.09,326.96 L 364.47,325.50 L 370.85,323.97 L 377.23,322.38 L 383.62,320.71 L 390.00,318.97 L 396.38,317.16 L 402.77,315.26 L 409.15,313.28 L 415.53,311.21 L 421.91,309.05 L 428.30,306.80 L 434.68,304.44 L 441.06,301.98 L 447.45,299.41 L 453.83,296.73 L 460.21,293.93 L 466.60,291.00 L 472.98,287.95 L 479.36,284.76 L 485.74,281.43 L 492.13,277.95 L 498.51,274.32 L 504.89,270.52 L 511.28,266.56 L 517.66,262.43 L 524.04,258.11 L 530.43,253.59 L 536.81,248.88 L 543.19,243.96 L 549.57,238.83 L 555.96,233.46 L 562.34,227.86 L 568.72,222.01 L 575.11,215.90 L 581.49,209.52 L 587.87,202.86 L 594.26,195.90 L 600.64,188.63 L 607.02,181.05 L 613.40,173.12 L 619.79,164.85 L 626.17,156.21 L 632.55,147.19 L 638.94,137.77 L 645.32,127.93 L 651.70,117.65 L 658.09,106.92 L 664.47,95.72 L 670.85,84.02 L 677.23,71.80 L 683.62,59.04 L 690.00,45.71" style="fill:none;stroke:rgb(133,79,11);stroke-width:2.5px;stroke-linejoin:round;"/>
+
+<circle cx="115.53" cy="353.63" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="115.53" y="333.63" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۱۰</text>
+<text x="115.53" y="346.63" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۳.۱M</text>
+
+<circle cx="179.36" cy="350.18" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="179.36" y="372.18" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۲۰</text>
+<text x="179.36" y="385.18" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۴.۸M</text>
+
+<circle cx="243.19" cy="344.85" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="243.19" y="324.85" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۳۰</text>
+<text x="243.19" y="337.85" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۷.۳M</text>
+
+<circle cx="307.02" cy="336.64" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="307.02" y="358.64" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۴۰</text>
+<text x="307.02" y="371.64" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۱۱.۳M</text>
+
+<circle cx="370.85" cy="323.97" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="370.85" y="303.97" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۵۰</text>
+<text x="370.85" y="316.97" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۱۷.۴M</text>
+
+<circle cx="434.68" cy="304.44" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="434.68" y="326.44" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۶۰</text>
+<text x="434.68" y="339.44" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۲۶.۹M</text>
+
+<circle cx="498.51" cy="274.32" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="498.51" y="254.32" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۷۰</text>
+<text x="498.51" y="267.32" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۴۱.۵M</text>
+
+<circle cx="562.34" cy="227.86" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="562.34" y="249.86" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۸۰</text>
+<text x="562.34" y="262.86" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۶۴M</text>
+
+<circle cx="626.17" cy="156.21" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="626.17" y="136.21" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۹۰</text>
+<text x="626.17" y="149.21" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۹۸.۷M</text>
+
+<circle cx="690.0" cy="45.71" r="3.5" style="fill:rgb(133,79,11);"/>
+<text x="690.0" y="67.71000000000001" text-anchor="middle" style="fill:rgb(99,56,6);font-size:10.5px;font-family:anthropic-sans, sans-serif;">N=۱۰۰</text>
+<text x="690.0" y="80.71000000000001" text-anchor="middle" style="fill:rgb(99,56,6);font-size:9.5px;font-family:anthropic-sans, sans-serif;">۱۵۲.۲M</text>
+
+<text x="400" y="16" text-anchor="middle" style="fill:rgb(41,37,36);font-size:14px;font-weight:600;font-family:anthropic-sans, sans-serif;">وثیقه‌ی لازم برای عضویت ولیدیتور جدید بر حسب تعداد ولیدیتور فعال (سورن)</text>
+</svg>
