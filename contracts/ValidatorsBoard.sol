@@ -11,7 +11,6 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
-    function hasIdentity(address who) external view returns (bool);
     /// @dev `status` is ValidatorsRegistry.Status's ABI-compatible uint8 encoding:
     ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting.
     function getValidatorInfo(address who) external view returns (
@@ -22,6 +21,12 @@ interface IValidatorsRegistry {
         uint256 livenessConfirmationsInPeriod,
         uint256 demotedAt
     );
+}
+
+/// @dev ✅ اصلاحیه‌ی معماری: هویت دیگر داخل ValidatorsRegistry نیست — یک قرارداد کاملاً
+///      مستقل و ششم، `IdentityRegistry.sol` (آدرس ثابت `0x6666...6666`).
+interface IIdentityRegistry {
+    function hasIdentity(address who) external view returns (bool);
 }
 
 interface IBlockRewardDistributor {
@@ -42,10 +47,10 @@ interface IValidatorsTreasury {
 ///             other active validators (`voteFor`), and withdraw any of those votes at any time
 ///             (`unvoteFor`). No nomination step, no voting window, no quorum requirement.
 ///             Voting requires the voter to have first self-attested identity information on
-///             ValidatorsRegistry (`registerIdentity` — name and person type only, self-reported;
-///             phone number and Telegram ID live off-chain in the companion app — this contract
-///             only records whether each was verified, via ValidatorsRegistry.setPhoneVerified/
-///             setTelegramVerified, not required for voting itself).
+///             the separate `IdentityRegistry` contract (`registerIdentity` — name and person
+///             type only, self-reported; phone number, Telegram ID, and full KYC documents live
+///             off-chain — `IdentityRegistry` only records whether each was verified, not
+///             required for voting itself, only `hasIdentity` is).
 ///           - `refreshBoard()` — permissionless, callable by anyone at any time — recomputes
 ///             the board as the BOARD_SIZE (5) validators with the most current votes, counting
 ///             only votes cast BY currently-active validators FOR currently-active validators
@@ -102,6 +107,7 @@ contract ValidatorsBoard {
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
+    IIdentityRegistry public constant IDENTITY_REGISTRY = IIdentityRegistry(SurAddresses.IDENTITY_REGISTRY);
 
     /// @notice Fixed board size — always exactly this many seats (fewer only transiently, if
     ///         fewer than this many candidates have ever received a vote).
@@ -206,7 +212,7 @@ contract ValidatorsBoard {
     ///         any other active validator (self-votes are allowed — nothing special about them).
     ///         Takes effect only once someone calls refreshBoard().
     function voteFor(address candidate) external onlyActiveValidator {
-        require(REGISTRY.hasIdentity(msg.sender), "ValidatorsBoard: register identity before voting");
+        require(IDENTITY_REGISTRY.hasIdentity(msg.sender), "ValidatorsBoard: register identity before voting");
         require(REGISTRY.isValidator(candidate), "ValidatorsBoard: candidate is not an active validator");
         require(!hasVotedFor[msg.sender][candidate], "ValidatorsBoard: already voted for this candidate");
         require(voterCandidates[msg.sender].length < MAX_VOTES_PER_VOTER, "ValidatorsBoard: max votes already used");

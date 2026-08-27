@@ -7,14 +7,14 @@
 ## ۱. ابزار ساخت genesis.json
 
 ### چشم‌انداز
-یک ابزار (نه یک محصول کاربرمحور — یک ابزار توسعه‌دهنده، احتمالاً فقط یک‌بار یا چندبار در طول عمر پروژه استفاده می‌شود) که پنج قرارداد ساختاری را روی یک زنجیره‌ی موقت دیپلوی می‌کند و state نهایی‌شان را برای genesis واقعی استخراج می‌کند.
+یک ابزار (نه یک محصول کاربرمحور — یک ابزار توسعه‌دهنده، احتمالاً فقط یک‌بار یا چندبار در طول عمر پروژه استفاده می‌شود) که شش قرارداد ساختاری را روی یک زنجیره‌ی موقت دیپلوی می‌کند و state نهایی‌شان را برای genesis واقعی استخراج می‌کند.
 
 ### کاربر هدف
 تیم فنی مستقر‌کننده‌ی شبکه — نه ولیدیتورها، نه عموم.
 
 ### ویژگی‌های اصلی
 1. اجرای یک زنجیره‌ی محلی موقت (Anvil یا Hardhat Network).
-2. دیپلوی هر پنج قرارداد (`SurAddresses`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `BlockRewardDistributor`, `FoundationDAO`) با آرگومان‌های نهایی (طبق `sur-contracts-deploy-notes.md`).
+2. دیپلوی هر شش قرارداد (`SurAddresses`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `BlockRewardDistributor`, `FoundationDAO`, `IdentityRegistry`) با آرگومان‌های نهایی (طبق `sur-contracts-deploy-notes.md`).
 3. استخراج `code` و کامل `storage` هر قرارداد (`eth_getCode`, و پیمایش/dump کامل storage).
 4. نوشتن این مقادیر در بخش `alloc` یک فایل `genesis.json` نهایی، به‌همراه سایر تنظیمات شبکه (`chainId=262`, `blockperiodseconds=3`, `blockreward`, `validatorcontractaddress`, `miningbeneficiary`, موجودی اولیه‌ی ۲۰ میلیونی `FoundationDAO`، `timestamp` واقعی — طبق یادداشت حیاتی درباره‌ی `_genesisTimestamp`).
 5. یک حالت «تأیید» (verify mode) که genesis تولیدشده را با یک شبیه‌سازی مستقل دوباره چک کند — چون این فایل فقط یک‌بار درست ساخته می‌شود و اشتباه در آن به‌سختی قابل‌اصلاح است.

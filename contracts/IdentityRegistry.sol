@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "./SurAddresses.sol";
+
+/// @title IdentityRegistry
+/// @notice ششمین قرارداد ساختاری سور (آدرس ثابت `0x6666...6666`) — مرجع واحد هویت برای **کل
+///         کاربران شبکه**، نه فقط ولیدیتورها. الهام‌گرفته از استاندارد قدیمی SIP001/SIP002
+///         («روش احراز هویت کاربران حقیقی و حقوقی» و «استفاده از خدمات احراز هویت توسط دپ‌ها»)،
+///         با دو اصلاح آگاهانه نسبت به نسخه‌ی اصلی:
+///
+///         ۱. **بدون دفترخانه‌ی اسناد رسمی** — SIP001 نیاز به گواهی امضای حضوری در دفترخانه
+///            داشت. اینجا جایگزینش شده با یک فرآیند کاملاً آنلاین: تأیید eKYC (تطبیق چهره +
+///            liveness detection + بررسی اصالت مدرک، توسط یک سرویس‌دهنده‌ی مجاز) + امضای
+///            دیجیتال چالش با همان کلید سوری کاربر (این بخش دوم دقیقاً همان ایده‌ی SIP001 است،
+///            بدون تغییر).
+///
+///         ۲. **بدون داده‌ی خام حساس on-chain** — SIP001 پیشنهاد می‌داد کد ملی/نام/شناسنامه در
+///            یک «قرارداد هوشمند محرمانه» ذخیره شود. این از نظر فنی ممکن نیست: هیچ storage
+///            روی یک بلاک‌چین عمومی واقعاً محرمانه نمی‌ماند (`eth_getStorageAt` همیشه در
+///            دسترس است)، و برای داده‌ی کم‌آنتروپی مثل کد ملی (۱۰ رقم)، حتی هش‌کردن هم بدون یک
+///            salt مخفی محافظت واقعی نمی‌دهد. راه‌حل: داده‌ی خام هرگز وارد این قرارداد نمی‌شود؛
+///            فقط یک وضعیت وریفای (bool) و یک commitment (برای اثبات عدم‌دستکاری در دعاوی
+///            حقوقی آینده، نه برای پاسخ به کوئری) on-chain می‌مانند. خودِ عملیات «تطبیق»
+///            (بخش ۶ SIP002) باید یک فراخوانی API آف‌چین باشد، نه یک تراکنش on-chain — چون
+///            حتی اگر قرارداد پاسخ را فاش نکند، **پارامتر ورودی خودِ تراکنش** (مقداری که
+///            دارد با آن مقایسه می‌شود) در calldata عمومی و همیشه قابل‌مشاهده است. جزئیات
+///            کامل در `sur-identity-registry-spec.md`.
+contract IdentityRegistry {
+    // ------------------------------------------------------------------
+    // Fixed cross-contract address (see SurAddresses.sol)
+    // ------------------------------------------------------------------
+    address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
+
+    // ------------------------------------------------------------------
+    // Self-attested identity (لایه‌ی اول SIP001) — بدون تغییر نسبت به طراحی قبلی خودمان،
+    // فقط منتقل‌شده از ValidatorsRegistry.
+    // ------------------------------------------------------------------
+    enum PersonType { Individual, Legal }
+
+    struct Identity {
+        bool registered;
+        PersonType personType;
+        string name;
+        bool phoneVerified;      // موبایل واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
+        bool telegramVerified;   // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
+        bool kycVerified;        // ✅ تازه — نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره)
+        bytes32 kycCommitment;   // ✅ تازه — فقط برای اثبات عدم‌دستکاری در دعاوی، نه matching
+    }
+
+    mapping(address => Identity) public identities;
+
+    // ------------------------------------------------------------------
+    // Operational key — کنترل بنیاد (نه هیأت‌مدیره‌ی ولیدیتورها)، چون احراز هویت یک
+    // مسئولیت بنیاد است، طبق همان طراحی اصلی SIP001 («بنیاد سور موظف است اطلاعات اشخاص
+    // حقیقی و حقوقی احراز هویت‌شده را ثبت کند»).
+    // ------------------------------------------------------------------
+    address public identityOracle;
+
+    event IdentityRegistered(address indexed who, PersonType personType, string name);
+    event PhoneVerificationUpdated(address indexed who, bool verified);
+    event TelegramVerificationUpdated(address indexed who, bool verified);
+    event KycVerificationUpdated(address indexed who, bool verified, bytes32 commitment);
+    event IdentityOracleUpdated(address indexed oldOracle, address indexed newOracle);
+
+    modifier onlyFoundation() {
+        require(msg.sender == FOUNDATION, "IdentityRegistry: caller is not the Foundation");
+        _;
+    }
+
+    modifier onlyIdentityOracle() {
+        require(msg.sender == identityOracle, "IdentityRegistry: caller is not the identity oracle");
+        _;
+    }
+
+    constructor(address _identityOracle) {
+        require(_identityOracle != address(0), "IdentityRegistry: zero oracle address");
+        identityOracle = _identityOracle;
+    }
+
+    // ------------------------------------------------------------------
+    // خوداظهاری — هر آدرسی، نه فقط ولیدیتورها
+    // ------------------------------------------------------------------
+
+    /// @notice ثبت/به‌روزرسانی هویت خوداظهاری (فقط نام و نوع شخصیت). قابل‌فراخوانی توسط هر
+    ///         آدرسی، هر زمان؛ فراخوانی دوباره هیچ‌کدام از فلگ‌های وریفای را ریست نمی‌کند.
+    function registerIdentity(PersonType personType, string calldata name) external {
+        require(bytes(name).length > 0, "IdentityRegistry: empty name");
+
+        Identity storage id_ = identities[msg.sender];
+        id_.registered = true;
+        id_.personType = personType;
+        id_.name = name;
+
+        emit IdentityRegistered(msg.sender, personType, name);
+    }
+
+    /// @notice چک سطح صفر (دسترسی آزاد، بدون نیاز به ثبت‌نام دپ) — دقیقاً معادل بخش ۶-۱ SIP002:
+    ///         «آیا این آدرس اصلاً هویتش را ثبت کرده؟» بدون افشای هیچ داده‌ی دیگری.
+    function hasIdentity(address who) external view returns (bool) {
+        return identities[who].registered;
+    }
+
+    /// @notice چک عمومی وضعیت وریفای — همه‌اش بولی، هیچ داده‌ی خامی نیست، پس افشای آزادش
+    ///         مشکلی ندارد (دقیقاً مثل بخش ۶-۱ SIP002).
+    function getVerificationStatus(address who)
+        external
+        view
+        returns (bool registered, bool phoneVerified, bool telegramVerified, bool kycVerified)
+    {
+        Identity storage id_ = identities[who];
+        return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.kycVerified);
+    }
+
+    // ------------------------------------------------------------------
+    // وریفای — فقط identityOracle (سرویس آف‌چین Identity Service، جزئیات در
+    // sur-identity-registry-spec.md)
+    // ------------------------------------------------------------------
+
+    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle {
+        identities[who].phoneVerified = verified;
+        emit PhoneVerificationUpdated(who, verified);
+    }
+
+    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle {
+        identities[who].telegramVerified = verified;
+        emit TelegramVerificationUpdated(who, verified);
+    }
+
+    /// @notice ثبت نتیجه‌ی eKYC کامل (تصویر شخص + کارت ملی + مشخصات شناسنامه‌ای + تطبیق چهره).
+    ///         `commitment` یک هش نمکین (salted hash) از داده‌ی کامل تأییدشده است — **فقط**
+    ///         برای اثبات عدم‌دستکاری در دعاوی حقوقی احتمالی آینده نگه‌داری می‌شود؛ هیچ تابع
+    ///         on-chain‌ای هرگز از آن برای پاسخ به کوئری «تطبیق» استفاده نمی‌کند (آن عملیات
+    ///         همیشه از طریق API آف‌چین Identity Service انجام می‌شود — بخش ۵،
+    ///         sur-identity-registry-spec.md).
+    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle {
+        Identity storage id_ = identities[who];
+        id_.kycVerified = verified;
+        id_.kycCommitment = verified ? commitment : bytes32(0);
+        emit KycVerificationUpdated(who, verified, id_.kycCommitment);
+    }
+
+    // ------------------------------------------------------------------
+    // چرخش کلید — فقط بنیاد (نه هیأت‌مدیره‌ی ولیدیتورها)
+    // ------------------------------------------------------------------
+    function setIdentityOracle(address newOracle) external onlyFoundation {
+        require(newOracle != address(0), "IdentityRegistry: zero oracle address");
+        emit IdentityOracleUpdated(identityOracle, newOracle);
+        identityOracle = newOracle;
+    }
+}

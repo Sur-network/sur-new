@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 /// @title SurAddresses
-/// @notice Fixed, genesis-assigned addresses for the SUR network's five structural contracts.
-///         All five are deployed directly in the genesis block's `alloc` section (bytecode +
+/// @notice Fixed, genesis-assigned addresses for the SUR network's six structural contracts.
+///         All six are deployed directly in the genesis block's `alloc` section (bytecode +
 ///         storage injected directly, not via a regular deployment transaction — see
 ///         "sur-contracts-deploy-notes.md" for the exact recipe). Because every one of these
 ///         addresses is therefore known and fixed before any contract's constructor logic is
@@ -31,4 +31,9 @@ library SurAddresses {
 
     /// @dev ValidatorsTreasury — holds and spends the validators' 50% reward share
     address internal constant VALIDATORS_TREASURY = 0x5555555555555555555555555555555555555555;
+
+    /// @dev IdentityRegistry — ✅ ششمین قرارداد ساختاری (تصمیم تازه). مرجع واحد هویت خوداظهاری
+    ///      (نام/نوع شخصیت) و وضعیت وریفای (موبایل/تلگرام/KYC کامل) برای **کل کاربران شبکه**،
+    ///      نه فقط ولیدیتورها — به همین دلیل از ValidatorsRegistry مستقل نگه داشته شده است.
+    address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
 }

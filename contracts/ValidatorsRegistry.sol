@@ -105,74 +105,25 @@ contract ValidatorsRegistry {
     mapping(address => ValidatorInfo) public validators;
 
     // ------------------------------------------------------------------
-    // Self-attested identity — required before a validator may vote in ValidatorsBoard
-    // elections (see ValidatorsBoard.voteFor). `personType`/`name` are self-reported here and
-    // never verified on-chain. Phone number and Telegram ID are NOT stored here at all — they
-    // are collected and held off-chain, in the companion app; this contract only records
-    // WHETHER each has been verified (by whatever process the app implements), as a boolean
-    // flag, set exclusively by `verifier` (a rotatable operational key — see setVerifier below).
+    // ⚠️ اصلاحیه‌ی معماری (تصمیم تازه): هویت (نام/نوع شخصیت، وریفای موبایل/تلگرام/KYC) دیگر
+    // اینجا نیست — به یک قرارداد کاملاً مستقل، `IdentityRegistry.sol`، منتقل شد. دلیل: جمعیت
+    // هدف هویت (کل کاربران شبکه) از جمعیت ولیدیتورها کاملاً جداست؛ `ValidatorsBoard.voteFor`
+    // اکنون مستقیماً `IdentityRegistry.hasIdentity(...)` را چک می‌کند، نه از طریق این قرارداد.
+    //
+    // `verifier` اینجا باقی مانده، ولی فقط برای یک هدف: گزارش `reportLiveness` (پایین‌تر در
+    // همین فایل). این یک کلید کاملاً جدا از `identityOracle` در `IdentityRegistry.sol` است —
+    // این دو نقش (زنده‌بودن نود در مقابل احراز هویت) عمداً مستقل نگه داشته شده‌اند.
     // ------------------------------------------------------------------
-    enum PersonType { Individual, Legal }
 
-    struct Identity {
-        bool registered;
-        PersonType personType;
-        string name;
-        bool phoneVerified;
-        bool telegramVerified;
-    }
-
-    mapping(address => Identity) public identities;
-
-    /// @notice Operational key trusted to set phoneVerified/telegramVerified, presumably
-    ///         controlled by whatever off-chain service (the companion app) performs the actual
-    ///         SMS/Telegram verification. Rotatable by ValidatorsBoard — see setVerifier.
+    /// @notice Operational key trusted to report validator liveness — see reportLiveness below.
+    ///         Rotatable by ValidatorsBoard — see setVerifier.
     address public verifier;
 
-    event IdentityRegistered(address indexed validator, PersonType personType, string name);
-    event PhoneVerificationUpdated(address indexed validator, bool verified);
-    event TelegramVerificationUpdated(address indexed validator, bool verified);
     event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
 
     modifier onlyVerifier() {
         require(msg.sender == verifier, "ValidatorsRegistry: caller is not the verifier");
         _;
-    }
-
-    /// @notice Self-attested identity registration (name + person type only). Callable by
-    ///         anyone (validator or not), any time, and re-callable to update the name/type —
-    ///         doing so never resets phoneVerified/telegramVerified. Required before voting in
-    ///         ValidatorsBoard elections — see ValidatorsBoard.voteFor. Neither field is
-    ///         verified on-chain.
-    function registerIdentity(PersonType personType, string calldata name) external {
-        require(bytes(name).length > 0, "ValidatorsRegistry: empty name");
-
-        Identity storage id_ = identities[msg.sender];
-        id_.registered = true;
-        id_.personType = personType;
-        id_.name = name;
-        // phoneVerified / telegramVerified intentionally left untouched here.
-
-        emit IdentityRegistered(msg.sender, personType, name);
-    }
-
-    /// @notice Used by ValidatorsBoard to require identity registration before voting.
-    function hasIdentity(address who) external view returns (bool) {
-        return identities[who].registered;
-    }
-
-    /// @notice Set whether `who`'s phone number has been verified by the off-chain app. Does
-    ///         NOT require `who` to have called registerIdentity first — verification and
-    ///         self-attested name/type are independent.
-    function setPhoneVerified(address who, bool verified) external onlyVerifier {
-        identities[who].phoneVerified = verified;
-        emit PhoneVerificationUpdated(who, verified);
-    }
-
-    /// @notice Set whether `who`'s Telegram account has been verified by the off-chain app.
-    function setTelegramVerified(address who, bool verified) external onlyVerifier {
-        identities[who].telegramVerified = verified;
-        emit TelegramVerificationUpdated(who, verified);
     }
 
     /// @notice Rotate the verifier key. Board-only — mirrors how distributionOracle is rotated
