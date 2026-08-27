@@ -46,6 +46,7 @@ contract IdentityRegistry {
         bool telegramVerified;   // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
         bool kycVerified;        // ✅ تازه — نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره)
         bytes32 kycCommitment;   // ✅ تازه — فقط برای اثبات عدم‌دستکاری در دعاوی، نه matching
+        address migratedTo;      // ✅ تازه — غیرصفر یعنی این آدرس «سوخته» و هویتش به آدرس جدید منتقل شده (بخش ۳.۴ سند فنی؛ معادل بخش ۷/۸ SIP001)
     }
 
     mapping(address => Identity) public identities;
@@ -61,6 +62,7 @@ contract IdentityRegistry {
     event PhoneVerificationUpdated(address indexed who, bool verified);
     event TelegramVerificationUpdated(address indexed who, bool verified);
     event KycVerificationUpdated(address indexed who, bool verified, bytes32 commitment);
+    event IdentityMigrated(address indexed oldAddress, address indexed newAddress);
     event IdentityOracleUpdated(address indexed oldOracle, address indexed newOracle);
 
     modifier onlyFoundation() {
@@ -96,9 +98,11 @@ contract IdentityRegistry {
     }
 
     /// @notice چک سطح صفر (دسترسی آزاد، بدون نیاز به ثبت‌نام دپ) — دقیقاً معادل بخش ۶-۱ SIP002:
-    ///         «آیا این آدرس اصلاً هویتش را ثبت کرده؟» بدون افشای هیچ داده‌ی دیگری.
+    ///         «آیا این آدرس اصلاً هویتش را ثبت کرده؟» بدون افشای هیچ داده‌ی دیگری. آدرس‌های
+    ///         مهاجرت‌کرده (`migratedTo != 0`) دیگر `true` برنمی‌گردانند — طبق بخش ۳.۴ سند فنی.
     function hasIdentity(address who) external view returns (bool) {
-        return identities[who].registered;
+        Identity storage id_ = identities[who];
+        return id_.registered && id_.migratedTo == address(0);
     }
 
     /// @notice چک عمومی وضعیت وریفای — همه‌اش بولی، هیچ داده‌ی خامی نیست، پس افشای آزادش
@@ -138,6 +142,36 @@ contract IdentityRegistry {
         id_.kycVerified = verified;
         id_.kycCommitment = verified ? commitment : bytes32(0);
         emit KycVerificationUpdated(who, verified, id_.kycCommitment);
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ بازیابی هویت — جایگزین آنلاین بخش ۷/۸ SIP001 (گم‌شدن کلید / سوزاندن آدرس).
+    // فراخوانی این تابع همیشه باید بعد از یک فرآیند احراز آف‌چین مستقل باشد (بخش ۳.۴ سند فنی):
+    // برای کاربران فقط-موبایل/تلگرام، تکرار OTP کافی است؛ برای کاربران KYC‌شده، باید سرویس‌دهنده‌ی
+    // eKYC تأیید کند سلفی جدید با بیومتریک قبلی همان کد ملی تطبیق دارد — نه یک ثبت‌نام تازه.
+    // ------------------------------------------------------------------
+
+    /// @notice انتقال کامل وضعیت هویت از یک آدرس قدیمی (گم‌شده/لو‌رفته) به یک آدرس جدید.
+    ///         آدرس قدیمی برای همیشه «سوخته» می‌شود (`hasIdentity` برایش دیگر true برنمی‌گرداند)
+    ///         ولی رکوردش (و مسئولیتش برای اقدامات قبلی) پاک نمی‌شود — فقط دیگر قابل‌استفاده نیست.
+    function migrateIdentity(address oldAddr, address newAddr) external onlyIdentityOracle {
+        require(newAddr != address(0), "IdentityRegistry: zero new address");
+        Identity storage oldId = identities[oldAddr];
+        require(oldId.registered, "IdentityRegistry: old address has no identity");
+        require(oldId.migratedTo == address(0), "IdentityRegistry: old address already migrated");
+
+        Identity storage newId = identities[newAddr];
+        newId.registered = true;
+        newId.personType = oldId.personType;
+        newId.name = oldId.name;
+        newId.phoneVerified = oldId.phoneVerified;
+        newId.telegramVerified = oldId.telegramVerified;
+        newId.kycVerified = oldId.kycVerified;
+        newId.kycCommitment = oldId.kycCommitment;
+
+        oldId.migratedTo = newAddr;
+
+        emit IdentityMigrated(oldAddr, newAddr);
     }
 
     // ------------------------------------------------------------------
