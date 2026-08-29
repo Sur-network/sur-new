@@ -274,6 +274,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `setPhoneVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ شماره هیچ‌وقت روی زنجیره نمی‌آید |
 | `setTelegramVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ آیدی هیچ‌وقت روی زنجیره نمی‌آید |
 | `setKycVerified(address who, bool verified, bytes32 commitment)` | **فقط `identityOracle`** | آدرس، وضعیت، هش نمکین | — | ✅ لایه‌ی اختیاری KYC کامل — فقط برای کاربردهای غیرولیدیتوری (بالا را ببین) |
+| `migrateIdentity(address oldAddr, address newAddr)` | **فقط `identityOracle`** | آدرس قدیم، آدرس جدید | — | بازیابی هویت بعد از گم‌شدن کلید؛ آدرس قدیم برای همیشه با `migratedTo` غیرفعال می‌شود |
 | `setIdentityOracle(address newOracle)` | **فقط `FoundationDAO`** (از طریق `proposeExecute`) | آدرس جدید | — | ⚠️ چرخش این کلید دست بنیاد است، **نه هیأت‌مدیره‌ی ولیدیتورها** — چون احراز هویت مسئولیت بنیاد است، نه امنیت شبکه‌ی ولیدیتوری |
 
 ### تفاوت کلیدی با `verifier` در `ValidatorsRegistry`
@@ -283,6 +284,28 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 ### چرا کوئری «تطبیق» (matching) یک تابع on-chain نیست
 حتی اگر قرارداد پاسخ فاش نکند، خودِ پارامتر ورودی تراکنش (مقداری که قرار است باهاش تطبیق داده شود) در calldata عمومی زنجیره همیشه قابل‌مشاهده است. پس عملیات «آیا کد ملی این آدرس برابر X است؟» (که در استاندارد قدیمی SIP002 تعریف شده بود) همیشه یک فراخوانی API آف‌چین به سرویس Identity Service است، نه تراکنش — جزئیات کامل در `sur-identity-registry-spec.md` بخش ۳.۲.
+
+---
+
+## ۷. `SurenSale.sol` — قرارداد مستقل (نه یکی از شش قرارداد ساختاری genesis)
+
+### نقش
+فروش خودکار و شفاف دوره‌ی قیمت ثابت (۶ماهه) سورن. برخلاف شش قرارداد بالا، در `alloc` genesis تزریق نمی‌شود — هر زمان بنیاد آماده بود، با یک تراکنش معمولی دیپلوی می‌شود. جزئیات کامل معماری در `sur-suren-sale-spec.md`.
+
+### جدول فانکشن‌ها
+
+| فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
+|---|---|---|---|---|
+| `receive()` | هرکسی (در عمل: `FoundationDAO` از طریق `proposeSendETH`) | — (فقط `msg.value`) | — | تأمین مالی قرارداد؛ فقط `Funded` event می‌زند |
+| `currentPriceToman()` | هرکسی (view) | — | `uint256` | قیمت فعلی، مستقل و فقط از `block.timestamp` محاسبه‌شده — هیچ ورودی گزارش‌شده‌ای در آن اثر ندارد |
+| `isSaleActive()` | هرکسی (view) | — | `bool` | آیا هنوز داخل بازه‌ی ۱۸۰روزه‌ی فروش هستیم |
+| `reportPayment(address buyer, uint256 tomanAmount, string paymentReference)` | **فقط `paymentOracle`** | آدرس خریدار، مبلغ تومانی، شناسه‌ی یکتای پرداخت | — | تنها تابعی که سورن واقعی جابه‌جا می‌کند؛ idempotent (با `processedPayments`) |
+| `setPaymentOracle(address newOracle)` | **فقط `FoundationDAO`** (از طریق `proposeExecute`، اکثریت ساده) | آدرس جدید | — | چرخش کلید عملیاتی |
+| `sweepUnsold(address to)` | **فقط `FoundationDAO`** | آدرس مقصد | — | فقط بعد از پایان رسمی دوره‌ی فروش قابل‌فراخوانی |
+| `getBalance()` / `currentMonthIndex()` / `timeRemaining()` | هرکسی (view) | — | متناسب | برای داشبورد فروش عمومی |
+
+### نکته‌ی امنیتی کلیدی
+`paymentOracle` فقط می‌تواند **ادعای پرداخت** کند (و موجودی فعلی قرارداد را با قیمت رسمی بخرد) — هرگز نمی‌تواند خودِ قیمت را دستکاری کند، چون `currentPriceToman()` کاملاً مستقل محاسبه می‌شود. توصیه‌ی امنیتی صریح در کد: بنیاد باید موجودی را **دوره‌ای** (نه یک‌جا) تأمین کند تا سقف زیان یک کلید هک‌شده محدود بماند.
 
 ---
 
