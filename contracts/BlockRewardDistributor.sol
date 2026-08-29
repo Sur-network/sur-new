@@ -29,13 +29,16 @@ interface IValidatorsRegistry {
 ///         retired once contract-mode validator selection made ValidatorsRegistry itself the
 ///         single source of truth for both consensus and payment; see design doc section 5).
 ///
-///         GENESIS DEPLOYMENT: ValidatorsRegistry, ValidatorsTreasury, and ValidatorsBoard
-///         addresses are fixed constants (see SurAddresses.sol) rather than constructor
-///         arguments, because all five structural contracts share a common, pre-agreed genesis
-///         address map. Only the initial distributionOracle key (a genuinely rotatable
-///         operational credential, not a structural contract) and `_genesisTimestamp` (see
-///         "sur-contracts-deploy-notes.md" for why this can't just be `block.timestamp` inside
-///         a genesis-simulated constructor) remain constructor arguments.
+///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
+///         the genesis `alloc`, so a constructor would never execute on the real chain.
+///         ValidatorsRegistry, ValidatorsTreasury, and ValidatorsBoard addresses are fixed
+///         constants (see SurAddresses.sol), because all six structural contracts share a
+///         common, pre-agreed genesis address map. The initial distributionOracle key (a
+///         genuinely rotatable operational credential, not a structural contract) and the real
+///         genesis timestamp are instead seeded via the off-chain genesis-building tool (see the
+///         🔶 GENESIS FILL-IN notes below, and "sur-contracts-deploy-notes.md" for why the real
+///         genesis timestamp can't just be read as `block.timestamp` from a simulated
+///         environment).
 contract BlockRewardDistributor {
     // ------------------------------------------------------------------
     // Constants and configuration
@@ -70,13 +73,27 @@ contract BlockRewardDistributor {
     /// @notice Address of the oracle authorized to call the periodic distribution function.
     ///         Its only job is to report block counts and reward/fee totals; it cannot pay out
     ///         to any address that ValidatorsRegistry does not currently recognize as active.
-    address public distributionOracle;
+    /// @dev 🔶 FILL_IN: initial distributionOracle address (must be non-zero).
+    address public distributionOracle = address(0);
 
-    uint256 public immutable deployTime;
+    /// @dev 🔶 FILL_IN: the real genesis timestamp of the live network (NOT block.timestamp of
+    ///      whatever machine/moment runs the simulation — see sur-contracts-deploy-notes.md for
+    ///      why block.timestamp is unreliable here). Declared `immutable` so this value is baked
+    ///      directly into the deployed bytecode, exactly as it would be if set in a constructor.
+    uint256 public immutable deployTime = 0;
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
     bool private locked; // simple reentrancy guard
+
+    // ------------------------------------------------------------------
+    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly
+    // into the genesis `alloc` (its constructor would never execute on the real chain). The
+    // off-chain genesis-building tool must simulate this contract's deployment (with the two
+    // real values above filled in, on a temporary local chain) and copy the resulting
+    // code + storage into the final genesis file. See "sur-contracts-deploy-notes.md" for the
+    // full recipe.
+    // ------------------------------------------------------------------
 
     // ------------------------------------------------------------------
     // Epoch reporting structure
@@ -143,17 +160,6 @@ contract BlockRewardDistributor {
         locked = true;
         _;
         locked = false;
-    }
-
-    // ------------------------------------------------------------------
-    // Constructor — executed once, off-chain, to compute the genesis storage snapshot.
-    // See "sur-contracts-deploy-notes.md" for the full recipe.
-    // ------------------------------------------------------------------
-    constructor(address _distributionOracle, uint256 _genesisTimestamp) {
-        require(_distributionOracle != address(0), "BlockRewardDistributor: zero distribution oracle address");
-
-        distributionOracle = _distributionOracle;
-        deployTime = _genesisTimestamp;
     }
 
     // ------------------------------------------------------------------

@@ -95,8 +95,10 @@ interface IValidatorsTreasury {
 ///         single board member can act unilaterally. This is separate from, and unaffected by,
 ///         the board-membership voting mechanism described above.
 ///
-///         GENESIS DEPLOYMENT: the initial board (exactly BOARD_SIZE = 5 members) is passed
-///         directly into the constructor and applied immediately, instead of a separate
+///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
+///         the genesis `alloc`, so a constructor would never execute on the real chain. The
+///         initial board (exactly BOARD_SIZE = 5 members) is instead seeded via the off-chain
+///         genesis-building tool (see the 🔶 GENESIS FILL-IN note below), instead of a separate
 ///         post-deploy election. BlockRewardDistributor, ValidatorsTreasury, and
 ///         ValidatorsRegistry addresses are fixed constants (see SurAddresses.sol) rather than a
 ///         runtime `wire()` step, because all five structural contracts share a common,
@@ -124,6 +126,24 @@ contract ValidatorsBoard {
 
     // ------------------------------------------------------------------
     // Board membership (current snapshot, produced by the last refreshBoard() call)
+    //
+    // 🔶 GENESIS FILL-IN: this contract has no constructor because it is injected directly into
+    // the genesis `alloc` (its constructor would never execute on the real chain). `boardMembers`
+    // is a dynamic array and `isBoardMember` is a mapping — Solidity has no syntax for populating
+    // either of them with a loop outside a function, so this initial state (exactly BOARD_SIZE =
+    // 5 addresses) CANNOT be expressed as a simple state-variable initializer here. The off-chain
+    // genesis-building tool must either (a) simulate this contract's deployment with the real
+    // constructor logic below, on a temporary local chain, and copy the resulting storage into
+    // the final genesis file, or (b) directly compute and write the corresponding storage slots
+    // (array length + each element, and the mapping slot per member — via
+    // keccak256(abi.encode(key, slot)) for the mapping) into the genesis `alloc`. See
+    // "sur-contracts-deploy-notes.md" for the full recipe.
+    //
+    // Reference logic (not live code — for the genesis tool to reproduce, either by simulation
+    // or by direct storage computation):
+    //   for each of the 5 initial board member addresses:
+    //     boardMembers.push(address);
+    //     isBoardMember[address] = true;
     // ------------------------------------------------------------------
     address[] private boardMembers;
     mapping(address => bool) public isBoardMember;
@@ -189,21 +209,6 @@ contract ValidatorsBoard {
     modifier onlyBoardMember() {
         require(isBoardMember[msg.sender], "ValidatorsBoard: caller is not a board member");
         _;
-    }
-
-    // ------------------------------------------------------------------
-    // Constructor — executed once, off-chain, to compute the genesis storage snapshot.
-    // See "sur-contracts-deploy-notes.md" for the full recipe.
-    // ------------------------------------------------------------------
-    constructor(address[] memory initialBoardMembers) {
-        require(initialBoardMembers.length == BOARD_SIZE, "ValidatorsBoard: must supply exactly BOARD_SIZE initial members");
-        for (uint256 i = 0; i < initialBoardMembers.length; i++) {
-            address m = initialBoardMembers[i];
-            require(m != address(0), "ValidatorsBoard: zero address");
-            require(!isBoardMember[m], "ValidatorsBoard: duplicate initial board member");
-            boardMembers.push(m);
-            isBoardMember[m] = true;
-        }
     }
 
     // ------------------------------------------------------------------

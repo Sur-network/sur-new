@@ -60,7 +60,6 @@ contract IdentityRegistry {
     // ("the Sur Foundation is responsible for recording verified information about individuals
     // and legal entities").
     // ------------------------------------------------------------------
-    address public identityOracle;
 
     event IdentityRegistered(address indexed who, PersonType personType, string name);
     event PhoneVerificationUpdated(address indexed who, bool verified);
@@ -79,10 +78,17 @@ contract IdentityRegistry {
         _;
     }
 
-    constructor(address _identityOracle) {
-        require(_identityOracle != address(0), "IdentityRegistry: zero oracle address");
-        identityOracle = _identityOracle;
-    }
+    // ------------------------------------------------------------------
+    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly
+    // into the genesis `alloc` (its constructor would never execute on the real chain). The
+    // off-chain genesis-building tool must simulate this contract's deployment (with the real
+    // constructor argument, on a temporary local chain) and copy the resulting storage into the
+    // final genesis file — do NOT just deploy this exact source as-is expecting the placeholder
+    // below to matter on-chain; it exists purely as a documentation/tooling marker.
+    // ------------------------------------------------------------------
+
+    /// @dev 🔶 FILL_IN: initial identityOracle address (must be non-zero).
+    address public identityOracle = address(0);
 
     // ------------------------------------------------------------------
     // Self-attestation — any address, not just validators

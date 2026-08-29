@@ -23,14 +23,14 @@ import "./SurAddresses.sol";
 ///
 ///         GENESIS DEPLOYMENT: this contract, along with the other four structural contracts,
 ///         is injected directly into the genesis block's `alloc` (code + final storage), not
-///         deployed by a transaction. The initial validator set is therefore passed as a
-///         constructor argument (`initialValidators`) and applied immediately in the
-///         constructor, instead of a separate post-deploy `bootstrap()` call. Likewise
-///         `_genesisTimestamp` must be passed in explicitly — code running inside a constructor
-///         that is only ever *simulated* locally to compute the genesis storage snapshot cannot
-///         reliably read the real chain's genesis `block.timestamp`; see
-///         "sur-contracts-deploy-notes.md" for the exact recipe and why this matters for the
-///         rate-limit window and each genesis validator's liveness-confirmation timestamps.
+///         deployed by a transaction — and, per that same reasoning, it has no constructor at
+///         all (a constructor would never execute on the real chain). The initial validator set,
+///         the real genesis timestamp, and every security parameter are instead seeded via the
+///         off-chain genesis-building tool (see the 🔶 GENESIS FILL-IN notes throughout this
+///         file); see "sur-contracts-deploy-notes.md" for the exact recipe and why the real
+///         genesis timestamp cannot reliably be read from a simulated environment's
+///         `block.timestamp`, and why this matters for the rate-limit window and each genesis
+///         validator's liveness-confirmation timestamps.
 ///
 ///         Lifecycle of a validator address:
 ///           None -> Probation (locks stake, verifier confirms node sync, NOT yet in getValidators())
@@ -119,7 +119,8 @@ contract ValidatorsRegistry {
 
     /// @notice Operational key trusted to report validator liveness — see reportLiveness below.
     ///         Rotatable by ValidatorsBoard — see setVerifier.
-    address public verifier;
+    /// @dev 🔶 FILL_IN: initial verifier address (must be non-zero).
+    address public verifier = address(0);
 
     event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
 
@@ -137,6 +138,24 @@ contract ValidatorsRegistry {
         verifier = newVerifier;
     }
 
+    // ------------------------------------------------------------------
+    // 🔶 GENESIS FILL-IN: the founding validator set. `activeValidators` is a dynamic array and
+    // `activeIndex`/`validators` are mappings — Solidity has no syntax for populating any of
+    // them with a loop outside a function, so this initial state cannot be expressed as a simple
+    // state-variable initializer here. The off-chain genesis-building tool must either
+    // (a) simulate this contract's deployment with the real seeding logic below, on a temporary
+    // local chain, and copy the resulting storage into the final genesis file, or (b) directly
+    // compute and write the corresponding storage slots into the genesis `alloc`. See
+    // "sur-contracts-deploy-notes.md" for the full recipe.
+    //
+    // Reference logic (not live code — for the genesis tool to reproduce, either by simulation
+    // or by direct storage computation) — for each founding validator address v:
+    //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
+    //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
+    //     livenessConfirmationsInPeriod: 0, demotedAt: 0 });
+    //   activeIndex[v] = activeValidators.length + 1;
+    //   activeValidators.push(v);
+    // ------------------------------------------------------------------
     // Active validator set, exposed via getValidators(). Swap-and-pop removal via 1-based index.
     address[] private activeValidators;
     mapping(address => uint256) private activeIndex;
@@ -185,20 +204,24 @@ contract ValidatorsRegistry {
     uint256 public membershipFeeBps = 400;
 
     /// @notice Maximum number of new membership requests allowed within entryWindowSeconds.
-    uint256 public maxEntriesPerWindow;
-    uint256 public entryWindowSeconds;
+    /// @dev 🔶 FILL_IN: all security parameters below require a full-validator-vote-equivalent
+    ///      decision before genesis — see sur-master-open-items.md.
+    uint256 public maxEntriesPerWindow = 0;
+    uint256 public entryWindowSeconds = 0;
 
-    uint256 public probationPeriod;          // e.g. 1 week
-    uint256 public minLivenessConfirmationsToActivate;  // positive liveness reports required during probation before activation
-    uint256 public inactivityThreshold;      // continuous absence of positive liveness reports before demotion is allowed
-    uint256 public recoveryPeriod;           // continuous period of positive liveness reports required after demotion
-    uint256 public slashBps;                 // fraction of locked stake slashed on inactivity demotion
-    uint256 public exitCooldown;             // wait time between requestExit() and withdrawStake()
+    uint256 public probationPeriod = 0;          // 🔶 FILL_IN — e.g. 1 week
+    uint256 public minLivenessConfirmationsToActivate = 0;  // 🔶 FILL_IN — positive liveness reports required during probation before activation
+    uint256 public inactivityThreshold = 0;      // 🔶 FILL_IN — continuous absence of positive liveness reports before demotion is allowed
+    uint256 public recoveryPeriod = 0;           // 🔶 FILL_IN — continuous period of positive liveness reports required after demotion
+    uint256 public slashBps = 0;                 // 🔶 FILL_IN — fraction of locked stake slashed on inactivity demotion (must be <= BPS_DENOMINATOR)
+    uint256 public exitCooldown = 0;             // 🔶 FILL_IN — wait time between requestExit() and withdrawStake()
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
+    /// @dev 🔶 FILL_IN: the real genesis timestamp of the live network (NOT block.timestamp of
+    ///      whatever machine/moment runs the simulation — see sur-contracts-deploy-notes.md).
     // rolling rate-limit window state
-    uint256 public windowStart;
+    uint256 public windowStart = 0;
     uint256 public entriesInWindow;
 
     bool private locked; // reentrancy guard
@@ -263,58 +286,6 @@ contract ValidatorsRegistry {
         locked = true;
         _;
         locked = false;
-    }
-
-    // ------------------------------------------------------------------
-    // Constructor — executed once, off-chain, to compute the genesis storage snapshot.
-    // See "sur-contracts-deploy-notes.md" for the full recipe.
-    // ------------------------------------------------------------------
-    constructor(
-        uint256 _genesisTimestamp,
-        address[] memory initialValidators,
-        address _verifier,
-        uint256 _maxEntriesPerWindow,
-        uint256 _entryWindowSeconds,
-        uint256 _probationPeriod,
-        uint256 _minLivenessConfirmationsToActivate,
-        uint256 _inactivityThreshold,
-        uint256 _recoveryPeriod,
-        uint256 _slashBps,
-        uint256 _exitCooldown
-    ) {
-        require(_slashBps <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
-        require(_verifier != address(0), "ValidatorsRegistry: zero verifier address");
-
-        verifier = _verifier;
-        maxEntriesPerWindow = _maxEntriesPerWindow;
-        entryWindowSeconds = _entryWindowSeconds;
-        probationPeriod = _probationPeriod;
-        minLivenessConfirmationsToActivate = _minLivenessConfirmationsToActivate;
-        inactivityThreshold = _inactivityThreshold;
-        recoveryPeriod = _recoveryPeriod;
-        slashBps = _slashBps;
-        exitCooldown = _exitCooldown;
-
-        windowStart = _genesisTimestamp;
-
-        // Seed the genesis validator set directly — no active stake, no probation. These are
-        // the network's founding validators, trusted by construction of the genesis block itself.
-        for (uint256 i = 0; i < initialValidators.length; i++) {
-            address v = initialValidators[i];
-            require(v != address(0), "ValidatorsRegistry: zero address");
-            require(validators[v].status == Status.None, "ValidatorsRegistry: duplicate initial validator");
-
-            validators[v] = ValidatorInfo({
-                status: Status.Active,
-                lockedStake: 0,
-                periodStartedAt: _genesisTimestamp,
-                lastLivenessConfirmation: _genesisTimestamp,
-                livenessConfirmationsInPeriod: 0,
-                demotedAt: 0
-            });
-            activeIndex[v] = activeValidators.length + 1;
-            activeValidators.push(v);
-        }
     }
 
     // ------------------------------------------------------------------

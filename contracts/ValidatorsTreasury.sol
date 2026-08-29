@@ -55,7 +55,8 @@ contract ValidatorsTreasury {
     ///         through the full validator vote path instead. Changeable only by full
     ///         validator vote (see proposeSmallBudgetCap below) — the board cannot raise its
     ///         own limit.
-    uint256 public smallBudgetCap;
+    /// @dev 🔶 FILL_IN: initial small-budget cap (in wei of native Suren).
+    uint256 public smallBudgetCap = 0;
 
     bool private locked; // reentrancy guard
 
@@ -109,12 +110,10 @@ contract ValidatorsTreasury {
     }
 
     // ------------------------------------------------------------------
-    // Constructor — executed once, off-chain, to compute the genesis storage snapshot.
-    // See "sur-contracts-deploy-notes.md" for the full recipe.
+    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly
+    // into the genesis `alloc` (its constructor would never execute on the real chain). See
+    // "sur-contracts-deploy-notes.md" for the full simulate-and-extract recipe.
     // ------------------------------------------------------------------
-    constructor(uint256 _smallBudgetCap) {
-        smallBudgetCap = _smallBudgetCap;
-    }
 
     // ------------------------------------------------------------------
     // Automatic receipt of native Suren — from BlockRewardDistributor's 50% reward share, and

@@ -43,9 +43,12 @@ interface IERC20 {
 ///         belongs exclusively to ValidatorsBoard (routine rotation) and a full validator vote
 ///         (structural changes) — see ValidatorsBoard.sol and BlockRewardDistributor.sol.
 ///
-///         GENESIS DEPLOYMENT: the initial 15 foundation members are passed directly into the
-///         constructor and applied immediately, instead of the old single-caller `register()`
-///         bootstrap. Separately, the genesis `alloc` credits this contract's own address with
+///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
+///         the genesis `alloc`, so a constructor would never execute on the real chain. The
+///         initial 15 foundation members are instead seeded via the off-chain genesis-building
+///         tool (simulate-and-extract, or direct storage computation — see the 🔶 GENESIS
+///         FILL-IN note below), instead of the old single-caller `register()` bootstrap.
+///         Separately, the genesis `alloc` credits this contract's own address with
 ///         20,000,000 Suren (native currency, not a token transfer) — the initial distribution
 ///         of base network tokens the foundation is responsible for per the charter's article
 ///         3-6; distributed onward via proposeSendETH proposals, subject to the two-thirds
@@ -80,6 +83,21 @@ contract FoundationDAO {
 
     // ------------------------------------------------------------------
     // State variables
+    //
+    // 🔶 GENESIS FILL-IN: the 15 founding foundation members. `memberList` is a dynamic array and
+    // `memberIndex`/`isMember` are mappings — Solidity has no syntax for populating any of them
+    // with a loop outside a function, so this initial state cannot be expressed as a simple
+    // state-variable initializer here. The off-chain genesis-building tool must either
+    // (a) simulate this contract's deployment with the real seeding logic below, on a temporary
+    // local chain, and copy the resulting storage into the final genesis file, or (b) directly
+    // compute and write the corresponding storage slots into the genesis `alloc`. See
+    // "sur-contracts-deploy-notes.md" for the full recipe.
+    //
+    // Reference logic (not live code — for the genesis tool to reproduce, either by simulation
+    // or by direct storage computation) — for each of the 15 founding (name, account) pairs:
+    //   memberList.push(Member({name: name, account: account}));
+    //   memberIndex[account] = memberList.length; // 1-based
+    //   isMember[account] = true;
     // ------------------------------------------------------------------
     Member[] public memberList;
     mapping(address => uint256) private memberIndex; // 1-based index into memberList, 0 means not a member
@@ -105,17 +123,13 @@ contract FoundationDAO {
     receive() external payable {}
 
     // ------------------------------------------------------------------
-    // Constructor — executed once, off-chain, to compute the genesis storage snapshot.
-    // See "sur-contracts-deploy-notes.md" for the full recipe.
+    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly into
+    // the genesis `alloc` (its constructor would never execute on the real chain). See
+    // "sur-contracts-deploy-notes.md" for the full simulate-and-extract recipe. Separately, the
+    // genesis `alloc` must also credit this contract's own address with 20,000,000 Suren (native
+    // currency — see the contract-level documentation above and sur-tokenomics.md for the full,
+    // three-row genesis distribution).
     // ------------------------------------------------------------------
-    constructor(string[] memory names, address[] memory accounts) {
-        require(names.length == accounts.length, "FoundationDAO: length mismatch");
-        require(names.length > 0, "FoundationDAO: empty initial member list");
-        for (uint256 i = 0; i < names.length; i++) {
-            require(bytes(names[i]).length > 0, "FoundationDAO: empty name");
-            _addMember(accounts[i], names[i]);
-        }
-    }
 
     // ------------------------------------------------------------------
     // Proposal creation — members only
