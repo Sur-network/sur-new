@@ -23,8 +23,9 @@ interface IValidatorsRegistry {
     );
 }
 
-/// @dev ✅ اصلاحیه‌ی معماری: هویت دیگر داخل ValidatorsRegistry نیست — یک قرارداد کاملاً
-///      مستقل و ششم، `IdentityRegistry.sol` (آدرس ثابت `0x6666...6666`).
+/// @dev Architecture note: identity no longer lives inside ValidatorsRegistry — it was moved to
+///      a fully independent, sixth structural contract, `IdentityRegistry.sol` (fixed address
+///      `0x6666...6666`).
 interface IIdentityRegistry {
     function hasIdentity(address who) external view returns (bool);
 }
@@ -39,7 +40,8 @@ interface IValidatorsTreasury {
 
 /// @title ValidatorsBoard
 /// @notice Deployed at the fixed genesis address SurAddresses.VALIDATORS_BOARD (0x4444...4444).
-///         این قرارداد در ادبیات فارسی پروژه «هیأت‌مدیره‌ی ولیدیتورها» نامیده می‌شود.
+///         Referred to as the "validators' board of directors" in the project's
+///         Persian-language documentation.
 ///
 ///         BOARD MEMBERSHIP — approval voting, fixed 5 seats, no recall (updated design; retires
 ///         the earlier one-at-a-time add/remove election model entirely):

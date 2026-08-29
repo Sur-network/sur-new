@@ -4,22 +4,25 @@ pragma solidity ^0.8.24;
 import "./SurAddresses.sol";
 
 /// @title SurenSale
-/// @notice قرارداد فروش دوره‌ی قیمت ثابت (۶ ماهه) سورن توسط بنیاد سور.
+/// @notice The Sur Foundation's fixed-price (6-month) Suren sale contract.
 ///
-///         چون تومان یک ارز فیات است (نه دارایی on-chain)، پرداخت واقعی همیشه آف‌چین اتفاق
-///         می‌افتد (درگاه پرداخت بانکی). یک سرویس آف‌چین جدا («PaymentReporter» — دقیقاً همان
-///         الگوی `verifier`/`distributionOracle`) پرداخت‌های تأییدشده را با کلید `paymentOracle`
-///         به این قرارداد گزارش می‌دهد؛ خودِ قرارداد قیمت را **مستقل و از روی `block.timestamp`**
-///         محاسبه می‌کند — یعنی حتی اگر کلید `paymentOracle` کاملاً هک شود، مهاجم فقط می‌تواند
-///         *ادعای پرداخت* کند (و موجودی فعلی قرارداد را خالی کند)، هرگز نمی‌تواند خودِ قیمت را
-///         دستکاری کند.
+///         Because Toman is a fiat currency (not an on-chain asset), the actual payment always
+///         happens off-chain (a bank payment gateway). A separate off-chain service
+///         ("PaymentReporter" — exactly the same trust pattern as `verifier`/
+///         `distributionOracle`) reports confirmed payments to this contract using the
+///         `paymentOracle` key; the contract itself computes the price **independently, from
+///         `block.timestamp`** — meaning that even if the `paymentOracle` key were fully
+///         compromised, an attacker could only *falsely claim a payment* (draining the
+///         contract's current balance), never manipulate the price itself.
 ///
-///         ⚠️ توصیه‌ی امنیتی حیاتی: بنیاد نباید کل ۲۰ میلیون سورن را یک‌جا به این قرارداد واریز
-///         کند — باید دوره‌ای (مثلاً ماهانه) فقط بخشی از موجودی را منتقل کند، تا سقف زیانِ
-///         احتمالیِ یک کلید `paymentOracle` هک‌شده محدود بماند.
+///         WARNING — critical security recommendation: the Foundation should not deposit the
+///         entire 20 million Suren into this contract at once — it should transfer only a
+///         portion of the balance periodically (e.g. monthly), so that the maximum possible
+///         loss from a compromised `paymentOracle` key stays bounded.
 ///
-///         این قرارداد یکی از شش قرارداد ساختاری genesis نیست — هر زمانی که بنیاد آماده بود،
-///         با یک تراکنش معمولی دیپلوی می‌شود (نه در `alloc` genesis).
+///         This contract is not one of the six genesis structural contracts — whenever the
+///         Foundation is ready, it is deployed via a normal transaction (not in the genesis
+///         `alloc`).
 contract SurenSale {
     // ------------------------------------------------------------------
     // Fixed cross-contract address (see SurAddresses.sol)
@@ -27,27 +30,28 @@ contract SurenSale {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // Sale schedule — ۶ ماه، پله‌ی ۳٪ رشد مرکب ماهانه (تصمیم قطعی پروژه؛ جدول از پیش محاسبه و
-    // هاردکد شده، نه محاسبه‌ی توان on-chain — چون فقط ۶ نقطه‌ی ثابت داریم، سادگی و گس کمتر
-    // بهتر از یک فرمول توان عمومی است).
+    // Sale schedule — 6 months, 3% monthly compound step (final project decision; the schedule
+    // is precomputed and hardcoded rather than computed as an on-chain power function — since
+    // there are only 6 fixed points, this is simpler and cheaper in gas than a general
+    // exponentiation formula).
     // ------------------------------------------------------------------
 
-    /// @notice قیمت هر سورن به تومان، به‌ازای هر ماه (ماه ۱ تا ۶). مقادیر از پیش محاسبه‌شده با
-    ///         ۱۰۰ تومان پایه و ۳٪ رشد مرکب ماهانه، رندشده به نزدیک‌ترین تومان.
+    /// @notice Price of one Suren in Toman, per month (month 1 through 6). Precomputed with a
+    ///         100 Toman base and 3% monthly compound growth, rounded to the nearest Toman.
     uint256[6] public monthlyPriceToman = [uint256(100), 103, 106, 109, 113, 116];
 
-    uint256 public constant SALE_DURATION = 180 days; // ~۶ ماه
+    uint256 public constant SALE_DURATION = 180 days; // ~6 months
     uint256 public constant SECONDS_PER_MONTH = 30 days;
 
-    /// @notice لحظه‌ی شروع دوره‌ی فروش — در سازنده تنظیم می‌شود، تغییرناپذیر.
+    /// @notice The moment the sale period starts — set in the constructor, immutable thereafter.
     uint256 public immutable saleStartTime;
 
     // ------------------------------------------------------------------
-    // Operational key — گزارش‌دهنده‌ی پرداخت‌های تأییدشده. چرخشش از طریق فراخوانی عمومی
-    // `FoundationDAO.proposeExecute` (نوع پیشنهاد اکثریت ساده، نه دوسوم) ممکن است — چون سقف
-    // زیان این کلید با تأمین مالی دوره‌ای (نه یک‌جا) محدود نگه داشته می‌شود؛ اگر بعداً مبالغ
-    // تأمین‌شده در هر دوره بزرگ‌تر شد، این تصمیم باید بازبینی شود (احتمالاً نصاب دوسوم مناسب‌تر
-    // خواهد بود).
+    // Operational key — reports confirmed payments. Rotatable via the public
+    // `FoundationDAO.proposeExecute` call (a simple-majority proposal type, not two-thirds) —
+    // because the maximum possible loss from this key is kept bounded by periodic (not
+    // lump-sum) funding; if the amounts funded per period grow larger later on, this decision
+    // should be revisited (a two-thirds quorum would likely become more appropriate).
     // ------------------------------------------------------------------
     address public paymentOracle;
 
@@ -62,8 +66,8 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // Idempotency — هر پرداخت با یک شناسه‌ی یکتا (مثلاً کد پیگیری درگاه پرداخت) فقط یک‌بار
-    // قابل‌پردازش است.
+    // Idempotency — each payment, identified by a unique reference (e.g. the payment gateway's
+    // tracking code), can only be processed once.
     // ------------------------------------------------------------------
     mapping(string => bool) public processedPayments;
 
@@ -85,7 +89,7 @@ contract SurenSale {
     event UnsoldSurenSweeped(address indexed to, uint256 amount);
 
     // ------------------------------------------------------------------
-    // Constructor — اجرای واقعی روی زنجیره (این قرارداد genesis-injected نیست).
+    // Constructor — actually executes on-chain (this contract is not genesis-injected).
     // ------------------------------------------------------------------
     constructor(address _paymentOracle) {
         require(_paymentOracle != address(0), "SurenSale: zero oracle address");
@@ -94,20 +98,21 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // تأمین مالی — بنیاد به‌صورت دوره‌ای بخشی از موجودی‌اش را اینجا واریز می‌کند
-    // (`FoundationDAO.proposeSendETH` با نصاب دوسوم — چون این خرج واقعی سورن بنیاد است).
+    // Funding — the Foundation periodically deposits a portion of its balance here
+    // (`FoundationDAO.proposeSendETH`, two-thirds quorum — since this is a real expenditure of
+    // the Foundation's Suren).
     // ------------------------------------------------------------------
     receive() external payable {
         emit Funded(msg.sender, msg.value);
     }
 
     // ------------------------------------------------------------------
-    // قیمت فعلی — کاملاً مستقل از هر گزارشی، فقط از block.timestamp محاسبه می‌شود.
+    // Current price — computed purely from block.timestamp, entirely independent of any report.
     // ------------------------------------------------------------------
     function currentPriceToman() public view returns (uint256) {
         uint256 elapsed = block.timestamp - saleStartTime;
         uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-        if (monthIndex > 5) monthIndex = 5; // بعد از پایان دوره، همچنان آخرین قیمت را برمی‌گرداند
+        if (monthIndex > 5) monthIndex = 5; // after the sale period ends, keep returning the last price
         return monthlyPriceToman[monthIndex];
     }
 
@@ -116,14 +121,15 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // گزارش پرداخت — تنها نقطه‌ی ورودی که سورن واقعی جابه‌جا می‌کند.
+    // Payment reporting — the only entry point that actually moves real Suren.
     // ------------------------------------------------------------------
 
-    /// @notice گزارش یک پرداخت تومانی تأییدشده (آف‌چین) و ارسال خودکار سورن معادل به خریدار.
-    /// @param buyer آدرس اتریومی خریدار (از طرف کاربر، همراه با پرداختش اعلام می‌شود)
-    /// @param tomanAmount مبلغ پرداختی، به تومان (عدد صحیح، بدون اعشار)
-    /// @param paymentReference شناسه‌ی یکتای این پرداخت (مثلاً کد پیگیری درگاه) — برای جلوگیری
-    ///        از پردازش دوباره‌ی همان پرداخت
+    /// @notice Reports a confirmed (off-chain) Toman payment and automatically sends the
+    ///         equivalent Suren to the buyer.
+    /// @param buyer The buyer's Ethereum-style address (supplied by the user together with their payment)
+    /// @param tomanAmount The amount paid, in Toman (whole integer, no decimals)
+    /// @param paymentReference A unique identifier for this payment (e.g. the gateway's tracking
+    ///        code) — used to prevent the same payment from being processed twice
     function reportPayment(
         address buyer,
         uint256 tomanAmount,
@@ -151,7 +157,7 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // مدیریت کلید عملیاتی — فقط بنیاد (از طریق FoundationDAO.proposeExecute، اکثریت ساده)
+    // Operational key management — Foundation only (via FoundationDAO.proposeExecute, simple majority)
     // ------------------------------------------------------------------
     function setPaymentOracle(address newOracle) external onlyFoundation {
         require(newOracle != address(0), "SurenSale: zero oracle address");
@@ -160,7 +166,7 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // جمع‌آوری باقی‌مانده‌ی نفروخته — فقط بعد از پایان رسمی دوره‌ی فروش، فقط توسط بنیاد.
+    // Sweeping unsold balance — only after the sale period has formally ended, only by the Foundation.
     // ------------------------------------------------------------------
     function sweepUnsold(address to) external onlyFoundation {
         require(!isSaleActive(), "SurenSale: sale period still active");
@@ -175,7 +181,7 @@ contract SurenSale {
     }
 
     // ------------------------------------------------------------------
-    // View helpers — برای داشبورد فروش عمومی
+    // View helpers — for the public sale dashboard
     // ------------------------------------------------------------------
     function getBalance() external view returns (uint256) {
         return address(this).balance;

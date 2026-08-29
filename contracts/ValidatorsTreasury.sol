@@ -17,8 +17,9 @@ interface IValidatorsRegistry {
 ///
 ///         Two inflows, both native currency:
 ///           - 50% of every block's reward share from BlockRewardDistributor (see design doc
-///             section 3: "از بلاک‌ریوارد: ۵۰٪ به خزانه‌ی ولیدیتورها"). Transaction fees never
-///             flow here — 100% of fees go directly to validators by block ratio.
+///             section 3: "50% of the block reward goes to the validators' treasury").
+///             Transaction fees never flow here — 100% of fees go directly to validators by
+///             block ratio.
 ///           - The membership fee (+ slashed collateral) forwarded directly by ValidatorsRegistry
 ///             on every new validator's entry / every inactivity-demotion (see
 ///             ValidatorsRegistry's "MEMBERSHIP FEE" doc comment for the hybrid stake model).

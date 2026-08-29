@@ -32,8 +32,9 @@ library SurAddresses {
     /// @dev ValidatorsTreasury — holds and spends the validators' 50% reward share
     address internal constant VALIDATORS_TREASURY = 0x5555555555555555555555555555555555555555;
 
-    /// @dev IdentityRegistry — ✅ ششمین قرارداد ساختاری (تصمیم تازه). مرجع واحد هویت خوداظهاری
-    ///      (نام/نوع شخصیت) و وضعیت وریفای (موبایل/تلگرام/KYC کامل) برای **کل کاربران شبکه**،
-    ///      نه فقط ولیدیتورها — به همین دلیل از ValidatorsRegistry مستقل نگه داشته شده است.
+    /// @dev IdentityRegistry — the sixth structural contract (added in a later revision). The
+    ///      single source of truth for self-attested identity (name/person type) and
+    ///      verification status (mobile/Telegram/full KYC) for **all network users**, not just
+    ///      validators — which is why it is kept independent from ValidatorsRegistry.
     address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
 }

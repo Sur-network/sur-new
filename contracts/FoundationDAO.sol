@@ -46,9 +46,10 @@ interface IERC20 {
 ///         GENESIS DEPLOYMENT: the initial 15 foundation members are passed directly into the
 ///         constructor and applied immediately, instead of the old single-caller `register()`
 ///         bootstrap. Separately, the genesis `alloc` credits this contract's own address with
-///         20,000,000 Suren (native currency, not a token transfer) — the "توزیع توکن‌های پایه‌ی
-///         شبکه" the foundation is responsible for per the charter's article 3-6; distributed
-///         onward via proposeSendETH proposals, subject to the two-thirds threshold above.
+///         20,000,000 Suren (native currency, not a token transfer) — the initial distribution
+///         of base network tokens the foundation is responsible for per the charter's article
+///         3-6; distributed onward via proposeSendETH proposals, subject to the two-thirds
+///         threshold above.
 contract FoundationDAO {
     // ------------------------------------------------------------------
     // Data structures

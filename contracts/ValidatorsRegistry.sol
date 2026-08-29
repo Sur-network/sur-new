@@ -105,14 +105,16 @@ contract ValidatorsRegistry {
     mapping(address => ValidatorInfo) public validators;
 
     // ------------------------------------------------------------------
-    // ⚠️ اصلاحیه‌ی معماری (تصمیم تازه): هویت (نام/نوع شخصیت، وریفای موبایل/تلگرام/KYC) دیگر
-    // اینجا نیست — به یک قرارداد کاملاً مستقل، `IdentityRegistry.sol`، منتقل شد. دلیل: جمعیت
-    // هدف هویت (کل کاربران شبکه) از جمعیت ولیدیتورها کاملاً جداست؛ `ValidatorsBoard.voteFor`
-    // اکنون مستقیماً `IdentityRegistry.hasIdentity(...)` را چک می‌کند، نه از طریق این قرارداد.
+    // Architecture note: identity (name/person type, mobile/Telegram/KYC verification) no
+    // longer lives here — it was moved to a fully independent contract, `IdentityRegistry.sol`.
+    // Reason: identity's target population (all network users) is entirely separate from the
+    // validator population; `ValidatorsBoard.voteFor` now checks
+    // `IdentityRegistry.hasIdentity(...)` directly, not through this contract.
     //
-    // `verifier` اینجا باقی مانده، ولی فقط برای یک هدف: گزارش `reportLiveness` (پایین‌تر در
-    // همین فایل). این یک کلید کاملاً جدا از `identityOracle` در `IdentityRegistry.sol` است —
-    // این دو نقش (زنده‌بودن نود در مقابل احراز هویت) عمداً مستقل نگه داشته شده‌اند.
+    // `verifier` remains here, but for a single purpose only: reporting `reportLiveness`
+    // (further below in this file). This is a completely separate key from `identityOracle` in
+    // `IdentityRegistry.sol` — these two roles (node liveness vs. identity verification) are
+    // deliberately kept independent.
     // ------------------------------------------------------------------
 
     /// @notice Operational key trusted to report validator liveness — see reportLiveness below.

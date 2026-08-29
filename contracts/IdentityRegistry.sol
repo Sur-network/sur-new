@@ -4,28 +4,31 @@ pragma solidity ^0.8.24;
 import "./SurAddresses.sol";
 
 /// @title IdentityRegistry
-/// @notice ششمین قرارداد ساختاری سور (آدرس ثابت `0x6666...6666`) — مرجع واحد هویت برای **کل
-///         کاربران شبکه**، نه فقط ولیدیتورها. الهام‌گرفته از استاندارد قدیمی SIP001/SIP002
-///         («روش احراز هویت کاربران حقیقی و حقوقی» و «استفاده از خدمات احراز هویت توسط دپ‌ها»)،
-///         با دو اصلاح آگاهانه نسبت به نسخه‌ی اصلی:
+/// @notice Sur's sixth structural contract (fixed address `0x6666...6666`) — the single source
+///         of truth for identity across **all network users**, not just validators. Inspired by
+///         the project's earlier standards SIP001/SIP002 ("Identity verification method for
+///         individual and legal-entity users" and "Use of identity verification services by
+///         dApps"), with two deliberate changes from the original:
 ///
-///         ۱. **بدون دفترخانه‌ی اسناد رسمی** — SIP001 نیاز به گواهی امضای حضوری در دفترخانه
-///            داشت. اینجا جایگزینش شده با یک فرآیند کاملاً آنلاین: تأیید eKYC (تطبیق چهره +
-///            liveness detection + بررسی اصالت مدرک، توسط یک سرویس‌دهنده‌ی مجاز) + امضای
-///            دیجیتال چالش با همان کلید سوری کاربر (این بخش دوم دقیقاً همان ایده‌ی SIP001 است،
-///            بدون تغییر).
+///         1. **No notary office.** SIP001 required an in-person notarized signature. Here it is
+///            replaced with a fully online process: eKYC verification (face matching + liveness
+///            detection + document authenticity check, performed by a licensed provider) +
+///            digitally signing a challenge with the user's own Sur key (this second step is
+///            exactly SIP001's original idea, unchanged).
 ///
-///         ۲. **بدون داده‌ی خام حساس on-chain** — SIP001 پیشنهاد می‌داد کد ملی/نام/شناسنامه در
-///            یک «قرارداد هوشمند محرمانه» ذخیره شود. این از نظر فنی ممکن نیست: هیچ storage
-///            روی یک بلاک‌چین عمومی واقعاً محرمانه نمی‌ماند (`eth_getStorageAt` همیشه در
-///            دسترس است)، و برای داده‌ی کم‌آنتروپی مثل کد ملی (۱۰ رقم)، حتی هش‌کردن هم بدون یک
-///            salt مخفی محافظت واقعی نمی‌دهد. راه‌حل: داده‌ی خام هرگز وارد این قرارداد نمی‌شود؛
-///            فقط یک وضعیت وریفای (bool) و یک commitment (برای اثبات عدم‌دستکاری در دعاوی
-///            حقوقی آینده، نه برای پاسخ به کوئری) on-chain می‌مانند. خودِ عملیات «تطبیق»
-///            (بخش ۶ SIP002) باید یک فراخوانی API آف‌چین باشد، نه یک تراکنش on-chain — چون
-///            حتی اگر قرارداد پاسخ را فاش نکند، **پارامتر ورودی خودِ تراکنش** (مقداری که
-///            دارد با آن مقایسه می‌شود) در calldata عمومی و همیشه قابل‌مشاهده است. جزئیات
-///            کامل در `sur-identity-registry-spec.md`.
+///         2. **No sensitive raw data on-chain.** SIP001 proposed storing national ID / name /
+///            birth-certificate data in a "confidential smart contract." This is not technically
+///            possible: no storage on a public blockchain is ever truly confidential
+///            (`eth_getStorageAt` is always available), and for low-entropy data such as a
+///            10-digit national ID, even hashing provides no real protection without a secret
+///            salt. Solution: raw data never enters this contract; only a verification status
+///            (bool) and a commitment (kept solely to prove non-tampering in a possible future
+///            legal dispute, never used to answer a query) live on-chain. The "matching"
+///            operation itself (SIP002 section 6) must be an off-chain API call, never an
+///            on-chain transaction — because even if the contract never reveals the answer, the
+///            **transaction's own input parameter** (the value being compared against) is
+///            always visible in public calldata. Full details in
+///            `sur-identity-registry-spec.md`.
 contract IdentityRegistry {
     // ------------------------------------------------------------------
     // Fixed cross-contract address (see SurAddresses.sol)
@@ -33,8 +36,8 @@ contract IdentityRegistry {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // Self-attested identity (لایه‌ی اول SIP001) — بدون تغییر نسبت به طراحی قبلی خودمان،
-    // فقط منتقل‌شده از ValidatorsRegistry.
+    // Self-attested identity (SIP001's first layer) — unchanged from our earlier design, just
+    // relocated out of ValidatorsRegistry.
     // ------------------------------------------------------------------
     enum PersonType { Individual, Legal }
 
@@ -42,19 +45,20 @@ contract IdentityRegistry {
         bool registered;
         PersonType personType;
         string name;
-        bool phoneVerified;      // موبایل واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
-        bool telegramVerified;   // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
-        bool kycVerified;        // ✅ تازه — نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره)
-        bytes32 kycCommitment;   // ✅ تازه — فقط برای اثبات عدم‌دستکاری در دعاوی، نه matching
-        address migratedTo;      // ✅ تازه — غیرصفر یعنی این آدرس «سوخته» و هویتش به آدرس جدید منتقل شده (بخش ۳.۴ سند فنی؛ معادل بخش ۷/۸ SIP001)
+        bool phoneVerified;      // the actual phone number is never stored here — only this flag
+        bool telegramVerified;   // the actual Telegram ID is never stored here — only this flag
+        bool kycVerified;        // new — result of full eKYC (photo + national ID + face match)
+        bytes32 kycCommitment;   // new — kept only to prove non-tampering in disputes, never for matching
+        address migratedTo;      // new — non-zero means this address is "burned" and its identity has been migrated to a new address (see spec section 3.4; equivalent to SIP001 sections 7/8)
     }
 
     mapping(address => Identity) public identities;
 
     // ------------------------------------------------------------------
-    // Operational key — کنترل بنیاد (نه هیأت‌مدیره‌ی ولیدیتورها)، چون احراز هویت یک
-    // مسئولیت بنیاد است، طبق همان طراحی اصلی SIP001 («بنیاد سور موظف است اطلاعات اشخاص
-    // حقیقی و حقوقی احراز هویت‌شده را ثبت کند»).
+    // Operational key — controlled by the Foundation (not the validators' board), because
+    // identity verification is the Foundation's responsibility, per SIP001's original design
+    // ("the Sur Foundation is responsible for recording verified information about individuals
+    // and legal entities").
     // ------------------------------------------------------------------
     address public identityOracle;
 
@@ -81,11 +85,11 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // خوداظهاری — هر آدرسی، نه فقط ولیدیتورها
+    // Self-attestation — any address, not just validators
     // ------------------------------------------------------------------
 
-    /// @notice ثبت/به‌روزرسانی هویت خوداظهاری (فقط نام و نوع شخصیت). قابل‌فراخوانی توسط هر
-    ///         آدرسی، هر زمان؛ فراخوانی دوباره هیچ‌کدام از فلگ‌های وریفای را ریست نمی‌کند.
+    /// @notice Registers/updates self-attested identity (name and person type only). Callable
+    ///         by any address, at any time; calling it again never resets any verification flag.
     function registerIdentity(PersonType personType, string calldata name) external {
         require(bytes(name).length > 0, "IdentityRegistry: empty name");
 
@@ -97,16 +101,17 @@ contract IdentityRegistry {
         emit IdentityRegistered(msg.sender, personType, name);
     }
 
-    /// @notice چک سطح صفر (دسترسی آزاد، بدون نیاز به ثبت‌نام دپ) — دقیقاً معادل بخش ۶-۱ SIP002:
-    ///         «آیا این آدرس اصلاً هویتش را ثبت کرده؟» بدون افشای هیچ داده‌ی دیگری. آدرس‌های
-    ///         مهاجرت‌کرده (`migratedTo != 0`) دیگر `true` برنمی‌گردانند — طبق بخش ۳.۴ سند فنی.
+    /// @notice Tier-zero check (open access, no dApp registration required) — exactly equivalent
+    ///         to SIP002 section 6-1: "has this address registered an identity at all?", without
+    ///         revealing any other data. Migrated addresses (`migratedTo != 0`) no longer return
+    ///         `true` — see spec section 3.4.
     function hasIdentity(address who) external view returns (bool) {
         Identity storage id_ = identities[who];
         return id_.registered && id_.migratedTo == address(0);
     }
 
-    /// @notice چک عمومی وضعیت وریفای — همه‌اش بولی، هیچ داده‌ی خامی نیست، پس افشای آزادش
-    ///         مشکلی ندارد (دقیقاً مثل بخش ۶-۱ SIP002).
+    /// @notice Public verification-status check — everything here is boolean, no raw data, so
+    ///         freely disclosing it is not a problem (exactly like SIP002 section 6-1).
     function getVerificationStatus(address who)
         external
         view
@@ -117,8 +122,8 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // وریفای — فقط identityOracle (سرویس آف‌چین Identity Service، جزئیات در
-    // sur-identity-registry-spec.md)
+    // Verification — identityOracle only (off-chain Identity Service; see
+    // sur-identity-registry-spec.md for details)
     // ------------------------------------------------------------------
 
     function setPhoneVerified(address who, bool verified) external onlyIdentityOracle {
@@ -131,12 +136,12 @@ contract IdentityRegistry {
         emit TelegramVerificationUpdated(who, verified);
     }
 
-    /// @notice ثبت نتیجه‌ی eKYC کامل (تصویر شخص + کارت ملی + مشخصات شناسنامه‌ای + تطبیق چهره).
-    ///         `commitment` یک هش نمکین (salted hash) از داده‌ی کامل تأییدشده است — **فقط**
-    ///         برای اثبات عدم‌دستکاری در دعاوی حقوقی احتمالی آینده نگه‌داری می‌شود؛ هیچ تابع
-    ///         on-chain‌ای هرگز از آن برای پاسخ به کوئری «تطبیق» استفاده نمی‌کند (آن عملیات
-    ///         همیشه از طریق API آف‌چین Identity Service انجام می‌شود — بخش ۵،
-    ///         sur-identity-registry-spec.md).
+    /// @notice Records the result of a full eKYC check (personal photo + national ID card +
+    ///         birth-certificate-level details + face match). `commitment` is a salted hash of
+    ///         the full verified data set — kept **only** to prove non-tampering in a possible
+    ///         future legal dispute; no on-chain function ever uses it to answer a "matching"
+    ///         query (that operation always goes through the off-chain Identity Service API —
+    ///         see section 5 of `sur-identity-registry-spec.md`).
     function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle {
         Identity storage id_ = identities[who];
         id_.kycVerified = verified;
@@ -145,15 +150,18 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // ✅ بازیابی هویت — جایگزین آنلاین بخش ۷/۸ SIP001 (گم‌شدن کلید / سوزاندن آدرس).
-    // فراخوانی این تابع همیشه باید بعد از یک فرآیند احراز آف‌چین مستقل باشد (بخش ۳.۴ سند فنی):
-    // برای کاربران فقط-موبایل/تلگرام، تکرار OTP کافی است؛ برای کاربران KYC‌شده، باید سرویس‌دهنده‌ی
-    // eKYC تأیید کند سلفی جدید با بیومتریک قبلی همان کد ملی تطبیق دارد — نه یک ثبت‌نام تازه.
+    // Identity recovery — the online replacement for SIP001 sections 7/8 (lost key / burned
+    // address). Calling this function must always follow an independent off-chain verification
+    // process (see spec section 3.4): for phone/Telegram-only users, repeating the OTP flow is
+    // enough; for KYC-verified users, the eKYC provider must confirm the new selfie matches the
+    // previously stored biometric data for the same national ID — this is a recovery, not a
+    // fresh registration.
     // ------------------------------------------------------------------
 
-    /// @notice انتقال کامل وضعیت هویت از یک آدرس قدیمی (گم‌شده/لو‌رفته) به یک آدرس جدید.
-    ///         آدرس قدیمی برای همیشه «سوخته» می‌شود (`hasIdentity` برایش دیگر true برنمی‌گرداند)
-    ///         ولی رکوردش (و مسئولیتش برای اقدامات قبلی) پاک نمی‌شود — فقط دیگر قابل‌استفاده نیست.
+    /// @notice Migrates the full identity status from an old (lost/compromised) address to a new
+    ///         one. The old address is permanently "burned" (`hasIdentity` no longer returns true
+    ///         for it), but its record — and its liability for past actions — is not erased, it
+    ///         simply can no longer be used.
     function migrateIdentity(address oldAddr, address newAddr) external onlyIdentityOracle {
         require(newAddr != address(0), "IdentityRegistry: zero new address");
         Identity storage oldId = identities[oldAddr];
@@ -175,7 +183,7 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // چرخش کلید — فقط بنیاد (نه هیأت‌مدیره‌ی ولیدیتورها)
+    // Key rotation — Foundation only (not the validators' board)
     // ------------------------------------------------------------------
     function setIdentityOracle(address newOracle) external onlyFoundation {
         require(newOracle != address(0), "IdentityRegistry: zero oracle address");
