@@ -2,32 +2,35 @@
 pragma solidity ^0.8.24;
 
 // ============================================================================
-// ⚠️⚠️⚠️  GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN  ⚠️⚠️⚠️
+// WARNING: GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN
 //
-// این قرارداد نسخه‌ی موقتِ  ValidatorsRegistry.sol  است.
-// (Temporary counterpart of: contracts/ValidatorsRegistry.sol)
+// This is the TEMPORARY counterpart of: contracts/ValidatorsRegistry.sol
 //
-// هدف: ValidatorsRegistry.sol واقعی هیچ constructor ندارد (چون در genesis alloc تزریق می‌شود).
-// ولی `validators` (mapping به یک struct)، `activeValidators` (آرایه‌ی پویا)، و `activeIndex`
-// (mapping) با هیچ syntax سطح-قرارداد در Solidity قابل‌مقداردهی نیستند. این قرارداد کمکی همان
-// منطق seed کردن را در یک constructor واقعی پیاده می‌کند، تا با اجرای واقعی‌اش روی یک زنجیره‌ی
-// محلی (Anvil/Hardhat)، خودِ EVM محاسبات keccak256 لازم برای هر mapping/آرایه را انجام دهد.
+// Purpose: the real ValidatorsRegistry.sol has no constructor (it is injected directly into the
+// genesis alloc). But `validators` (a mapping to a struct), `activeValidators` (a dynamic
+// array), and `activeIndex` (a mapping) cannot be populated with any contract-level Solidity
+// syntax. This helper contract implements that exact seeding logic inside a real constructor,
+// so that running it once on a temporary local chain (Anvil/Hardhat) lets the EVM itself
+// perform the keccak256 storage-slot math required for each mapping/array entry.
 //
-// نحوه‌ی استفاده‌ی ابزار genesis:
-//   ۱. این فایل را روی یک زنجیره‌ی محلی موقت دیپلوی کن (با آدرس‌های واقعی ولیدیتورهای اولیه و
-//      genesis timestamp واقعی).
-//   ۲. کل storage نهایی‌اش را با eth_getStorageAt (یا state-dump) استخراج کن.
-//   ۳. این storage را — نه بایت‌کد این فایل، بلکه بایت‌کد ValidatorsRegistry.sol واقعی — زیر
-//      آدرس 0x3333...3333 در alloc genesis.json بگذار.
+// How the genesis-building tool should use this file:
+//   1. Deploy this file on a temporary local chain, with the real initial validator addresses
+//      and the real genesis timestamp.
+//   2. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
+//      state-dump tool).
+//   3. Write that storage — together with the REAL ValidatorsRegistry.sol's compiled runtime
+//      bytecode (NOT this file's bytecode) — under address 0x3333...3333 in genesis.json's
+//      `alloc` section.
 //
-// ⚠️ ترتیب و نوع فیلدهای زیر باید دقیقاً همان ترتیب ValidatorsRegistry.sol واقعی باشد، وگرنه
-// storage slotهای استخراج‌شده با قرارداد نهایی هم‌راستا نمی‌شوند. هر بار ValidatorsRegistry.sol
-// واقعی تغییر کرد، این فایل هم باید دستی هماهنگ شود. توجه: پارامترهای امنیتی و اقتصادی (که
-// خودشان مقادیر ساده‌اند، نه mapping/آرایه) اینجا تکرار نشده‌اند — آن‌ها مستقیماً در سورس
-// اصلی با 🔶 FILL_IN پر می‌شوند، نیازی به این قرارداد کمکی ندارند.
+// WARNING: the field order and types below must exactly match the real ValidatorsRegistry.sol,
+// or the extracted storage slots will not line up with the final contract. Whenever the real
+// ValidatorsRegistry.sol changes, this file must be manually kept in sync. Note: the security
+// and economic parameters (which are simple scalar values, not mappings/arrays) are NOT
+// repeated here — those are filled directly in the real contract's source with 🔶 FILL_IN
+// markers and don't need this helper.
 // ============================================================================
 contract ValidatorsRegistry_GenesisSeed {
-    // --- دقیقاً کپی از ValidatorsRegistry.sol واقعی، تا نقطه‌ای که به mapping/آرایه می‌رسیم ---
+    // --- Exact copy of the real ValidatorsRegistry.sol, up to the point where mappings/arrays start ---
     enum Status { None, Probation, Active, Demoted, Exiting }
 
     struct ValidatorInfo {
@@ -45,8 +48,8 @@ contract ValidatorsRegistry_GenesisSeed {
     mapping(address => uint256) private activeIndex;
 
     // ------------------------------------------------------------------
-    // این constructor معادل دقیق «Reference logic»ای است که در کامنت‌های
-    // ValidatorsRegistry.sol واقعی (بالای اعلان activeValidators) نوشته شده.
+    // This constructor is the exact equivalent of the "Reference logic" documented in a comment
+    // above the `activeValidators` declaration in the real ValidatorsRegistry.sol.
     // ------------------------------------------------------------------
     constructor(uint256 genesisTimestamp, address[] memory initialValidators) {
         for (uint256 i = 0; i < initialValidators.length; i++) {
@@ -67,8 +70,8 @@ contract ValidatorsRegistry_GenesisSeed {
         }
     }
 
-    // برای راحتی خواندن نتیجه هنگام تست دستی (این تابع خودش هیچ نقشی در استخراج storage ندارد،
-    // فقط برای دیباگ روی زنجیره‌ی محلی مفید است).
+    // Convenience view for manual inspection during testing — plays no role in storage
+    // extraction itself.
     function getActiveValidators() external view returns (address[] memory) {
         return activeValidators;
     }

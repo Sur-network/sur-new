@@ -2,37 +2,40 @@
 pragma solidity ^0.8.24;
 
 // ============================================================================
-// ⚠️⚠️⚠️  GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN  ⚠️⚠️⚠️
+// WARNING: GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN
 //
-// این قرارداد نسخه‌ی موقتِ  ValidatorsBoard.sol  است.
-// (Temporary counterpart of: contracts/ValidatorsBoard.sol)
+// This is the TEMPORARY counterpart of: contracts/ValidatorsBoard.sol
 //
-// هدف: ValidatorsBoard.sol واقعی هیچ constructor ندارد (چون در genesis alloc تزریق می‌شود).
-// ولی `boardMembers` (آرایه‌ی پویا) و `isBoardMember` (mapping) با هیچ syntax سطح-قرارداد در
-// Solidity قابل‌مقداردهی نیستند. این قرارداد کمکی همان منطق seed کردن را در یک constructor
-// واقعی پیاده می‌کند، تا با اجرای واقعی‌اش روی یک زنجیره‌ی محلی (Anvil/Hardhat)، خودِ EVM
-// محاسبات keccak256 لازم برای mapping/آرایه را انجام دهد.
+// Purpose: the real ValidatorsBoard.sol has no constructor (it is injected directly into the
+// genesis alloc). But `boardMembers` (a dynamic array) and `isBoardMember` (a mapping) cannot be
+// populated with any contract-level Solidity syntax. This helper contract implements that exact
+// seeding logic inside a real constructor, so that running it once on a temporary local chain
+// (Anvil/Hardhat) lets the EVM itself perform the keccak256 storage-slot math required for the
+// mapping/array.
 //
-// نحوه‌ی استفاده‌ی ابزار genesis:
-//   ۱. این فایل را روی یک زنجیره‌ی محلی موقت دیپلوی کن (با آدرس‌های واقعی ۵ عضو اولیه‌ی هیأت).
-//   ۲. کل storage نهایی‌اش را با eth_getStorageAt (یا state-dump) استخراج کن.
-//   ۳. این storage را — نه بایت‌کد این فایل، بلکه بایت‌کد ValidatorsBoard.sol واقعی — زیر
-//      آدرس 0x4444...4444 در alloc genesis.json بگذار.
+// How the genesis-building tool should use this file:
+//   1. Deploy this file on a temporary local chain, with the real addresses of the 5 founding
+//      board members.
+//   2. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
+//      state-dump tool).
+//   3. Write that storage — together with the REAL ValidatorsBoard.sol's compiled runtime
+//      bytecode (NOT this file's bytecode) — under address 0x4444...4444 in genesis.json's
+//      `alloc` section.
 //
-// ⚠️ ترتیب و نوع فیلدهای زیر باید دقیقاً همان ترتیب ValidatorsBoard.sol واقعی باشد، وگرنه
-// storage slotهای استخراج‌شده با قرارداد نهایی هم‌راستا نمی‌شوند. هر بار ValidatorsBoard.sol
-// واقعی تغییر کرد، این فایل هم باید دستی هماهنگ شود.
+// WARNING: the field order and types below must exactly match the real ValidatorsBoard.sol, or
+// the extracted storage slots will not line up with the final contract. Whenever the real
+// ValidatorsBoard.sol changes, this file must be manually kept in sync.
 // ============================================================================
 contract ValidatorsBoard_GenesisSeed {
-    // --- دقیقاً کپی از ValidatorsBoard.sol واقعی، تا نقطه‌ای که به mapping/آرایه می‌رسیم ---
+    // --- Exact copy of the real ValidatorsBoard.sol, up to the point where mappings/arrays start ---
     uint256 public constant BOARD_SIZE = 5;
 
     address[] private boardMembers;
     mapping(address => bool) public isBoardMember;
 
     // ------------------------------------------------------------------
-    // این constructor معادل دقیق «Reference logic»ای است که در کامنت‌های
-    // ValidatorsBoard.sol واقعی (بالای اعلان boardMembers) نوشته شده.
+    // This constructor is the exact equivalent of the "Reference logic" documented in a comment
+    // above the `boardMembers` declaration in the real ValidatorsBoard.sol.
     // ------------------------------------------------------------------
     constructor(address[] memory initialBoardMembers) {
         require(initialBoardMembers.length == BOARD_SIZE, "GenesisSeed: must supply exactly BOARD_SIZE members");
@@ -45,7 +48,8 @@ contract ValidatorsBoard_GenesisSeed {
         }
     }
 
-    // برای راحتی خواندن نتیجه هنگام تست دستی (این تابع خودش هیچ نقشی در استخراج storage ندارد).
+    // Convenience view for manual inspection during testing — plays no role in storage
+    // extraction itself.
     function getBoardMembers() external view returns (address[] memory) {
         return boardMembers;
     }

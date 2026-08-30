@@ -2,30 +2,33 @@
 pragma solidity ^0.8.24;
 
 // ============================================================================
-// ⚠️⚠️⚠️  GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN  ⚠️⚠️⚠️
+// WARNING: GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN
 //
-// این قرارداد نسخه‌ی موقتِ  FoundationDAO.sol  است.
-// (Temporary counterpart of: contracts/FoundationDAO.sol)
+// This is the TEMPORARY counterpart of: contracts/FoundationDAO.sol
 //
-// هدف: FoundationDAO.sol واقعی هیچ constructor ندارد (چون در genesis alloc تزریق می‌شود و
-// constructor هرگز روی زنجیره‌ی اصلی اجرا نمی‌شود). ولی سه فیلد آن (`memberList` که آرایه‌ی
-// پویاست، و `memberIndex`/`isMember` که mapping هستند) با هیچ syntax سطح-قرارداد در Solidity
-// قابل‌مقداردهی نیستند. این قرارداد کمکی همان منطق seed کردن را در یک constructor واقعی پیاده
-// می‌کند، تا با اجرای واقعی‌اش روی یک زنجیره‌ی محلی (Anvil/Hardhat)، خودِ EVM محاسبات
-// keccak256 لازم برای هر mapping/آرایه را انجام دهد.
+// Purpose: the real FoundationDAO.sol has no constructor (it is injected directly into the
+// genesis alloc, so a constructor would never execute on the real chain). But three of its
+// fields (`memberList`, a dynamic array; and `memberIndex`/`isMember`, mappings) cannot be
+// populated with any contract-level Solidity syntax. This helper contract implements that exact
+// seeding logic inside a real constructor, so that running it once on a temporary local chain
+// (Anvil/Hardhat) lets the EVM itself perform the keccak256 storage-slot math required for each
+// mapping/array entry.
 //
-// نحوه‌ی استفاده‌ی ابزار genesis:
-//   ۱. این فایل را روی یک زنجیره‌ی محلی موقت دیپلوی کن (با نام‌ها و آدرس‌های واقعی ۱۵ عضو).
-//   ۲. کل storage نهایی‌اش را با eth_getStorageAt (یا state-dump) استخراج کن.
-//   ۳. این storage را — نه بایت‌کد این فایل، بلکه بایت‌کد FoundationDAO.sol واقعی — زیر آدرس
-//      0x1111...1111 در alloc genesis.json بگذار.
+// How the genesis-building tool should use this file:
+//   1. Deploy this file on a temporary local chain, with the real names/addresses of the 15
+//      founding members.
+//   2. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
+//      state-dump tool).
+//   3. Write that storage — together with the REAL FoundationDAO.sol's compiled runtime
+//      bytecode (NOT this file's bytecode) — under address 0x1111...1111 in genesis.json's
+//      `alloc` section.
 //
-// ⚠️ ترتیب و نوع فیلدهای زیر باید دقیقاً همان ترتیب FoundationDAO.sol واقعی باشد، وگرنه
-// storage slotهای استخراج‌شده با قرارداد نهایی هم‌راستا نمی‌شوند. هر بار FoundationDAO.sol
-// واقعی تغییر کرد، این فایل هم باید دستی هماهنگ شود.
+// WARNING: the field order and types below must exactly match the real FoundationDAO.sol, or
+// the extracted storage slots will not line up with the final contract. Whenever the real
+// FoundationDAO.sol changes, this file must be manually kept in sync.
 // ============================================================================
 contract FoundationDAO_GenesisSeed {
-    // --- دقیقاً کپی از FoundationDAO.sol واقعی، تا نقطه‌ای که به mapping/آرایه می‌رسیم ---
+    // --- Exact copy of the real FoundationDAO.sol, up to the point where mappings/arrays start ---
     struct Member {
         string name;
         address account;
@@ -36,8 +39,8 @@ contract FoundationDAO_GenesisSeed {
     mapping(address => bool) public isMember;
 
     // ------------------------------------------------------------------
-    // این constructor معادل دقیق «Reference logic»ای است که در کامنت‌های
-    // FoundationDAO.sol واقعی (بالای اعلان memberList) نوشته شده.
+    // This constructor is the exact equivalent of the "Reference logic" documented in a comment
+    // above the `memberList` declaration in the real FoundationDAO.sol.
     // ------------------------------------------------------------------
     constructor(string[] memory names, address[] memory accounts) {
         require(names.length == accounts.length, "GenesisSeed: length mismatch");
