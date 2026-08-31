@@ -188,7 +188,6 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `constructor(address _distributionOracle, uint256 _genesisTimestamp)` | فقط در محاسبه‌ی genesis | آدرس اوراکل توزیع اولیه، زمان genesis | — | مقداردهی اولیه |
 | `setDistributionOracle(address newOracle)` | **فقط قرارداد `ValidatorsBoard`** (بعد از رأی داخلی هیأت) | آدرس اوراکل جدید | — | کلید اوراکل توزیع را فوری عوض می‌کند |
 | `receive()` | هرکسی (در عمل استفاده نمی‌شود توسط پروتکل، فقط تست/واریز دستی) | — (`msg.value`) | — | فقط event می‌زند |
 | `distributeRewards(address[] validators, uint256[] blocksMined, uint256 totalRewards, uint256 totalFees)` | **فقط `distributionOracle`** (سرویس آف‌چین RewardRouter) | لیست ولیدیتورها، تعداد بلاک هرکدام، جمع ریوارد epoch، جمع فی epoch | — | ۵۰٪ ریوارد را به Treasury، بقیه‌ی ریوارد+۱۰۰٪ فی را به نسبت بلاک بین ولیدیتورها (با چک `isValidator` از رجیستری) تقسیم و پرداخت می‌کند؛ epoch را ثبت می‌کند |
@@ -199,6 +198,9 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `getDistributionOracle()` | هرکسی | — | `address` | آدرس اوراکل فعلی |
 | `getLastEpochId()` | هرکسی | — | `uint256` | شماره‌ی آخرین epoch |
 | `timeUntilNextDistribution()` | هرکسی | — | `uint256` | ثانیه‌های باقی‌مانده تا فراخوانی بعدی مجاز |
+
+### ✅ بازنویسی داخلی برای سازگاری با وریفای (بدون تغییر رفتار)
+`distributeRewards` در نسخه‌ی اولیه یک تابع بزرگ و یکپارچه بود که در کامپایل بدون `viaIR` به خطای «Stack too deep» می‌خورد — و چون بسیاری از سرویس‌های وریفای (از جمله Blockscout) اصلاً از `viaIR` پشتیبانی نمی‌کنند، این یک مشکل واقعی برای هدف وریفای‌شدن روی اکسپلورر بود. راه‌حل: منطق به سه تابع خصوصی جدا شد — `_sumBlocks`، `_checkPhysicalMaximum` (سلامتی)، `_payValidators` + `_payOneValidator` (پرداخت هر ولیدیتور، با پارامترهای بسته‌بندی‌شده در `struct EpochContext`)، و `_finalizeEpoch` (رند خرده‌ریز + ثبت epoch). هرکدام stack frame مستقل خودشان را دارند، پس دیگر نیازی به `viaIR` نیست. رفتار، ترتیب event، و هر شرط `require()` کاملاً بدون تغییر باقی مانده — این فقط یک بازآرایی ساختاری داخلی بود.
 
 ### قواعد تقسیم (داخل `distributeRewards`)
 - از `totalRewards`: ۵۰٪ (`TREASURY_SHARE_BPS=5000`) به `TREASURY`؛ بقیه به نسبت `blocksMined` بین ولیدیتورها.

@@ -185,6 +185,16 @@ contract BlockRewardDistributor {
 
     // ------------------------------------------------------------------
     // Main periodic distribution function — callable only by the distribution oracle
+    //
+    // ✅ Refactored (no longer needs viaIR to compile): the original single large function had
+    // too many simultaneously-live local variables for the EVM's 16-slot stack-manipulation
+    // window under the legacy (non-IR) codegen pipeline — a real "Stack too deep" compiler
+    // error, confirmed identical in both the English and Persian versions of this file. Rather
+    // than requiring viaIR (which many verification services, including Blockscout, cannot
+    // verify against — see sur-contracts-deploy-notes.md), the logic is split into three
+    // functions, each with its own independent stack frame and therefore far fewer
+    // simultaneously-live locals. Behavior, event order, and every require() condition are
+    // unchanged from the original single-function version.
     // ------------------------------------------------------------------
     /// @param validators list of validator addresses (no duplicates)
     /// @param blocksMined number of blocks each validator mined since the last call (same order as validators)
@@ -206,43 +216,91 @@ contract BlockRewardDistributor {
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
+        require(totalRewards + totalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + totalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        uint256 totalToDistribute = totalRewards + totalFees;
-        require(totalToDistribute > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalToDistribute <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
-
-        uint256 totalBlocks = 0;
-        for (uint256 i = 0; i < blocksMined.length; i++) {
-            totalBlocks += blocksMined[i];
-        }
+        uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
-
-        // --- sanity check: reported block count cannot exceed the physical maximum for this
-        // time window. Skipped for epoch 0: deployTime reflects the genesis timestamp, but
-        // there is no reliable way to bound "time since genesis" more tightly than "since
-        // deployTime", and a network's first distribution call may legitimately cover a long
-        // initial period (e.g. more than MIN_DISTRIBUTION_INTERVAL if the oracle was started
-        // late) — the bound is only meaningful once lastDistributionTime is a real, on-chain
-        // timestamp from a prior call.
-        if (epochCount > 0) {
-            uint256 elapsed = block.timestamp - lastDistributionTime;
-            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
-            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
-        }
+        _checkPhysicalMaximum(totalBlocks);
 
         epochCount++;
         uint256 epochId = epochCount;
 
         // Treasury's cut is taken only from REWARDS, never from FEES
         uint256 treasuryAmount = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 remainingRewards = totalRewards - treasuryAmount;
 
-        // Distribute remainingRewards (by block ratio) + all of totalFees (by block ratio) —
-        // each validator receives a single combined payout.
-        uint256 distributedRewards = 0;
-        uint256 distributedFees = 0;
-        uint256 validatorCount = 0;
+        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
+            _payValidators(
+                validators,
+                blocksMined,
+                EpochContext({
+                    epochId: epochId,
+                    remainingRewards: totalRewards - treasuryAmount,
+                    totalFees: totalFees,
+                    totalBlocks: totalBlocks
+                })
+            );
 
+        _finalizeEpoch(
+            epochId,
+            totalRewards,
+            totalFees,
+            treasuryAmount,
+            totalBlocks,
+            validatorCount,
+            distributedRewards,
+            distributedFees
+        );
+    }
+
+    /// @dev Sums the reported per-validator block counts. Split out of distributeRewards purely
+    ///      to keep that function's own stack frame small (see the refactor note above) — no
+    ///      behavior change from the original inline loop.
+    function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
+        for (uint256 i = 0; i < blocksMined.length; i++) {
+            totalBlocks += blocksMined[i];
+        }
+    }
+
+    /// @dev Sanity check: reported block count cannot exceed the physical maximum for this time
+    ///      window. Skipped for epoch 0 — see the original inline comment this was moved from,
+    ///      preserved in full below. Split out purely for stack-depth reasons.
+    ///
+    ///      Skipped for epoch 0: deployTime reflects the genesis timestamp, but there is no
+    ///      reliable way to bound "time since genesis" more tightly than "since deployTime", and
+    ///      a network's first distribution call may legitimately cover a long initial period
+    ///      (e.g. more than MIN_DISTRIBUTION_INTERVAL if the oracle was started late) — the
+    ///      bound is only meaningful once lastDistributionTime is a real, on-chain timestamp
+    ///      from a prior call.
+    function _checkPhysicalMaximum(uint256 totalBlocks) private view {
+        if (epochCount > 0) {
+            uint256 elapsed = block.timestamp - lastDistributionTime;
+            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
+            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
+        }
+    }
+
+    /// @dev Bundles the four scalar inputs `_payValidators` needs into a single memory struct —
+    ///      a struct is passed as one pointer (one stack slot) instead of four separate slots,
+    ///      which is what let this function's own frame fit under the 16-slot limit (see the
+    ///      refactor note above `distributeRewards`).
+    struct EpochContext {
+        uint256 epochId;
+        uint256 remainingRewards;
+        uint256 totalFees;
+        uint256 totalBlocks;
+    }
+
+    /// @dev Pays every eligible validator a single combined (reward share + fee share) transfer,
+    ///      by block ratio. Same behavior as the original inline loop body from
+    ///      distributeRewards; the actual per-validator storage writes, transfer, and event now
+    ///      live in `_payOneValidator` (its own stack frame) so that even this loop's own frame
+    ///      stays small — no behavior, event, or ordering change.
+    function _payValidators(
+        address[] calldata validators,
+        uint256[] calldata blocksMined,
+        EpochContext memory ctx
+    ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
         for (uint256 i = 0; i < validators.length; i++) {
             if (blocksMined[i] == 0) continue;
 
@@ -250,34 +308,64 @@ contract BlockRewardDistributor {
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
             require(REGISTRY.isValidator(validator), "BlockRewardDistributor: address is not an active validator");
 
-            uint256 rewardShare = (remainingRewards * blocksMined[i]) / totalBlocks;
-            uint256 feeShare = (totalFees * blocksMined[i]) / totalBlocks;
-            uint256 payout = rewardShare + feeShare;
-            if (payout == 0) continue;
+            uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
+            uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;
 
-            distributedRewards += rewardShare;
-            distributedFees += feeShare;
-            validatorCount++;
-
-            epochValidatorRewardShare[epochId][validator] = rewardShare;
-            epochValidatorFeeShare[epochId][validator] = feeShare;
-            epochValidatorBlocks[epochId][validator] = blocksMined[i];
-            totalRewardsPaid[validator] += rewardShare;
-            totalFeesPaid[validator] += feeShare;
-            totalBlocksRecorded[validator] += blocksMined[i];
-
-            // single combined transfer per validator for the entire call
-            (bool success, ) = validator.call{value: payout}("");
-            require(success, "BlockRewardDistributor: validator transfer failed");
-
-            emit ValidatorRewarded(epochId, validator, blocksMined[i], rewardShare, feeShare, payout);
+            bool paid = _payOneValidator(ctx.epochId, validator, blocksMined[i], rewardShare, feeShare);
+            if (paid) {
+                distributedRewards += rewardShare;
+                distributedFees += feeShare;
+                validatorCount++;
+            }
         }
+    }
 
+    /// @dev Records one validator's epoch shares, transfers their combined payout, and emits the
+    ///      per-validator event. Split out of `_payValidators` purely so these locals (payout,
+    ///      success) live in their own minimal stack frame — no behavior, event, or ordering
+    ///      change from the original single-function version.
+    function _payOneValidator(
+        uint256 epochId,
+        address validator,
+        uint256 blocksMinedByValidator,
+        uint256 rewardShare,
+        uint256 feeShare
+    ) private returns (bool paid) {
+        uint256 payout = rewardShare + feeShare;
+        if (payout == 0) return false;
+
+        epochValidatorRewardShare[epochId][validator] = rewardShare;
+        epochValidatorFeeShare[epochId][validator] = feeShare;
+        epochValidatorBlocks[epochId][validator] = blocksMinedByValidator;
+        totalRewardsPaid[validator] += rewardShare;
+        totalFeesPaid[validator] += feeShare;
+        totalBlocksRecorded[validator] += blocksMinedByValidator;
+
+        // single combined transfer per validator for the entire call
+        (bool success, ) = validator.call{value: payout}("");
+        require(success, "BlockRewardDistributor: validator transfer failed");
+
+        emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        return true;
+    }
+
+    /// @dev Rounds dust into the treasury, transfers the treasury's share, updates lifetime
+    ///      totals, records the epoch, and emits the final event — exactly the original inline
+    ///      tail of distributeRewards, moved into its own function purely for stack-depth
+    ///      reasons (see the refactor note above). No behavior, event, or ordering change.
+    function _finalizeEpoch(
+        uint256 epochId,
+        uint256 totalRewards,
+        uint256 totalFees,
+        uint256 treasuryAmount,
+        uint256 totalBlocks,
+        uint256 validatorCount,
+        uint256 distributedRewards,
+        uint256 distributedFees
+    ) private {
         // Rounding dust from both reward and fee division is added to the treasury's amount
         // so that no wei is left stuck in the contract.
-        uint256 rewardDust = remainingRewards - distributedRewards;
-        uint256 feeDust = totalFees - distributedFees;
-        uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
+        uint256 totalTreasuryAmount = treasuryAmount + (totalRewards - treasuryAmount - distributedRewards) + (totalFees - distributedFees);
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");

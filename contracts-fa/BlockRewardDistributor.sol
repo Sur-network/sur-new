@@ -183,6 +183,15 @@ contract BlockRewardDistributor {
 
     // ------------------------------------------------------------------
     // تابع اصلی توزیع دوره‌ای — فقط توسط اوراکل توزیع قابل‌فراخوانی است
+    //
+    // ✅ بازنویسی‌شده (دیگر نیازی به viaIR برای کامپایل ندارد): نسخه‌ی اولیه‌ی این تابع
+    // (یک تابع بزرگ و یکپارچه) هم‌زمان متغیر محلی بیشتری از پنجره‌ی ۱۶لایه‌ای دستکاری استک
+    // EVM در پایپ‌لاین کدسازی قدیمی (غیر-IR) داشت — یک خطای واقعی کامپایلر «Stack too deep»،
+    // که دقیقاً یکسان هم در نسخه‌ی انگلیسی هم در نسخه‌ی فارسی این فایل تأیید شد. به‌جای نیاز
+    // به viaIR (که خیلی از سرویس‌های وریفای، از جمله Blockscout، نمی‌توانند در برابرش وریفای
+    // کنند — sur-contracts-deploy-notes.md را ببین)، منطق به سه تابع تقسیم شده، هرکدام با
+    // stack frame مستقل خودشان و در نتیجه متغیر هم‌زمان بسیار کمتر. رفتار، ترتیب event، و هر
+    // شرط require() نسبت به نسخه‌ی تک‌تابعی اصلی بدون تغییر است.
     // ------------------------------------------------------------------
     /// @param validators لیست آدرس ولیدیتورها (بدون تکرار)
     /// @param blocksMined تعداد بلاک تولیدشده توسط هر ولیدیتور از آخرین فراخوانی به بعد (همون ترتیب validators)
@@ -204,43 +213,91 @@ contract BlockRewardDistributor {
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
+        require(totalRewards + totalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + totalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        uint256 totalToDistribute = totalRewards + totalFees;
-        require(totalToDistribute > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalToDistribute <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
-
-        uint256 totalBlocks = 0;
-        for (uint256 i = 0; i < blocksMined.length; i++) {
-            totalBlocks += blocksMined[i];
-        }
+        uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
-
-        // --- بررسی سلامتی: تعداد بلاک گزارش‌شده نمی‌تواند از حداکثر فیزیکی این بازه‌ی زمانی
-        // بیشتر باشد. برای epoch صفر رد می‌شود: deployTime همان genesis timestamp است، ولی
-        // راه قابل‌اتکایی برای محدودکردن دقیق‌تر «زمان از genesis» غیر از «از deployTime»
-        // وجود ندارد، و اولین فراخوانی توزیع یک شبکه ممکن است به‌طور مشروع یک دوره‌ی
-        // ابتدایی طولانی را پوشش دهد (مثلاً بیشتر از MIN_DISTRIBUTION_INTERVAL اگر اوراکل
-        // دیر شروع شده باشد) — این محدودیت فقط وقتی معنا دارد که lastDistributionTime یک
-        // timestamp واقعی و on-chain از یک فراخوانی قبلی باشد.
-        if (epochCount > 0) {
-            uint256 elapsed = block.timestamp - lastDistributionTime;
-            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
-            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
-        }
+        _checkPhysicalMaximum(totalBlocks);
 
         epochCount++;
         uint256 epochId = epochCount;
 
         // سهم خزانه فقط از ریوارد گرفته می‌شود، هرگز از فی
         uint256 treasuryAmount = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 remainingRewards = totalRewards - treasuryAmount;
 
-        // توزیع remainingRewards (به نسبت بلاک) + کل totalFees (به نسبت بلاک) — هر ولیدیتور
-        // یک پرداخت ترکیبی واحد دریافت می‌کند.
-        uint256 distributedRewards = 0;
-        uint256 distributedFees = 0;
-        uint256 validatorCount = 0;
+        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
+            _payValidators(
+                validators,
+                blocksMined,
+                EpochContext({
+                    epochId: epochId,
+                    remainingRewards: totalRewards - treasuryAmount,
+                    totalFees: totalFees,
+                    totalBlocks: totalBlocks
+                })
+            );
 
+        _finalizeEpoch(
+            epochId,
+            totalRewards,
+            totalFees,
+            treasuryAmount,
+            totalBlocks,
+            validatorCount,
+            distributedRewards,
+            distributedFees
+        );
+    }
+
+    /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. فقط برای کوچک‌نگه‌داشتن stack frame خودِ
+    ///      distributeRewards از آن جدا شده (یادداشت بازنویسی بالا را ببین) — بدون تغییر
+    ///      رفتار نسبت به حلقه‌ی inline اصلی.
+    function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
+        for (uint256 i = 0; i < blocksMined.length; i++) {
+            totalBlocks += blocksMined[i];
+        }
+    }
+
+    /// @dev بررسی سلامتی: تعداد بلاک گزارش‌شده نمی‌تواند از حداکثر فیزیکی این بازه‌ی زمانی
+    ///      بیشتر باشد. برای epoch صفر رد می‌شود — کامنت اصلی که از آن منتقل شده، کامل پایین
+    ///      حفظ شده. فقط به‌خاطر عمق استک از تابع اصلی جدا شده.
+    ///
+    ///      برای epoch صفر رد می‌شود: deployTime همان genesis timestamp است، ولی راه
+    ///      قابل‌اتکایی برای محدودکردن دقیق‌تر «زمان از genesis» غیر از «از deployTime»
+    ///      وجود ندارد، و اولین فراخوانی توزیع یک شبکه ممکن است به‌طور مشروع یک دوره‌ی
+    ///      ابتدایی طولانی را پوشش دهد (مثلاً بیشتر از MIN_DISTRIBUTION_INTERVAL اگر اوراکل
+    ///      دیر شروع شده باشد) — این محدودیت فقط وقتی معنا دارد که lastDistributionTime یک
+    ///      timestamp واقعی و on-chain از یک فراخوانی قبلی باشد.
+    function _checkPhysicalMaximum(uint256 totalBlocks) private view {
+        if (epochCount > 0) {
+            uint256 elapsed = block.timestamp - lastDistributionTime;
+            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
+            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
+        }
+    }
+
+    /// @dev بسته‌بندی چهار ورودی مقیاسی موردنیاز `_payValidators` در یک struct در memory —
+    ///      یک struct با یک اشاره‌گر (یک slot استک) پاس داده می‌شود، نه چهار slot جدا؛ همین
+    ///      چیزی است که اجازه داد stack frame خودِ این تابع زیر سقف ۱۶لایه جا بگیرد (یادداشت
+    ///      بازنویسی بالای distributeRewards را ببین).
+    struct EpochContext {
+        uint256 epochId;
+        uint256 remainingRewards;
+        uint256 totalFees;
+        uint256 totalBlocks;
+    }
+
+    /// @dev پرداخت یک انتقال ترکیبی واحد (سهم ریوارد + سهم فی) به هر ولیدیتور واجدشرایط، به
+    ///      نسبت بلاک. رفتار دقیقاً همان بدنه‌ی حلقه‌ی inline اصلی در distributeRewards است؛
+    ///      نوشتن‌های storage، انتقال، و event هر ولیدیتور حالا در `_payOneValidator` (با
+    ///      stack frame مستقل خودشان) هستند تا حتی frame خودِ این حلقه هم کوچک بماند — بدون
+    ///      تغییر رفتار، event، یا ترتیب.
+    function _payValidators(
+        address[] calldata validators,
+        uint256[] calldata blocksMined,
+        EpochContext memory ctx
+    ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
         for (uint256 i = 0; i < validators.length; i++) {
             if (blocksMined[i] == 0) continue;
 
@@ -248,34 +305,64 @@ contract BlockRewardDistributor {
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
             require(REGISTRY.isValidator(validator), "BlockRewardDistributor: address is not an active validator");
 
-            uint256 rewardShare = (remainingRewards * blocksMined[i]) / totalBlocks;
-            uint256 feeShare = (totalFees * blocksMined[i]) / totalBlocks;
-            uint256 payout = rewardShare + feeShare;
-            if (payout == 0) continue;
+            uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
+            uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;
 
-            distributedRewards += rewardShare;
-            distributedFees += feeShare;
-            validatorCount++;
-
-            epochValidatorRewardShare[epochId][validator] = rewardShare;
-            epochValidatorFeeShare[epochId][validator] = feeShare;
-            epochValidatorBlocks[epochId][validator] = blocksMined[i];
-            totalRewardsPaid[validator] += rewardShare;
-            totalFeesPaid[validator] += feeShare;
-            totalBlocksRecorded[validator] += blocksMined[i];
-
-            // یک انتقال ترکیبی واحد برای هر ولیدیتور در کل این فراخوانی
-            (bool success, ) = validator.call{value: payout}("");
-            require(success, "BlockRewardDistributor: validator transfer failed");
-
-            emit ValidatorRewarded(epochId, validator, blocksMined[i], rewardShare, feeShare, payout);
+            bool paid = _payOneValidator(ctx.epochId, validator, blocksMined[i], rewardShare, feeShare);
+            if (paid) {
+                distributedRewards += rewardShare;
+                distributedFees += feeShare;
+                validatorCount++;
+            }
         }
+    }
 
+    /// @dev ثبت سهم‌های epoch یک ولیدیتور، انتقال پرداخت ترکیبی‌اش، و emit event مخصوص همان
+    ///      ولیدیتور. از `_payValidators` جدا شده فقط تا این متغیرهای محلی (payout، success)
+    ///      در stack frame حداقلی خودشان زندگی کنند — بدون تغییر رفتار، event، یا ترتیب نسبت
+    ///      به نسخه‌ی تک‌تابعی اصلی.
+    function _payOneValidator(
+        uint256 epochId,
+        address validator,
+        uint256 blocksMinedByValidator,
+        uint256 rewardShare,
+        uint256 feeShare
+    ) private returns (bool paid) {
+        uint256 payout = rewardShare + feeShare;
+        if (payout == 0) return false;
+
+        epochValidatorRewardShare[epochId][validator] = rewardShare;
+        epochValidatorFeeShare[epochId][validator] = feeShare;
+        epochValidatorBlocks[epochId][validator] = blocksMinedByValidator;
+        totalRewardsPaid[validator] += rewardShare;
+        totalFeesPaid[validator] += feeShare;
+        totalBlocksRecorded[validator] += blocksMinedByValidator;
+
+        // یک انتقال ترکیبی واحد برای هر ولیدیتور در کل این فراخوانی
+        (bool success, ) = validator.call{value: payout}("");
+        require(success, "BlockRewardDistributor: validator transfer failed");
+
+        emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        return true;
+    }
+
+    /// @dev رند کردن خرده‌ریز به خزانه، انتقال سهم خزانه، به‌روزرسانی مجموع‌های تاریخی، ثبت
+    ///      epoch، و emit کردن event نهایی — دقیقاً همان دنباله‌ی inline اصلی
+    ///      distributeRewards، فقط به‌خاطر عمق استک به تابع جدا منتقل شده (یادداشت بازنویسی
+    ///      بالا را ببین). بدون تغییر رفتار، event، یا ترتیب.
+    function _finalizeEpoch(
+        uint256 epochId,
+        uint256 totalRewards,
+        uint256 totalFees,
+        uint256 treasuryAmount,
+        uint256 totalBlocks,
+        uint256 validatorCount,
+        uint256 distributedRewards,
+        uint256 distributedFees
+    ) private {
         // خرده‌ریز رند شده از تقسیم ریوارد و فی، به مبلغ خزانه اضافه می‌شود تا هیچ wei ای
         // توی قرارداد گیر نکند.
-        uint256 rewardDust = remainingRewards - distributedRewards;
-        uint256 feeDust = totalFees - distributedFees;
-        uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
+        uint256 totalTreasuryAmount = treasuryAmount + (totalRewards - treasuryAmount - distributedRewards) + (totalFees - distributedFees);
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");
