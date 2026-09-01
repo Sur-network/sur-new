@@ -9,10 +9,10 @@
 | ۱ | RewardRouter | `sur-reward-router-spec.md` |
 | ۲ | ابزار ساخت genesis.json | `sur-genesis-builder-tool-spec.md` |
 | ۳ | سرویس Verifier | `sur-verifier-service-spec.md` |
-| ۴ | اپلیکیشن همراه Verifier | `sur-verifier-app-spec.md` |
+| ۴ | اپلیکیشن همراه ولیدیتور | `sur-validator-app-claudecode-brief.md` (جایگزین قدیمی‌تر `sur-verifier-app-spec.md`) |
 | ۵ | بلاک اکسپلورر | فقط پیکربندی Blockscout — بدون سند مجزا |
-| ۶ | داشبورد حکمرانی | `sur-governance-dashboard-spec.md` |
-| ۷ | داشبورد فروش پگ | `sur-sale-dashboard-spec.md` |
+| ۶ | داشبورد حکمرانی | `sur-governance-dashboard-claudecode-brief.md` (جایگزین قدیمی‌تر `sur-governance-dashboard-spec.md`) |
+| ۷ | پرتال فروش سورن (آماری + خرید) | `sur-suren-sale-portal-claudecode-brief.md` (جایگزین قدیمی‌تر `sur-sale-dashboard-spec.md`) |
 
 ## اولویت و وابستگی متقابل
 
@@ -21,10 +21,10 @@
 | ۱ | RewardRouter | 🔴 مسدودکننده | — |
 | ۲ | ابزار genesis.json | 🔴 مسدودکننده | تصمیمات نهایی همه‌ی پارامترهای genesis (`sur-contracts-deploy-notes.md`) باید قبل از اجرا قطعی باشند |
 | ۳ | سرویس Verifier | 🔴 مسدودکننده | — |
-| ۴ | اپلیکیشن همراه Verifier | 🔴 عملاً مسدودکننده | API بک‌اند سرویس Verifier (از قبل کامل مشخص) |
+| ۴ | اپلیکیشن همراه ولیدیتور | 🔴 عملاً مسدودکننده | API بک‌اند سرویس Verifier + تراکنش‌های چرخه‌ی عمر مستقیم روی `ValidatorsRegistry` |
 | ۵ | بلاک اکسپلورر (Blockscout) | 🟡 مهم — فقط پیکربندی | — |
 | ۶ | داشبورد حکمرانی | 🟡 مهم، غیرمسدودکننده | Blockscout برای وریفای سورس (نه اجباری برای کارکرد، فقط برای شفافیت عمومی) |
-| ۷ | داشبورد فروش پگ | 🟢 قابل‌تعویق | دیپلوی واقعی `SurenSale.sol` |
+| ۷ | پرتال فروش سورن | 🟢 قابل‌تعویق (بخش آماری)، 🔴 ضروری (بخش خرید) | دیپلوی واقعی `SurenSale.sol` + اندپوینت‌های تازه‌ی PaymentReporter |
 
 ## چرا این اولویت‌بندی
 
