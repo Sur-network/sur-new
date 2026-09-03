@@ -53,7 +53,11 @@ contract SurenSale {
     // lump-sum) funding; if the amounts funded per period grow larger later on, this decision
     // should be revisited (a two-thirds quorum would likely become more appropriate).
     // ------------------------------------------------------------------
-    address public paymentOracle;
+    /// @dev ✅ FILLED: initial paymentOracle address (checksummed per EIP-55). Hardcoded
+    ///      directly, matching the pattern of the other three oracles, rather than taken as a
+    ///      constructor argument — this was a deliberate project decision even though this
+    ///      contract is not genesis-injected and does have a real, executing constructor.
+    address public paymentOracle = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
 
     modifier onlyFoundation() {
         require(msg.sender == FOUNDATION, "SurenSale: caller is not the Foundation");
@@ -89,11 +93,10 @@ contract SurenSale {
     event UnsoldSurenSweeped(address indexed to, uint256 amount);
 
     // ------------------------------------------------------------------
-    // Constructor — actually executes on-chain (this contract is not genesis-injected).
+    // Constructor — actually executes on-chain (this contract is not genesis-injected). No
+    // longer takes paymentOracle as an argument — it is hardcoded above, by project decision.
     // ------------------------------------------------------------------
-    constructor(address _paymentOracle) {
-        require(_paymentOracle != address(0), "SurenSale: zero oracle address");
-        paymentOracle = _paymentOracle;
+    constructor() {
         saleStartTime = block.timestamp;
     }
 

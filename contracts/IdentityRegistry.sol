@@ -87,8 +87,8 @@ contract IdentityRegistry {
     // below to matter on-chain; it exists purely as a documentation/tooling marker.
     // ------------------------------------------------------------------
 
-    /// @dev 🔶 FILL_IN: initial identityOracle address (must be non-zero).
-    address public identityOracle = address(0);
+    /// @dev ✅ FILLED: initial identityOracle address (checksummed per EIP-55).
+    address public identityOracle = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
 
     // ------------------------------------------------------------------
     // Self-attestation — any address, not just validators

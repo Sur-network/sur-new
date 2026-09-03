@@ -97,15 +97,17 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 مقادیری که باید قبل از تولید genesis نهایی پر شوند (خلاصه — لیست کامل هرکدام در خودِ سورس با علامت `🔶 FILL_IN` مشخص است):
 
-1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، `verifier` (⚠️ این کلید دیگر ربطی به هویت ندارد — فقط برای `reportLiveness` است)، پارامترهای امنیتی (`maxEntriesPerWindow`, `entryWindowSeconds`, `probationPeriod`, `minLivenessConfirmationsToActivate`, `inactivityThreshold`, `recoveryPeriod`, `slashBps`, `exitCooldown`), `windowStart` (= genesis timestamp واقعی). **بدون** آدرس توکن — سورن ارز بومی شبکه است.
+✅ **به‌روزرسانی:** هر چهار آدرس اوراکل (`verifier`، `distributionOracle`، `identityOracle`، و `paymentOracle` در `SurenSale`) نهایی شده و مستقیم در سورس هاردکد شده‌اند — دیگر جزو موارد باز فهرست زیر نیستند. جزئیات کامل آدرس‌ها در `sur-contracts-oracles-accounts-report.md`.
+
+1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، پارامترهای امنیتی (`maxEntriesPerWindow`, `entryWindowSeconds`, `probationPeriod`, `minLivenessConfirmationsToActivate`, `inactivityThreshold`, `recoveryPeriod`, `slashBps`, `exitCooldown`), `windowStart` (= genesis timestamp واقعی). **بدون** آدرس توکن — سورن ارز بومی شبکه است.
 2. `ValidatorsBoard` — لیست **دقیقاً ۵** عضو اولیه‌ی هیأت (نیازمند شبیه‌سازی).
 3. `ValidatorsTreasury` — `smallBudgetCap` اولیه (مقدار ساده).
-4. `BlockRewardDistributor` — `distributionOracle` اولیه، `deployTime` (= genesis timestamp واقعی؛ چون `immutable` است، باید مستقیم در سورس جایگزین و دوباره کامپایل شود).
+4. `BlockRewardDistributor` — `deployTime` (= genesis timestamp واقعی؛ چون `immutable` است، باید مستقیم در سورس جایگزین و دوباره کامپایل شود).
 5. `FoundationDAO` — نام و آدرس ۱۵ عضو اولیه‌ی بنیاد (نیازمند شبیه‌سازی). ✅ **علاوه بر این، در `alloc` genesis (نه از طریق مقداردهی قرارداد)، سه ردیف مجزا و additive تخصیص می‌یابد** — تصمیم قطعی، جزئیات کامل در `sur-tokenomics.md`:
    - ۲۰,۰۰۰,۰۰۰ سورن به آدرس خودِ `FoundationDAO` (توسعه/آموزش/تبلیغات، ماده ۳-۶ اساسنامه).
    - 🔶 مبلغ نامشخص، مستقیم به آدرس هرکدام از ولیدیتورهای سابق شبکه‌ی قبلی (جبران خسارت).
    - ۱۵,۵۳۰,۰۰۰ سورن، مستقیم و **ردیفی** (نه یک‌جا) به آدرس شخصی هرکدام از طلبکاران بدهی بنیاد — نه به آدرس `FoundationDAO`.
-6. `IdentityRegistry` — `identityOracle` اولیه (آدرس کلید وریفای موبایل/تلگرام/KYC — کاملاً جدا از `verifier` در `ValidatorsRegistry`؛ مقدار ساده). ششمین قرارداد ساختاری genesis؛ جزئیات کامل در `sur-identity-registry-spec.md`.
+6. `IdentityRegistry` — ششمین قرارداد ساختاری genesis؛ جزئیات کامل در `sur-identity-registry-spec.md`.
 
 ## چیزهایی که عمداً هنوز به‌صورت پارامتر باز گذاشته شدند
 
@@ -169,7 +171,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 ⚠️ **اصلاحیه:** نسخه‌های قبلی این بخش هویت را داخل `ValidatorsRegistry` توضیح می‌دادند. این دیگر درست نیست — هویت (خوداظهاری + وریفای موبایل/تلگرام/KYC) به یک قرارداد کاملاً جدا، `IdentityRegistry.sol` (آدرس `0x6666...6666`)، منتقل شد، چون جمعیت هدفش (کل کاربران شبکه) از جمعیت ولیدیتورها کاملاً جداست. جزئیات کامل در `sur-identity-registry-spec.md`.
 
 - `IdentityRegistry.registerIdentity(personType, name)` — پیش‌نیاز رأی‌دادن در `ValidatorsBoard` (که حالا مستقیماً `IdentityRegistry.hasIdentity(...)` را چک می‌کند، نه `ValidatorsRegistry` را). کاملاً خوداظهاری.
-- `setPhoneVerified`/`setTelegramVerified`/`setKycVerified` — فقط `identityOracle` (کلید عملیاتی، مقدار اولیه از آرگومان constructor `_identityOracle` قرارداد `IdentityRegistry`).
+- `setPhoneVerified`/`setTelegramVerified`/`setKycVerified` — فقط `identityOracle` (کلید عملیاتی، مقدار اولیه مستقیم در سورس `IdentityRegistry.sol` با علامت `🔶 FILL_IN` — **نه** آرگومان constructor، چون این قرارداد اصلاً constructor ندارد).
 - ✅ **تفاوت مهم نسبت به `verifier` (لایوینس):** چرخش `identityOracle` دست **`FoundationDAO`** است (از طریق `proposeExecute`، اکثریت ساده)، نه هیأت‌مدیره‌ی ولیدیتورها — چون احراز هویت یک مسئولیت بنیاد است، نه امنیت شبکه.
 - ✅ **تازه:** `setKycVerified` نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره، جایگزین دفترخانه‌ی اسناد رسمی طبق استاندارد قدیمی SIP001) را ثبت می‌کند؛ داده‌ی خام هرگز on-chain نمی‌رود، فقط یک فلگ بولی + یک commitment برای اثبات عدم‌دستکاری در دعاوی حقوقی.
 - ✅ تأییدشده توسط کاربر: نام (نه شماره/آیدی/مدارک KYC) روی زنجیره‌ی عمومی و دائمی باقی می‌ماند — عمداً پذیرفته‌شده (شفافیت مدنظر است).

@@ -72,8 +72,8 @@ contract BlockRewardDistributor {
     /// @notice آدرس اوراکلی که مجاز به فراخوانی تابع توزیع دوره‌ای است. تنها وظیفه‌اش گزارش
     ///         تعداد بلاک و مجموع ریوارد/فی است؛ نمی‌تواند به هیچ آدرسی که ValidatorsRegistry
     ///         الان به‌عنوان فعال نمی‌شناسد پرداخت کند.
-    /// @dev 🔶 FILL_IN: آدرس اولیه‌ی distributionOracle (باید غیرصفر باشد).
-    address public distributionOracle = address(0);
+    /// @dev ✅ پرشده: آدرس اولیه‌ی distributionOracle (چک‌سام‌شده طبق EIP-55).
+    address public distributionOracle = 0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6;
 
     /// @dev 🔶 FILL_IN: genesis timestamp واقعی شبکه‌ی زنده (نه block.timestamp هر ماشین/لحظه‌ای
     ///      که شبیه‌سازی رویش اجرا می‌شود — به sur-contracts-deploy-notes.md مراجعه کن که چرا

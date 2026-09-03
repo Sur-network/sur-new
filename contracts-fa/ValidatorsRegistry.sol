@@ -116,8 +116,8 @@ contract ValidatorsRegistry {
 
     /// @notice کلید عملیاتی مورد اعتماد برای گزارش لایوینس ولیدیتور — reportLiveness پایین را
     ///         ببین. با ValidatorsBoard قابل‌چرخش است — setVerifier را ببین.
-    /// @dev 🔶 FILL_IN: آدرس اولیه‌ی verifier (باید غیرصفر باشد).
-    address public verifier = address(0);
+    /// @dev ✅ پرشده: آدرس اولیه‌ی verifier (چک‌سام‌شده طبق EIP-55).
+    address public verifier = 0x1A5E86f3333291B3332C0f9Eddb04269940566bc;
 
     event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
 

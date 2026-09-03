@@ -18,6 +18,9 @@
 
 ## ۳. ورودی‌های لازم — فایل پیکربندی (`genesis-config.json`)
 
+✅ **به‌روزرسانی:** هر چهار آدرس اوراکل زیر (`distributionOracle`, `verifier`, `identityOracle`, `paymentOracle`) نهایی شده و مستقیماً هاردکد شده‌اند — هم در قراردادهای واقعی (`contracts/BlockRewardDistributor.sol`, `ValidatorsRegistry.sol`, `IdentityRegistry.sol`, `SurenSale.sol`)، هم در مثال پیکربندی زیر. هر چهار آدرس با استاندارد چک‌سام EIP-55 (حروف بزرگ/کوچک صحیح) نوشته شده‌اند.
+
+
 این فایل باید قبل از اجرای ابزار توسط تیم پروژه (نه توسط خودِ ابزار) تکمیل شود. فرمت دقیق:
 
 ```json
@@ -30,10 +33,10 @@
     "minGasPriceWei": "100000000000000"
   },
   "oracles": {
-    "distributionOracle": "0x....",
-    "verifier": "0x....",
-    "identityOracle": "0x....",
-    "paymentOracle": "0x...."
+    "distributionOracle": "0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6",
+    "verifier": "0x1A5E86f3333291B3332C0f9Eddb04269940566bc",
+    "identityOracle": "0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9",
+    "paymentOracle": "0xc1fF1F40F665404fbf7DaAD26153357C544C35A0"
   },
   "validatorsRegistry": {
     "initialValidators": ["0x....", "0x....", "..."],
