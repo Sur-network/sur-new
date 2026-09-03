@@ -10,13 +10,16 @@ pragma solidity ^0.8.24;
 // هدف: ValidatorsBoard.sol واقعی هیچ constructor ندارد (چون در genesis alloc تزریق می‌شود).
 // ولی `boardMembers` (آرایه‌ی پویا) و `isBoardMember` (mapping) با هیچ syntax سطح-قرارداد در
 // Solidity قابل‌مقداردهی نیستند. این قرارداد کمکی همان منطق seed کردن را در یک constructor
-// واقعی پیاده می‌کند، تا با اجرای واقعی‌اش روی یک زنجیره‌ی محلی (Anvil/Hardhat)، خودِ EVM
-// محاسبات keccak256 لازم برای mapping/آرایه را انجام دهد.
+// واقعی و **بدون هیچ ورودی** پیاده می‌کند — آدرس هر ۵ عضو مؤسس هیأت مستقیم پایین همین فایل
+// هاردکد شده‌اند، نه به‌عنوان آرگومان constructor — تا با اجرای واقعی‌اش روی یک زنجیره‌ی محلی
+// (Anvil/Hardhat)، خودِ EVM محاسبات keccak256 لازم برای mapping/آرایه را انجام دهد.
 //
 // نحوه‌ی استفاده‌ی ابزار genesis:
-//   ۱. این فایل را روی یک زنجیره‌ی محلی موقت دیپلوی کن (با آدرس‌های واقعی ۵ عضو اولیه‌ی هیأت).
-//   ۲. کل storage نهایی‌اش را با eth_getStorageAt (یا state-dump) استخراج کن.
-//   ۳. این storage را — نه بایت‌کد این فایل، بلکه بایت‌کد ValidatorsBoard.sol واقعی — زیر
+//   ۱. 🔶 FILL_IN: هر آدرس placeholder پایین را با ۵ عضو مؤسس هیأت واقعی و نهایی جایگزین کن،
+//      پیش از این‌که این فایل جایی دیپلوی شود.
+//   ۲. این فایل را (بدون هیچ آرگومان constructor) روی یک زنجیره‌ی محلی موقت دیپلوی کن.
+//   ۳. کل storage نهایی‌اش را با eth_getStorageAt (یا state-dump) استخراج کن.
+//   ۴. این storage را — نه بایت‌کد این فایل، بلکه بایت‌کد ValidatorsBoard.sol واقعی — زیر
 //      آدرس 0x4444...4444 در alloc genesis.json بگذار.
 //
 // ⚠️ ترتیب و نوع فیلدهای زیر باید دقیقاً همان ترتیب ValidatorsBoard.sol واقعی باشد، وگرنه
@@ -31,14 +34,23 @@ contract ValidatorsBoard_GenesisSeed {
     mapping(address => bool) public isBoardMember;
 
     // ------------------------------------------------------------------
-    // این constructor معادل دقیق «منطق مرجع»ای است که در کامنت‌های
-    // ValidatorsBoard.sol واقعی (بالای اعلان boardMembers) نوشته شده.
+    // constructor بدون ورودی — هر ۵ عضو مؤسس هیأت مستقیم پایین هاردکد شده‌اند.
+    // 🔶 FILL_IN: هر آدرس 0x000...000 را با فهرست واقعی و نهایی و توافق‌شده‌ی اعضای مؤسس
+    // هیأت جایگزین کن، پیش از این‌که این فایل جایی دیپلوی شود.
     // ------------------------------------------------------------------
-    constructor(address[] memory initialBoardMembers) {
-        require(initialBoardMembers.length == BOARD_SIZE, "GenesisSeed: must supply exactly BOARD_SIZE members");
-        for (uint256 i = 0; i < initialBoardMembers.length; i++) {
+    constructor() {
+        address[BOARD_SIZE] memory initialBoardMembers = [
+            address(0), // Alireza Zojaji
+            address(0), // Citex Corp.
+            address(0), // Mahkameh Sharifzad
+            //address(0), // Mostafa Naghipoorfar
+            address(0), // Sepehr Mohammadi
+            address(0) // Siavash Tafazzoli
+        ];
+
+        for (uint256 i = 0; i < BOARD_SIZE; i++) {
             address m = initialBoardMembers[i];
-            require(m != address(0), "GenesisSeed: zero address");
+            require(m != address(0), "GenesisSeed: zero address - fill in real values first");
             require(!isBoardMember[m], "GenesisSeed: duplicate initial board member");
             boardMembers.push(m);
             isBoardMember[m] = true;
