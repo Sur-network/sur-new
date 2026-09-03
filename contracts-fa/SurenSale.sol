@@ -49,11 +49,12 @@ contract SurenSale {
     // تأمین‌شده در هر دوره بزرگ‌تر شد، این تصمیم باید بازبینی شود (احتمالاً نصاب دوسوم مناسب‌تر
     // خواهد بود).
     // ------------------------------------------------------------------
-    /// @dev ✅ پرشده: آدرس اولیه‌ی paymentOracle (چک‌سام‌شده طبق EIP-55). مستقیم هاردکد شده،
+    /// @dev ✅ پرشده: آدرس اولیه‌ی paymentOracle، خوانده‌شده از SurAddresses.sol (منبع واحد
+    ///      صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین). مستقیم هاردکد شده،
     ///      مطابق همون الگوی سه اوراکل دیگر، نه به‌عنوان آرگومان constructor — این یه تصمیم
     ///      عمدی پروژه بود، با وجود این‌که این قرارداد genesis-injected نیست و واقعاً یک
     ///      constructor اجراشونده دارد.
-    address public paymentOracle = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
+    address public paymentOracle = SurAddresses.PAYMENT_ORACLE;
 
     modifier onlyFoundation() {
         require(msg.sender == FOUNDATION, "SurenSale: caller is not the Foundation");

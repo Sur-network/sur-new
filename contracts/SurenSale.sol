@@ -53,11 +53,13 @@ contract SurenSale {
     // lump-sum) funding; if the amounts funded per period grow larger later on, this decision
     // should be revisited (a two-thirds quorum would likely become more appropriate).
     // ------------------------------------------------------------------
-    /// @dev ✅ FILLED: initial paymentOracle address (checksummed per EIP-55). Hardcoded
-    ///      directly, matching the pattern of the other three oracles, rather than taken as a
-    ///      constructor argument — this was a deliberate project decision even though this
-    ///      contract is not genesis-injected and does have a real, executing constructor.
-    address public paymentOracle = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
+    /// @dev ✅ FILLED: initial paymentOracle address, read from SurAddresses.sol (single
+    ///      source of truth for all four oracle addresses — see that file for rationale).
+    ///      Hardcoded directly, matching the pattern of the other three oracles, rather than
+    ///      taken as a constructor argument — this was a deliberate project decision even
+    ///      though this contract is not genesis-injected and does have a real, executing
+    ///      constructor.
+    address public paymentOracle = SurAddresses.PAYMENT_ORACLE;
 
     modifier onlyFoundation() {
         require(msg.sender == FOUNDATION, "SurenSale: caller is not the Foundation");

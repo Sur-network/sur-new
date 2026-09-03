@@ -83,8 +83,9 @@ contract IdentityRegistry {
     // یک علامت مستندسازی/ابزاری است.
     // ------------------------------------------------------------------
 
-    /// @dev ✅ پرشده: آدرس اولیه‌ی identityOracle (چک‌سام‌شده طبق EIP-55).
-    address public identityOracle = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
+    /// @dev ✅ پرشده: آدرس اولیه‌ی identityOracle، خوانده‌شده از SurAddresses.sol (منبع واحد
+    ///      صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین).
+    address public identityOracle = SurAddresses.IDENTITY_ORACLE;
 
     // ------------------------------------------------------------------
     // خوداظهاری — هر آدرسی، نه فقط ولیدیتورها

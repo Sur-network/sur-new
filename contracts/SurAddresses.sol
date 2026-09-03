@@ -37,4 +37,27 @@ library SurAddresses {
     ///      verification status (mobile/Telegram/full KYC) for **all network users**, not just
     ///      validators — which is why it is kept independent from ValidatorsRegistry.
     address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
+
+    // ------------------------------------------------------------------
+    // Operational oracle addresses — unlike the six structural contract addresses above, these
+    // are NOT immutable constants baked into every consumer forever: each contract still stores
+    // its own oracle address in ordinary (mutable) state, initialized from here, and can later
+    // rotate it via its own governance path (ValidatorsBoard for distributionOracle/verifier,
+    // FoundationDAO for identityOracle/paymentOracle). Centralizing the *initial* value here,
+    // in one file, means updating an oracle before genesis/deployment only requires editing one
+    // line instead of hunting through four separate contract files. All four are checksummed
+    // per EIP-55.
+    // ------------------------------------------------------------------
+
+    /// @dev Initial distributionOracle for BlockRewardDistributor.sol.
+    address internal constant DISTRIBUTION_ORACLE = 0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6;
+
+    /// @dev Initial verifier for ValidatorsRegistry.sol.
+    address internal constant VERIFIER = 0x1A5E86f3333291B3332C0f9Eddb04269940566bc;
+
+    /// @dev Initial identityOracle for IdentityRegistry.sol.
+    address internal constant IDENTITY_ORACLE = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
+
+    /// @dev Initial paymentOracle for SurenSale.sol.
+    address internal constant PAYMENT_ORACLE = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
 }

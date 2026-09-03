@@ -119,8 +119,9 @@ contract ValidatorsRegistry {
 
     /// @notice Operational key trusted to report validator liveness — see reportLiveness below.
     ///         Rotatable by ValidatorsBoard — see setVerifier.
-    /// @dev ✅ FILLED: initial verifier address (checksummed per EIP-55).
-    address public verifier = 0x1A5E86f3333291B3332C0f9Eddb04269940566bc;
+    /// @dev ✅ FILLED: initial verifier address, read from SurAddresses.sol (single source of
+    ///      truth for all four oracle addresses — see that file for rationale).
+    address public verifier = SurAddresses.VERIFIER;
 
     event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
 

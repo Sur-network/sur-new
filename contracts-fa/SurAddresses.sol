@@ -36,4 +36,27 @@ library SurAddresses {
     ///      **کل کاربران شبکه**، نه فقط ولیدیتورها — به همین دلیل از ValidatorsRegistry
     ///      مستقل نگه داشته شده است.
     address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
+
+    // ------------------------------------------------------------------
+    // آدرس‌های عملیاتی اوراکل — برخلاف شش آدرس ساختاری بالا، این‌ها ثابت‌های تغییرناپذیر
+    // نیستند که برای همیشه توی قراردادهای مصرف‌کننده جاسازی بشن: هر قرارداد همچنان آدرس
+    // اوراکلش رو توی state معمولی (قابل‌تغییر) خودش نگه می‌داره، فقط مقدار *اولیه*ش از اینجا
+    // خونده می‌شه، و بعداً از طریق همون مسیر حکمرانی خودش (ValidatorsBoard برای
+    // distributionOracle/verifier، FoundationDAO برای identityOracle/paymentOracle) قابل‌چرخشه.
+    // متمرکزکردن مقدار *اولیه* اینجا، توی یه فایل، یعنی برای به‌روزرسانی یه اوراکل قبل از
+    // genesis/دیپلوی، فقط کافیه یه خط عوض بشه، نه این‌که دنبال چهار فایل جدا بگردی. هر چهارتا
+    // طبق EIP-55 چک‌سام شده‌اند.
+    // ------------------------------------------------------------------
+
+    /// @dev آدرس اولیه‌ی distributionOracle برای BlockRewardDistributor.sol.
+    address internal constant DISTRIBUTION_ORACLE = 0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6;
+
+    /// @dev آدرس اولیه‌ی verifier برای ValidatorsRegistry.sol.
+    address internal constant VERIFIER = 0x1A5E86f3333291B3332C0f9Eddb04269940566bc;
+
+    /// @dev آدرس اولیه‌ی identityOracle برای IdentityRegistry.sol.
+    address internal constant IDENTITY_ORACLE = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
+
+    /// @dev آدرس اولیه‌ی paymentOracle برای SurenSale.sol.
+    address internal constant PAYMENT_ORACLE = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
 }

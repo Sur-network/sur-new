@@ -73,8 +73,9 @@ contract BlockRewardDistributor {
     /// @notice Address of the oracle authorized to call the periodic distribution function.
     ///         Its only job is to report block counts and reward/fee totals; it cannot pay out
     ///         to any address that ValidatorsRegistry does not currently recognize as active.
-    /// @dev ✅ FILLED: initial distributionOracle address (checksummed per EIP-55).
-    address public distributionOracle = 0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6;
+    /// @dev ✅ FILLED: initial distributionOracle address, read from SurAddresses.sol (single
+    ///      source of truth for all four oracle addresses — see that file for rationale).
+    address public distributionOracle = SurAddresses.DISTRIBUTION_ORACLE;
 
     /// @dev 🔶 FILL_IN: the real genesis timestamp of the live network (NOT block.timestamp of
     ///      whatever machine/moment runs the simulation — see sur-contracts-deploy-notes.md for
