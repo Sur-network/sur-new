@@ -64,9 +64,10 @@ contract ValidatorsRegistry_GenesisSeed {
     constructor() {
         uint256 genesisTimestamp = 0; // 🔶 FILL_IN — the real genesis timestamp of the live network
 
-        address[6] memory initialValidators = [
+        address[7] memory initialValidators = [
             address(0), // Alireza Zojaji
-            address(0), // Citex Corp.
+            address(0), // Citex Corp. 1
+            address(0), // Citex Corp. 2
             address(0), // Mahkameh Sharifzad
             address(0), // Mostafa Naghipoorfar
             address(0), // Sepehr Mohammadi

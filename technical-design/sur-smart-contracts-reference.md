@@ -57,7 +57,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `constructor(...)` | فقط در محاسبه‌ی genesis (اجرا نمی‌شود روی چین واقعی) | `_genesisTimestamp`، لیست ولیدیتورهای اولیه، فقط پارامترهای امنیتی با رأی کامل (**بدون** سه پارامتر اقتصادی ورود — آن‌ها دیگر آرگومان constructor نیستند، پایین را ببین؛ و **بدون** آدرس توکن — سورن ارز بومی است) | — | مقداردهی اولیه‌ی پارامترها؛ ولیدیتورهای اولیه را مستقیماً `Active` می‌کند (بدون استیک، بدون probation) |
+| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، پس هیچ `constructor`ی ندارد | پارامترهای امنیتی ساده (`slashBps` و بقیه) + `verifier` + `windowStart`: مستقیم در سورس اصلی با علامت `🔶 FILL_IN`. لیست ولیدیتورهای اولیه (فعلاً ۷ نفر): از طریق قرارداد کمکی موقت `ValidatorsRegistry_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | ابزار genesis این مقادیر را قبل از تولید `genesis.json` پر می‌کند — جزئیات کامل در `sur-genesis-builder-tool-spec.md` |
 | `getValidators()` | هرکسی (در عمل: خودِ کلاینت Besu، هر بلاک) | — | `address[]` | لیست فعلی ولیدیتورهای `Active` |
 | `isValidator(address who)` | هرکسی (در عمل: `BlockRewardDistributor`) | آدرس | `bool` | آیا `who` الان `Active` است |
 | `getActiveValidatorCount()` | هرکسی | — | `uint256` | تعداد ولیدیتورهای فعال |
@@ -91,7 +91,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `membershipFeeBps` | `400` (۴٪) | عمداً پایین نگه داشته شده تا شبیه «خرید» عضویت به‌نظر نرسد (ریسک حقوقی instrument سرمایه‌گذاری) |
 
 ### پارامترهای قابل‌تغییر با رأی کامل ولیدیتورها (`ParamKey`)
-`MaxEntriesPerWindow`, `EntryWindowSeconds`, `ProbationPeriod`, `MinLivenessConfirmationsToActivate`, `InactivityThreshold`, `RecoveryPeriod`, `SlashBps`, `ExitCooldown` — این‌ها همچنان از constructor می‌آیند و فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند؛ **دیگر شامل سه پارامتر اقتصادی بالا نیستند.**
+`MaxEntriesPerWindow`, `EntryWindowSeconds`, `ProbationPeriod`, `MinLivenessConfirmationsToActivate`, `InactivityThreshold`, `RecoveryPeriod`, `SlashBps`, `ExitCooldown` — این‌ها مستقیم در سورس `ValidatorsRegistry.sol` با علامت `🔶 FILL_IN` مقداردهی می‌شوند (نه constructor — این قرارداد اصلاً constructor ندارد) و فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند؛ **دیگر شامل سه پارامتر اقتصادی بالا نیستند.**
 
 ### متغیرهای عمومی مهم (خواندنی خودکار)
 `TREASURY`, `BOARD` (آدرس‌های ثابت)، `verifier` (کلید عملیاتی لایوینس، چرخش با هیأت)، `validators(address)` (کل struct یک ولیدیتور)، `entryThresholdBase`، `growthFactorPerValidator`، `membershipFeeBps`، `windowStart`، `entriesInWindow`، `paramProposals(id)`.
@@ -114,7 +114,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `constructor(address[] initialBoardMembers)` | فقط در محاسبه‌ی genesis | لیست **دقیقاً ۵** عضو اولیه‌ی هیأت | — | اعضای اولیه را مستقیم ثبت می‌کند (بدون رأی‌گیری اولیه) |
+| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، constructor ندارد | لیست **دقیقاً ۵** عضو اولیه‌ی هیأت: از طریق قرارداد کمکی موقت `ValidatorsBoard_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | اعضای اولیه مستقیم توسط ابزار genesis ثبت می‌شوند (بدون رأی‌گیری اولیه) |
 | `voteFor(address candidate)` | هر ولیدیتور `Active` که هویتش را ثبت کرده (⚠️ اصلاحیه: `IdentityRegistry.hasIdentity`، نه دیگر `ValidatorsRegistry.hasIdentity`) | آدرس کاندید (باید خودش ولیدیتور فعال باشد؛ خودرأیی مجاز است) | — | یک رأی «موافق» به کاندیدا اضافه می‌کند؛ هر رأی‌دهنده حداکثر ۵ کاندیدای هم‌زمان می‌تواند داشته باشد؛ اثرش فقط با `refreshBoard()` بعدی اعمال می‌شود |
 | `unvoteFor(address candidate)` | خودِ رأی‌دهنده | آدرس کاندیدایی که قبلاً بهش رأی داده | — | رأی را پس می‌گیرد، هر لحظه، بدون محدودیت |
 | `refreshBoard()` | **هرکسی** (permissionless) | — | — | ۵ ولیدیتوری که *همین الان* بیشترین رأی معتبر را دارند محاسبه و به‌عنوان هیأت اعمال می‌کند؛ رأی‌های ولیدیتورهای غیرفعال (چه به‌عنوان رأی‌دهنده، چه به‌عنوان کاندیدا) خودکار نادیده گرفته می‌شوند |
@@ -163,7 +163,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `constructor(uint256 _smallBudgetCap)` | فقط در محاسبه‌ی genesis | سقف اولیه‌ی بودجه‌ی قابل‌تفویض به هیأت | — | مقداردهی اولیه‌ی سقف |
+| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، constructor ندارد | سقف اولیه‌ی بودجه (`smallBudgetCap`) | — | مستقیم در سورس `ValidatorsTreasury.sol` با علامت `🔶 FILL_IN` مقداردهی می‌شود (مقدار ساده، نیازی به قرارداد کمکی ندارد) |
 | `receive()` | خودکار، از `BlockRewardDistributor` (سهم ریوارد) و `ValidatorsRegistry` (کارمزد عضویت/استیک اسلش‌شده)؛ هرکس دیگری هم بفرستد قبول می‌شود | — (`msg.value`) | — | مبلغ را به `totalDistributedToTreasury` اضافه می‌کند و event می‌زند |
 | `proposeExpenditure(address to, uint256 amount, string description)` | **فقط ولیدیتور `Active`** (⚠️ اصلاحیه: بنیاد دیگر هیچ دسترسی ندارد — مسیر `FoundationDAO.proposeRequestTreasuryBudget` کلاً حذف شد) | مقصد، مبلغ، توضیح | `id` هزینه | پیشنهاد هزینه می‌سازد و رأی پیشنهاددهنده را هم ثبت می‌کند |
 | `voteExpenditure(uint256 id)` | فقط ولیدیتور `Active` | شناسه‌ی هزینه | — | رأی می‌دهد؛ با رسیدن به نصاب، انتقال واقعی همان تراکنش انجام می‌شود |
@@ -225,7 +225,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `constructor(string[] names, address[] accounts)` | فقط در محاسبه‌ی genesis | نام و آدرس ۱۵ عضو اولیه | — | اعضای اولیه را مستقیم ثبت می‌کند |
+| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، constructor ندارد | نام و آدرس ۱۵ عضو اولیه: از طریق قرارداد کمکی موقت `FoundationDAO_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | اعضای اولیه مستقیم توسط ابزار genesis ثبت می‌شوند |
 | `receive()` | هرکسی | — (`msg.value`) | — | سورن می‌پذیرد (بدون event خاص) |
 | `proposeAddMember(string description, string name, address account)` | فقط عضو | توضیح، نام عضو جدید، آدرس | `id` پیشنهاد | پیشنهاد افزودن عضو — ⚠️ **نصاب دوسوم** |
 | `proposeRemoveMember(string description, address account)` | فقط عضو | توضیح، آدرس عضو | `id` پیشنهاد | پیشنهاد حذف عضو — ⚠️ **نصاب دوسوم** |
@@ -251,7 +251,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 `memberList(index)`، `isMember(address)`، `proposalCount`. ⚠️ دیگر هیچ ثابت `TREASURY` یا وابستگی‌ای به `ValidatorsTreasury` وجود ندارد — این قرارداد کاملاً مستقل از خزانه‌ی ولیدیتورهاست.
 
 ### تفاوت مهم نسبت به `MemberDAO.sol` قدیمی
-- `register()` (ثبت‌نام تک‌نفره‌ی اولین فراخوان) حذف شد؛ اعضای اولیه از constructor می‌آیند (چون کل قرارداد در genesis محاسبه می‌شود).
+- `register()` (ثبت‌نام تک‌نفره‌ی اولین فراخوان) حذف شد؛ این قرارداد اصلاً `constructor` هم ندارد (چون کل قرارداد در genesis تزریق می‌شود) — اعضای اولیه از طریق قرارداد کمکی موقت `FoundationDAO_GenesisSeed.sol` توسط ابزار genesis محاسبه می‌شوند.
 - `setDistributionOracle`/`setValidatorSyncOracle` و proposal typeهای متناظرشان کاملاً حذف شدند — بنیاد دیگر هیچ دسترسی به هیچ اوراکلی ندارد.
 - ✅ نصاب رأی از یکنواخت (همه‌جا اکثریت ساده) به دوگانه (دوسوم برای عضویت/خرج سورن، اکثریت ساده برای بقیه) تغییر کرد.
 - ✅ `proposeRequestTreasuryBudget` و هرچیزی که این قرارداد را به `ValidatorsTreasury` وصل می‌کرد، کاملاً حذف شد — تصمیم آگاهانه، بدون جایگزین.
@@ -313,4 +313,4 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 ## پیوست: چرا این ساختار مشکل circular addressing را حل می‌کند
 
-در نسخه‌ی قبلی این قراردادها، برای مشکل «قرارداد A به آدرس B نیاز دارد ولی B هنوز دیپلوی نشده» از یک تابع `wire()` یک‌بارمصرف بعد از دیپلوی استفاده شده بود. با دیپلوی هر شش قرارداد در genesis با آدرس از‌پیش‌تعیین‌شده، این مشکل اصلاً پیش نمی‌آید: چون همه‌ی آدرس‌ها *قبل* از این‌که هیچ constructor ای حتی شبیه‌سازی شود مشخص‌اند، هر قرارداد می‌تواند آدرس بقیه را مستقیماً به‌صورت `constant` در سورس بنویسد. جزئیات فنی دقیق این‌که genesis alloc چطور کار می‌کند (و چرا `block.timestamp` داخل این constructorها قابل‌اتکا نیست) در `sur-contracts-deploy-notes.md` آمده.
+در نسخه‌ی قبلی این قراردادها، برای مشکل «قرارداد A به آدرس B نیاز دارد ولی B هنوز دیپلوی نشده» از یک تابع `wire()` یک‌بارمصرف بعد از دیپلوی استفاده شده بود. با دیپلوی هر شش قرارداد در genesis با آدرس از‌پیش‌تعیین‌شده، این مشکل اصلاً پیش نمی‌آید: چون همه‌ی آدرس‌ها *قبل* از این‌که هیچ‌کدام از این شش قرارداد اصلاً وجود داشته باشند مشخص‌اند، هر قرارداد می‌تواند آدرس بقیه را مستقیماً به‌صورت `constant` در سورس بنویسد — هیچ‌کدام از این شش قرارداد اصلاً `constructor` ندارد. (سه قرارداد پیچیده‌تر — `FoundationDAO`, `ValidatorsRegistry`, `ValidatorsBoard` — برای محاسبه‌ی state اولیه‌ی mapping/آرایه‌شان به قراردادهای کمکی موقت در `genesis-seed-helpers/` نیاز دارند؛ آن قراردادهای کمکی، نه خودِ شش قرارداد اصلی، `constructor` دارند و فقط برای شبیه‌سازی محلی استفاده می‌شوند، هرگز روی زنجیره‌ی واقعی.) جزئیات فنی دقیق این‌که genesis alloc چطور کار می‌کند در `sur-contracts-deploy-notes.md` آمده.
