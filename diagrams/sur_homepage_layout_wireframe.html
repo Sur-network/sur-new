@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>وایرفریم چیدمان صفحه‌ی اول — سور</title>
+<style>
+  @font-face {
+    font-family: 'Vazirmatn';
+    src: local('Vazirmatn');
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+    background: #f4f3ef;
+    color: #1f1e1c;
+    margin: 0;
+    padding: 24px 12px;
+    direction: rtl;
+  }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e2e0d8;
+  }
+  .note {
+    text-align: center;
+    font-size: 11px;
+    color: #9a9789;
+    margin-bottom: 10px;
+  }
+  .row { display: flex; }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border: 1px solid #e2e0d8; border-radius: 8px; background: #fbfaf7;
+  }
+  .logo-box {
+    width: 70px; height: 20px; background: #eeece4; border-radius: 4px;
+    font-size: 10px; display: flex; align-items: center; justify-content: center; color: #9a9789;
+  }
+  .nav { display: flex; gap: 14px; font-size: 12px; color: #55534b; }
+  .btn {
+    font-size: 11px; padding: 6px 14px; border-radius: 6px; border: none;
+    background: #1f1e1c; color: #fff; cursor: default;
+  }
+  .btn-outline {
+    background: transparent; color: #fff; border: 1px solid #fff;
+  }
+  .btn-small { font-size: 11px; padding: 5px 12px; }
+  .hero {
+    margin-top: 8px; padding: 32px 20px; border-radius: 8px; background: #1f1e1c; text-align: center;
+  }
+  .hero h1 { font-size: 17px; font-weight: 500; color: #fff; margin: 0 0 8px; }
+  .hero p { font-size: 12px; color: #cfcdc6; max-width: 440px; margin: 0 auto 16px; }
+  .hero .btns { display: flex; gap: 8px; justify-content: center; }
+  .stats {
+    display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 8px;
+  }
+  .stat-card {
+    background: #f4f3ef; border-radius: 8px; padding: 12px; text-align: center;
+  }
+  .stat-card .label { font-size: 10px; color: #9a9789; }
+  .stat-card .value { font-size: 16px; font-weight: 600; margin-top: 2px; }
+  .section-title {
+    margin-top: 20px; font-size: 14px; font-weight: 600; text-align: center; color: #1f1e1c;
+  }
+  .reasons {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px;
+  }
+  .reason-card {
+    border: 1px solid #e2e0d8; border-radius: 8px; padding: 14px; text-align: center;
+  }
+  .reason-icon {
+    width: 32px; height: 32px; border-radius: 50%; background: #eaf1fb; color: #2f6fb3;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 16px;
+  }
+  .reason-card .t { font-size: 11.5px; font-weight: 600; }
+  .gov {
+    display: flex; align-items: center; gap: 10px; margin-top: 10px;
+  }
+  .gov-card {
+    flex: 1; background: #f4f3ef; border-radius: 8px; padding: 14px;
+  }
+  .gov-card .t { font-size: 12.5px; font-weight: 600; }
+  .gov-card .s { font-size: 10.5px; color: #77746a; margin-top: 3px; }
+  .gov-arrow { font-size: 18px; color: #9a9789; }
+  .carousel {
+    display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px;
+  }
+  .carousel .card {
+    min-width: 112px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 12px;
+    text-align: center; font-size: 10.5px; flex-shrink: 0;
+  }
+  .carousel .card.more {
+    border: 1px dashed #c7c4b8; color: #2f6fb3;
+  }
+  .trust-box {
+    margin-top: 18px; background: #fdf3df; border-radius: 8px; padding: 16px;
+    border: 1px solid #f0dfae;
+  }
+  .trust-box .t { font-size: 12.5px; font-weight: 600; color: #8a6d1f; }
+  .trust-box .s { font-size: 10.5px; color: #6b5f3f; margin-top: 5px; line-height: 1.6; }
+  .sale-box {
+    margin-top: 12px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 16px;
+  }
+  .sale-box .top { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 8px; }
+  .sale-box .top .price { font-weight: 600; }
+  .progress-track { height: 7px; background: #f0efe9; border-radius: 4px; overflow: hidden; }
+  .progress-fill { width: 62%; height: 100%; background: #2f6fb3; }
+  .news {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 10px;
+  }
+  .news-card {
+    border: 1px solid #e2e0d8; border-radius: 8px; overflow: hidden;
+  }
+  .news-thumb { height: 44px; background: #eeece4; }
+  .news-card .t { font-size: 10.5px; padding: 7px; }
+  .footer {
+    margin-top: 20px; padding: 14px 16px; border-top: 1px solid #e2e0d8;
+    display: flex; justify-content: space-between; font-size: 10.5px; color: #9a9789;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="note">وایرفریم چیدمان صفحه‌ی اول — surnet.org (ساختار، نه طراحی نهایی)</div>
+
+    <!-- 1. Header -->
+    <div class="header">
+      <div class="logo-box">لوگو</div>
+      <div class="nav">
+        <span>درباره‌ی سور</span><span>سورن</span><span>حکمرانی</span><span>مزیت‌ها و خدمات</span><span>توسعه‌دهندگان</span><span>جامعه و اخبار</span>
+      </div>
+      <button class="btn btn-small">خرید سورن</button>
+    </div>
+
+    <!-- 2. Hero -->
+    <div class="hero">
+      <h1>بلاک‌چینی که برای واقعیت ایران ساخته شده</h1>
+      <p>سور یک بلاک‌چین عمومی و بدون‌مجوز است — با هزینه‌ی تراکنش قابل‌پیش‌بینی به تومان، حاکمیتی مستقل از هر بازیگر خارجی.</p>
+      <div class="btns">
+        <button class="btn" style="background:#fff;color:#1f1e1c">سپیدنامه را بخوانید</button>
+        <button class="btn btn-outline">چطور ولیدیتور شویم</button>
+      </div>
+    </div>
+
+    <!-- 3. Live stats bar -->
+    <div class="stats">
+      <div class="stat-card"><div class="label">بلاک فعلی</div><div class="value">۱۲۴,۰۸۲</div></div>
+      <div class="stat-card"><div class="label">ولیدیتور فعال</div><div class="value">۲۷</div></div>
+      <div class="stat-card"><div class="label">قیمت سورن</div><div class="value">۱۱۴ تومان</div></div>
+      <div class="stat-card"><div class="label">تراکنش امروز</div><div class="value">۳,۴۱۰</div></div>
+    </div>
+
+    <!-- 4. Three reasons -->
+    <div class="section-title">چرا سور را انتخاب کنیم؟</div>
+    <div class="reasons">
+      <div class="reason-card"><div class="reason-icon">۱</div><div class="t">هزینه‌ای که هرروز عوض نمی‌شود</div></div>
+      <div class="reason-card"><div class="reason-icon">۲</div><div class="t">حکمرانی‌ای که در کد قفل شده</div></div>
+      <div class="reason-card"><div class="reason-icon">۳</div><div class="t">بدون وابستگی به بیرون</div></div>
+    </div>
+
+    <!-- 5. Dual governance -->
+    <div class="section-title">یک شبکه، دو نهاد مستقل</div>
+    <div class="gov">
+      <div class="gov-card"><div class="t">بنیاد سور</div><div class="s">توسعه، آموزش، تبلیغات اکوسیستم</div></div>
+      <div class="gov-arrow">⇄</div>
+      <div class="gov-card"><div class="t">مجمع ولیدیتورهای شبکه</div><div class="s">حاکمیت واقعی شبکه</div></div>
+    </div>
+
+    <!-- 6. Benefits carousel -->
+    <div class="section-title">مزیت‌ها و خدمات</div>
+    <div class="carousel">
+      <div class="card">رجیستری هویت مشترک</div>
+      <div class="card">تراکنش‌های محرمانه</div>
+      <div class="card">ثبت‌زمان اسناد</div>
+      <div class="card">سرویس نام‌گذاری</div>
+      <div class="card more">مشاهده‌ی همه ↗</div>
+    </div>
+
+    <!-- 7. Trust box -->
+    <div class="trust-box">
+      <div class="t">چرا به سور اعتماد کنیم؟</div>
+      <div class="s">سور نسخه‌ی دوم است — و این را پنهان نمی‌کنیم. داستان کامل شکست نسخه‌ی اول را بخوانید ↗</div>
+    </div>
+
+    <!-- 8. Sale progress -->
+    <div class="sale-box">
+      <div class="top"><span>دوره‌ی فروش قیمت ثابت سورن</span><span class="price">۱۱۴ تومان</span></div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>
+
+    <!-- 9. News -->
+    <div class="section-title">آخرین اخبار</div>
+    <div class="news">
+      <div class="news-card"><div class="news-thumb"></div><div class="t">تیتر خبر یک</div></div>
+      <div class="news-card"><div class="news-thumb"></div><div class="t">تیتر خبر دو</div></div>
+      <div class="news-card"><div class="news-thumb"></div><div class="t">تیتر خبر سه</div></div>
+    </div>
+
+    <!-- 10. Footer -->
+    <div class="footer">
+      <span>لوگو سور</span>
+      <span>لینک‌های سریع · تلگرام · گیت‌هاب</span>
+      <span>© بنیاد سور</span>
+    </div>
+  </div>
+</body>
+</html>
