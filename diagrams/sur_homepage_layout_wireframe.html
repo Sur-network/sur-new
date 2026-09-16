@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <title>وایرفریم چیدمان صفحه‌ی اول — سور</title>
 <style>
-  @font-face {
-    font-family: 'Vazirmatn';
-    src: local('Vazirmatn');
-  }
   * { box-sizing: border-box; }
   body {
     font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
@@ -31,23 +27,21 @@
     color: #9a9789;
     margin-bottom: 10px;
   }
-  .row { display: flex; }
+  .icon { width: 22px; height: 22px; flex-shrink: 0; }
+  .icon-lg { width: 30px; height: 30px; }
   .header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 16px; border: 1px solid #e2e0d8; border-radius: 8px; background: #fbfaf7;
   }
-  .logo-box {
-    width: 70px; height: 20px; background: #eeece4; border-radius: 4px;
-    font-size: 10px; display: flex; align-items: center; justify-content: center; color: #9a9789;
-  }
+  .logo-box { display: flex; align-items: center; gap: 6px; }
+  .logo-box img { height: 22px; }
+  .logo-box span { font-size: 12px; font-weight: 600; color: #2F3690; }
   .nav { display: flex; gap: 14px; font-size: 12px; color: #55534b; }
   .btn {
     font-size: 11px; padding: 6px 14px; border-radius: 6px; border: none;
     background: #1f1e1c; color: #fff; cursor: default;
   }
-  .btn-outline {
-    background: transparent; color: #fff; border: 1px solid #fff;
-  }
+  .btn-outline { background: transparent; color: #fff; border: 1px solid #fff; }
   .btn-small { font-size: 11px; padding: 5px 12px; }
   .hero {
     margin-top: 8px; padding: 32px 20px; border-radius: 8px; background: #1f1e1c; text-align: center;
@@ -55,72 +49,52 @@
   .hero h1 { font-size: 17px; font-weight: 500; color: #fff; margin: 0 0 8px; }
   .hero p { font-size: 12px; color: #cfcdc6; max-width: 440px; margin: 0 auto 16px; }
   .hero .btns { display: flex; gap: 8px; justify-content: center; }
-  .stats {
-    display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 8px;
-  }
-  .stat-card {
-    background: #f4f3ef; border-radius: 8px; padding: 12px; text-align: center;
-  }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+  .stat-card { background: #f4f3ef; border-radius: 8px; padding: 12px; text-align: center; }
   .stat-card .label { font-size: 10px; color: #9a9789; }
   .stat-card .value { font-size: 16px; font-weight: 600; margin-top: 2px; }
-  .section-title {
-    margin-top: 20px; font-size: 14px; font-weight: 600; text-align: center; color: #1f1e1c;
-  }
-  .reasons {
-    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px;
-  }
-  .reason-card {
-    border: 1px solid #e2e0d8; border-radius: 8px; padding: 14px; text-align: center;
-  }
+  .section-title { margin-top: 20px; font-size: 14px; font-weight: 600; text-align: center; color: #1f1e1c; }
+  .reasons { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+  .reason-card { border: 1px solid #e2e0d8; border-radius: 8px; padding: 14px; text-align: center; }
   .reason-icon {
-    width: 32px; height: 32px; border-radius: 50%; background: #eaf1fb; color: #2f6fb3;
-    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 16px;
+    width: 40px; height: 40px; border-radius: 50%; background: #eaf1fb; color: #2f6fb3;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;
   }
   .reason-card .t { font-size: 11.5px; font-weight: 600; }
-  .gov {
-    display: flex; align-items: center; gap: 10px; margin-top: 10px;
-  }
-  .gov-card {
-    flex: 1; background: #f4f3ef; border-radius: 8px; padding: 14px;
+  .gov { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .gov-card { flex: 1; background: #f4f3ef; border-radius: 8px; padding: 14px; text-align: center; }
+  .gov-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #2F3690;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;
   }
   .gov-card .t { font-size: 12.5px; font-weight: 600; }
   .gov-card .s { font-size: 10.5px; color: #77746a; margin-top: 3px; }
   .gov-arrow { font-size: 18px; color: #9a9789; }
-  .carousel {
-    display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px;
-  }
+  .carousel { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; }
   .carousel .card {
-    min-width: 112px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 12px;
+    min-width: 100px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 12px 8px;
     text-align: center; font-size: 10.5px; flex-shrink: 0;
   }
-  .carousel .card.more {
-    border: 1px dashed #c7c4b8; color: #2f6fb3;
-  }
-  .trust-box {
-    margin-top: 18px; background: #fdf3df; border-radius: 8px; padding: 16px;
-    border: 1px solid #f0dfae;
-  }
+  .carousel .card svg { margin: 0 auto 6px; display: block; color: #2f6fb3; }
+  .carousel .card.more { border: 1px dashed #c7c4b8; color: #2f6fb3; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .trust-box { margin-top: 18px; background: #fdf3df; border-radius: 8px; padding: 16px; border: 1px solid #f0dfae; display: flex; gap: 12px; align-items: flex-start; }
+  .trust-box .icon { color: #8a6d1f; margin-top: 2px; }
   .trust-box .t { font-size: 12.5px; font-weight: 600; color: #8a6d1f; }
   .trust-box .s { font-size: 10.5px; color: #6b5f3f; margin-top: 5px; line-height: 1.6; }
-  .sale-box {
-    margin-top: 12px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 16px;
-  }
+  .sale-box { margin-top: 12px; border: 1px solid #e2e0d8; border-radius: 8px; padding: 16px; }
   .sale-box .top { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 8px; }
   .sale-box .top .price { font-weight: 600; }
   .progress-track { height: 7px; background: #f0efe9; border-radius: 4px; overflow: hidden; }
   .progress-fill { width: 62%; height: 100%; background: #2f6fb3; }
-  .news {
-    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 10px;
-  }
-  .news-card {
-    border: 1px solid #e2e0d8; border-radius: 8px; overflow: hidden;
-  }
+  .news { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 10px; }
+  .news-card { border: 1px solid #e2e0d8; border-radius: 8px; overflow: hidden; }
   .news-thumb { height: 44px; background: #eeece4; }
   .news-card .t { font-size: 10.5px; padding: 7px; }
   .footer {
     margin-top: 20px; padding: 14px 16px; border-top: 1px solid #e2e0d8;
-    display: flex; justify-content: space-between; font-size: 10.5px; color: #9a9789;
+    display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #9a9789;
   }
+  .footer img { height: 16px; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -129,7 +103,10 @@
 
     <!-- 1. Header -->
     <div class="header">
-      <div class="logo-box">لوگو</div>
+      <div class="logo-box">
+        <img src="../brand/sur-logo.svg" alt="لوگوی سور">
+        <span>سور</span>
+      </div>
       <div class="nav">
         <span>درباره‌ی سور</span><span>سورن</span><span>حکمرانی</span><span>مزیت‌ها و خدمات</span><span>توسعه‌دهندگان</span><span>جامعه و اخبار</span>
       </div>
@@ -157,33 +134,78 @@
     <!-- 4. Three reasons -->
     <div class="section-title">چرا سور را انتخاب کنیم؟</div>
     <div class="reasons">
-      <div class="reason-card"><div class="reason-icon">۱</div><div class="t">نهایی‌شدن فوری و قطعی تراکنش‌ها</div></div>
-      <div class="reason-card"><div class="reason-icon">۲</div><div class="t">زیرساخت‌های آماده برای هر برنامه‌ی غیرمتمرکز</div></div>
-      <div class="reason-card"><div class="reason-icon">۳</div><div class="t">خرید مستقیم سورن با کارت بانکی</div></div>
+      <div class="reason-card">
+        <div class="reason-icon">
+          <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>
+        </div>
+        <div class="t">نهایی‌شدن فوری و قطعی تراکنش‌ها</div>
+      </div>
+      <div class="reason-card">
+        <div class="reason-icon">
+          <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="14" width="7" height="6" rx="1"/><rect x="13" y="14" width="7" height="6" rx="1"/><rect x="8.5" y="6" width="7" height="6" rx="1"/></svg>
+        </div>
+        <div class="t">زیرساخت‌های آماده برای هر برنامه‌ی غیرمتمرکز</div>
+      </div>
+      <div class="reason-card">
+        <div class="reason-icon">
+          <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="11" y2="15"/></svg>
+        </div>
+        <div class="t">خرید مستقیم سورن با کارت بانکی</div>
+      </div>
     </div>
 
     <!-- 5. Dual governance -->
     <div class="section-title">یک شبکه، دو نهاد مستقل</div>
     <div class="gov">
-      <div class="gov-card"><div class="t">بنیاد سور</div><div class="s">توسعه، آموزش، تبلیغات اکوسیستم</div></div>
+      <div class="gov-card">
+        <div class="gov-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10l8-6 8 6v11"/><line x1="9" y1="21" x2="9" y2="13"/><line x1="15" y1="21" x2="15" y2="13"/></svg>
+        </div>
+        <div class="t">بنیاد سور</div>
+        <div class="s">توسعه، آموزش، تبلیغات اکوسیستم</div>
+      </div>
       <div class="gov-arrow">⇄</div>
-      <div class="gov-card"><div class="t">مجمع ولیدیتورهای شبکه</div><div class="s">حاکمیت واقعی شبکه</div></div>
+      <div class="gov-card">
+        <div class="gov-icon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="19" cy="18" r="2.2"/><line x1="7" y1="11" x2="17" y2="7"/><line x1="7" y1="13" x2="17" y2="17"/></svg>
+        </div>
+        <div class="t">مجمع ولیدیتورهای شبکه</div>
+        <div class="s">حاکمیت واقعی شبکه</div>
+      </div>
     </div>
 
     <!-- 6. Benefits carousel -->
     <div class="section-title">مزیت‌ها و خدمات</div>
     <div class="carousel">
-      <div class="card">رجیستری هویت مشترک</div>
-      <div class="card">تراکنش‌های محرمانه</div>
-      <div class="card">ثبت‌زمان اسناد</div>
-      <div class="card">سرویس نام‌گذاری</div>
-      <div class="card more">مشاهده‌ی همه ↗</div>
+      <div class="card">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><line x1="7" y1="16" x2="11" y2="16"/><line x1="15" y1="9" x2="18" y2="9"/><line x1="15" y1="13" x2="18" y2="13"/></svg>
+        رجیستری هویت مشترک
+      </div>
+      <div class="card">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        تراکنش‌های محرمانه
+      </div>
+      <div class="card">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15.5,14"/></svg>
+        ثبت‌زمان اسناد
+      </div>
+      <div class="card">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.5l-8 8a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1 0-2.8l8-8H18a2.5 2.5 0 0 1 2.5 2.5v6.5z"/><circle cx="15" cy="9" r="1.2" fill="currentColor" stroke="none"/></svg>
+        سرویس نام‌گذاری
+      </div>
+      <div class="card more">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+        مشاهده‌ی همه
+      </div>
     </div>
 
     <!-- 7. Trust box -->
     <div class="trust-box">
-      <div class="t">چرا به سور اعتماد کنیم؟</div>
-      <div class="s">سور نسخه‌ی دوم است — و این را پنهان نمی‌کنیم. داستان کامل شکست نسخه‌ی اول را بخوانید ↗</div>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      <div>
+        <div class="t">چرا به سور اعتماد کنیم؟</div>
+        <div class="s">سور نسخه‌ی دوم است — و این را پنهان نمی‌کنیم. داستان کامل شکست نسخه‌ی اول را بخوانید ↗</div>
+      </div>
     </div>
 
     <!-- 8. Sale progress -->
@@ -202,7 +224,7 @@
 
     <!-- 10. Footer -->
     <div class="footer">
-      <span>لوگو سور</span>
+      <img src="../brand/sur-logo.svg" alt="لوگوی سور">
       <span>لینک‌های سریع · تلگرام · گیت‌هاب</span>
       <span>© بنیاد سور</span>
     </div>
