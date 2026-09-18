@@ -3,6 +3,10 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
+interface IBlockRewardDistributor {
+    function receiveMembershipFee() external payable;
+}
+
 /// @title ValidatorsRegistry
 /// @notice دیپلوی‌شده در آدرس ثابت genesis، یعنی SurAddresses.VALIDATORS_REGISTRY
 ///         (0x3333...3333). دو نقش دارد:
@@ -67,13 +71,14 @@ import "./SurAddresses.sol";
 ///             کاملاً قابل‌استرداد در خروج داوطلبانه (به withdrawStake مراجعه کن)، بخشی
 ///             قابل‌اسلش در دموت به‌خاطر غیرفعالی. این پول خودِ آدرس است، هرگز با رأی مجمع
 ///             ولیدیتورها قابل‌خرج نیست.
-///           - کارمزد عضویت (= currentMembershipFee()، درصدی حکمرانی‌شده از وثیقه): بلافاصله
-///             و برگشت‌ناپذیر در ورود به ValidatorsTreasury فوروارد می‌شود، دقیقاً مثل بخش
-///             اسلش‌شده‌ی وثیقه. این همان چیزی است که باعث می‌شود ورود ولیدیتور تازه بلافاصله
-///             به خزانه‌ی مشترک مجمع وجه خرج‌شدنی اضافه کند، بدون این‌که خودِ وثیقه را به
-///             دارایی عمومی تبدیل کند (که تضمین خروج را می‌شکند و اسلش را به‌عنوان بازدارنده‌ی
-///             شخصی کند می‌کند — به بحث طراحی حکمرانی پروژه مراجعه کن که چرا تقسیم ترکیبی به‌جای
-///             خزانه‌ای‌کردن کل استیک انتخاب شد).
+///           - کارمزد عضویت (= currentMembershipFee()، درصدی حکمرانی‌شده از وثیقه): ✅
+///             تغییر کرد: بلافاصله به BlockRewardDistributor فوروارد می‌شود (نه
+///             ValidatorsTreasury)، جایی که در استخر فی epoch توزیع بعدی تجمیع و
+///             ۱۰۰٪-به‌نسبت-بلاک بین ولیدیتورهای فعال همان epoch پرداخت می‌شود — به
+///             sur-tokenomics.md بخش ۶ مراجعه کنید که چرا (این ورود هر عضو تازه را به یک
+///             انگیزه‌ی نقدی مستقیم و قابل‌ردیابی برای ولیدیتورهای موجود تبدیل می‌کند، نه
+///             صرفاً رقیق‌شدن سهم آن‌ها). بخش اسلش‌شده‌ی وثیقه (پایین) همچنان مستقیم به
+///             ValidatorsTreasury می‌رود، بدون تغییر — فقط مقصد کارمزد عضویت عوض شد.
 contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // آدرس‌های ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
@@ -81,6 +86,14 @@ contract ValidatorsRegistry {
 
     /// @notice ValidatorsTreasury — مقصد استیک اسلش‌شده.
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
+
+    /// @notice BlockRewardDistributor — ✅ تغییر کرد: کارمزد عضویت اکنون اینجا فرستاده
+    ///         می‌شود (از طریق receiveMembershipFee())، نه مستقیم به TREASURY — تا در استخر
+    ///         فی ۱۰۰٪-به‌نسبت-بلاک epoch بعدی، بین ولیدیتورهای فعال آن epoch تقسیم شود. به
+    ///         sur-tokenomics.md بخش ۶ مراجعه کنید: این به ولیدیتورهای موجود یک انگیزه‌ی
+    ///         مستقیم و قابل‌ردیابی برای استقبال/تبلیغ عضویت تازه می‌دهد، به‌جای این‌که هر
+    ///         عضو تازه صرفاً سهم آن‌ها را رقیق کند.
+    IBlockRewardDistributor public constant DISTRIBUTOR = IBlockRewardDistributor(payable(SurAddresses.BLOCK_REWARD_DISTRIBUTOR));
 
     /// @notice ValidatorsBoard — تنها آدرس مجاز به تغییر پارامترهای اقتصادی ورود پایین
     ///         (entryThresholdBase، growthFactorPerValidator، membershipFeeBps).
@@ -377,7 +390,8 @@ contract ValidatorsRegistry {
     // Payable: فراخوان مستقیم سورن بومی را همراه تراکنش می‌فرستد (msg.value)، که به دو مبلغ
     // تقسیم می‌شود:
     //   ۱. `threshold` (currentEntryThreshold()) — اینجا به‌عنوان وثیقه‌ی قابل‌استرداد/قابل‌اسلش نگه داشته می‌شود.
-    //   ۲. `fee` (currentMembershipFee()) — مستقیم به ValidatorsTreasury فوروارد می‌شود، غیرقابل‌استرداد.
+    //   ۲. `fee` (currentMembershipFee()) — ✅ تغییر کرد: به BlockRewardDistributor (نه
+    //      ValidatorsTreasury) فوروارد می‌شود — به کامنت ثابت DISTRIBUTOR بالا مراجعه کنید.
     // msg.value باید دقیقاً برابر مجموع هر دو باشد — بدون باقی‌مانده/پرداخت‌اضافه‌ای که نیاز به توضیح داشته باشد.
     // ------------------------------------------------------------------
     function requestMembership() external payable nonReentrant {
@@ -390,8 +404,7 @@ contract ValidatorsRegistry {
         _enforceRateLimit();
 
         if (fee > 0) {
-            (bool success, ) = TREASURY.call{value: fee}("");
-            require(success, "ValidatorsRegistry: membership fee transfer failed");
+            DISTRIBUTOR.receiveMembershipFee{value: fee}();
         }
         // `threshold` عمداً در موجودی بومی همین قرارداد به‌عنوان وثیقه‌ی قفل‌شده می‌ماند — نیازی
         // به انتقال نیست، همراه همین فراخوانی از طریق msg.value رسیده است.

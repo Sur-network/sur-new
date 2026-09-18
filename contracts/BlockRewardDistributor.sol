@@ -16,13 +16,27 @@ interface IValidatorsRegistry {
 ///         Experiment 1) and periodically distributes them, based on data reported by an
 ///         authorized oracle, between validators and ValidatorsTreasury.
 ///
-///         Distribution rules (final model — design doc section 3):
-///           - From total REWARDS: 50% (TREASURY_SHARE_BPS) goes to ValidatorsTreasury, the
-///             rest is split among validators proportionally to blocks mined.
+///         Distribution rules (updated model — see sur-tokenomics.md section 6.5 for the
+///         Foundation funding decision and section 6 for the membership-fee redirect decision):
+///           - From total REWARDS: 50% (TREASURY_SHARE_BPS) is the "treasury cut". Of that cut,
+///             15% (FOUNDATION_SHARE_OF_TREASURY_BPS) now goes to FoundationDAO — automatically,
+///             every epoch, with no vote and no way for validators to cancel it — and the
+///             remaining 85% goes to ValidatorsTreasury as before. The other 50% of rewards is
+///             split among validators proportionally to blocks mined, unchanged.
 ///           - From total FEES: 100% is split among validators proportionally to blocks mined
-///             (no treasury cut on fees).
+///             (no treasury or foundation cut on fees) — unchanged.
+///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() no longer sends
+///             the membership fee to ValidatorsTreasury. Instead it forwards it here via
+///             receiveMembershipFee(), where it accumulates in `pendingMembershipFees` and is
+///             folded into the *next* epoch's fee pool (same 100%-pro-rata-by-blocks treatment
+///             as ordinary transaction fees — see sur-tokenomics.md section 6 for why: this
+///             gives existing validators a direct, traceable cash incentive tied to every new
+///             validator that joins). This means a new member's fee is not paid out in the same
+///             block as their registration — it is paid out at the next distributionOracle
+///             epoch (~23 hours later), exactly like ordinary fees already are.
 ///           - Each validator receives exactly one payment per call (a single combined
-///             transfer of reward share + fee share).
+///             transfer of reward share + fee share, where "fee share" now includes any
+///             pending membership fees folded in for that epoch).
 ///
 ///         Validator eligibility is checked directly, on-chain, against ValidatorsRegistry —
 ///         there is no internal whitelist and no second "validatorSyncOracle" (that design was
@@ -46,6 +60,13 @@ contract BlockRewardDistributor {
 
     /// @notice Treasury's share of total REWARDS (not fees) — basis points out of 10000 = 100%.
     uint256 public constant TREASURY_SHARE_BPS = 5000; // 50%
+
+    /// @notice Foundation's share OF the treasury cut (not of total rewards) — basis points out
+    ///         of 10000 = 100% of TREASURY_SHARE_BPS. See sur-tokenomics.md section 6.5: this
+    ///         funds the Foundation's ongoing operating costs (board/CEO/staff salaries), not
+    ///         campaign budgets, which is why it is small, automatic, and non-cancelable rather
+    ///         than routed through any vote.
+    uint256 public constant FOUNDATION_SHARE_OF_TREASURY_BPS = 1500; // 15% of the 50% cut
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice Minimum allowed interval between two consecutive distribution calls.
@@ -61,6 +82,15 @@ contract BlockRewardDistributor {
 
     /// @notice ValidatorsTreasury — receives the 50% reward cut.
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
+
+    /// @notice FoundationDAO — receives the new automatic 15%-of-treasury-cut share every
+    ///         epoch. This is the only inbound connection FoundationDAO has to the reward flow;
+    ///         it never needs to call anything to receive it (see FoundationDAO.sol comments).
+    address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
+
+    /// @notice ValidatorsRegistry is also the only address allowed to forward pending
+    ///         membership fees via receiveMembershipFee() below.
+    address public constant REGISTRY_ADDRESS = SurAddresses.VALIDATORS_REGISTRY;
 
     /// @notice ValidatorsBoard — the only address allowed to rotate distributionOracle (a
     ///         delegated power explicitly granted to the board; see design doc section 4).
@@ -120,12 +150,20 @@ contract BlockRewardDistributor {
 
     uint256 public totalDistributedToValidators;
     uint256 public totalDistributedToTreasury;
+    uint256 public totalDistributedToFoundation;
+
+    /// @notice Membership fees forwarded by ValidatorsRegistry since the last distribution
+    ///         epoch, waiting to be folded into that epoch's 100%-pro-rata-by-blocks fee pool.
+    ///         Reset to zero at the end of every distributeRewards() call.
+    uint256 public pendingMembershipFees;
 
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
     event DistributionOracleUpdated(address indexed oldOracle, address indexed newOracle);
     event RewardsReceived(address indexed from, uint256 amount);
+    event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
+    event FoundationFunded(uint256 indexed epochId, uint256 amount);
     event RewardsDistributed(
         uint256 indexed epochId,
         uint256 totalRewards,
@@ -184,6 +222,22 @@ contract BlockRewardDistributor {
         emit RewardsReceived(msg.sender, msg.value);
     }
 
+    /// @notice Called by ValidatorsRegistry.requestMembership() to forward a new validator's
+    ///         membership fee here instead of straight to ValidatorsTreasury (the old
+    ///         behavior). The amount simply accumulates until the next distributeRewards()
+    ///         call, at which point it is folded into that epoch's fee pool and paid out
+    ///         100%-pro-rata-by-blocks, exactly like ordinary transaction fees — see
+    ///         sur-tokenomics.md section 6 for why this design (a direct, traceable, per-join
+    ///         cash incentive for existing validators) was chosen over an immediate on-the-spot
+    ///         payout, which would have required an unbounded loop over all active validators
+    ///         inside requestMembership() itself — a real gas-limit / DoS risk as the validator
+    ///         set grows, and duplicate logic already implemented correctly here.
+    function receiveMembershipFee() external payable {
+        require(msg.sender == REGISTRY_ADDRESS, "BlockRewardDistributor: only ValidatorsRegistry may forward membership fees");
+        pendingMembershipFees += msg.value;
+        emit MembershipFeeReceived(msg.value, pendingMembershipFees);
+    }
+
     // ------------------------------------------------------------------
     // Main periodic distribution function — callable only by the distribution oracle
     //
@@ -217,8 +271,17 @@ contract BlockRewardDistributor {
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
-        require(totalRewards + totalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + totalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+
+        // Fold any membership fees forwarded by ValidatorsRegistry since the last epoch into
+        // this epoch's fee pool — they are already sitting in this contract's balance (received
+        // via receiveMembershipFee()), so they simply join ordinary fees and get the exact same
+        // 100%-pro-rata-by-blocks treatment. See sur-tokenomics.md section 6.
+        uint256 membershipFeesThisEpoch = pendingMembershipFees;
+        pendingMembershipFees = 0;
+        uint256 effectiveTotalFees = totalFees + membershipFeesThisEpoch;
+
+        require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
         uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
@@ -227,8 +290,11 @@ contract BlockRewardDistributor {
         epochCount++;
         uint256 epochId = epochCount;
 
-        // Treasury's cut is taken only from REWARDS, never from FEES
-        uint256 treasuryAmount = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
+        // Treasury's cut is taken only from REWARDS, never from FEES. Of that cut, a fixed
+        // slice now goes to the Foundation instead — see sur-tokenomics.md section 6.5.
+        uint256 treasuryCut = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 foundationAmount = (treasuryCut * FOUNDATION_SHARE_OF_TREASURY_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = treasuryCut - foundationAmount;
 
         (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
             _payValidators(
@@ -236,8 +302,8 @@ contract BlockRewardDistributor {
                 blocksMined,
                 EpochContext({
                     epochId: epochId,
-                    remainingRewards: totalRewards - treasuryAmount,
-                    totalFees: totalFees,
+                    remainingRewards: totalRewards - treasuryCut,
+                    totalFees: effectiveTotalFees,
                     totalBlocks: totalBlocks
                 })
             );
@@ -245,8 +311,9 @@ contract BlockRewardDistributor {
         _finalizeEpoch(
             epochId,
             totalRewards,
-            totalFees,
+            effectiveTotalFees,
             treasuryAmount,
+            foundationAmount,
             totalBlocks,
             validatorCount,
             distributedRewards,
@@ -359,22 +426,36 @@ contract BlockRewardDistributor {
         uint256 totalRewards,
         uint256 totalFees,
         uint256 treasuryAmount,
+        uint256 foundationAmount,
         uint256 totalBlocks,
         uint256 validatorCount,
         uint256 distributedRewards,
         uint256 distributedFees
     ) private {
         // Rounding dust from both reward and fee division is added to the treasury's amount
-        // so that no wei is left stuck in the contract.
-        uint256 totalTreasuryAmount = treasuryAmount + (totalRewards - treasuryAmount - distributedRewards) + (totalFees - distributedFees);
+        // so that no wei is left stuck in the contract. Note: the reward-side dust formula now
+        // subtracts BOTH treasuryAmount and foundationAmount (they together make up the full
+        // 50% treasury cut) — subtracting only treasuryAmount here (as the pre-Foundation-split
+        // version of this function did) would silently double-count foundationAmount as "dust"
+        // and send the Foundation's already-transferred share to the treasury a second time.
+        uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
+        uint256 feeDust = totalFees - distributedFees;
+        uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");
             require(tsuccess, "BlockRewardDistributor: treasury transfer failed");
         }
 
+        if (foundationAmount > 0) {
+            (bool fsuccess, ) = FOUNDATION.call{value: foundationAmount}("");
+            require(fsuccess, "BlockRewardDistributor: foundation transfer failed");
+            emit FoundationFunded(epochId, foundationAmount);
+        }
+
         totalDistributedToValidators += (distributedRewards + distributedFees);
         totalDistributedToTreasury += totalTreasuryAmount;
+        totalDistributedToFoundation += foundationAmount;
         lastDistributionTime = block.timestamp;
 
         epochs[epochId] = Epoch({

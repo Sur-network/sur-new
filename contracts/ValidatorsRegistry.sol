@@ -3,6 +3,10 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
+interface IBlockRewardDistributor {
+    function receiveMembershipFee() external payable;
+}
+
 /// @title ValidatorsRegistry
 /// @notice Deployed at the fixed genesis address SurAddresses.VALIDATORS_REGISTRY
 ///         (0x3333...3333). Serves two roles:
@@ -68,13 +72,14 @@ import "./SurAddresses.sol";
 ///             slashable on inactivity demotion. This is the address's own money, never
 ///             spendable by the validator assembly's vote.
 ///           - MEMBERSHIP FEE (= currentMembershipFee(), a governed % of the collateral):
-///             forwarded immediately and irrevocably to ValidatorsTreasury on entry, exactly
-///             like the collateral's slashed portion is. This is what makes new-validator
-///             entries add spendable funds to the assembly's shared treasury right away,
-///             without turning the collateral itself into communal property (which would break
-///             the exit guarantee and blunt slashing as a personal deterrent — see the
-///             project's governance-design discussion for why the hybrid split was chosen over
-///             making the whole stake treasury-owned).
+///             ✅ CHANGED: forwarded immediately to BlockRewardDistributor (not
+///             ValidatorsTreasury), where it is folded into the very next reward-distribution
+///             epoch's fee pool and paid out 100%-pro-rata-by-blocks to whichever validators are
+///             active during that epoch — see sur-tokenomics.md section 6 for why (this turns
+///             every new member's entry into a direct, traceable cash incentive for existing
+///             validators, rather than a pure dilution of their block-reward share). The
+///             collateral's slashed portion (below) still goes straight to ValidatorsTreasury,
+///             unchanged — only the membership fee's destination changed.
 contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Fixed cross-contract addresses (see SurAddresses.sol)
@@ -82,6 +87,14 @@ contract ValidatorsRegistry {
 
     /// @notice ValidatorsTreasury — destination for slashed stake.
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
+
+    /// @notice BlockRewardDistributor — ✅ CHANGED: membership fees are now forwarded here
+    ///         (via receiveMembershipFee()) instead of straight to TREASURY, so they get folded
+    ///         into the next epoch's 100%-pro-rata-by-blocks fee distribution among currently
+    ///         active validators. See sur-tokenomics.md section 6 for the full reasoning: this
+    ///         gives existing validators a direct, traceable incentive to welcome/promote new
+    ///         members, instead of every new joiner purely diluting existing validators' share.
+    IBlockRewardDistributor public constant DISTRIBUTOR = IBlockRewardDistributor(payable(SurAddresses.BLOCK_REWARD_DISTRIBUTOR));
 
     /// @notice ValidatorsBoard — the only address allowed to change the economic entry
     ///         parameters below (entryThresholdBase, growthFactorPerValidator, membershipFeeBps).
@@ -380,7 +393,8 @@ contract ValidatorsRegistry {
     // Payable: the caller sends native Suren directly with the transaction (msg.value), split
     // into two amounts:
     //   1. `threshold` (currentEntryThreshold()) — kept here as refundable/slashable collateral.
-    //   2. `fee` (currentMembershipFee()) — forwarded straight to ValidatorsTreasury, non-refundable.
+    //   2. `fee` (currentMembershipFee()) — ✅ CHANGED: forwarded to BlockRewardDistributor
+    //      (not ValidatorsTreasury) — see the DISTRIBUTOR constant comment above for why.
     // msg.value must equal the exact sum of both — no leftover/overpayment to reason about.
     // ------------------------------------------------------------------
     function requestMembership() external payable nonReentrant {
@@ -393,8 +407,7 @@ contract ValidatorsRegistry {
         _enforceRateLimit();
 
         if (fee > 0) {
-            (bool success, ) = TREASURY.call{value: fee}("");
-            require(success, "ValidatorsRegistry: membership fee transfer failed");
+            DISTRIBUTOR.receiveMembershipFee{value: fee}();
         }
         // `threshold` intentionally stays in this contract's own native balance as locked
         // collateral — no transfer needed, it arrived with this same call via msg.value.

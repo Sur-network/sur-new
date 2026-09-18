@@ -16,13 +16,27 @@ interface IValidatorsRegistry {
 ///         آزمایش ۱ مراجعه کن) و به‌صورت دوره‌ای، بر اساس داده‌ی گزارش‌شده توسط یک اوراکل
 ///         مجاز، بین ولیدیتورها و ValidatorsTreasury توزیع می‌کند.
 ///
-///         قواعد توزیع (مدل نهایی — بخش ۳ سند طراحی):
-///           - از کل ریوارد: ۵۰٪ (TREASURY_SHARE_BPS) به ValidatorsTreasury می‌رود، بقیه به
-///             نسبت تعداد بلاک تولیدی بین ولیدیتورها تقسیم می‌شود.
-///           - از کل فی: ۱۰۰٪ به نسبت تعداد بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (بدون
-///             سهم خزانه از فی).
+///         قواعد توزیع (مدل به‌روزشده — به sur-tokenomics.md بخش ۶.۵ برای تصمیم بودجه‌ی بنیاد
+///         و بخش ۶ برای تصمیم تغییر مقصد کارمزد عضویت مراجعه کنید):
+///           - از کل ریوارد: ۵۰٪ (TREASURY_SHARE_BPS) «سهم خزانه» است. از همین سهم، ۱۵٪
+///             (FOUNDATION_SHARE_OF_TREASURY_BPS) اکنون خودکار — هر epoch، بدون رأی‌گیری و
+///             بدون امکان لغو توسط ولیدیتورها — به FoundationDAO می‌رود، و ۸۵٪ باقی‌مانده مثل
+///             قبل به ValidatorsTreasury. ۵۰٪ باقی‌مانده‌ی ریوارد همچنان به نسبت بلاک تولیدی
+///             بین ولیدیتورها تقسیم می‌شود، بدون تغییر.
+///           - از کل فی: ۱۰۰٪ به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (بدون سهم
+///             خزانه یا بنیاد از فی) — بدون تغییر.
+///           - کارمزد عضویت معلق: ValidatorsRegistry.requestMembership() دیگر کارمزد عضویت
+///             را به ValidatorsTreasury نمی‌فرستد. به‌جایش آن را از طریق
+///             receiveMembershipFee() به همین قرارداد می‌فرستد، جایی که در
+///             `pendingMembershipFees` انباشته و در *epoch بعدی* به استخر فی همان epoch اضافه
+///             می‌شود (همان رفتار ۱۰۰٪-به‌نسبت-بلاک فی‌های معمولی — به sur-tokenomics.md بخش
+///             ۶ مراجعه کنید که چرا: این یک انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به ولیدیتورهای
+///             موجود برای هر ولیدیتور تازه‌ای که می‌پیوندد می‌دهد). یعنی کارمزد عضو تازه در
+///             همان بلاک ثبت‌نامش پرداخت نمی‌شود — در epoch بعدی distributionOracle (~۲۳
+///             ساعت بعد) پرداخت می‌شود، دقیقاً مثل فی‌های معمولی.
 ///           - هر ولیدیتور دقیقاً یک پرداخت در هر فراخوانی دریافت می‌کند (یک انتقال ترکیبی
-///             از سهم ریوارد + سهم فی).
+///             از سهم ریوارد + سهم فی، که «سهم فی» اکنون شامل هر کارمزد عضویت معلق تجمیع‌شده
+///             در همان epoch هم می‌شود).
 ///
 ///         صلاحیت ولیدیتور مستقیم و on-chain در برابر ValidatorsRegistry چک می‌شود — هیچ
 ///         لیست سفید داخلی و هیچ «اوراکل همگام‌سازی ولیدیتور» دومی وجود ندارد (آن طراحی وقتی
@@ -45,6 +59,12 @@ contract BlockRewardDistributor {
 
     /// @notice سهم خزانه از کل ریوارد (نه فی) — واحد basis point از ۱۰۰۰۰ = ۱۰۰٪.
     uint256 public constant TREASURY_SHARE_BPS = 5000; // ۵۰٪
+
+    /// @notice سهم بنیاد از خودِ سهم خزانه (نه از کل ریوارد) — بیسیس‌پوینت از ۱۰۰۰۰ = ۱۰۰٪
+    ///         TREASURY_SHARE_BPS. به sur-tokenomics.md بخش ۶.۵ مراجعه کنید: این هزینه‌ی جاری
+    ///         بنیاد (حقوق هیأت‌مدیره/مدیرعامل/کارکنان) را تأمین می‌کند، نه بودجه‌ی کمپین —
+    ///         به همین دلیل کوچک، خودکار، و غیرقابل‌لغو است، نه از طریق رأی‌گیری.
+    uint256 public constant FOUNDATION_SHARE_OF_TREASURY_BPS = 1500; // ۱۵٪ از سهم ۵۰٪
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice حداقل فاصله‌ی مجاز بین دو فراخوانی متوالی توزیع.
@@ -60,6 +80,15 @@ contract BlockRewardDistributor {
 
     /// @notice ValidatorsTreasury — دریافت‌کننده‌ی سهم ۵۰٪ ریوارد.
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
+
+    /// @notice FoundationDAO — سهم تازه‌ی خودکار ۱۵٪-از-سهم-خزانه را هر epoch دریافت می‌کند.
+    ///         این تنها اتصال ورودی بنیاد به جریان ریوارد است؛ هیچ‌وقت نیازی به فراخوانی
+    ///         چیزی برای دریافتش ندارد (کامنت‌های FoundationDAO.sol را ببینید).
+    address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
+
+    /// @notice ValidatorsRegistry تنها آدرسی است که مجاز به ارسال کارمزد عضویت معلق از
+    ///         طریق receiveMembershipFee() پایین است.
+    address public constant REGISTRY_ADDRESS = SurAddresses.VALIDATORS_REGISTRY;
 
     /// @notice ValidatorsBoard — تنها آدرس مجاز به چرخش distributionOracle (یک اختیار تفویضی
     ///         که صریح به هیأت داده شده؛ بخش ۴ سند طراحی را ببین).
@@ -119,12 +148,20 @@ contract BlockRewardDistributor {
 
     uint256 public totalDistributedToValidators;
     uint256 public totalDistributedToTreasury;
+    uint256 public totalDistributedToFoundation;
+
+    /// @notice کارمزدهای عضویتی که ValidatorsRegistry از epoch توزیع قبلی تا الان فرستاده،
+    ///         در انتظار تجمیع در استخر فی ۱۰۰٪-به‌نسبت-بلاک همان epoch. در انتهای هر
+    ///         فراخوانی distributeRewards() صفر می‌شود.
+    uint256 public pendingMembershipFees;
 
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
     event DistributionOracleUpdated(address indexed oldOracle, address indexed newOracle);
     event RewardsReceived(address indexed from, uint256 amount);
+    event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
+    event FoundationFunded(uint256 indexed epochId, uint256 amount);
     event RewardsDistributed(
         uint256 indexed epochId,
         uint256 totalRewards,
@@ -182,6 +219,21 @@ contract BlockRewardDistributor {
         emit RewardsReceived(msg.sender, msg.value);
     }
 
+    /// @notice توسط ValidatorsRegistry.requestMembership() فراخوانی می‌شود تا کارمزد عضویت
+    ///         ولیدیتور تازه را اینجا بفرستد، به‌جای مستقیم به ValidatorsTreasury (رفتار
+    ///         قبلی). مبلغ صرفاً انباشته می‌شود تا فراخوانی distributeRewards() بعدی، جایی که
+    ///         به استخر فی همان epoch اضافه و دقیقاً مثل فی تراکنش معمولی، ۱۰۰٪-به‌نسبت-بلاک
+    ///         پرداخت می‌شود — به sur-tokenomics.md بخش ۶ مراجعه کنید که چرا این طراحی (یک
+    ///         انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به‌ازای هر عضویت تازه) به‌جای پرداخت فوری
+    ///         همان‌لحظه انتخاب شد — پرداخت فوری نیازمند یک حلقه‌ی نامحدود روی همه‌ی
+    ///         ولیدیتورهای فعال درون خودِ requestMembership() می‌بود؛ یک ریسک واقعی سقف گس/DoS
+    ///         با رشد جمعیت ولیدیتور، و تکرار منطقی که همین‌جا از قبل درست پیاده شده.
+    function receiveMembershipFee() external payable {
+        require(msg.sender == REGISTRY_ADDRESS, "BlockRewardDistributor: only ValidatorsRegistry may forward membership fees");
+        pendingMembershipFees += msg.value;
+        emit MembershipFeeReceived(msg.value, pendingMembershipFees);
+    }
+
     // ------------------------------------------------------------------
     // تابع اصلی توزیع دوره‌ای — فقط توسط اوراکل توزیع قابل‌فراخوانی است
     //
@@ -214,8 +266,17 @@ contract BlockRewardDistributor {
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
-        require(totalRewards + totalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + totalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+
+        // هر کارمزد عضویتی که از epoch قبلی ValidatorsRegistry فرستاده به استخر فی همین epoch
+        // اضافه می‌شود — از قبل در موجودی این قرارداد هست (از طریق receiveMembershipFee()
+        // دریافت شده)، پس فقط به فی معمولی می‌پیوندد و همان رفتار ۱۰۰٪-به‌نسبت-بلاک را
+        // می‌گیرد. به sur-tokenomics.md بخش ۶ مراجعه کنید.
+        uint256 membershipFeesThisEpoch = pendingMembershipFees;
+        pendingMembershipFees = 0;
+        uint256 effectiveTotalFees = totalFees + membershipFeesThisEpoch;
+
+        require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
         uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
@@ -224,8 +285,11 @@ contract BlockRewardDistributor {
         epochCount++;
         uint256 epochId = epochCount;
 
-        // سهم خزانه فقط از ریوارد گرفته می‌شود، هرگز از فی
-        uint256 treasuryAmount = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
+        // سهم خزانه فقط از ریوارد گرفته می‌شود، هرگز از فی. از همین سهم، یک بخش ثابت اکنون
+        // به بنیاد می‌رود — به sur-tokenomics.md بخش ۶.۵ مراجعه کنید.
+        uint256 treasuryCut = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 foundationAmount = (treasuryCut * FOUNDATION_SHARE_OF_TREASURY_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = treasuryCut - foundationAmount;
 
         (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
             _payValidators(
@@ -233,8 +297,8 @@ contract BlockRewardDistributor {
                 blocksMined,
                 EpochContext({
                     epochId: epochId,
-                    remainingRewards: totalRewards - treasuryAmount,
-                    totalFees: totalFees,
+                    remainingRewards: totalRewards - treasuryCut,
+                    totalFees: effectiveTotalFees,
                     totalBlocks: totalBlocks
                 })
             );
@@ -242,8 +306,9 @@ contract BlockRewardDistributor {
         _finalizeEpoch(
             epochId,
             totalRewards,
-            totalFees,
+            effectiveTotalFees,
             treasuryAmount,
+            foundationAmount,
             totalBlocks,
             validatorCount,
             distributedRewards,
@@ -356,22 +421,35 @@ contract BlockRewardDistributor {
         uint256 totalRewards,
         uint256 totalFees,
         uint256 treasuryAmount,
+        uint256 foundationAmount,
         uint256 totalBlocks,
         uint256 validatorCount,
         uint256 distributedRewards,
         uint256 distributedFees
     ) private {
         // خرده‌ریز رند شده از تقسیم ریوارد و فی، به مبلغ خزانه اضافه می‌شود تا هیچ wei ای
-        // توی قرارداد گیر نکند.
-        uint256 totalTreasuryAmount = treasuryAmount + (totalRewards - treasuryAmount - distributedRewards) + (totalFees - distributedFees);
+        // توی قرارداد گیر نکند. نکته: فرمول خرده‌ریز سمت ریوارد اکنون هم treasuryAmount هم
+        // foundationAmount را کم می‌کند (این دو با هم کل سهم ۵۰٪ خزانه را می‌سازند) — کم‌کردن
+        // فقط treasuryAmount (مثل نسخه‌ی قبل از تفکیک بنیاد) به‌اشتباه foundationAmount را
+        // دوباره «خرده‌ریز» حساب می‌کرد و سهم بنیاد را دوباره به خزانه می‌فرستاد.
+        uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
+        uint256 feeDust = totalFees - distributedFees;
+        uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");
             require(tsuccess, "BlockRewardDistributor: treasury transfer failed");
         }
 
+        if (foundationAmount > 0) {
+            (bool fsuccess, ) = FOUNDATION.call{value: foundationAmount}("");
+            require(fsuccess, "BlockRewardDistributor: foundation transfer failed");
+            emit FoundationFunded(epochId, foundationAmount);
+        }
+
         totalDistributedToValidators += (distributedRewards + distributedFees);
         totalDistributedToTreasury += totalTreasuryAmount;
+        totalDistributedToFoundation += foundationAmount;
         lastDistributionTime = block.timestamp;
 
         epochs[epochId] = Epoch({
