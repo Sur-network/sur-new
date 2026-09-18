@@ -9,14 +9,14 @@ pragma solidity ^0.8.24;
 // Purpose: the real ValidatorsBoard.sol has no constructor (it is injected directly into the
 // genesis alloc). But `boardMembers` (a dynamic array) and `isBoardMember` (a mapping) cannot be
 // populated with any contract-level Solidity syntax. This helper contract implements that exact
-// seeding logic inside a real, NO-ARGUMENT constructor — the 5 founding board members' addresses
+// seeding logic inside a real, NO-ARGUMENT constructor — the founding board members' addresses
 // are hardcoded directly below, not passed in as constructor arguments — so that running it once
 // on a temporary local chain (Anvil/Hardhat) lets the EVM itself perform the keccak256
 // storage-slot math required for the mapping/array.
 //
 // How the genesis-building tool should use this file:
-//   1. 🔶 FILL_IN: replace every placeholder address below with the real, final 5 founding
-//      board members before deploying this file anywhere.
+//   1. 🔶 FILL_IN: replace every placeholder address below with the real, final address for
+//      each founding board member before deploying this file anywhere.
 //   2. Deploy this file (no constructor arguments) on a temporary local chain.
 //   3. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
 //      state-dump tool).
@@ -36,9 +36,10 @@ contract ValidatorsBoard_GenesisSeed {
     mapping(address => bool) public isBoardMember;
 
     // ------------------------------------------------------------------
-    // No-argument constructor — all 5 founding board members are hardcoded directly below.
-    // 🔶 FILL_IN: replace every 0x000...000 address with the real, final, agreed-upon founding
-    // board member list before this file is ever deployed anywhere.
+    // No-argument constructor — the founding board members (exactly BOARD_SIZE = 5) are
+    // hardcoded directly below.
+    // 🔶 FILL_IN: replace every 0x000...000 address with the real, final address for each
+    // founding board member before this file is ever deployed anywhere.
     // ------------------------------------------------------------------
     constructor() {
         address[BOARD_SIZE] memory initialBoardMembers = [

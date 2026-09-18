@@ -16,8 +16,8 @@ pragma solidity ^0.8.24;
 // keccak256 storage-slot math required for each mapping/array entry.
 //
 // How the genesis-building tool should use this file:
-//   1. 🔶 FILL_IN: replace every placeholder name/address below with the real, final 15
-//      founding members before deploying this file anywhere.
+//   1. 🔶 FILL_IN: replace every placeholder address below with the real, final address for
+//      each founding member before deploying this file anywhere.
 //   2. Deploy this file (no constructor arguments) on a temporary local chain.
 //   3. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
 //      state-dump tool).
@@ -42,8 +42,8 @@ contract FoundationDAO_GenesisSeed {
 
     // ------------------------------------------------------------------
     // No-argument constructor — all 15 founding members are hardcoded directly below.
-    // 🔶 FILL_IN: replace every "Member N" name and every 0x000...000 address with the real,
-    // final, agreed-upon founding member list before this file is ever deployed anywhere.
+    // 🔶 FILL_IN: replace every 0x000...000 address with the real, final address for each
+    // founding member before this file is ever deployed anywhere.
     // ------------------------------------------------------------------
     constructor() {
         string[15] memory names = [
