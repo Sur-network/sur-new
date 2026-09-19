@@ -113,9 +113,26 @@ contract ValidatorsRegistry {
         uint256 lastLivenessConfirmation;
         uint256 livenessConfirmationsInPeriod; // positive liveness reports since periodStartedAt (reset each period)
         uint256 demotedAt;          // 0 if never demoted / currently not in Demoted status
+        bool isPaidEntrant;        // ✅ NEW: true only for validators who actually paid via
+        // requestMembership() below. False (default) for genesis-seeded founding validators,
+        // who are injected directly with lockedStake=0 and never call requestMembership(). This
+        // is what lets currentEntryThreshold() below charge the founders' free entry as
+        // "outside" the growth curve entirely — see paidValidatorCount and the design note
+        // above currentEntryThreshold() for the full reasoning (a deliberate decision: the
+        // ascending-cost curve should reflect only paid entries, not the founding cohort).
     }
 
     mapping(address => ValidatorInfo) public validators;
+
+    /// @notice ✅ NEW: count of currently-active validators who entered via requestMembership()
+    ///         (the paid path) — increments on a successful requestMembership(), decrements when
+    ///         a paid validator exits (see requestExit()/_removeFromActive()). Genesis-seeded
+    ///         founding validators are deliberately NOT counted here (they never call
+    ///         requestMembership()), so their free entry does not steepen the cost curve for
+    ///         anyone after them. currentEntryThreshold() below uses this instead of
+    ///         activeValidators.length as its exponent — see sur-tokenomics.md for the full
+    ///         economic reasoning behind this distinction.
+    uint256 public paidValidatorCount;
 
     // ------------------------------------------------------------------
     // Architecture note: identity (name/person type, mobile/Telegram/KYC verification) no
@@ -166,9 +183,10 @@ contract ValidatorsRegistry {
     // or by direct storage computation) — for each founding validator address v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, demotedAt: 0 });
+    //     livenessConfirmationsInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
+    //   // paidValidatorCount is NOT incremented for founders — see its doc comment above.
     // ------------------------------------------------------------------
     // Active validator set, exposed via getValidators(). Swap-and-pop removal via 1-based index.
     address[] private activeValidators;
@@ -186,13 +204,18 @@ contract ValidatorsRegistry {
     // $0.0005, 2,000,000 Suren ~= $1000 collateral per validator seat.
     // ------------------------------------------------------------------
 
-    /// @notice Base stake required to request membership when there are 0 active validators.
+    /// @notice Base stake required to request membership when there are 0 PAID validators yet
+    ///         (i.e., the first person to ever call requestMembership() — regardless of how
+    ///         many free, genesis-seeded founding validators are already active; see
+    ///         paidValidatorCount above).
     uint256 public entryThresholdBase = 2_000_000 ether; // 2,000,000 Suren (18 decimals, like ETH)
 
-    /// @notice The entry threshold grows CONTINUOUSLY (compounding per additional active
-    ///         validator, not in discrete steps): current threshold =
-    ///         entryThresholdBase * growthFactorPerValidator^activeValidators.length.
-    ///         `growthFactorPerValidator` is a fixed-point number with 18 decimals (see
+    /// @notice ✅ CHANGED: The entry threshold grows CONTINUOUSLY (compounding per additional
+    ///         PAID validator, not per active validator, and not in discrete steps): current
+    ///         threshold = entryThresholdBase * growthFactorPerValidator^paidValidatorCount.
+    ///         Genesis-seeded founding validators do NOT count toward this exponent — see the
+    ///         paidValidatorCount doc comment above for why. `growthFactorPerValidator` is a
+    ///         fixed-point number with 18 decimals (see
     ///         FIXED_POINT_ONE below); e.g. 1_044273782427413840 (~1.044274) means the threshold
     ///         grows by ~4.4274% for every additional active validator — chosen so that 16
     ///         consecutive validators joining multiplies the threshold by exactly 2x
@@ -323,11 +346,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
 
     /// @notice Current stake required to request membership. Grows continuously (compounding
-    ///         per additional active validator, not in discrete jumps) — see
-    ///         `growthFactorPerValidator` above. Capped at MAX_GROWTH_VALIDATORS active
-    ///         validators worth of growth, to avoid overflow/unbounded gas.
+    ///         per additional PAID validator — see paidValidatorCount — not per discrete jump,
+    ///         and NOT counting free genesis-seeded founders). Capped at MAX_GROWTH_VALIDATORS
+    ///         worth of growth, to avoid overflow/unbounded gas.
     function currentEntryThreshold() public view returns (uint256) {
-        uint256 n = activeValidators.length;
+        uint256 n = paidValidatorCount;
         if (n > MAX_GROWTH_VALIDATORS) n = MAX_GROWTH_VALIDATORS;
         uint256 multiplier = _fixedPow(growthFactorPerValidator, n);
         return (entryThresholdBase * multiplier) / FIXED_POINT_ONE;
@@ -418,8 +441,10 @@ contract ValidatorsRegistry {
             periodStartedAt: block.timestamp,
             lastLivenessConfirmation: block.timestamp,
             livenessConfirmationsInPeriod: 0,
-            demotedAt: 0
+            demotedAt: 0,
+            isPaidEntrant: true
         });
+        paidValidatorCount++;
 
         emit MembershipRequested(msg.sender, threshold, fee);
     }
@@ -550,6 +575,14 @@ contract ValidatorsRegistry {
             _removeFromActive(msg.sender);
         }
 
+        // ✅ NEW: a paid entrant leaving frees up their slot in the growth curve — the next
+        // paid joiner should not be charged as if this departed validator were still counted.
+        // Genesis-seeded founders (isPaidEntrant == false) never incremented this counter, so
+        // they correctly never decrement it either.
+        if (v.isPaidEntrant) {
+            paidValidatorCount--;
+        }
+
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
 
@@ -642,10 +675,11 @@ contract ValidatorsRegistry {
         uint256 periodStartedAt,
         uint256 lastLivenessConfirmation,
         uint256 livenessConfirmationsInPeriod,
-        uint256 demotedAt
+        uint256 demotedAt,
+        bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.demotedAt);
+        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.demotedAt, v.isPaidEntrant);
     }
 
     function requiredVotesNow() external view returns (uint256) {

@@ -112,7 +112,25 @@ contract ValidatorsRegistry {
         uint256 lastLivenessConfirmation;
         uint256 livenessConfirmationsInPeriod; // گزارش‌های لایوینس مثبت از periodStartedAt به بعد (هر دوره ریست می‌شود)
         uint256 demotedAt;          // اگه هرگز دموت نشده/الان در وضعیت Demoted نیست، صفر است
+        bool isPaidEntrant;        // ✅ تازه: فقط برای ولیدیتورهایی که واقعاً از طریق
+        // requestMembership() پایین پرداخت کرده‌اند true است. پیش‌فرض false برای ولیدیتورهای
+        // مؤسس genesis-seeded، که با lockedStake=0 مستقیم تزریق می‌شوند و هرگز
+        // requestMembership() را فراخوانی نمی‌کنند. این همان چیزیه که به currentEntryThreshold()
+        // پایین اجازه می‌دهد ورود رایگان مؤسسین را کاملاً «بیرون» از منحنی رشد نگه دارد — به
+        // paidValidatorCount و یادداشت طراحی بالای currentEntryThreshold() برای استدلال کامل
+        // مراجعه کن (یک تصمیم عمدی: منحنی هزینه‌ی صعودی باید فقط ورودی‌های پرداخت‌شده را
+        // منعکس کند، نه هیأت مؤسس را).
     }
+
+    /// @notice ✅ تازه: تعداد ولیدیتورهای فعلاً فعالی که از طریق requestMembership() (مسیر
+    ///         پرداختی) وارد شده‌اند — با هر requestMembership() موفق زیاد، و وقتی یک ولیدیتور
+    ///         پرداخت‌کرده خارج می‌شود کم می‌شود (به requestExit()/_removeFromActive() مراجعه
+    ///         کن). ولیدیتورهای مؤسس genesis-seeded عمداً اینجا شمرده نمی‌شوند (هرگز
+    ///         requestMembership() را فراخوانی نمی‌کنند)، پس ورود رایگانشان منحنی هزینه را برای
+    ///         هیچ‌کس بعد از خودشان تندتر نمی‌کند. currentEntryThreshold() پایین به‌جای
+    ///         activeValidators.length از این به‌عنوان توان استفاده می‌کند — برای استدلال کامل
+    ///         اقتصادی این تفاوت به sur-tokenomics.md مراجعه کن.
+    uint256 public paidValidatorCount;
 
     mapping(address => ValidatorInfo) public validators;
 
@@ -162,9 +180,10 @@ contract ValidatorsRegistry {
     // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هر آدرس ولیدیتور مؤسس v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, demotedAt: 0 });
+    //     livenessConfirmationsInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
+    //   // paidValidatorCount برای مؤسسین افزایش پیدا نمی‌کند — یادداشتش را بالا ببین.
     // ------------------------------------------------------------------
     // مجموعه‌ی ولیدیتورهای فعال، از طریق getValidators() افشا می‌شود. حذف با swap-and-pop از
     // طریق اندیس یک‌مبنایی.
@@ -183,19 +202,24 @@ contract ValidatorsRegistry {
     // ۲,۰۰۰,۰۰۰ سورن ~= ۱۰۰۰ دلار وثیقه به‌ازای هر کرسی ولیدیتور.
     // ------------------------------------------------------------------
 
-    /// @notice استیک پایه‌ی لازم برای درخواست عضویت وقتی صفر ولیدیتور فعال وجود دارد.
+    /// @notice استیک پایه‌ی لازم برای درخواست عضویت وقتی صفر ولیدیتور پرداخت‌کرده وجود دارد
+    ///         (یعنی اولین نفری که تا‌به‌حال requestMembership() را فراخوانی می‌کند — صرف‌نظر
+    ///         از این‌که چند ولیدیتور مؤسس رایگان genesis-seeded از قبل فعال باشند؛ به
+    ///         paidValidatorCount بالا مراجعه کن).
     uint256 public entryThresholdBase = 2_000_000 ether; // ۲,۰۰۰,۰۰۰ سورن (۱۸ رقم اعشار، مثل ETH)
 
-    /// @notice آستانه‌ی ورود به‌طور پیوسته رشد می‌کند (مرکب به‌ازای هر ولیدیتور فعال اضافی،
-    ///         نه در پله‌های گسسته): آستانه‌ی فعلی =
-    ///         entryThresholdBase * growthFactorPerValidator^activeValidators.length.
-    ///         `growthFactorPerValidator` یک عدد fixed-point با ۱۸ رقم اعشار است (FIXED_POINT_ONE
-    ///         پایین را ببین)؛ مثلاً 1_044273782427413840 (~۱.۰۴۴۲۷۴) یعنی آستانه به‌ازای هر
-    ///         ولیدیتور فعال اضافی حدود ۴.۴۲۷۴٪ رشد می‌کند — طوری انتخاب شده که ۱۶ ولیدیتور
-    ///         پیوسته‌ی تازه، آستانه را دقیقاً ۲برابر می‌کند (2^(1/16) ≈ 1.044274)، یعنی آستانه
-    ///         هر ۱۶ ولیدیتور فعال، به‌طور نرم (نه با یک پرش در دقیقاً شانزدهمین) دوبرابر
-    ///         می‌شود. این همان «منحنی هزینه‌ی صعودی» سند طراحی است: خرید هم‌زمان بیش از ۱/۳
-    ///         کرسی‌ها را نمایی، نه خطی، گران می‌کند.
+    /// @notice ✅ تغییر کرد: آستانه‌ی ورود به‌طور پیوسته رشد می‌کند (مرکب به‌ازای هر ولیدیتور
+    ///         *پرداخت‌کرده* اضافی، نه هر ولیدیتور فعال، و نه در پله‌های گسسته): آستانه‌ی فعلی =
+    ///         entryThresholdBase * growthFactorPerValidator^paidValidatorCount. ولیدیتورهای
+    ///         مؤسس genesis-seeded در این توان شمرده **نمی‌شوند** — یادداشت paidValidatorCount
+    ///         بالا را برای دلیلش ببین. `growthFactorPerValidator` یک عدد fixed-point با ۱۸ رقم
+    ///         اعشار است (FIXED_POINT_ONE پایین را ببین)؛ مثلاً 1_044273782427413840
+    ///         (~۱.۰۴۴۲۷۴) یعنی آستانه به‌ازای هر ولیدیتور پرداخت‌کرده‌ی اضافی حدود ۴.۴۲۷۴٪
+    ///         رشد می‌کند — طوری انتخاب شده که ۱۶ ولیدیتور پرداخت‌کرده‌ی پیوسته‌ی تازه، آستانه
+    ///         را دقیقاً ۲برابر می‌کند (2^(1/16) ≈ 1.044274)، یعنی آستانه هر ۱۶ ولیدیتور
+    ///         پرداخت‌کرده، به‌طور نرم (نه با یک پرش در دقیقاً شانزدهمین) دوبرابر می‌شود. این
+    ///         همان «منحنی هزینه‌ی صعودی» سند طراحی است: خرید هم‌زمان بیش از ۱/۳ کرسی‌ها را
+    ///         نمایی، نه خطی، گران می‌کند.
     uint256 public growthFactorPerValidator = 1_044273782427413840;
 
     /// @notice دقت fixed-point استفاده‌شده توسط growthFactorPerValidator و _fixedPow (۱۸ رقم
@@ -319,11 +343,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
 
     /// @notice استیک فعلی موردنیاز برای درخواست عضویت. به‌طور پیوسته رشد می‌کند (مرکب به‌ازای
-    ///         هر ولیدیتور فعال اضافی، نه در پرش‌های گسسته) — growthFactorPerValidator بالا را
-    ///         ببین. سقف‌گذاری‌شده روی رشد معادل MAX_GROWTH_VALIDATORS ولیدیتور فعال، برای
-    ///         جلوگیری از overflow/گس نامحدود.
+    ///         هر ولیدیتور *پرداخت‌کرده* اضافی — paidValidatorCount را ببین — نه پرش گسسته، و
+    ///         بدون شمردن مؤسسین رایگان genesis-seeded). سقف‌گذاری‌شده روی رشد معادل
+    ///         MAX_GROWTH_VALIDATORS، برای جلوگیری از overflow/گس نامحدود.
     function currentEntryThreshold() public view returns (uint256) {
-        uint256 n = activeValidators.length;
+        uint256 n = paidValidatorCount;
         if (n > MAX_GROWTH_VALIDATORS) n = MAX_GROWTH_VALIDATORS;
         uint256 multiplier = _fixedPow(growthFactorPerValidator, n);
         return (entryThresholdBase * multiplier) / FIXED_POINT_ONE;
@@ -415,8 +439,10 @@ contract ValidatorsRegistry {
             periodStartedAt: block.timestamp,
             lastLivenessConfirmation: block.timestamp,
             livenessConfirmationsInPeriod: 0,
-            demotedAt: 0
+            demotedAt: 0,
+            isPaidEntrant: true
         });
+        paidValidatorCount++;
 
         emit MembershipRequested(msg.sender, threshold, fee);
     }
@@ -547,6 +573,14 @@ contract ValidatorsRegistry {
             _removeFromActive(msg.sender);
         }
 
+        // ✅ تازه: خروج یک ولیدیتور پرداخت‌کرده، جایش را در منحنی رشد آزاد می‌کند — عضو
+        // پرداخت‌کننده‌ی بعدی نباید طوری حساب شود که انگار این ولیدیتور خارج‌شده هنوز حساب
+        // می‌شود. مؤسسین genesis-seeded (isPaidEntrant == false) هرگز این شمارنده را افزایش
+        // نداده‌اند، پس درست است که هرگز آن را کاهش هم ندهند.
+        if (v.isPaidEntrant) {
+            paidValidatorCount--;
+        }
+
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
 
@@ -639,10 +673,11 @@ contract ValidatorsRegistry {
         uint256 periodStartedAt,
         uint256 lastLivenessConfirmation,
         uint256 livenessConfirmationsInPeriod,
-        uint256 demotedAt
+        uint256 demotedAt,
+        bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.demotedAt);
+        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.demotedAt, v.isPaidEntrant);
     }
 
     function requiredVotesNow() external view returns (uint256) {
