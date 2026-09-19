@@ -102,9 +102,10 @@ contract BlockRewardDistributor {
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // سقف ۶۵٪
     uint256 private constant BPS_DENOMINATOR = 10000;
 
-    /// @notice ✅ تازه: بخش ثابتی از کل فی (فی معمولی تراکنش + کارمزد عضویت تاشده) که هر
-    ///         epoch، قبل از توزیع ۷۰٪ باقی‌مانده دقیقاً مثل قبل بین ولیدیتورها، برای همیشه
-    ///         سوزانده می‌شود. به sur-tokenomics.md بخش ۷ برای استدلال کامل مراجعه کن: چون
+    /// @notice ✅ تازه: بخش ثابتی از **فی معمولی تراکنش** (نه کارمزد عضویت — به کامنت
+    ///         distributeRewards() مراجعه کن که چرا عمداً معافه) که هر epoch، قبل از توزیع
+    ///         ۷۰٪ باقی‌مانده دقیقاً مثل قبل بین ولیدیتورها، برای همیشه سوزانده می‌شود. به
+    ///         sur-tokenomics.md بخش ۷ برای استدلال کامل مراجعه کن: چون
     ///         منبع غالب تورم سورن خودِ ریوارده نه فی، سوزاندن فی به‌تنهایی تورم را خنثی
     ///         نمی‌کند، ولی یک مکانیزم کمیابی مرتبط با کاربرد واقعی می‌سازد — نزدیک‌ترین
     ///         معادلی که طراحی `gasPrice` ثابت این پروژه (نه پویا مثل EIP-1559) اجازه می‌دهد،
@@ -462,11 +463,14 @@ contract BlockRewardDistributor {
         require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        // ✅ تازه: ۳۰٪ ثابت از کل استخر فی (فی معمولی + کارمزد عضویت) سوزانده می‌شود — به
-        // کامنت FEE_BURN_BPS بالا مراجعه کن. فقط ۷۰٪ باقی‌مانده واقعاً پایین بین ولیدیتورها
-        // توزیع می‌شود؛ رکورد epoch و رویدادش همچنان effectiveTotalFees کامل قبل از سوزاندن
-        // را جدا از مبلغ سوزانده‌شده گزارش می‌دهند، برای شفافیت کامل.
-        uint256 feeBurnAmount = (effectiveTotalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        // ✅ تازه: ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
+        // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
+        // اصلاً یه فی عمومی شبکه نیست — یه پرداخت هدفمند و یک‌باره‌ی جبران رقیق‌شدن به
+        // ولیدیتورهای موجوده، که با ورود ولیدیتور تازه فعال می‌شه. سوزوندن بخشی ازش، این
+        // انگیزه‌ی مشخص رو به‌عنوان یه اثر جانبی ناخواسته‌ی یه تصمیم بعدی و بی‌ربط (سوزاندن
+        // عمومی فی) ضعیف می‌کنه. فی معمولی چنین هدف‌گذاری‌ای نداره، پس هدف درست — و تنها هدف
+        // — سوزاندنه.
+        uint256 feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
         uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
 
         uint256 totalBlocks = _sumBlocks(blocksMined);

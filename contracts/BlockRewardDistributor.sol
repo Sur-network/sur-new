@@ -44,19 +44,22 @@ interface IValidatorsBoard {
 ///             toward a bigger treasury, since a bigger treasury means more discretionary
 ///             spending under its own small-expenditure approval power) as a built-in check
 ///             against either chamber unilaterally draining the other's share over time.
-///           - From total FEES: ✅ NEW — a fixed 30% (FEE_BURN_BPS) is now permanently burned
-///             (sent to BURN_ADDRESS = address(0)) every epoch; the remaining 70% is split
-///             among validators proportionally to blocks mined exactly as before (still no
-///             treasury or foundation cut on the distributed portion). See FEE_BURN_BPS's own
-///             doc comment and sur-tokenomics.md section 7 for why fees (not rewards) were
-///             chosen as the burn target, and why 30% specifically.
+///           - From total ORDINARY FEES (not membership fees — see below): ✅ NEW — a fixed
+///             30% (FEE_BURN_BPS) is now permanently burned (sent to BURN_ADDRESS =
+///             address(0)) every epoch; the remaining 70% is split among validators
+///             proportionally to blocks mined exactly as before (still no treasury or
+///             foundation cut on the distributed portion). See FEE_BURN_BPS's own doc comment
+///             and sur-tokenomics.md section 7 for why fees (not rewards) were chosen as the
+///             burn target, and why 30% specifically.
 ///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() no longer sends
 ///             the membership fee to ValidatorsTreasury. Instead it forwards it here via
 ///             receiveMembershipFee(), where it accumulates in `pendingMembershipFees` and is
-///             folded into the *next* epoch's fee pool (same 100%-pro-rata-by-blocks treatment
-///             as ordinary transaction fees — see sur-tokenomics.md section 6 for why: this
-///             gives existing validators a direct, traceable cash incentive tied to every new
-///             validator that joins). This means a new member's fee is not paid out in the same
+///             folded into the *next* epoch's fee pool — ✅ UPDATED: fully exempt from the 30%
+///             burn above (100% of it reaches validators, unlike ordinary fees), but otherwise
+///             the same 100%-pro-rata-by-blocks treatment as ordinary transaction fees — see
+///             sur-tokenomics.md section 6 for why: this gives existing validators a direct,
+///             traceable cash incentive tied to every new validator that joins). This means a
+///             new member's fee is not paid out in the same
 ///             block as their registration — it is paid out at the next distributionOracle
 ///             epoch (~23 hours later), exactly like ordinary fees already are.
 ///           - Each validator receives exactly one payment per call (a single combined
@@ -104,15 +107,15 @@ contract BlockRewardDistributor {
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // 65% ceiling
     uint256 private constant BPS_DENOMINATOR = 10000;
 
-    /// @notice ✅ NEW: fixed fraction of total fees (ordinary tx fees + folded-in membership
-    ///         fees) that is permanently burned every epoch, before the remaining 70% is
-    ///         distributed 100%-pro-rata-by-blocks to validators exactly as before. See
-    ///         sur-tokenomics.md section 7 for the full reasoning: rewards (not fees) are the
-    ///         dominant source of Suren inflation, so burning fees alone cannot offset it, but
-    ///         it creates a usage-linked scarcity mechanism that grows in effect as real network
-    ///         activity grows — the closest analogue this project's fixed-gasPrice design
-    ///         allows to Ethereum's EIP-1559 base-fee burn, without adopting a dynamic gas price
-    ///         (which would break the "predictable Suren-denominated cost" design goal).
+    /// @notice ✅ NEW: fixed fraction of ordinary transaction fees (NOT membership fees — see
+    /// distributeRewards()'s comment for why they are deliberately exempt) that is permanently
+    /// burned every epoch, before the remaining 70% is distributed 100%-pro-rata-by-blocks to
+    /// validators exactly as before. See sur-tokenomics.md section 7 for the full reasoning:
+    /// rewards (not fees) are the dominant source of Suren inflation, so burning fees alone
+    /// cannot offset it, but it creates a usage-linked scarcity mechanism that grows in effect
+    /// as real network activity grows — the closest analogue this project's fixed-gasPrice
+    /// design allows to Ethereum's EIP-1559 base-fee burn, without adopting a dynamic gas price
+    /// (which would break the "predictable Suren-denominated cost" design goal).
     uint256 public constant FEE_BURN_BPS = 3000; // 30%
 
     /// @notice Burning native Suren means sending it to the zero address — no private key
@@ -470,11 +473,15 @@ contract BlockRewardDistributor {
         require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        // ✅ NEW: burn a fixed 30% of the full fee pool (ordinary fees + membership fees) —
-        // see FEE_BURN_BPS's doc comment above for why. Only the remaining 70% is what actually
-        // gets distributed to validators below; the epoch record and event still report the
-        // FULL pre-burn effectiveTotalFees separately from the burned amount, for transparency.
-        uint256 feeBurnAmount = (effectiveTotalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        // ✅ NEW: burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
+        // deliberately NOT of membershipFeesThisEpoch. Rationale (see sur-tokenomics.md
+        // section 6): the membership fee is not a general network fee at all — it is a
+        // targeted, one-time dilution-compensation payment to existing validators, triggered
+        // by a new validator's entry. Burning part of it would silently weaken that specific
+        // incentive mechanism as an unintended side effect of a later, unrelated decision
+        // (the general fee-burn). Ordinary fees have no such earmarked purpose, so they are
+        // the correct — and only — burn target.
+        uint256 feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
         uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
 
         uint256 totalBlocks = _sumBlocks(blocksMined);
