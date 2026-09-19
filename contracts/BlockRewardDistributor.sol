@@ -44,8 +44,12 @@ interface IValidatorsBoard {
 ///             toward a bigger treasury, since a bigger treasury means more discretionary
 ///             spending under its own small-expenditure approval power) as a built-in check
 ///             against either chamber unilaterally draining the other's share over time.
-///           - From total FEES: 100% is split among validators proportionally to blocks mined
-///             (no treasury or foundation cut on fees) — unchanged.
+///           - From total FEES: ✅ NEW — a fixed 30% (FEE_BURN_BPS) is now permanently burned
+///             (sent to BURN_ADDRESS = address(0)) every epoch; the remaining 70% is split
+///             among validators proportionally to blocks mined exactly as before (still no
+///             treasury or foundation cut on the distributed portion). See FEE_BURN_BPS's own
+///             doc comment and sur-tokenomics.md section 7 for why fees (not rewards) were
+///             chosen as the burn target, and why 30% specifically.
 ///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() no longer sends
 ///             the membership fee to ValidatorsTreasury. Instead it forwards it here via
 ///             receiveMembershipFee(), where it accumulates in `pendingMembershipFees` and is
@@ -99,6 +103,27 @@ contract BlockRewardDistributor {
     uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // 40% floor
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // 65% ceiling
     uint256 private constant BPS_DENOMINATOR = 10000;
+
+    /// @notice ✅ NEW: fixed fraction of total fees (ordinary tx fees + folded-in membership
+    ///         fees) that is permanently burned every epoch, before the remaining 70% is
+    ///         distributed 100%-pro-rata-by-blocks to validators exactly as before. See
+    ///         sur-tokenomics.md section 7 for the full reasoning: rewards (not fees) are the
+    ///         dominant source of Suren inflation, so burning fees alone cannot offset it, but
+    ///         it creates a usage-linked scarcity mechanism that grows in effect as real network
+    ///         activity grows — the closest analogue this project's fixed-gasPrice design
+    ///         allows to Ethereum's EIP-1559 base-fee burn, without adopting a dynamic gas price
+    ///         (which would break the "predictable Suren-denominated cost" design goal).
+    uint256 public constant FEE_BURN_BPS = 3000; // 30%
+
+    /// @notice Burning native Suren means sending it to the zero address — no private key
+    ///         exists for it, so any value sent here is permanently and verifiably
+    ///         irrecoverable. A plain value transfer to address(0) succeeds on Besu/EVM exactly
+    ///         like a transfer to any other externally-owned account.
+    address public constant BURN_ADDRESS = address(0);
+
+    /// @notice Cumulative Suren burned from fees since deployment — for off-chain dashboards
+    ///         and audits (mirrors totalDistributedToValidators/Treasury/Foundation below).
+    uint256 public totalFeesBurned;
 
     /// @notice Minimum allowed interval between two consecutive distribution calls.
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
@@ -228,6 +253,7 @@ contract BlockRewardDistributor {
     event RewardsReceived(address indexed from, uint256 amount);
     event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
     event FoundationFunded(uint256 indexed epochId, uint256 amount);
+    event FeesBurned(uint256 indexed epochId, uint256 amount, uint256 totalBurnedToDate);
     event ShareChangeProposed(uint256 indexed id, uint256 newValidatorShareBps, address indexed proposer);
     event ShareChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
     event ShareChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
@@ -444,6 +470,13 @@ contract BlockRewardDistributor {
         require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
+        // ✅ NEW: burn a fixed 30% of the full fee pool (ordinary fees + membership fees) —
+        // see FEE_BURN_BPS's doc comment above for why. Only the remaining 70% is what actually
+        // gets distributed to validators below; the epoch record and event still report the
+        // FULL pre-burn effectiveTotalFees separately from the burned amount, for transparency.
+        uint256 feeBurnAmount = (effectiveTotalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
+
         uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
         _checkPhysicalMaximum(totalBlocks);
@@ -469,7 +502,7 @@ contract BlockRewardDistributor {
                 EpochContext({
                     epochId: epochId,
                     remainingRewards: validatorDirectAmount,
-                    totalFees: effectiveTotalFees,
+                    totalFees: feesToDistribute,
                     totalBlocks: totalBlocks
                 })
             );
@@ -478,6 +511,7 @@ contract BlockRewardDistributor {
             epochId,
             totalRewards,
             effectiveTotalFees,
+            feeBurnAmount,
             treasuryAmount,
             foundationAmount,
             totalBlocks,
@@ -591,6 +625,7 @@ contract BlockRewardDistributor {
         uint256 epochId,
         uint256 totalRewards,
         uint256 totalFees,
+        uint256 feeBurnAmount,
         uint256 treasuryAmount,
         uint256 foundationAmount,
         uint256 totalBlocks,
@@ -606,7 +641,11 @@ contract BlockRewardDistributor {
         // that level), what's left over here is exactly validatorDirectAmount - distributedRewards
         // — the integer-division remainder from splitting validatorDirectAmount by block share.
         uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        uint256 feeDust = totalFees - distributedFees;
+        // ✅ CHANGED: totalFees here is the FULL pre-burn fee pool (for the epoch record/event's
+        // transparency — see distributeRewards). feeDust must therefore subtract feeBurnAmount
+        // as well as distributedFees, or the burned 30% would be silently miscounted as
+        // "rounding dust" and sent to the treasury a second time on top of already being burned.
+        uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
         if (totalTreasuryAmount > 0) {
@@ -618,6 +657,17 @@ contract BlockRewardDistributor {
             (bool fsuccess, ) = FOUNDATION.call{value: foundationAmount}("");
             require(fsuccess, "BlockRewardDistributor: foundation transfer failed");
             emit FoundationFunded(epochId, foundationAmount);
+        }
+
+        // ✅ NEW: actually burn the fee-burn portion — sent last, after the treasury/foundation
+        // transfers, purely for a consistent call ordering; the amount was already carved out
+        // of feesToDistribute before _payValidators ran, so this is simply moving Suren that
+        // was never paid to anyone into permanent, verifiable non-circulation.
+        if (feeBurnAmount > 0) {
+            (bool bsuccess, ) = BURN_ADDRESS.call{value: feeBurnAmount}("");
+            require(bsuccess, "BlockRewardDistributor: fee burn transfer failed");
+            totalFeesBurned += feeBurnAmount;
+            emit FeesBurned(epochId, feeBurnAmount, totalFeesBurned);
         }
 
         totalDistributedToValidators += (distributedRewards + distributedFees);

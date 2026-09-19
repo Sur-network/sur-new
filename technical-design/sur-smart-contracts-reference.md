@@ -323,6 +323,8 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 ✅ **تغییر تازه‌تر — نسبت سهم مستقیم/خزانه اکنون حکمرانی‌شونده است:** `TREASURY_SHARE_BPS` ثابت قبلی حذف و با `validatorDirectShareBps` (متغیر حالت، شروع ۵۰٪) جایگزین شد — قابل‌تغییر فقط از طریق رأی‌گیری دومجلسی (`proposeShareChange`/`boardVoteShareChange`/`validatorVoteShareChange` در `BlockRewardDistributor.sol`)، محدود به بازه‌ی [۴۰٪, ۶۵٪]، با فاصله‌ی حداقلی ۶ ماه بین تغییرات.
 
+✅ **تغییر تازه‌تر — سوزاندن ۳۰٪ فی (هر دو زبان کامل):** `FEE_BURN_BPS = 3000` (ثابت، غیرقابل‌حکمرانی) — از کل استخر فی هر epoch (فی معمولی + کارمزد عضویت تاشده)، ۳۰٪ به `BURN_ADDRESS = address(0)` فرستاده می‌شود؛ ۷۰٪ باقی‌مانده مثل قبل بین ولیدیتورها تقسیم می‌شود. رویداد `FeesBurned` و شمارنده‌ی تجمعی `totalFeesBurned` برای شفافیت اضافه شدند. جزئیات کامل در `sur-tokenomics.md` بخش ۷.
+
 ✅ **تغییر تازه‌تر — منحنی هزینه‌ی ورود:** `entryThresholdBase` از ۲ میلیون به ۵۰۰,۰۰۰ سورن، و دوره‌ی دوبرابرشدن از ۱۶ به ۴۰ ولیدیتور *پرداخت‌کننده* تغییر کرد؛ منحنی دیگر ۷ ولیدیتور مؤسس رایگان genesis-seeded را نمی‌شمرد (`isPaidEntrant`/`paidValidatorCount` تازه در `ValidatorsRegistry.sol`).
 
 جزئیات کامل هر سه در `sur-tokenomics.md` بخش‌های ۶، ۶.۵، و ۶.۶.

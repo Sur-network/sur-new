@@ -43,8 +43,12 @@ interface IValidatorsBoard {
 ///             خزانه‌ی بزرگ‌تر یعنی اختیار خرج صلاحدیدی بیشتر زیر قدرت تصویب هزینه‌ی کوچک
 ///             خودش) به‌عنوان یک بازدارنده‌ی داخلی در برابر تخلیه‌ی یک‌طرفه‌ی سهم دیگری توسط
 ///             هرکدام از این دو مجلس در طول زمان استفاده می‌کند.
-///           - از کل فی: ۱۰۰٪ به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (بدون سهم
-///             خزانه یا بنیاد از فی) — بدون تغییر.
+///           - از کل فی: ✅ تازه — یک ۳۰٪ ثابت (FEE_BURN_BPS) اکنون هر epoch برای همیشه
+///             سوزانده می‌شود (به BURN_ADDRESS = address(0) فرستاده می‌شود)؛ ۷۰٪ باقی‌مانده
+///             دقیقاً مثل قبل به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (همچنان بدون
+///             سهم خزانه یا بنیاد از بخش توزیع‌شده). به کامنت خودِ FEE_BURN_BPS و
+///             sur-tokenomics.md بخش ۷ مراجعه کن که چرا فی (نه ریوارد) به‌عنوان هدف سوزاندن
+///             انتخاب شد، و چرا دقیقاً ۳۰٪.
 ///           - کارمزد عضویت معلق: ValidatorsRegistry.requestMembership() دیگر کارمزد عضویت
 ///             را به ValidatorsTreasury نمی‌فرستد. به‌جایش آن را از طریق
 ///             receiveMembershipFee() به همین قرارداد می‌فرستد، جایی که در
@@ -97,6 +101,25 @@ contract BlockRewardDistributor {
     uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // کف ۴۰٪
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // سقف ۶۵٪
     uint256 private constant BPS_DENOMINATOR = 10000;
+
+    /// @notice ✅ تازه: بخش ثابتی از کل فی (فی معمولی تراکنش + کارمزد عضویت تاشده) که هر
+    ///         epoch، قبل از توزیع ۷۰٪ باقی‌مانده دقیقاً مثل قبل بین ولیدیتورها، برای همیشه
+    ///         سوزانده می‌شود. به sur-tokenomics.md بخش ۷ برای استدلال کامل مراجعه کن: چون
+    ///         منبع غالب تورم سورن خودِ ریوارده نه فی، سوزاندن فی به‌تنهایی تورم را خنثی
+    ///         نمی‌کند، ولی یک مکانیزم کمیابی مرتبط با کاربرد واقعی می‌سازد — نزدیک‌ترین
+    ///         معادلی که طراحی `gasPrice` ثابت این پروژه (نه پویا مثل EIP-1559) اجازه می‌دهد،
+    ///         بدون قربانی‌کردن هدف «هزینه‌ی قابل‌پیش‌بینی به سورن».
+    uint256 public constant FEE_BURN_BPS = 3000; // ۳۰٪
+
+    /// @notice سوزاندن سورن بومی یعنی ارسالش به آدرس صفر — هیچ کلید خصوصی‌ای برایش وجود
+    ///         ندارد، پس هر مبلغ ارسال‌شده اینجا برای همیشه و به‌طور قابل‌راستی‌آزمایی
+    ///         بازیابی‌ناپذیر است. یک انتقال ساده به address(0) روی Besu/EVM دقیقاً مثل
+    ///         انتقال به هر حساب برون‌زنجیره‌ی دیگری موفق می‌شود.
+    address public constant BURN_ADDRESS = address(0);
+
+    /// @notice مجموع تجمعی سورن سوزانده‌شده از فی از زمان دیپلوی — برای داشبوردهای آف‌چین و
+    ///         حسابرسی (مثل totalDistributedToValidators/Treasury/Foundation پایین).
+    uint256 public totalFeesBurned;
 
     /// @notice حداقل فاصله‌ی مجاز بین دو فراخوانی متوالی توزیع.
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
@@ -227,6 +250,7 @@ contract BlockRewardDistributor {
     event RewardsReceived(address indexed from, uint256 amount);
     event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
     event FoundationFunded(uint256 indexed epochId, uint256 amount);
+    event FeesBurned(uint256 indexed epochId, uint256 amount, uint256 totalBurnedToDate);
     event ShareChangeProposed(uint256 indexed id, uint256 newValidatorShareBps, address indexed proposer);
     event ShareChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
     event ShareChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
@@ -438,6 +462,13 @@ contract BlockRewardDistributor {
         require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
+        // ✅ تازه: ۳۰٪ ثابت از کل استخر فی (فی معمولی + کارمزد عضویت) سوزانده می‌شود — به
+        // کامنت FEE_BURN_BPS بالا مراجعه کن. فقط ۷۰٪ باقی‌مانده واقعاً پایین بین ولیدیتورها
+        // توزیع می‌شود؛ رکورد epoch و رویدادش همچنان effectiveTotalFees کامل قبل از سوزاندن
+        // را جدا از مبلغ سوزانده‌شده گزارش می‌دهند، برای شفافیت کامل.
+        uint256 feeBurnAmount = (effectiveTotalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
+
         uint256 totalBlocks = _sumBlocks(blocksMined);
         require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
         _checkPhysicalMaximum(totalBlocks);
@@ -462,7 +493,7 @@ contract BlockRewardDistributor {
                 EpochContext({
                     epochId: epochId,
                     remainingRewards: validatorDirectAmount,
-                    totalFees: effectiveTotalFees,
+                    totalFees: feesToDistribute,
                     totalBlocks: totalBlocks
                 })
             );
@@ -471,6 +502,7 @@ contract BlockRewardDistributor {
             epochId,
             totalRewards,
             effectiveTotalFees,
+            feeBurnAmount,
             treasuryAmount,
             foundationAmount,
             totalBlocks,
@@ -584,6 +616,7 @@ contract BlockRewardDistributor {
         uint256 epochId,
         uint256 totalRewards,
         uint256 totalFees,
+        uint256 feeBurnAmount,
         uint256 treasuryAmount,
         uint256 foundationAmount,
         uint256 totalBlocks,
@@ -592,12 +625,18 @@ contract BlockRewardDistributor {
         uint256 distributedFees
     ) private {
         // خرده‌ریز رند شده از تقسیم ریوارد و فی، به مبلغ خزانه اضافه می‌شود تا هیچ wei ای
-        // توی قرارداد گیر نکند. نکته: فرمول خرده‌ریز سمت ریوارد اکنون هم treasuryAmount هم
-        // foundationAmount را کم می‌کند (این دو با هم کل سهم ۵۰٪ خزانه را می‌سازند) — کم‌کردن
-        // فقط treasuryAmount (مثل نسخه‌ی قبل از تفکیک بنیاد) به‌اشتباه foundationAmount را
-        // دوباره «خرده‌ریز» حساب می‌کرد و سهم بنیاد را دوباره به خزانه می‌فرستاد.
+        // توی قرارداد گیر نکند. فرمول خرده‌ریز سمت ریوارد treasuryAmount، foundationAmount، و
+        // distributedRewards را از totalRewards کم می‌کند — چون totalRewards از نظر جبری
+        // دقیقاً برابر foundationAmount + validatorDirectAmount + treasuryAmount است
+        // (treasuryAmount به‌عنوان باقی‌مانده تعریف شده، پس در آن سطح خرده‌ریزی نیست)، آنچه
+        // اینجا باقی می‌ماند دقیقاً validatorDirectAmount - distributedRewards است — باقی‌مانده‌ی
+        // تقسیم صحیح‌عددی هنگام تقسیم به نسبت بلاک.
         uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        uint256 feeDust = totalFees - distributedFees;
+        // ✅ تغییر کرد: totalFees اینجا کل استخر فی *قبل از سوزاندن* است (برای شفافیت رکورد
+        // epoch/رویداد — به distributeRewards مراجعه کن). پس feeDust باید هم feeBurnAmount هم
+        // distributedFees را کم کند، وگرنه ۳۰٪ سوزانده‌شده به‌اشتباه «خرده‌ریز» حساب و یک بار
+        // دیگر (روی سوزاندن قبلی‌اش) به خزانه فرستاده می‌شد.
+        uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
         if (totalTreasuryAmount > 0) {
@@ -609,6 +648,17 @@ contract BlockRewardDistributor {
             (bool fsuccess, ) = FOUNDATION.call{value: foundationAmount}("");
             require(fsuccess, "BlockRewardDistributor: foundation transfer failed");
             emit FoundationFunded(epochId, foundationAmount);
+        }
+
+        // ✅ تازه: بخش سوزاندنی فی را واقعاً بسوزان — بعد از انتقال‌های خزانه/بنیاد، صرفاً
+        // برای ترتیب فراخوانی یکدست؛ این مبلغ از قبل، پیش از اجرای _payValidators، از
+        // feesToDistribute کنار گذاشته شده بود، پس اینجا فقط سورنی را که هرگز به کسی پرداخت
+        // نشده به یک عدم‌گردش دائمی و قابل‌راستی‌آزمایی منتقل می‌کنیم.
+        if (feeBurnAmount > 0) {
+            (bool bsuccess, ) = BURN_ADDRESS.call{value: feeBurnAmount}("");
+            require(bsuccess, "BlockRewardDistributor: fee burn transfer failed");
+            totalFeesBurned += feeBurnAmount;
+            emit FeesBurned(epochId, feeBurnAmount, totalFeesBurned);
         }
 
         totalDistributedToValidators += (distributedRewards + distributedFees);
