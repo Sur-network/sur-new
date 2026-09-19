@@ -16,13 +16,19 @@ interface IValidatorsRegistry {
 ///         anywhere in this system.
 ///
 ///         Two inflows, both native currency:
-///           - 50% of every block's reward share from BlockRewardDistributor (see design doc
-///             section 3: "50% of the block reward goes to the validators' treasury").
-///             Transaction fees never flow here — 100% of fees go directly to validators by
-///             block ratio.
-///           - The membership fee (+ slashed collateral) forwarded directly by ValidatorsRegistry
-///             on every new validator's entry / every inactivity-demotion (see
-///             ValidatorsRegistry's "MEMBERSHIP FEE" doc comment for the hybrid stake model).
+///           - ✅ UPDATED: whatever remains of the block reward after Foundation's fixed 15%
+///             cut (of TOTAL rewards, independent of this) and validators' own direct,
+///             governable share (validatorDirectShareBps, [40%, 65%] of total, changeable via
+///             the bicameral vote in BlockRewardDistributor.sol) are both removed — see
+///             sur-tokenomics.md sections 6.5/6.6 for the full current model; the old fixed
+///             "50% of block reward" description no longer applies. Transaction fees never flow
+///             here — 70% of fees go directly to validators by block ratio, and the remaining
+///             30% is permanently burned (section 7) — treasury gets none of either.
+///           - The slashed collateral forwarded directly by ValidatorsRegistry on every
+///             inactivity-demotion (see ValidatorsRegistry's "MEMBERSHIP FEE" doc comment for
+///             the hybrid stake model). ✅ Membership fees themselves no longer arrive here —
+///             they go to BlockRewardDistributor instead, folded into the next fee epoch and
+///             paid 100%-pro-rata-by-blocks to active validators (sur-tokenomics.md section 6).
 ///
 ///         Two spending paths, matching the governance structure in the design doc:
 ///
@@ -116,8 +122,10 @@ contract ValidatorsTreasury {
     // ------------------------------------------------------------------
 
     // ------------------------------------------------------------------
-    // Automatic receipt of native Suren — from BlockRewardDistributor's 50% reward share, and
-    // from ValidatorsRegistry's membership fees / slashed collateral.
+    // Automatic receipt of native Suren — ✅ UPDATED: from BlockRewardDistributor's remainder
+    // share (after Foundation's fixed 15% and validators' governable direct share are both
+    // removed — no longer a fixed 50%), and from ValidatorsRegistry's slashed collateral only
+    // (membership fees go to BlockRewardDistributor instead, not here).
     // ------------------------------------------------------------------
     receive() external payable {
         totalDistributedToTreasury += msg.value;
