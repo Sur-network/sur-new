@@ -5,6 +5,13 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
+    function getActiveValidatorCount() external view returns (uint256); // ✅ NEW: needed for the 2/3-of-assembly threshold in the bicameral share-change vote below.
+}
+
+/// @notice ✅ NEW: minimal interface onto ValidatorsBoard, needed only to check board
+///         membership for the bicameral share-change vote below (see proposeShareChange).
+interface IValidatorsBoard {
+    function isBoardMember(address who) external view returns (bool);
 }
 
 /// @title BlockRewardDistributor
@@ -16,13 +23,27 @@ interface IValidatorsRegistry {
 ///         Experiment 1) and periodically distributes them, based on data reported by an
 ///         authorized oracle, between validators and ValidatorsTreasury.
 ///
-///         Distribution rules (updated model — see sur-tokenomics.md section 6.5 for the
-///         Foundation funding decision and section 6 for the membership-fee redirect decision):
-///           - From total REWARDS: 50% (TREASURY_SHARE_BPS) is the "treasury cut". Of that cut,
-///             15% (FOUNDATION_SHARE_OF_TREASURY_BPS) now goes to FoundationDAO — automatically,
-///             every epoch, with no vote and no way for validators to cancel it — and the
-///             remaining 85% goes to ValidatorsTreasury as before. The other 50% of rewards is
-///             split among validators proportionally to blocks mined, unchanged.
+///         Distribution rules (✅ updated again — see sur-tokenomics.md section 6.5/6/11 for
+///         the full economic and governance reasoning behind each piece below):
+///           - From total REWARDS: FoundationDAO's 15% (FOUNDATION_SHARE_BPS) is now taken
+///             DIRECTLY off the top of total rewards — fixed forever, automatic, no vote, and
+///             deliberately NOT computed as a percentage of anything else (earlier drafts of
+///             this contract computed it as 15% of a 50% "treasury cut," which meant Foundation
+///             income would have silently moved whenever the treasury/validator split below was
+///             later made governable — exactly the entanglement the fixed-15%-of-total design
+///             avoids).
+///           - Of the REMAINING 85%, the split between validators (direct, block-share-based)
+///             and ValidatorsTreasury is governed by `validatorDirectShareBps` — ✅ NEW:
+///             changeable via a bicameral vote (see proposeShareChange/boardVoteShareChange/
+///             validatorVoteShareChange below), bounded to [40%, 65%] of TOTAL rewards, with a
+///             mandatory 6-month cooldown between successful changes. Both chambers — a simple
+///             majority of ValidatorsBoard AND a two-thirds majority of the full active
+///             validator assembly — must independently approve the same proposal before it
+///             takes effect. This deliberately uses the two chambers' opposing incentives (rank-
+///             and-file validators are pulled toward a bigger direct share; the board is pulled
+///             toward a bigger treasury, since a bigger treasury means more discretionary
+///             spending under its own small-expenditure approval power) as a built-in check
+///             against either chamber unilaterally draining the other's share over time.
 ///           - From total FEES: 100% is split among validators proportionally to blocks mined
 ///             (no treasury or foundation cut on fees) — unchanged.
 ///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() no longer sends
@@ -58,15 +79,25 @@ contract BlockRewardDistributor {
     // Constants and configuration
     // ------------------------------------------------------------------
 
-    /// @notice Treasury's share of total REWARDS (not fees) — basis points out of 10000 = 100%.
-    uint256 public constant TREASURY_SHARE_BPS = 5000; // 50%
+    /// @notice Foundation's share of TOTAL rewards (not of any sub-cut) — basis points out of
+    ///         10000 = 100%. ✅ CHANGED: fixed forever, applied directly to totalRewards, and
+    ///         deliberately independent of validatorDirectShareBps below — see sur-tokenomics.md
+    ///         section 6.5 and the contract-level doc comment above for why this must stay
+    ///         decoupled from the governable treasury/validator split.
+    uint256 public constant FOUNDATION_SHARE_BPS = 1500; // 15% of total rewards, always
 
-    /// @notice Foundation's share OF the treasury cut (not of total rewards) — basis points out
-    ///         of 10000 = 100% of TREASURY_SHARE_BPS. See sur-tokenomics.md section 6.5: this
-    ///         funds the Foundation's ongoing operating costs (board/CEO/staff salaries), not
-    ///         campaign budgets, which is why it is small, automatic, and non-cancelable rather
-    ///         than routed through any vote.
-    uint256 public constant FOUNDATION_SHARE_OF_TREASURY_BPS = 1500; // 15% of the 50% cut
+    /// @notice ✅ NEW (replaces the old constant TREASURY_SHARE_BPS): validators' direct,
+    ///         block-share-based cut of TOTAL rewards — basis points out of 10000. Starts at the
+    ///         same 50% the old fixed constant used, but is now a governable STATE variable,
+    ///         changeable only via the bicameral vote below (proposeShareChange /
+    ///         boardVoteShareChange / validatorVoteShareChange), bounded to
+    ///         [VALIDATOR_SHARE_MIN_BPS, VALIDATOR_SHARE_MAX_BPS]. ValidatorsTreasury receives
+    ///         whatever remains after Foundation's fixed 15% and this share are both taken out:
+    ///         treasuryShare = 10000 - FOUNDATION_SHARE_BPS - validatorDirectShareBps.
+    uint256 public validatorDirectShareBps = 5000; // 50% initially — same starting point as before
+
+    uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // 40% floor
+    uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // 65% ceiling
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice Minimum allowed interval between two consecutive distribution calls.
@@ -99,6 +130,20 @@ contract BlockRewardDistributor {
     /// @notice ValidatorsRegistry — single source of truth for validator eligibility, checked
     ///         directly on every payout, no intermediary oracle.
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
+
+    /// @notice ✅ NEW: read-only view onto ValidatorsBoard, used only to check board membership
+    ///         for the bicameral share-change vote below.
+    IValidatorsBoard public constant BOARD_CONTRACT = IValidatorsBoard(SurAddresses.VALIDATORS_BOARD);
+
+    /// @notice Mirrors ValidatorsBoard.BOARD_SIZE — the board is always exactly this many
+    ///         members, so a simple majority is BOARD_SIZE/2 + 1 (i.e. 3 of 5).
+    uint256 public constant BOARD_SIZE = 5;
+
+    /// @notice ✅ NEW: minimum time between two successful validatorDirectShareBps changes —
+    ///         deliberately slow (~6 months) so this parameter cannot be nudged repeatedly in
+    ///         quick succession by either chamber. See sur-tokenomics.md section 11 for why.
+    uint256 public constant SHARE_CHANGE_MIN_INTERVAL = 180 days;
+    uint256 public lastShareChangeTime;
 
     /// @notice Address of the oracle authorized to call the periodic distribution function.
     ///         Its only job is to report block counts and reward/fee totals; it cannot pay out
@@ -157,6 +202,25 @@ contract BlockRewardDistributor {
     ///         Reset to zero at the end of every distributeRewards() call.
     uint256 public pendingMembershipFees;
 
+    /// @notice ✅ NEW: a bicameral proposal to change validatorDirectShareBps. Requires
+    ///         independent approval from BOTH a simple majority of ValidatorsBoard AND a
+    ///         two-thirds majority of the full active validator assembly before it applies —
+    ///         see proposeShareChange/boardVoteShareChange/validatorVoteShareChange below.
+    struct ShareProposal {
+        uint256 newValidatorShareBps;
+        uint256 createdAt;
+        uint256 boardApprovals;
+        uint256 validatorApprovals;
+        bool boardPassed;
+        bool validatorPassed;
+        bool executed;
+    }
+
+    mapping(uint256 => ShareProposal) public shareProposals;
+    mapping(uint256 => mapping(address => bool)) private shareBoardVoted;
+    mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
+    uint256 public shareProposalCount;
+
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
@@ -164,6 +228,10 @@ contract BlockRewardDistributor {
     event RewardsReceived(address indexed from, uint256 amount);
     event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
     event FoundationFunded(uint256 indexed epochId, uint256 amount);
+    event ShareChangeProposed(uint256 indexed id, uint256 newValidatorShareBps, address indexed proposer);
+    event ShareChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
+    event ShareChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
+    event ShareChangeApplied(uint256 indexed id, uint256 newValidatorShareBps);
     event RewardsDistributed(
         uint256 indexed epochId,
         uint256 totalRewards,
@@ -239,6 +307,99 @@ contract BlockRewardDistributor {
     }
 
     // ------------------------------------------------------------------
+    // ✅ NEW: bicameral governance for validatorDirectShareBps (the validator-vs-treasury
+    // split — see the contract-level doc comment and sur-tokenomics.md section 11 for the full
+    // reasoning). Any active validator may propose; a simple majority of ValidatorsBoard AND a
+    // two-thirds majority of the full active validator assembly must BOTH independently approve
+    // the exact same proposal before it takes effect — whichever chamber's threshold is reached
+    // second is what actually triggers execution, via _tryExecuteShareChange.
+    // ------------------------------------------------------------------
+
+    /// @notice Starts a new proposal. Any active validator may call this — deliberately not
+    ///         restricted to board members, since rank-and-file validators are one of the two
+    ///         chambers whose approval is required.
+    function proposeShareChange(uint256 newValidatorShareBps) external returns (uint256 id) {
+        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a share change");
+        require(
+            newValidatorShareBps >= VALIDATOR_SHARE_MIN_BPS && newValidatorShareBps <= VALIDATOR_SHARE_MAX_BPS,
+            "BlockRewardDistributor: proposed share is outside the allowed [40%, 65%] range"
+        );
+        require(
+            block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
+            "BlockRewardDistributor: too soon since the last successful share change"
+        );
+
+        shareProposalCount++;
+        id = shareProposalCount;
+        shareProposals[id] = ShareProposal({
+            newValidatorShareBps: newValidatorShareBps,
+            createdAt: block.timestamp,
+            boardApprovals: 0,
+            validatorApprovals: 0,
+            boardPassed: false,
+            validatorPassed: false,
+            executed: false
+        });
+        emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
+    }
+
+    /// @notice One of the two required votes — the ValidatorsBoard chamber. Simple majority of
+    ///         the fixed BOARD_SIZE (5), i.e. 3 votes.
+    function boardVoteShareChange(uint256 id) external {
+        require(BOARD_CONTRACT.isBoardMember(msg.sender), "BlockRewardDistributor: caller is not a board member");
+        ShareProposal storage p = shareProposals[id];
+        require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
+        require(!p.executed, "BlockRewardDistributor: already executed");
+        require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
+
+        shareBoardVoted[id][msg.sender] = true;
+        p.boardApprovals++;
+        uint256 required = (BOARD_SIZE / 2) + 1; // 3 of 5
+        emit ShareChangeBoardVoted(id, msg.sender, p.boardApprovals, required);
+
+        if (p.boardApprovals >= required) {
+            p.boardPassed = true;
+        }
+        _tryExecuteShareChange(id);
+    }
+
+    /// @notice The other required vote — the full validator assembly chamber. Two-thirds of the
+    ///         CURRENT active validator count (recomputed live, not snapshotted at proposal
+    ///         time — matching the same pattern as ValidatorsRegistry's security-parameter
+    ///         votes).
+    function validatorVoteShareChange(uint256 id) external {
+        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
+        ShareProposal storage p = shareProposals[id];
+        require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
+        require(!p.executed, "BlockRewardDistributor: already executed");
+        require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
+
+        shareValidatorVoted[id][msg.sender] = true;
+        p.validatorApprovals++;
+        uint256 activeCount = REGISTRY.getActiveValidatorCount();
+        uint256 required = (activeCount * 2 + 2) / 3; // ceil(2 * activeCount / 3)
+        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, required);
+
+        if (p.validatorApprovals >= required) {
+            p.validatorPassed = true;
+        }
+        _tryExecuteShareChange(id);
+    }
+
+    /// @dev Applies the change only once BOTH chambers have independently passed the same
+    ///      proposal. Called from both vote functions after each new vote, so whichever chamber
+    ///      crosses its threshold second is what actually triggers this.
+    function _tryExecuteShareChange(uint256 id) private {
+        ShareProposal storage p = shareProposals[id];
+        if (p.boardPassed && p.validatorPassed && !p.executed) {
+            p.executed = true;
+            validatorDirectShareBps = p.newValidatorShareBps;
+            lastShareChangeTime = block.timestamp;
+            emit ShareChangeApplied(id, p.newValidatorShareBps);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Main periodic distribution function — callable only by the distribution oracle
     //
     // ✅ Refactored (no longer needs viaIR to compile): the original single large function had
@@ -290,11 +451,16 @@ contract BlockRewardDistributor {
         epochCount++;
         uint256 epochId = epochCount;
 
-        // Treasury's cut is taken only from REWARDS, never from FEES. Of that cut, a fixed
-        // slice now goes to the Foundation instead — see sur-tokenomics.md section 6.5.
-        uint256 treasuryCut = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 foundationAmount = (treasuryCut * FOUNDATION_SHARE_OF_TREASURY_BPS) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = treasuryCut - foundationAmount;
+        // ✅ CHANGED: Foundation's cut is now a fixed 15% of TOTAL rewards, taken independently
+        // off the top — never affected by validatorDirectShareBps below. Only REWARDS are
+        // split this way; FEES (below) are never touched by any of these three shares.
+        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        // validatorDirectShareBps is governable (bicameral vote, [40%, 65%]) — see the
+        // contract-level doc comment. ValidatorsTreasury receives whatever remains of the
+        // reward pool after Foundation's fixed share and this governable share are both
+        // removed.
+        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
 
         (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
             _payValidators(
@@ -302,7 +468,7 @@ contract BlockRewardDistributor {
                 blocksMined,
                 EpochContext({
                     epochId: epochId,
-                    remainingRewards: totalRewards - treasuryCut,
+                    remainingRewards: validatorDirectAmount,
                     totalFees: effectiveTotalFees,
                     totalBlocks: totalBlocks
                 })
@@ -433,11 +599,12 @@ contract BlockRewardDistributor {
         uint256 distributedFees
     ) private {
         // Rounding dust from both reward and fee division is added to the treasury's amount
-        // so that no wei is left stuck in the contract. Note: the reward-side dust formula now
-        // subtracts BOTH treasuryAmount and foundationAmount (they together make up the full
-        // 50% treasury cut) — subtracting only treasuryAmount here (as the pre-Foundation-split
-        // version of this function did) would silently double-count foundationAmount as "dust"
-        // and send the Foundation's already-transferred share to the treasury a second time.
+        // so that no wei is left stuck in the contract. The reward-side dust formula subtracts
+        // treasuryAmount, foundationAmount, AND distributedRewards from totalRewards — since
+        // totalRewards is algebraically exactly foundationAmount + validatorDirectAmount +
+        // treasuryAmount (treasuryAmount is defined as the remainder, so there is no dust at
+        // that level), what's left over here is exactly validatorDirectAmount - distributedRewards
+        // — the integer-division remainder from splitting validatorDirectAmount by block share.
         uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
         uint256 feeDust = totalFees - distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;

@@ -5,6 +5,13 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
+    function getActiveValidatorCount() external view returns (uint256); // ✅ تازه: برای آستانه‌ی ۲/۳ رأی‌گیری دومجلسی پایین لازم است.
+}
+
+/// @notice ✅ تازه: اینترفیس حداقلی روی ValidatorsBoard، فقط برای چک عضویت هیأت‌مدیره در
+///         رأی‌گیری دومجلسی پایین لازم است.
+interface IValidatorsBoard {
+    function isBoardMember(address who) external view returns (bool);
 }
 
 /// @title BlockRewardDistributor
@@ -16,13 +23,26 @@ interface IValidatorsRegistry {
 ///         آزمایش ۱ مراجعه کن) و به‌صورت دوره‌ای، بر اساس داده‌ی گزارش‌شده توسط یک اوراکل
 ///         مجاز، بین ولیدیتورها و ValidatorsTreasury توزیع می‌کند.
 ///
-///         قواعد توزیع (مدل به‌روزشده — به sur-tokenomics.md بخش ۶.۵ برای تصمیم بودجه‌ی بنیاد
-///         و بخش ۶ برای تصمیم تغییر مقصد کارمزد عضویت مراجعه کنید):
-///           - از کل ریوارد: ۵۰٪ (TREASURY_SHARE_BPS) «سهم خزانه» است. از همین سهم، ۱۵٪
-///             (FOUNDATION_SHARE_OF_TREASURY_BPS) اکنون خودکار — هر epoch، بدون رأی‌گیری و
-///             بدون امکان لغو توسط ولیدیتورها — به FoundationDAO می‌رود، و ۸۵٪ باقی‌مانده مثل
-///             قبل به ValidatorsTreasury. ۵۰٪ باقی‌مانده‌ی ریوارد همچنان به نسبت بلاک تولیدی
-///             بین ولیدیتورها تقسیم می‌شود، بدون تغییر.
+///         قواعد توزیع (✅ دوباره به‌روزشده — به sur-tokenomics.md بخش ۶.۵/۶/۱۱ برای استدلال
+///         کامل اقتصادی و حکمرانی هر بخش مراجعه کنید):
+///           - از کل ریوارد: سهم ۱۵٪ بنیاد (FOUNDATION_SHARE_BPS) اکنون مستقیم از بالای کل
+///             ریوارد کسر می‌شود — برای همیشه ثابت، خودکار، بدون رأی‌گیری، و عمداً به‌عنوان
+///             درصدی از هیچ‌چیز دیگری محاسبه **نمی‌شود** (نسخه‌های قبلی این قرارداد آن را
+///             ۱۵٪ از یک «سهم خزانه‌ی ۵۰٪» حساب می‌کردند، یعنی درآمد بنیاد بی‌سروصدا با هر
+///             تغییر آینده‌ی نسبت خزانه/ولیدیتور پایین جابه‌جا می‌شد — دقیقاً همان گره‌خوردگی‌ای
+///             که طراحی ۱۵٪-ثابت-از-کل ازش جلوگیری می‌کند).
+///           - از ۸۵٪ باقی‌مانده، تقسیم بین ولیدیتورها (مستقیم، به‌نسبت بلاک) و
+///             ValidatorsTreasury توسط `validatorDirectShareBps` حکمرانی می‌شود — ✅ تازه:
+///             قابل‌تغییر فقط از طریق یک رأی‌گیری دومجلسی (به proposeShareChange/
+///             boardVoteShareChange/validatorVoteShareChange پایین مراجعه کنید)، محدود به
+///             بازه‌ی [۴۰٪, ۶۵٪] از کل ریوارد، با یک دوره‌ی خنک‌سازی اجباری ۶ماهه بین
+///             تغییرات موفق متوالی. هر دو مجلس — اکثریت ساده‌ی ValidatorsBoard **و** اکثریت
+///             دوسوم کل مجمع ولیدیتورهای فعال — باید مستقلاً همان یک پیشنهاد را تصویب کنند
+///             تا اجرا شود. این عمداً از انگیزه‌های متضاد این دو مجلس (ولیدیتورهای عادی به
+///             سمت سهم مستقیم بزرگ‌تر کشیده می‌شوند؛ هیأت‌مدیره به سمت خزانه‌ی بزرگ‌تر، چون
+///             خزانه‌ی بزرگ‌تر یعنی اختیار خرج صلاحدیدی بیشتر زیر قدرت تصویب هزینه‌ی کوچک
+///             خودش) به‌عنوان یک بازدارنده‌ی داخلی در برابر تخلیه‌ی یک‌طرفه‌ی سهم دیگری توسط
+///             هرکدام از این دو مجلس در طول زمان استفاده می‌کند.
 ///           - از کل فی: ۱۰۰٪ به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (بدون سهم
 ///             خزانه یا بنیاد از فی) — بدون تغییر.
 ///           - کارمزد عضویت معلق: ValidatorsRegistry.requestMembership() دیگر کارمزد عضویت
@@ -57,14 +77,25 @@ contract BlockRewardDistributor {
     // ثابت‌ها و تنظیمات
     // ------------------------------------------------------------------
 
-    /// @notice سهم خزانه از کل ریوارد (نه فی) — واحد basis point از ۱۰۰۰۰ = ۱۰۰٪.
-    uint256 public constant TREASURY_SHARE_BPS = 5000; // ۵۰٪
+    /// @notice سهم بنیاد از کل ریوارد (نه از هیچ زیرمجموعه‌ای) — بیسیس‌پوینت از ۱۰۰۰۰ = ۱۰۰٪.
+    ///         ✅ تغییر کرد: برای همیشه ثابت، مستقیم روی totalRewards اعمال می‌شود، و عمداً
+    ///         مستقل از validatorDirectShareBps پایین — به sur-tokenomics.md بخش ۶.۵ و کامنت
+    ///         سطح قرارداد بالا مراجعه کنید که چرا این باید از نسبت حکمرانی‌شونده‌ی
+    ///         خزانه/ولیدیتور جدا بماند.
+    uint256 public constant FOUNDATION_SHARE_BPS = 1500; // ۱۵٪ از کل ریوارد، همیشه
 
-    /// @notice سهم بنیاد از خودِ سهم خزانه (نه از کل ریوارد) — بیسیس‌پوینت از ۱۰۰۰۰ = ۱۰۰٪
-    ///         TREASURY_SHARE_BPS. به sur-tokenomics.md بخش ۶.۵ مراجعه کنید: این هزینه‌ی جاری
-    ///         بنیاد (حقوق هیأت‌مدیره/مدیرعامل/کارکنان) را تأمین می‌کند، نه بودجه‌ی کمپین —
-    ///         به همین دلیل کوچک، خودکار، و غیرقابل‌لغو است، نه از طریق رأی‌گیری.
-    uint256 public constant FOUNDATION_SHARE_OF_TREASURY_BPS = 1500; // ۱۵٪ از سهم ۵۰٪
+    /// @notice ✅ تازه (جایگزین ثابت قدیمی TREASURY_SHARE_BPS): سهم مستقیم و به‌نسبت‌بلاک
+    ///         ولیدیتورها از کل ریوارد — بیسیس‌پوینت از ۱۰۰۰۰. با همون ۵۰٪ ثابت قدیمی شروع
+    ///         می‌شود، ولی اکنون یک متغیر state حکمرانی‌شونده است، فقط از طریق رأی‌گیری
+    ///         دومجلسی پایین (proposeShareChange / boardVoteShareChange /
+    ///         validatorVoteShareChange) قابل‌تغییر، محدود به [VALIDATOR_SHARE_MIN_BPS,
+    ///         VALIDATOR_SHARE_MAX_BPS]. ValidatorsTreasury هرچه بعد از سهم ثابت ۱۵٪ بنیاد و
+    ///         این سهم باقی بماند را دریافت می‌کند:
+    ///         treasuryShare = 10000 - FOUNDATION_SHARE_BPS - validatorDirectShareBps.
+    uint256 public validatorDirectShareBps = 5000; // ۵۰٪ در ابتدا — همون نقطه‌ی شروع قبلی
+
+    uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // کف ۴۰٪
+    uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // سقف ۶۵٪
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice حداقل فاصله‌ی مجاز بین دو فراخوانی متوالی توزیع.
@@ -97,6 +128,21 @@ contract BlockRewardDistributor {
     /// @notice ValidatorsRegistry — مرجع واحد صلاحیت ولیدیتور، مستقیم در هر پرداخت چک می‌شود،
     ///         بدون اوراکل واسط.
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
+
+    /// @notice ✅ تازه: نمای فقط‌خواندنی روی ValidatorsBoard، فقط برای چک عضویت هیأت‌مدیره در
+    ///         رأی‌گیری دومجلسی پایین لازم است.
+    IValidatorsBoard public constant BOARD_CONTRACT = IValidatorsBoard(SurAddresses.VALIDATORS_BOARD);
+
+    /// @notice معادل ValidatorsBoard.BOARD_SIZE — هیأت‌مدیره همیشه دقیقاً همین تعداد عضو
+    ///         دارد، پس اکثریت ساده یعنی BOARD_SIZE/2 + 1 (یعنی ۳ از ۵).
+    uint256 public constant BOARD_SIZE = 5;
+
+    /// @notice ✅ تازه: حداقل فاصله‌ی زمانی بین دو تغییر موفق متوالی validatorDirectShareBps —
+    ///         عمداً کند (~۶ ماه) تا این پارامتر نتواند به‌سرعت و پشت‌سرهم توسط هیچ‌کدام از دو
+    ///         مجلس تکان بخورد. به sur-tokenomics.md بخش ۱۱ مراجعه کنید که چرا.
+    uint256 public constant SHARE_CHANGE_MIN_INTERVAL = 180 days;
+    uint256 public lastShareChangeTime;
+
 
     /// @notice آدرس اوراکلی که مجاز به فراخوانی تابع توزیع دوره‌ای است. تنها وظیفه‌اش گزارش
     ///         تعداد بلاک و مجموع ریوارد/فی است؛ نمی‌تواند به هیچ آدرسی که ValidatorsRegistry
@@ -155,6 +201,25 @@ contract BlockRewardDistributor {
     ///         فراخوانی distributeRewards() صفر می‌شود.
     uint256 public pendingMembershipFees;
 
+    /// @notice ✅ تازه: یک پیشنهاد دومجلسی برای تغییر validatorDirectShareBps. نیازمند تأیید
+    ///         مستقل از **هردو**: اکثریت ساده‌ی ValidatorsBoard **و** اکثریت دوسوم کل مجمع
+    ///         ولیدیتورهای فعال، پیش از اجرا شدن — به proposeShareChange/boardVoteShareChange/
+    ///         validatorVoteShareChange پایین مراجعه کنید.
+    struct ShareProposal {
+        uint256 newValidatorShareBps;
+        uint256 createdAt;
+        uint256 boardApprovals;
+        uint256 validatorApprovals;
+        bool boardPassed;
+        bool validatorPassed;
+        bool executed;
+    }
+
+    mapping(uint256 => ShareProposal) public shareProposals;
+    mapping(uint256 => mapping(address => bool)) private shareBoardVoted;
+    mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
+    uint256 public shareProposalCount;
+
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
@@ -162,6 +227,10 @@ contract BlockRewardDistributor {
     event RewardsReceived(address indexed from, uint256 amount);
     event MembershipFeeReceived(uint256 amount, uint256 newPendingTotal);
     event FoundationFunded(uint256 indexed epochId, uint256 amount);
+    event ShareChangeProposed(uint256 indexed id, uint256 newValidatorShareBps, address indexed proposer);
+    event ShareChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
+    event ShareChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
+    event ShareChangeApplied(uint256 indexed id, uint256 newValidatorShareBps);
     event RewardsDistributed(
         uint256 indexed epochId,
         uint256 totalRewards,
@@ -235,6 +304,97 @@ contract BlockRewardDistributor {
     }
 
     // ------------------------------------------------------------------
+    // ✅ تازه: حکمرانی دومجلسی برای validatorDirectShareBps (نسبت خزانه در برابر ولیدیتور —
+    // کامنت سطح قرارداد بالا و sur-tokenomics.md بخش ۱۱ را برای استدلال کامل ببینید). هر
+    // ولیدیتور فعالی می‌تواند پیشنهاد بدهد؛ اکثریت ساده‌ی ValidatorsBoard **و** اکثریت دوسوم
+    // کل مجمع ولیدیتورهای فعال باید هردو، مستقلاً، دقیقاً همان یک پیشنهاد را تصویب کنند تا
+    // اجرا شود — هرکدام از دو مجلس که دومی به آستانه‌اش برسد، همان اجرا را فعال می‌کند (از
+    // طریق _tryExecuteShareChange).
+    // ------------------------------------------------------------------
+
+    /// @notice شروع یک پیشنهاد تازه. هر ولیدیتور فعالی می‌تواند این را فراخوانی کند — عمداً
+    ///         به اعضای هیأت‌مدیره محدود نشده، چون ولیدیتورهای عادی خودشان یکی از دو مجلسی
+    ///         هستند که تأییدشان لازم است.
+    function proposeShareChange(uint256 newValidatorShareBps) external returns (uint256 id) {
+        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a share change");
+        require(
+            newValidatorShareBps >= VALIDATOR_SHARE_MIN_BPS && newValidatorShareBps <= VALIDATOR_SHARE_MAX_BPS,
+            "BlockRewardDistributor: proposed share is outside the allowed [40%, 65%] range"
+        );
+        require(
+            block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
+            "BlockRewardDistributor: too soon since the last successful share change"
+        );
+
+        shareProposalCount++;
+        id = shareProposalCount;
+        shareProposals[id] = ShareProposal({
+            newValidatorShareBps: newValidatorShareBps,
+            createdAt: block.timestamp,
+            boardApprovals: 0,
+            validatorApprovals: 0,
+            boardPassed: false,
+            validatorPassed: false,
+            executed: false
+        });
+        emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
+    }
+
+    /// @notice یکی از دو رأی لازم — مجلس ValidatorsBoard. اکثریت ساده از BOARD_SIZE ثابت
+    ///         (۵)، یعنی ۳ رأی.
+    function boardVoteShareChange(uint256 id) external {
+        require(BOARD_CONTRACT.isBoardMember(msg.sender), "BlockRewardDistributor: caller is not a board member");
+        ShareProposal storage p = shareProposals[id];
+        require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
+        require(!p.executed, "BlockRewardDistributor: already executed");
+        require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
+
+        shareBoardVoted[id][msg.sender] = true;
+        p.boardApprovals++;
+        uint256 required = (BOARD_SIZE / 2) + 1; // ۳ از ۵
+        emit ShareChangeBoardVoted(id, msg.sender, p.boardApprovals, required);
+
+        if (p.boardApprovals >= required) {
+            p.boardPassed = true;
+        }
+        _tryExecuteShareChange(id);
+    }
+
+    /// @notice رأی لازم دیگر — مجلس کل مجمع ولیدیتورها. دوسوم از تعداد ولیدیتور فعال
+    ///         **فعلی** (زنده محاسبه می‌شود، نه در لحظه‌ی پیشنهاد ثبت‌شده — دقیقاً مطابق
+    ///         همان الگوی رأی‌گیری‌های پارامتر امنیتی ValidatorsRegistry).
+    function validatorVoteShareChange(uint256 id) external {
+        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
+        ShareProposal storage p = shareProposals[id];
+        require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
+        require(!p.executed, "BlockRewardDistributor: already executed");
+        require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
+
+        shareValidatorVoted[id][msg.sender] = true;
+        p.validatorApprovals++;
+        uint256 activeCount = REGISTRY.getActiveValidatorCount();
+        uint256 required = (activeCount * 2 + 2) / 3; // سقف(۲ × تعداد فعال ÷ ۳)
+        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, required);
+
+        if (p.validatorApprovals >= required) {
+            p.validatorPassed = true;
+        }
+        _tryExecuteShareChange(id);
+    }
+
+    /// @dev فقط وقتی **هردو** مجلس مستقلاً همان پیشنهاد را تصویب کرده باشند اجرا می‌کند.
+    ///      بعد از هر رأی تازه در هر دو تابع رأی‌گیری فراخوانی می‌شود، پس هرکدام از دو مجلس
+    ///      که دومی به آستانه‌اش برسد، همین را فعال می‌کند.
+    function _tryExecuteShareChange(uint256 id) private {
+        ShareProposal storage p = shareProposals[id];
+        if (p.boardPassed && p.validatorPassed && !p.executed) {
+            p.executed = true;
+            validatorDirectShareBps = p.newValidatorShareBps;
+            lastShareChangeTime = block.timestamp;
+            emit ShareChangeApplied(id, p.newValidatorShareBps);
+        }
+    }
+
     // تابع اصلی توزیع دوره‌ای — فقط توسط اوراکل توزیع قابل‌فراخوانی است
     //
     // ✅ بازنویسی‌شده (دیگر نیازی به viaIR برای کامپایل ندارد): نسخه‌ی اولیه‌ی این تابع
@@ -285,11 +445,15 @@ contract BlockRewardDistributor {
         epochCount++;
         uint256 epochId = epochCount;
 
-        // سهم خزانه فقط از ریوارد گرفته می‌شود، هرگز از فی. از همین سهم، یک بخش ثابت اکنون
-        // به بنیاد می‌رود — به sur-tokenomics.md بخش ۶.۵ مراجعه کنید.
-        uint256 treasuryCut = (totalRewards * TREASURY_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 foundationAmount = (treasuryCut * FOUNDATION_SHARE_OF_TREASURY_BPS) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = treasuryCut - foundationAmount;
+        // ✅ تغییر کرد: سهم بنیاد اکنون ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
+        // می‌شود — هرگز تحت‌تأثیر validatorDirectShareBps پایین نیست. فقط ریوارد این‌طور
+        // تقسیم می‌شود؛ فی (پایین) هرگز توسط هیچ‌کدام از این سه سهم لمس نمی‌شود.
+        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        // validatorDirectShareBps حکمرانی‌شونده است (رأی دومجلسی، [۴۰٪, ۶۵٪]) — کامنت سطح
+        // قرارداد بالا را ببینید. ValidatorsTreasury هرچه بعد از سهم ثابت بنیاد و این سهم
+        // حکمرانی‌شونده باقی بماند را دریافت می‌کند.
+        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
 
         (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
             _payValidators(
@@ -297,7 +461,7 @@ contract BlockRewardDistributor {
                 blocksMined,
                 EpochContext({
                     epochId: epochId,
-                    remainingRewards: totalRewards - treasuryCut,
+                    remainingRewards: validatorDirectAmount,
                     totalFees: effectiveTotalFees,
                     totalBlocks: totalBlocks
                 })

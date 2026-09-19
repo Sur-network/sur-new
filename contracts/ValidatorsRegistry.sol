@@ -201,14 +201,27 @@ contract ValidatorsRegistry {
     // (not a constructor argument, not full-validator-vote governed — see the governance note
     // in the contract-level doc comment above). Initial values below are a deliberate starting
     // point, not derived from any on-chain data: at an assumed initial Suren price of roughly
-    // $0.0005, 2,000,000 Suren ~= $1000 collateral per validator seat.
+    // $0.0005, 500,000 Suren ~= $250 collateral per validator seat. ✅ CHANGED: lowered from
+    // the original 2,000,000 Suren (~$1000) — see entryThresholdBase's own doc comment below
+    // for why (reducing the capital barrier to entry, without changing the actual pure-reward
+    // breakeven point, which is independent of this parameter — sur-tokenomics.md section 6).
+    // ⚠️ Note: this $0.0005 assumption was never reconciled against SurenSale's actual fixed
+    // sale price (100-116 Toman, roughly $0.002-0.0025 at informal exchange rates) — the real
+    // dollar value of this collateral is likely several times higher than the figure quoted
+    // here from day one (see sur-master-open-items.md for this open discrepancy).
     // ------------------------------------------------------------------
 
     /// @notice Base stake required to request membership when there are 0 PAID validators yet
     ///         (i.e., the first person to ever call requestMembership() — regardless of how
     ///         many free, genesis-seeded founding validators are already active; see
-    ///         paidValidatorCount above).
-    uint256 public entryThresholdBase = 2_000_000 ether; // 2,000,000 Suren (18 decimals, like ETH)
+    ///         paidValidatorCount above). ✅ CHANGED: lowered from 2,000,000 to 500,000 —
+    ///         deliberately, to reduce the capital barrier to entry and broaden who can
+    ///         realistically become a validator, reducing ownership-concentration risk. See
+    ///         sur-tokenomics.md section 6 for the full reasoning: this does NOT change the
+    ///         point at which pure-block-reward income turns negative against fixed operating
+    ///         costs (that breakeven depends only on the reward pool and validator count, not on
+    ///         this parameter) — it only changes how much capital must be locked up to find out.
+    uint256 public entryThresholdBase = 500_000 ether; // 500,000 Suren (18 decimals, like ETH)
 
     /// @notice ✅ CHANGED: The entry threshold grows CONTINUOUSLY (compounding per additional
     ///         PAID validator, not per active validator, and not in discrete steps): current
@@ -216,14 +229,16 @@ contract ValidatorsRegistry {
     ///         Genesis-seeded founding validators do NOT count toward this exponent — see the
     ///         paidValidatorCount doc comment above for why. `growthFactorPerValidator` is a
     ///         fixed-point number with 18 decimals (see
-    ///         FIXED_POINT_ONE below); e.g. 1_044273782427413840 (~1.044274) means the threshold
-    ///         grows by ~4.4274% for every additional active validator — chosen so that 16
-    ///         consecutive validators joining multiplies the threshold by exactly 2x
-    ///         (2^(1/16) ≈ 1.044274), i.e. the threshold doubles every 16 active validators,
-    ///         smoothly instead of jumping at each 16th validator. This is the "ascending cost
-    ///         curve" from the design doc: it makes simultaneously buying >1/3 of the seats
-    ///         exponentially, not linearly, expensive.
-    uint256 public growthFactorPerValidator = 1_044273782427413840;
+    ///         FIXED_POINT_ONE below); ✅ CHANGED: e.g. 1_017479692102686336 (~1.017480) means
+    ///         the threshold grows by ~1.7480% for every additional paid validator — chosen so
+    ///         that 40 consecutive paid validators joining multiplies the threshold by exactly
+    ///         2x (2^(1/40) ≈ 1.017480), i.e. the threshold doubles every 40 paid validators
+    ///         (widened from the original 16 — deliberately, alongside the lower base above, to
+    ///         keep the capital barrier from becoming unreasonable even at a large validator
+    ///         count; see sur-tokenomics.md section 6), smoothly instead of jumping at each 40th
+    ///         validator. This is the "ascending cost curve" from the design doc: it makes
+    ///         simultaneously buying >1/3 of the seats exponentially, not linearly, expensive.
+    uint256 public growthFactorPerValidator = 1_017479692102686336;
 
     /// @notice Fixed-point precision used by growthFactorPerValidator and _fixedPow (18 decimals,
     ///         like Suren/ETH itself). 1_000000000000000000 represents 1.0 (no growth).
@@ -231,9 +246,10 @@ contract ValidatorsRegistry {
 
     /// @notice Safety/gas cap: active validator count is clamped to this many when computing the
     ///         entry threshold, so the exponent — and therefore the multiplier — never grows
-    ///         unboundedly. 512 = 16 * 32, preserving the same maximum multiplier (2^32) the
-    ///         cap has always represented, now scaled to a 16-validator doubling period.
-    uint256 private constant MAX_GROWTH_VALIDATORS = 512;
+    ///         unboundedly. ✅ CHANGED: 1280 = 40 * 32, preserving the same maximum multiplier
+    ///         (2^32) the cap has always represented, now scaled to the widened 40-paid-validator
+    ///         doubling period (was 512 = 16*32, for the original 16-validator period).
+    uint256 private constant MAX_GROWTH_VALIDATORS = 1280;
 
     /// @notice Membership fee, as a fraction of currentEntryThreshold(), paid IN ADDITION to
     ///         the collateral and sent immediately to ValidatorsTreasury (non-refundable — see
