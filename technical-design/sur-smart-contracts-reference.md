@@ -190,7 +190,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 |---|---|---|---|---|
 | `setDistributionOracle(address newOracle)` | **فقط قرارداد `ValidatorsBoard`** (بعد از رأی داخلی هیأت) | آدرس اوراکل جدید | — | کلید اوراکل توزیع را فوری عوض می‌کند |
 | `receive()` | هرکسی (در عمل استفاده نمی‌شود توسط پروتکل، فقط تست/واریز دستی) | — (`msg.value`) | — | فقط event می‌زند |
-| `distributeRewards(address[] validators, uint256[] blocksMined, uint256 totalRewards, uint256 totalFees)` | **فقط `distributionOracle`** (سرویس آف‌چین RewardRouter) | لیست ولیدیتورها، تعداد بلاک هرکدام، جمع ریوارد epoch، جمع فی epoch | — | ۵۰٪ ریوارد را به Treasury، بقیه‌ی ریوارد+۱۰۰٪ فی را به نسبت بلاک بین ولیدیتورها (با چک `isValidator` از رجیستری) تقسیم و پرداخت می‌کند؛ epoch را ثبت می‌کند |
+| `distributeRewards(address[] validators, uint256[] blocksMined, uint256 totalRewards, uint256 totalFees)` | **فقط `distributionOracle`** (سرویس آف‌چین RewardRouter) | لیست ولیدیتورها، تعداد بلاک هرکدام، جمع ریوارد epoch، جمع فی epoch | — | ✅ **به‌روزشده:** از ریوارد، ۱۵٪ ثابت به بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (۴۰-۶۵٪) را کنار می‌گذارد، باقی‌مانده به خزانه می‌رود؛ از فی معمولی، ۳۰٪ می‌سوزاند و ۷۰٪ باقی‌مانده را (+ کارمزد عضویت معلق، که کاملاً از سوزاندن معاف است) به نسبت بلاک بین ولیدیتورها (با چک `isValidator` از رجیستری) تقسیم و پرداخت می‌کند؛ epoch را ثبت می‌کند |
 | `getEpoch(uint256 epochId)` | هرکسی | شناسه‌ی epoch | خلاصه‌ی کامل epoch | گزارش یک دوره‌ی توزیع |
 | `getValidatorEpochReward(uint256 epochId, address validator)` | هرکسی | شناسه‌ی epoch + آدرس | سهم ریوارد، سهم فی، تعداد بلاک | جزئیات یک ولیدیتور در یک epoch |
 | `getValidatorTotals(address validator)` | هرکسی | آدرس | مجموع ریوارد، مجموع فی، مجموع بلاک (کل عمر) | آمار کلی یک ولیدیتور |

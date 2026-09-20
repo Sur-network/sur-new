@@ -28,7 +28,10 @@ library SurAddresses {
     /// @dev ValidatorsBoard — هیأت کوچک منتخب/قابل‌عزل با اختیارات تفویضی محدود
     address internal constant VALIDATORS_BOARD = 0x4444444444444444444444444444444444444444;
 
-    /// @dev ValidatorsTreasury — نگه‌دارنده و خرج‌کننده‌ی سهم ۵۰٪ ریوارد ولیدیتورها
+    /// @dev ValidatorsTreasury — نگه‌دارنده و خرج‌کننده‌ی سهم ولیدیتورها از استخر ریوارد
+    ///      (باقی‌مانده بعد از کسر سهم ثابت ۱۵٪ بنیاد و سهم مستقیم حکمرانی‌شونده‌ی
+    ///      ولیدیتورها — دیگر یک سهم ثابت ۵۰٪ نیست؛ به
+    ///      BlockRewardDistributor.validatorDirectShareBps مراجعه کن)
     address internal constant VALIDATORS_TREASURY = 0x5555555555555555555555555555555555555555;
 
     /// @dev IdentityRegistry — ششمین قرارداد ساختاری (در یک بازنگری بعدی اضافه شد). مرجع واحد

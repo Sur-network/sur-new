@@ -29,7 +29,9 @@ library SurAddresses {
     /// @dev ValidatorsBoard — small elected/recallable board with narrow delegated powers
     address internal constant VALIDATORS_BOARD = 0x4444444444444444444444444444444444444444;
 
-    /// @dev ValidatorsTreasury — holds and spends the validators' 50% reward share
+    /// @dev ValidatorsTreasury — holds and spends the validators' share of the reward pool
+    ///      (the remainder after Foundation's fixed 15% and validators' governable direct
+    ///      share — no longer a fixed 50%; see BlockRewardDistributor.validatorDirectShareBps)
     address internal constant VALIDATORS_TREASURY = 0x5555555555555555555555555555555555555555;
 
     /// @dev IdentityRegistry — the sixth structural contract (added in a later revision). The

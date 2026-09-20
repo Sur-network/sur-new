@@ -139,7 +139,9 @@ contract BlockRewardDistributor {
     // Fixed cross-contract addresses (see SurAddresses.sol)
     // ------------------------------------------------------------------
 
-    /// @notice ValidatorsTreasury — receives the 50% reward cut.
+    /// @notice ValidatorsTreasury — receives whatever remains of the reward pool after
+    ///         Foundation's fixed 15% and validators' governable direct share are both
+    ///         removed (no longer a fixed "50% reward cut" — see validatorDirectShareBps).
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
     /// @notice FoundationDAO — receives the new automatic 15%-of-treasury-cut share every
