@@ -170,6 +170,13 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
 
+    /// @dev ✅ HARDENED (related to the stale-vote bug class found in review, though less
+    ///      severe here since `required` is always derived from the fixed BOARD_SIZE, not a
+    ///      shrinking count): without an expiry, a board action could still sit open long
+    ///      enough that the ORIGINAL board membership shifts (via _recomputeBoard) before
+    ///      enough votes accumulate — meaning votes cast by since-replaced ex-board-members
+    ///      could combine with a current member's vote to reach majority, even though no real
+    ///      5-person board ever agreed on it at the same time. `expiresAt` bounds that window.
     struct BoardAction {
         ActionType atype;
         address target;      // new oracle address, or budget recipient (unused for economic-param actions)
@@ -177,8 +184,11 @@ contract ValidatorsBoard {
         string description;   // only used for ApproveBudget
         uint256 votes;
         uint256 createdAt;
+        uint256 expiresAt; // ✅ NEW
         bool executed;
     }
+
+    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
@@ -430,6 +440,7 @@ contract ValidatorsBoard {
             description: description,
             votes: 0,
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
         });
         emit ActionProposed(id, atype, target, amount, msg.sender);
@@ -440,6 +451,7 @@ contract ValidatorsBoard {
         BoardAction storage a = actions[id];
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
+        require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
         actionHasVoted[id][voter] = true;

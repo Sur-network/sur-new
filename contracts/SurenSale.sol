@@ -70,10 +70,24 @@ contract SurenSale {
     uint256 public constant TRANSITION_CEILING_TOMAN = 150;
     uint256 public constant MOVING_AVERAGE_WINDOW_DAYS = 7;
 
-    /// @notice Current transition-period price, in Toman. Zero until the transition period
-    ///         actually starts and is first touched (seeded from the last fixed-period price,
-    ///         monthlyPriceToman[5]).
-    uint256 public transitionPriceToman;
+    /// @notice ✅ FIXED (critical bug found in review): TRANSITION_PRICE_STEP_BPS (50 = 0.5%)
+    ///         applied directly to a whole-Toman integer price (90-150) always computed to
+    ///         `price * 50 / 10000 = 0` for every price in that range — Solidity integer
+    ///         division floors, and 150*50=7500 never reaches the 10000 denominator. The daily
+    ///         ±0.5% adjustment therefore silently never fired; the price would have been
+    ///         permanently stuck at whatever it was seeded with. Fix: track the transition
+    ///         price internally at 1000x precision ("milli-Toman" — see
+    ///         transitionPriceMilliToman below) so a 0.5% step on a scaled value like 116000 is
+    ///         580, not zero. currentPriceToman() below still returns a plain whole-Toman
+    ///         value externally — no interface change for PaymentReporter or any other
+    ///         consumer.
+    uint256 public constant TRANSITION_PRICE_PRECISION = 1000;
+
+    /// @notice ✅ RENAMED from transitionPriceToman (was whole Toman, the source of the bug
+    ///         above) — now stores price * TRANSITION_PRICE_PRECISION internally. Never read
+    ///         directly by external callers; use currentPriceToman() (whole Toman) or
+    ///         currentPriceMilliToman() (full precision) instead.
+    uint256 public transitionPriceMilliToman;
 
     /// @notice How many transition-days have already had their volume folded into a price
     ///         adjustment. Day indices are 0-based, counted from transitionStartTime().
@@ -86,6 +100,7 @@ contract SurenSale {
         uint256 indexed dayIndex,
         uint256 dayVolumeSuren,
         uint256 movingAverageSuren,
+        uint256 newPriceMilliToman,
         uint256 newPriceToman
     );
 
@@ -168,7 +183,20 @@ contract SurenSale {
         // Transition period (or after it ends — the contract has no further pricing role past
         // this point, but keeps returning its last known price rather than reverting, since a
         // stale-but-defined price is safer for any off-chain dashboard reading it than a revert).
-        return transitionPriceToman == 0 ? monthlyPriceToman[5] : transitionPriceToman;
+        // ✅ Converts the internal milli-Toman precision back to a plain whole Toman for
+        // external callers — see currentPriceMilliToman() for the full-precision value.
+        return transitionPriceMilliToman == 0
+            ? monthlyPriceToman[5]
+            : transitionPriceMilliToman / TRANSITION_PRICE_PRECISION;
+    }
+
+    /// @notice ✅ NEW: the full-precision transition price (whole Toman * 1000), for any
+    ///         off-chain consumer (e.g. a dashboard) that wants to show sub-Toman movement
+    ///         instead of the rounded value currentPriceToman() returns.
+    function currentPriceMilliToman() public view returns (uint256) {
+        return transitionPriceMilliToman == 0
+            ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
+            : transitionPriceMilliToman;
     }
 
     function isSaleActive() public view returns (bool) {
@@ -204,13 +232,16 @@ contract SurenSale {
     function advanceTransitionPrice() public {
         if (block.timestamp < transitionStartTime()) return; // fixed period still running
 
-        if (transitionPriceToman == 0) {
-            transitionPriceToman = monthlyPriceToman[5]; // seed with the last fixed-period price
+        if (transitionPriceMilliToman == 0) {
+            transitionPriceMilliToman = monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION; // seed with the last fixed-period price
         }
 
         uint256 maxDay = TRANSITION_DURATION / 1 days;
         uint256 today = currentTransitionDay();
         if (today > maxDay) today = maxDay; // don't keep pricing forever past the window's end
+
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * TRANSITION_PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * TRANSITION_PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
@@ -222,20 +253,20 @@ contract SurenSale {
                 uint256 lowThreshold = (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
 
                 if (dayVolume > highThreshold) {
-                    uint256 step = (transitionPriceToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
-                    uint256 raised = transitionPriceToman + step;
-                    transitionPriceToman = raised > TRANSITION_CEILING_TOMAN ? TRANSITION_CEILING_TOMAN : raised;
+                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                    uint256 raised = transitionPriceMilliToman + step;
+                    transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
                 } else if (dayVolume < lowThreshold) {
-                    uint256 step = (transitionPriceToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
-                    uint256 lowered = transitionPriceToman > step ? transitionPriceToman - step : 0;
-                    transitionPriceToman = lowered < TRANSITION_FLOOR_TOMAN ? TRANSITION_FLOOR_TOMAN : lowered;
+                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                    uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
+                    transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
                 }
                 // else: within [80%, 120%] of the moving average — no change this day.
             }
             // avg == 0 (no prior-day data yet, e.g. day 0) — no change; can't compare to a
             // moving average that doesn't exist yet.
 
-            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceToman);
+            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / TRANSITION_PRICE_PRECISION);
             lastPricedTransitionDay++;
         }
     }

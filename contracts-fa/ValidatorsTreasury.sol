@@ -67,14 +67,21 @@ contract ValidatorsTreasury {
     // ------------------------------------------------------------------
     // پیشنهادهای خرج با رأی کامل
     // ------------------------------------------------------------------
+    /// @dev ✅ اصلاح‌شده (باگ بحرانی رأی مانده‌شده — همون کلاس مشکل ShareProposal در
+    ///      BlockRewardDistributor.sol و ParamProposal در ValidatorsRegistry.sol):
+    ///      `requiredVotes`/`expiresAt` حالا در لحظه‌ی ثبت پیشنهاد snapshot/ثابت می‌شن.
     struct Expenditure {
         address to;
         uint256 amount;
         string description;
         uint256 votes;
+        uint256 requiredVotes; // ✅ تازه
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه
         bool executed;
     }
+
+    uint256 public constant TREASURY_PROPOSAL_EXPIRY = 30 days;
 
     mapping(uint256 => Expenditure) public expenditures;
     mapping(uint256 => mapping(address => bool)) private expenditureHasVoted;
@@ -149,7 +156,9 @@ contract ValidatorsTreasury {
             amount: amount,
             description: description,
             votes: 0,
+            requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // همین لحظه ثابت‌شده
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
             executed: false
         });
         emit ExpenditureProposed(id, to, amount, description, msg.sender);
@@ -165,16 +174,15 @@ contract ValidatorsTreasury {
         Expenditure storage e = expenditures[id];
         require(e.createdAt != 0, "ValidatorsTreasury: expenditure not found");
         require(!e.executed, "ValidatorsTreasury: already executed");
+        require(block.timestamp <= e.expiresAt, "ValidatorsTreasury: expenditure proposal has expired");
         require(!expenditureHasVoted[id][voter], "ValidatorsTreasury: already voted");
 
         expenditureHasVoted[id][voter] = true;
         e.votes++;
 
-        uint256 activeCount = REGISTRY.getValidators().length;
-        uint256 required = (activeCount / 2) + 1;
-        emit ExpenditureVoted(id, voter, e.votes, required);
+        emit ExpenditureVoted(id, voter, e.votes, e.requiredVotes);
 
-        if (e.votes >= required) {
+        if (e.votes >= e.requiredVotes) {
             _executeExpenditure(id);
         }
     }
@@ -219,7 +227,9 @@ contract ValidatorsTreasury {
     struct ParamProposal {
         uint256 newCap;
         uint256 votes;
+        uint256 requiredVotes; // ✅ تازه — همون اصلاح Expenditure بالا
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه
         bool executed;
     }
 
@@ -233,7 +243,9 @@ contract ValidatorsTreasury {
         paramProposals[id] = ParamProposal({
             newCap: newCap,
             votes: 0,
+            requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // همین لحظه ثابت‌شده
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
             executed: false
         });
         _voteParam(id, msg.sender);
@@ -247,15 +259,13 @@ contract ValidatorsTreasury {
         ParamProposal storage p = paramProposals[id];
         require(p.createdAt != 0, "ValidatorsTreasury: proposal not found");
         require(!p.executed, "ValidatorsTreasury: already executed");
+        require(block.timestamp <= p.expiresAt, "ValidatorsTreasury: proposal has expired");
         require(!paramHasVoted[id][voter], "ValidatorsTreasury: already voted");
 
         paramHasVoted[id][voter] = true;
         p.votes++;
 
-        uint256 activeCount = REGISTRY.getValidators().length;
-        uint256 required = (activeCount / 2) + 1;
-
-        if (p.votes >= required) {
+        if (p.votes >= p.requiredVotes) {
             p.executed = true;
             emit SmallBudgetCapUpdated(smallBudgetCap, p.newCap);
             smallBudgetCap = p.newCap;

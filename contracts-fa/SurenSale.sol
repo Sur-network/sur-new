@@ -66,10 +66,23 @@ contract SurenSale {
     uint256 public constant TRANSITION_CEILING_TOMAN = 150;
     uint256 public constant MOVING_AVERAGE_WINDOW_DAYS = 7;
 
-    /// @notice قیمت فعلی دوره‌ی گذار، به تومان. تا وقتی دوره‌ی گذار واقعاً شروع و اولین‌بار
-    ///         لمس شود صفر است (بعد با آخرین قیمت دوره‌ی ثابت، monthlyPriceToman[5]، مقداردهی
-    ///         می‌شود).
-    uint256 public transitionPriceToman;
+    /// @notice ✅ اصلاح‌شده (باگ بحرانی پیداشده در بازبینی): TRANSITION_PRICE_STEP_BPS (۵۰ =
+    ///         ۰.۵٪) وقتی مستقیم روی یک قیمت صحیح تومانی (۹۰ تا ۱۵۰) اعمال می‌شد، همیشه به
+    ///         `price * 50 / 10000 = 0` می‌رسید — تقسیم صحیح سالیدیتی رند به پایین می‌کند و
+    ///         150*50=7500 هرگز به مخرج 10000 نمی‌رسد. یعنی تعدیل روزانه‌ی ±۰.۵٪ عملاً هرگز
+    ///         فعال نمی‌شد؛ قیمت برای همیشه روی همون عددی که باهاش مقداردهی اولیه شده بود
+    ///         گیر می‌کرد. اصلاح: قیمت دوره‌ی گذار داخلی حالا با دقت ۱۰۰۰برابر («میلی‌تومان» —
+    ///         به transitionPriceMilliToman پایین مراجعه کن) نگه‌داری می‌شود تا یه گام ۰.۵٪
+    ///         روی یه عدد مقیاس‌شده مثل ۱۱۶۰۰۰ بشه ۵۸۰، نه صفر. currentPriceToman() پایین
+    ///         همچنان یه مقدار صحیح تومانی معمولی برمی‌گردونه — هیچ تغییری توی رابط بیرونی
+    ///         برای PaymentReporter یا هر مصرف‌کننده‌ی دیگه‌ای نیست.
+    uint256 public constant TRANSITION_PRICE_PRECISION = 1000;
+
+    /// @notice ✅ تغییرنام از transitionPriceToman (که تومان کامل بود — منشأ باگ بالا) — حالا
+    ///         قیمت × TRANSITION_PRICE_PRECISION رو داخلی نگه می‌داره. هرگز مستقیم توسط
+    ///         فراخوان بیرونی خونده نمی‌شه؛ به‌جاش از currentPriceToman() (تومان کامل) یا
+    ///         currentPriceMilliToman() (دقت کامل) استفاده کن.
+    uint256 public transitionPriceMilliToman;
 
     /// @notice چند روز از دوره‌ی گذار قبلاً حجمشان در یک تعدیل قیمت لحاظ شده. شاخص روزها
     ///         صفرمبنا و از transitionStartTime() شمرده می‌شود.
@@ -82,6 +95,7 @@ contract SurenSale {
         uint256 indexed dayIndex,
         uint256 dayVolumeSuren,
         uint256 movingAverageSuren,
+        uint256 newPriceMilliToman,
         uint256 newPriceToman
     );
 
@@ -162,7 +176,19 @@ contract SurenSale {
         // دوره‌ی گذار (یا بعد از پایانش — قرارداد دیگر نقش قیمت‌گذاری ندارد، ولی به‌جای
         // revert کردن، همچنان آخرین قیمت شناخته‌شده را برمی‌گرداند — برای هر داشبورد آف‌چینی
         // که این مقدار را می‌خواند، یک قیمت قدیمی‌ولی‌مشخص امن‌تر از خطاست).
-        return transitionPriceToman == 0 ? monthlyPriceToman[5] : transitionPriceToman;
+        // ✅ دقت داخلی میلی‌تومان را برای فراخوان بیرونی به یه تومان کامل معمولی تبدیل می‌کنه.
+        return transitionPriceMilliToman == 0
+            ? monthlyPriceToman[5]
+            : transitionPriceMilliToman / TRANSITION_PRICE_PRECISION;
+    }
+
+    /// @notice ✅ تازه: قیمت دوره‌ی گذار با دقت کامل (تومان کامل × ۱۰۰۰)، برای هر مصرف‌کننده‌ی
+    ///         آف‌چین (مثل یه داشبورد) که بخواد حرکت زیرتومانی رو ببینه، نه فقط مقدار
+    ///         رندشده‌ای که currentPriceToman() برمی‌گردونه.
+    function currentPriceMilliToman() public view returns (uint256) {
+        return transitionPriceMilliToman == 0
+            ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
+            : transitionPriceMilliToman;
     }
 
     function isSaleActive() public view returns (bool) {
@@ -198,13 +224,16 @@ contract SurenSale {
     function advanceTransitionPrice() public {
         if (block.timestamp < transitionStartTime()) return; // دوره‌ی ثابت هنوز جریان دارد
 
-        if (transitionPriceToman == 0) {
-            transitionPriceToman = monthlyPriceToman[5]; // با آخرین قیمت دوره‌ی ثابت مقداردهی اولیه
+        if (transitionPriceMilliToman == 0) {
+            transitionPriceMilliToman = monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION; // با آخرین قیمت دوره‌ی ثابت مقداردهی اولیه
         }
 
         uint256 maxDay = TRANSITION_DURATION / 1 days;
         uint256 today = currentTransitionDay();
         if (today > maxDay) today = maxDay; // بعد از پایان پنجره، دیگر قیمت‌گذاری ادامه پیدا نکند
+
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * TRANSITION_PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * TRANSITION_PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
@@ -216,20 +245,20 @@ contract SurenSale {
                 uint256 lowThreshold = (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
 
                 if (dayVolume > highThreshold) {
-                    uint256 step = (transitionPriceToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
-                    uint256 raised = transitionPriceToman + step;
-                    transitionPriceToman = raised > TRANSITION_CEILING_TOMAN ? TRANSITION_CEILING_TOMAN : raised;
+                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                    uint256 raised = transitionPriceMilliToman + step;
+                    transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
                 } else if (dayVolume < lowThreshold) {
-                    uint256 step = (transitionPriceToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
-                    uint256 lowered = transitionPriceToman > step ? transitionPriceToman - step : 0;
-                    transitionPriceToman = lowered < TRANSITION_FLOOR_TOMAN ? TRANSITION_FLOOR_TOMAN : lowered;
+                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                    uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
+                    transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
                 }
                 // در غیر این صورت: داخل بازه‌ی [۸۰٪، ۱۲۰٪] میانگین متحرک — امروز بدون تغییر.
             }
             // avg == 0 (هنوز داده‌ی روز قبلی نیست، مثلاً روز ۰) — بدون تغییر؛ نمی‌توان با
             // میانگین متحرکی که هنوز وجود ندارد مقایسه کرد.
 
-            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceToman);
+            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / TRANSITION_PRICE_PRECISION);
             lastPricedTransitionDay++;
         }
     }

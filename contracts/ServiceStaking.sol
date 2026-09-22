@@ -94,7 +94,20 @@ contract ServiceStaking {
         require(msg.value > 0, "ServiceStaking: zero stake amount");
 
         Stake storage s = stakes[msg.sender][service];
-        if (s.amount == 0) {
+        // ✅ FIXED (critical exploit found in review): previously `stakedAt` was only set on
+        // the FIRST stake (when s.amount == 0), meaning a top-up after the original 90-day
+        // Reputation lock had already elapsed did NOT reset the clock — so a user could stake a
+        // trivial amount, wait 90 days, then top up with a large amount and withdraw it all
+        // immediately, since the lock check only ever looked at the original (tiny) stake's
+        // timestamp. Fix: for Reputation specifically, EVERY stake() call (top-up or first)
+        // resets stakedAt to now, restarting the 90-day lock for the full new balance — since
+        // Reputation's whole design intent is "the weight/lock reflects your CURRENT staked
+        // amount," a top-up must not inherit an already-expired lock from a much smaller
+        // earlier stake. Other services don't use stakedAt for anything (their cooldown is
+        // computed from withdrawalRequestedAt instead), so this change is a no-op for them.
+        if (service == ServiceId.Reputation) {
+            s.stakedAt = block.timestamp;
+        } else if (s.amount == 0) {
             s.stakedAt = block.timestamp;
         }
         s.amount += msg.value;

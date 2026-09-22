@@ -166,6 +166,13 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
 
+    /// @dev ✅ تقویت‌شده (مرتبط با کلاس باگ رأی مانده‌شده‌ی پیداشده در بازبینی، هرچند اینجا
+    ///      خفیف‌تره چون `required` همیشه از BOARD_SIZE ثابت میاد، نه یه تعداد کوچیک‌شونده):
+    ///      بدون یه مهلت انقضا، یه اقدام هیأت‌مدیره می‌تونست به‌اندازه‌ای باز بمونه که ترکیب
+    ///      هیأت‌مدیره‌ی اصلی (از طریق _recomputeBoard) قبل از رسیدن رأی کافی عوض بشه — یعنی
+    ///      رأی‌های ثبت‌شده توسط اعضای سابقِ عوض‌شده می‌تونستن با رأی یه عضو فعلی ترکیب بشن و
+    ///      به اکثریت برسن، حتی اگه هیچ‌وقت یه هیأت‌مدیره‌ی واقعی ۵نفره هم‌زمان روش توافق
+    ///      نکرده باشه. `expiresAt` این پنجره رو محدود می‌کنه.
     struct BoardAction {
         ActionType atype;
         address target;      // آدرس اوراکل جدید، یا گیرنده‌ی بودجه (برای اقدامات پارامتر اقتصادی استفاده نمی‌شود)
@@ -173,8 +180,11 @@ contract ValidatorsBoard {
         string description;   // فقط برای ApproveBudget استفاده می‌شود
         uint256 votes;
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه
         bool executed;
     }
+
+    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
@@ -425,6 +435,7 @@ contract ValidatorsBoard {
             description: description,
             votes: 0,
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
         });
         emit ActionProposed(id, atype, target, amount, msg.sender);
@@ -435,6 +446,7 @@ contract ValidatorsBoard {
         BoardAction storage a = actions[id];
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
+        require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
         actionHasVoted[id][voter] = true;

@@ -96,7 +96,20 @@ contract ServiceStaking {
         require(msg.value > 0, "ServiceStaking: zero stake amount");
 
         Stake storage s = stakes[msg.sender][service];
-        if (s.amount == 0) {
+        // ✅ اصلاح‌شده (اکسپلویت بحرانی پیداشده در بازبینی): قبلاً `stakedAt` فقط در **اولین**
+        // استیک (وقتی s.amount صفر بود) تنظیم می‌شد — یعنی یه top-up بعد از این‌که قفل ۹۰روزه‌ی
+        // اصلی Reputation از قبل تموم شده بود، ساعت رو ریست نمی‌کرد؛ پس یه کاربر می‌تونست یه
+        // مقدار ناچیز استیک کنه، ۹۰ روز صبر کنه، بعد با یه مبلغ بزرگ top-up کنه و بلافاصله کل
+        // مبلغ رو برداره، چون چک قفل فقط تایم‌استمپ همون استیک اولیه‌ی ناچیز رو می‌دید. اصلاح:
+        // برای Reputation به‌طور خاص، **هر** فراخوان stake() (چه top-up چه اولین‌بار) `stakedAt`
+        // رو به همین لحظه ریست می‌کنه، یعنی قفل ۹۰روزه برای کل موجودی تازه از نو شروع می‌شه —
+        // چون کل فلسفه‌ی طراحی Reputation اینه که «وزن/قفل باید مقدار *فعلی* استیک‌شده رو منعکس
+        // کنه»، پس یه top-up نباید یه قفل از قبل منقضی‌شده‌ی مال یه استیک قبلی خیلی کوچیک‌تر رو
+        // به ارث ببره. سایر سرویس‌ها اصلاً از stakedAt برای هیچی استفاده نمی‌کنن (cooldownشون
+        // از withdrawalRequestedAt محاسبه می‌شه)، پس این تغییر براشون بی‌اثره.
+        if (service == ServiceId.Reputation) {
+            s.stakedAt = block.timestamp;
+        } else if (s.amount == 0) {
             s.stakedAt = block.timestamp;
         }
         s.amount += msg.value;

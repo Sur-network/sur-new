@@ -120,7 +120,7 @@
 | `BLOCK_REWARD_DISTRIBUTOR` (آدرس) | ValidatorsBoard | ثابت `DISTRIBUTOR` برای چرخش اوراکل |
 | `VALIDATORS_REGISTRY` (آدرس) | BlockRewardDistributor، ValidatorsBoard، ValidatorsTreasury | ثابت `REGISTRY` برای بررسی `isValidator`/`getValidators` |
 | `VALIDATORS_BOARD` (آدرس) | BlockRewardDistributor، ValidatorsRegistry، ValidatorsTreasury | ثابت `BOARD` برای اعمال modifier `onlyBoard` |
-| `VALIDATORS_TREASURY` (آدرس) | BlockRewardDistributor، ValidatorsRegistry، ValidatorsBoard | ثابت `TREASURY`، مقصد سهم پاداش/کارمزد عضویت/جریمه/بودجه‌ی تصویب‌شده |
+| `VALIDATORS_TREASURY` (آدرس) | BlockRewardDistributor، ValidatorsRegistry، ValidatorsBoard | ثابت `TREASURY`، مقصد سهم پاداش/جریمه/بودجه‌ی تصویب‌شده (کارمزد عضویت دیگر اینجا نمی‌آید — به `BlockRewardDistributor` می‌رود) |
 | `IDENTITY_REGISTRY` (آدرس) | ValidatorsBoard | ثابت `IDENTITY_REGISTRY`، بررسی `hasIdentity` پیش از `voteFor` |
 
 ---
@@ -130,7 +130,7 @@
 - پاداش بلاک + کارمزد تراکنش‌ها (سطح پروتکل، بدون فراخوانی EVM) → BlockRewardDistributor به‌عنوان `miningbeneficiary`.
 - از مجموع پاداش‌ها (Rewards): ۱۵٪ ثابت (`FOUNDATION_SHARE_BPS`) → FoundationDAO؛ ۴۰٪-۶۵٪ حکمرانی‌شونده (`validatorDirectShareBps`، شروع ۵۰٪) → مستقیم به نسبت بلاک تولیدی بین ولیدیتورها؛ باقی‌مانده → ValidatorsTreasury.
 - از مجموع کارمزدها (Fees): ۱۰۰٪ متناسب با تعداد بلاک تولیدی بین ولیدیتورها — بدون هیچ سهمی برای خزانه.
-- در ValidatorsRegistry: کارمزد عضویت (membership fee) هر ولیدیتور جدید + سپرده‌ی جریمه‌شده (slashed) در غیرفعالی → مستقیماً به ValidatorsTreasury.
+- در ValidatorsRegistry: ✅ **به‌روزشده:** کارمزد عضویت (membership fee) هر ولیدیتور جدید دیگر مستقیم به ValidatorsTreasury نمی‌رود — به `BlockRewardDistributor` فوروارد و در epoch فی بعدی، ۱۰۰٪-به‌نسبت-بلاک بین ولیدیتورهای فعال تقسیم می‌شود (بدون سوزاندن، برخلاف فی معمولی). فقط سپرده‌ی جریمه‌شده (slashed) در غیرفعالی مستقیماً به ValidatorsTreasury می‌رود.
 - در FoundationDAO: ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis، فقط از طریق `proposeSendETH` (دوسوم رأی) قابل خروج است — از جمله برای تأمین دوره‌ای SurenSale.
 - ValidatorsTreasury دو مسیر خرج دارد: ۱) رأی کامل ولیدیتورهای فعال (بدون سقف)، ۲) تصویب board برای مبالغ کوچک زیر `smallBudgetCap` (که خودش فقط با رأی کامل ولیدیتورها قابل تغییر است، نه توسط board).
 

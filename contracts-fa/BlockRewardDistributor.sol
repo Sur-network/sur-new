@@ -233,15 +233,34 @@ contract BlockRewardDistributor {
     ///         مستقل از **هردو**: اکثریت ساده‌ی ValidatorsBoard **و** اکثریت دوسوم کل مجمع
     ///         ولیدیتورهای فعال، پیش از اجرا شدن — به proposeShareChange/boardVoteShareChange/
     ///         validatorVoteShareChange پایین مراجعه کنید.
+    /// @dev ✅ اصلاح‌شده (باگ بحرانی رأی مانده‌شده‌ی پیداشده در بازبینی): `requiredValidatorApprovals`
+    ///      حالا فقط یک‌بار در لحظه‌ی ثبت پیشنهاد snapshot می‌شه (از تعداد ولیدیتور فعال همون
+    ///      لحظه)، نه این‌که هر بار رأی زنده دوباره محاسبه بشه. قبلاً `validatorApprovals` یه
+    ///      شمارنده‌ی ساده بود که فقط زیاد می‌شد (هرگز کم نمی‌شد وقتی یه ولیدیتورِ رأی‌داده بعداً
+    ///      خارج می‌شد)، درحالی‌که `required` هر بار از تعداد فعال *فعلی* دوباره حساب می‌شد. این
+    ///      یعنی یه پیشنهاد که به نصاب نرسیده بود، می‌تونست بعداً، بدون هیچ رأی تازه‌ای، فقط
+    ///      به‌خاطر کوچیک‌شدن شبکه، خودبه‌خود قابل‌اجرا بشه — یه باگ کلاسیک حکمرانی. snapshot
+    ///      گرفتن آستانه در لحظه‌ی ثبت، این رو می‌بنده: سقفی که یه پیشنهاد باید ازش رد بشه،
+    ///      همون لحظه‌ی ثبتش قفل می‌شه. همراه با `expiresAt` پایین (که اونم تازه‌ست)، یه
+    ///      پیشنهاد که نتونه توی یه پنجره‌ی محدود به آستانه‌ی *خودش* برسه، ساده منقضی می‌شه،
+    ///      نه این‌که بی‌نهایت باز بمونه و منتظر کوچیک‌شدن جمعیت رأی‌دهنده باشه.
     struct ShareProposal {
         uint256 newValidatorShareBps;
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه — بعد از این، دیگه قابل‌رأی یا اجرا نیست
+        uint256 requiredValidatorApprovals; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره محاسبه نمی‌شه
         uint256 boardApprovals;
         uint256 validatorApprovals;
         bool boardPassed;
         bool validatorPassed;
         bool executed;
     }
+
+    /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بعد از ثبت هنوز قابل‌رأی/اجراست. عمداً به‌وضوح
+    ///         کوتاه‌تر از SHARE_CHANGE_MIN_INTERVAL (۱۸۰ روز) — پیشنهادی که ظرف ۳۰ روز نتونه
+    ///         رأی لازم رو جمع کنه، باید دوباره از نو (با یه snapshot تازه از جمعیت) ثبت بشه،
+    ///         نه این‌که بی‌نهایت باز بمونه.
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
     mapping(uint256 => ShareProposal) public shareProposals;
     mapping(uint256 => mapping(address => bool)) private shareBoardVoted;
@@ -358,9 +377,12 @@ contract BlockRewardDistributor {
 
         shareProposalCount++;
         id = shareProposalCount;
+        uint256 activeCountAtProposal = REGISTRY.getActiveValidatorCount();
         shareProposals[id] = ShareProposal({
             newValidatorShareBps: newValidatorShareBps,
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + PROPOSAL_EXPIRY,
+            requiredValidatorApprovals: (activeCountAtProposal * 2 + 2) / 3, // سقف(۲/۳)، از همین لحظه ثابت‌شده
             boardApprovals: 0,
             validatorApprovals: 0,
             boardPassed: false,
@@ -377,11 +399,13 @@ contract BlockRewardDistributor {
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
         require(!p.executed, "BlockRewardDistributor: already executed");
+        require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
 
         shareBoardVoted[id][msg.sender] = true;
         p.boardApprovals++;
-        uint256 required = (BOARD_SIZE / 2) + 1; // ۳ از ۵
+        uint256 required = (BOARD_SIZE / 2) + 1; // ۳ از ۵ — BOARD_SIZE یه ثابته، پس برخلاف
+        // آستانه‌ی سمت ولیدیتور، نیازی به snapshot نداره: هرگز جابه‌جا نمی‌شه.
         emit ShareChangeBoardVoted(id, msg.sender, p.boardApprovals, required);
 
         if (p.boardApprovals >= required) {
@@ -390,23 +414,23 @@ contract BlockRewardDistributor {
         _tryExecuteShareChange(id);
     }
 
-    /// @notice رأی لازم دیگر — مجلس کل مجمع ولیدیتورها. دوسوم از تعداد ولیدیتور فعال
-    ///         **فعلی** (زنده محاسبه می‌شود، نه در لحظه‌ی پیشنهاد ثبت‌شده — دقیقاً مطابق
-    ///         همان الگوی رأی‌گیری‌های پارامتر امنیتی ValidatorsRegistry).
+    /// @notice رأی لازم دیگر — مجلس کل مجمع ولیدیتورها. ✅ اصلاح‌شده: حالا در برابر
+    ///         `requiredValidatorApprovals` چک می‌شه که یک‌بار در لحظه‌ی ثبت پیشنهاد
+    ///         snapshot شده — به کامنت struct ShareProposal مراجعه کن که چرا محاسبه‌ی زنده
+    ///         (رفتار قبلی) یه آسیب‌پذیری رأی-مانده‌شده بود.
     function validatorVoteShareChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
         require(!p.executed, "BlockRewardDistributor: already executed");
+        require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
 
         shareValidatorVoted[id][msg.sender] = true;
         p.validatorApprovals++;
-        uint256 activeCount = REGISTRY.getActiveValidatorCount();
-        uint256 required = (activeCount * 2 + 2) / 3; // سقف(۲ × تعداد فعال ÷ ۳)
-        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, required);
+        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, p.requiredValidatorApprovals);
 
-        if (p.validatorApprovals >= required) {
+        if (p.validatorApprovals >= p.requiredValidatorApprovals) {
             p.validatorPassed = true;
         }
         _tryExecuteShareChange(id);

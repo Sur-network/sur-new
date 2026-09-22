@@ -122,17 +122,29 @@ contract ValidatorsRegistry {
         // منعکس کند، نه هیأت مؤسس را).
     }
 
-    /// @notice ✅ تازه: تعداد ولیدیتورهای فعلاً فعالی که از طریق requestMembership() (مسیر
-    ///         پرداختی) وارد شده‌اند — با هر requestMembership() موفق زیاد، و وقتی یک ولیدیتور
-    ///         پرداخت‌کرده خارج می‌شود کم می‌شود (به requestExit()/_removeFromActive() مراجعه
-    ///         کن). ولیدیتورهای مؤسس genesis-seeded عمداً اینجا شمرده نمی‌شوند (هرگز
-    ///         requestMembership() را فراخوانی نمی‌کنند)، پس ورود رایگانشان منحنی هزینه را برای
-    ///         هیچ‌کس بعد از خودشان تندتر نمی‌کند. currentEntryThreshold() پایین به‌جای
-    ///         activeValidators.length از این به‌عنوان توان استفاده می‌کند — برای استدلال کامل
-    ///         اقتصادی این تفاوت به sur-tokenomics.md مراجعه کن.
-    uint256 public paidValidatorCount;
-
     mapping(address => ValidatorInfo) public validators;
+
+    /// @notice ✅ تازه: تعداد ولیدیتورهای پرداخت‌کننده (وارد‌شده از طریق requestMembership())
+    ///         که هنوز requestExit() را فراخوانی نکرده‌اند — با هر requestMembership() موفق
+    ///         زیاد می‌شود، و فقط با requestExit() (پایین را ببین) کم می‌شود. ⚠️ **تعریف دقیق
+    ///         (بعد از بازبینی روشن‌تر شد):** برخلاف اسم متغیر، این «ولیدیتور پرداخت‌کننده‌ی
+    ///         *فعلاً فعال*» نیست — Probation، Active، و Demoted را یکسان شامل می‌شود، چون
+    ///         هیچ‌کدام از این انتقال‌ها requestExit() صدا نمی‌زنند. یه ولیدیتور پرداخت‌کننده
+    ///         که فقط در Probation است، یا موقتاً به‌خاطر غیرفعالی Demoted شده، همچنان اینجا
+    ///         شمرده می‌شود؛ فقط خروج کامل شمرده نمی‌شود. این رفتار عمدیه، نه یه باگ: منحنی
+    ///         رشد قراره نشون بده چند تا صندلی پرداختی گرفته شده و هنوز رها نشده، نه فقط
+    ///         زیرمجموعه‌ی محدودتر «کسانی که همین الان liveness رو رد می‌کنن». ولیدیتورهای
+    ///         مؤسس genesis-seeded عمداً اینجا شمرده نمی‌شوند (هرگز requestMembership() را
+    ///         فراخوانی نمی‌کنند)، پس ورود رایگانشان منحنی هزینه را برای هیچ‌کس بعد از خودشان
+    ///         تندتر نمی‌کند. currentEntryThreshold() پایین به‌جای activeValidators.length از
+    ///         این به‌عنوان توان استفاده می‌کند — برای استدلال کامل اقتصادی این تفاوت به
+    ///         sur-tokenomics.md مراجعه کن.
+    /// @dev ⚠️ ترتیب این اعلان (بعد از validators) عمداً با نسخه‌ی انگلیسی هم‌تراز نگه داشته
+    ///      شده — ترتیب متغیرهای storage باید بین دو زبان کاملاً یکی باشد، حتی اگر این پروژه
+    ///      فقط نسخه‌ی انگلیسی را دیپلوی می‌کند، تا این فایل واقعاً یک «همون کد، کامنت فارسی»
+    ///      باشد، نه یک قرارداد با storage layout متفاوت. (باگ پیداشده در بازبینی: قبلاً این
+    ///      دو خط برعکسِ نسخه‌ی انگلیسی بودند.)
+    uint256 public paidValidatorCount;
 
     // ------------------------------------------------------------------
     // یادداشت معماری: هویت (نام/نوع شخصیت، وریفای موبایل/تلگرام/KYC) دیگر اینجا نیست — به یک
@@ -208,6 +220,32 @@ contract ValidatorsRegistry {
     // برابر عدد نقل‌شده‌ی اینجاست (به sur-master-open-items.md برای این ناهماهنگی باز
     // مراجعه کن).
     // ------------------------------------------------------------------
+
+    /// @notice ✅ تازه (guardrail اضافه‌شده بعد از بازبینی): بازه‌ی سخت + یه تایمر مشترک برای
+    ///         اختیار هیأت‌مدیره‌ی ولیدیتورها روی سه پارامتر اقتصادی ورود پایین
+    ///         (entryThresholdBase، growthFactorPerValidator، membershipFeeBps). قبل از این،
+    ///         هیچ‌کدوم از این سه تابع تنظیم، سقف/کف معناداری نداشتن — هیأت‌مدیره (فقط اکثریت
+    ///         ۳ از ۵) می‌تونست entryThresholdBase رو صفر کنه (ورود کاملاً رایگان)،
+    ///         growthFactorPerValidator رو به یه عدد نجومی سنگین ببره (ورود عملاً بعد از
+    ///         چندتا ولیدیتور غیرممکن بشه)، یا membershipFeeBps رو تا ۱۰۰٪ ببره (نفر تازه
+    ///         دوبرابر خودِ وثیقه‌ش بپردازه). یه اکثریت ۳نفره‌ی تحت‌فشار یا صرفاً اشتباه‌کرده
+    ///         می‌تونست یک‌شبه اقتصاد ورود ولیدیتور رو عوض کنه، بدون هیچ رأی مجمع کامل. بازه‌ها
+    ///         حالت‌های افراطی رو می‌بندن؛ تایمر مشترک (یه شمارنده برای هر سه تا، نه سه‌تا
+    ///         جدا) جلوی این رو می‌گیره که هیأت‌مدیره چندتا تغییر تندتند و متوالی روی این سه
+    ///         پارامتر بده تا در مجموع به یه اثر افراطی برسه که هیچ تغییر تک‌سقف‌داری به
+    ///         تنهایی اجازه نمی‌داد.
+    uint256 public constant ENTRY_THRESHOLD_BASE_MIN = 100_000 ether;
+    uint256 public constant ENTRY_THRESHOLD_BASE_MAX = 2_000_000 ether;
+    uint256 public constant MEMBERSHIP_FEE_BPS_MIN = 100; // ۱٪
+    uint256 public constant MEMBERSHIP_FEE_BPS_MAX = 1000; // ۱۰٪
+    /// @dev بازه‌ها بر حسب دوره‌ی دوبرابرشدنی که ایجاد می‌کنن بیان شدن (نه خودِ ضریب
+    ///      fixed-point مستقیم)، چون «هر N ولیدیتور پرداخت‌کننده» واحد معنادار اقتصادی
+    ///      اینجاست — ضریب خام برای یه دوره‌ی مشخص از 2^(1/دوره) محاسبه می‌شه. تندترین
+    ///      مجاز: دوبرابر هر ۲۰ ولیدیتور پرداخت‌کننده. کندترین مجاز: هر ۸۰ نفر.
+    uint256 public constant GROWTH_FACTOR_MIN = 1_008701983790398976; // 2^(1/80)، دوبرابر هر ۸۰
+    uint256 public constant GROWTH_FACTOR_MAX = 1_035264923841377536; // 2^(1/20)، دوبرابر هر ۲۰
+    uint256 public constant ECONOMIC_PARAM_CHANGE_MIN_INTERVAL = 180 days;
+    uint256 public lastEconomicParamChangeTime;
 
     /// @notice استیک پایه‌ی لازم برای درخواست عضویت وقتی صفر ولیدیتور پرداخت‌کرده وجود دارد
     ///         (یعنی اولین نفری که تا‌به‌حال requestMembership() را فراخوانی می‌کند — صرف‌نظر
@@ -292,13 +330,26 @@ contract ValidatorsRegistry {
         ExitCooldown
     }
 
+    /// @dev ✅ اصلاح‌شده (باگ بحرانی رأی مانده‌شده‌ی پیداشده در بازبینی — همون کلاس مشکل
+    ///      ShareProposal در BlockRewardDistributor.sol): `required` قبلاً هر بار زنده از
+    ///      getActiveValidatorCount() محاسبه می‌شد، درحالی‌که `votes` فقط زیاد می‌شد و هرگز
+    ///      کم نمی‌شد. یعنی یه پیشنهاد تغییر پارامتر امنیتی (slashBps، exitCooldown، و بقیه‌ی
+    ///      ParamKey پایین) که به اکثریت نرسیده بود، می‌تونست بعداً، بدون هیچ رأی تازه‌ای،
+    ///      فقط به‌خاطر کوچیک‌شدن تعداد فعال، خودبه‌خود قابل‌اجرا بشه. `requiredVotes` و
+    ///      `expiresAt` حالا هردو در لحظه‌ی ثبت پیشنهاد snapshot/ثابت می‌شن — دقیقاً مثل
+    ///      ShareProposal در BlockRewardDistributor.
     struct ParamProposal {
         ParamKey key;
         uint256 newValue;
         uint256 votes;
+        uint256 requiredVotes; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره حساب نمی‌شه
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه — بعد از این دیگه قابل‌رأی/اجرا نیست
         bool executed;
     }
+
+    /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد تغییر پارامتر بعد از ثبت قابل‌رأی/اجراست.
+    uint256 public constant PARAM_PROPOSAL_EXPIRY = 30 days;
 
     mapping(uint256 => ParamProposal) public paramProposals;
     mapping(uint256 => mapping(address => bool)) private paramHasVoted;
@@ -399,20 +450,45 @@ contract ValidatorsRegistry {
     // در ValidatorsBoard.sol مراجعه کن).
     // ------------------------------------------------------------------
     function setEntryThresholdBase(uint256 newValue) external onlyBoard {
+        require(
+            newValue >= ENTRY_THRESHOLD_BASE_MIN && newValue <= ENTRY_THRESHOLD_BASE_MAX,
+            "ValidatorsRegistry: entryThresholdBase outside allowed bounds"
+        );
+        require(
+            block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
+            "ValidatorsRegistry: too soon since the last economic-parameter change"
+        );
         emit EconomicParamUpdatedByBoard("entryThresholdBase", entryThresholdBase, newValue);
         entryThresholdBase = newValue;
+        lastEconomicParamChangeTime = block.timestamp;
     }
 
     function setGrowthFactorPerValidator(uint256 newValue) external onlyBoard {
-        require(newValue > FIXED_POINT_ONE, "ValidatorsRegistry: growth factor must be > 1.0 (must actually grow)");
+        require(
+            newValue >= GROWTH_FACTOR_MIN && newValue <= GROWTH_FACTOR_MAX,
+            "ValidatorsRegistry: growthFactorPerValidator outside allowed bounds"
+        );
+        require(
+            block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
+            "ValidatorsRegistry: too soon since the last economic-parameter change"
+        );
         emit EconomicParamUpdatedByBoard("growthFactorPerValidator", growthFactorPerValidator, newValue);
         growthFactorPerValidator = newValue;
+        lastEconomicParamChangeTime = block.timestamp;
     }
 
     function setMembershipFeeBps(uint256 newValue) external onlyBoard {
-        require(newValue <= BPS_DENOMINATOR, "ValidatorsRegistry: membershipFeeBps too high");
+        require(
+            newValue >= MEMBERSHIP_FEE_BPS_MIN && newValue <= MEMBERSHIP_FEE_BPS_MAX,
+            "ValidatorsRegistry: membershipFeeBps outside allowed bounds"
+        );
+        require(
+            block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
+            "ValidatorsRegistry: too soon since the last economic-parameter change"
+        );
         emit EconomicParamUpdatedByBoard("membershipFeeBps", membershipFeeBps, newValue);
         membershipFeeBps = newValue;
+        lastEconomicParamChangeTime = block.timestamp;
     }
 
     function _enforceRateLimit() private {
@@ -629,7 +705,9 @@ contract ValidatorsRegistry {
             key: key,
             newValue: newValue,
             votes: 0,
+            requiredVotes: (getActiveValidatorCount() / 2) + 1, // همین لحظه ثابت‌شده
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + PARAM_PROPOSAL_EXPIRY,
             executed: false
         });
         emit ParameterChangeProposed(id, key, newValue, msg.sender);
@@ -644,15 +722,15 @@ contract ValidatorsRegistry {
         ParamProposal storage p = paramProposals[id];
         require(p.createdAt != 0, "ValidatorsRegistry: proposal not found");
         require(!p.executed, "ValidatorsRegistry: already executed");
+        require(block.timestamp <= p.expiresAt, "ValidatorsRegistry: proposal has expired");
         require(!paramHasVoted[id][voter], "ValidatorsRegistry: already voted");
 
         paramHasVoted[id][voter] = true;
         p.votes++;
 
-        uint256 required = (getActiveValidatorCount() / 2) + 1;
-        emit ParameterChangeVoted(id, voter, p.votes, required);
+        emit ParameterChangeVoted(id, voter, p.votes, p.requiredVotes);
 
-        if (p.votes >= required) {
+        if (p.votes >= p.requiredVotes) {
             p.executed = true;
             _applyParam(p.key, p.newValue);
         }

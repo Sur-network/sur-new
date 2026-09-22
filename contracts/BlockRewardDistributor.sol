@@ -236,15 +236,37 @@ contract BlockRewardDistributor {
     ///         independent approval from BOTH a simple majority of ValidatorsBoard AND a
     ///         two-thirds majority of the full active validator assembly before it applies —
     ///         see proposeShareChange/boardVoteShareChange/validatorVoteShareChange below.
+    /// @dev ✅ FIXED (critical stale-vote bug found in review): `requiredValidatorApprovals` is
+    ///      now snapshotted ONCE at proposal creation (from the active-validator count at that
+    ///      moment), not recomputed live on every vote. Previously, `validatorApprovals` was a
+    ///      simple counter that only ever increased (never decremented when a voting validator
+    ///      later exited), while `required` was recalculated from the CURRENT active count on
+    ///      every call. This meant a proposal that failed to reach quorum at a large validator
+    ///      count could later become executable with ZERO new votes, purely because the
+    ///      network's active count shrank enough that the live-recomputed threshold fell below
+    ///      the old, frozen vote tally — a classic stale/replay governance bug. Snapshotting the
+    ///      requirement at creation time closes this: the bar a given proposal must clear is
+    ///      fixed the moment it's proposed, exactly like a share price is fixed the moment an
+    ///      order is placed. Combined with `expiresAt` below (also new), a proposal that doesn't
+    ///      reach ITS OWN frozen bar within a bounded window simply dies, rather than being able
+    ///      to sit indefinitely waiting for the electorate to shrink.
     struct ShareProposal {
         uint256 newValidatorShareBps;
         uint256 createdAt;
+        uint256 expiresAt; // ✅ NEW — proposal can no longer be voted on or executed after this
+        uint256 requiredValidatorApprovals; // ✅ NEW — snapshotted at creation, never recomputed
         uint256 boardApprovals;
         uint256 validatorApprovals;
         bool boardPassed;
         bool validatorPassed;
         bool executed;
     }
+
+    /// @notice ✅ NEW: how long a proposal remains votable/executable after creation. Chosen to
+    ///         be comfortably shorter than SHARE_CHANGE_MIN_INTERVAL (180 days) — a proposal
+    ///         that can't gather the required votes within 30 days should be re-proposed fresh
+    ///         (with a fresh electorate snapshot) rather than left open indefinitely.
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
     mapping(uint256 => ShareProposal) public shareProposals;
     mapping(uint256 => mapping(address => bool)) private shareBoardVoted;
@@ -362,9 +384,12 @@ contract BlockRewardDistributor {
 
         shareProposalCount++;
         id = shareProposalCount;
+        uint256 activeCountAtProposal = REGISTRY.getActiveValidatorCount();
         shareProposals[id] = ShareProposal({
             newValidatorShareBps: newValidatorShareBps,
             createdAt: block.timestamp,
+            expiresAt: block.timestamp + PROPOSAL_EXPIRY,
+            requiredValidatorApprovals: (activeCountAtProposal * 2 + 2) / 3, // ceil(2/3), frozen now
             boardApprovals: 0,
             validatorApprovals: 0,
             boardPassed: false,
@@ -381,11 +406,13 @@ contract BlockRewardDistributor {
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
         require(!p.executed, "BlockRewardDistributor: already executed");
+        require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
 
         shareBoardVoted[id][msg.sender] = true;
         p.boardApprovals++;
-        uint256 required = (BOARD_SIZE / 2) + 1; // 3 of 5
+        uint256 required = (BOARD_SIZE / 2) + 1; // 3 of 5 — BOARD_SIZE is a fixed constant, so
+        // unlike the validator-side threshold, this needs no snapshotting: it can never drift.
         emit ShareChangeBoardVoted(id, msg.sender, p.boardApprovals, required);
 
         if (p.boardApprovals >= required) {
@@ -394,24 +421,23 @@ contract BlockRewardDistributor {
         _tryExecuteShareChange(id);
     }
 
-    /// @notice The other required vote — the full validator assembly chamber. Two-thirds of the
-    ///         CURRENT active validator count (recomputed live, not snapshotted at proposal
-    ///         time — matching the same pattern as ValidatorsRegistry's security-parameter
-    ///         votes).
+    /// @notice The other required vote — the full validator assembly chamber. ✅ FIXED: now
+    ///         checked against `requiredValidatorApprovals`, snapshotted once at proposal
+    ///         creation — see the ShareProposal struct's doc comment for why recomputing this
+    ///         live (the previous behavior) was a stale-vote vulnerability.
     function validatorVoteShareChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
         require(!p.executed, "BlockRewardDistributor: already executed");
+        require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
 
         shareValidatorVoted[id][msg.sender] = true;
         p.validatorApprovals++;
-        uint256 activeCount = REGISTRY.getActiveValidatorCount();
-        uint256 required = (activeCount * 2 + 2) / 3; // ceil(2 * activeCount / 3)
-        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, required);
+        emit ShareChangeValidatorVoted(id, msg.sender, p.validatorApprovals, p.requiredValidatorApprovals);
 
-        if (p.validatorApprovals >= required) {
+        if (p.validatorApprovals >= p.requiredValidatorApprovals) {
             p.validatorPassed = true;
         }
         _tryExecuteShareChange(id);
