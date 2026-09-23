@@ -105,7 +105,7 @@
 ⚠️ تصمیم تازه: هر سه قرارداد `_GenesisSeed` دیگر آرگومان constructor نمی‌گیرند — مقادیر اولیه (لیست اعضا/ولیدیتورها/هیأت) مستقیم و هاردکد داخل خودِ فایل سورس، با علامت `🔶 FILL_IN`، نوشته شده‌اند. این یعنی ابزار genesis باید یک مرحله‌ی «جایگزینی سورس» قبل از کامپایل انجام دهد، نه صرفاً پاس‌دادن آرگومان زمان دیپلوی:
 
 1. از فایل `genesis-config.json` (بخش ۳ بالا)، مقادیر `foundationDAO.initialMembers`، `validatorsRegistry.initialValidators`، و `validatorsBoard.initialBoardMembers` را بخوان.
-2. برای هرکدام از سه قرارداد `_GenesisSeed.sol`، یک نسخه‌ی «جایگزینی‌شده» از سورس تولید کن: هر placeholder (`"Member N"`, `address(0)`, `genesisTimestamp = 0`) را با مقدار واقعی متناظر از پیکربندی جایگزین کن. اگر تعداد ولیدیتورهای اولیه با اندازه‌ی آرایه‌ی نمونه (فعلاً ۵) فرق داشت، بدنه‌ی آرایه (هم نوعش هم فهرست مقادیرش) باید متناسب بازتولید شود.
+2. برای هرکدام از سه قرارداد `_GenesisSeed.sol`، یک نسخه‌ی «جایگزینی‌شده» از سورس تولید کن: هر placeholder (`"Member N"`, `address(0)`, `genesisTimestamp = 0`) را با مقدار واقعی متناظر از پیکربندی جایگزین کن. ⚠️ **تصحیح‌شده:** اندازه‌ی آرایه‌ی نمونه‌ی فعلی در `ValidatorsRegistry_GenesisSeed.sol` **۷** است (نه ۵ — هم‌راستا با ۷ ولیدیتور مؤسس واقعی پروژه)؛ اگر تعداد ولیدیتورهای اولیه در `genesis-config.json` با این عدد فرق داشت، بدنه‌ی آرایه (هم نوعش هم فهرست مقادیرش) باید متناسب بازتولید شود.
 3. این سورسِ جایگزینی‌شده را کامپایل کن.
 4. روی یک نمونه‌ی Anvil محلی (`anvil --silent`) دیپلویش کن — چون این‌بار `constructor` هیچ آرگومانی نمی‌گیرد، دیپلوی صرفاً ارسال بایت‌کد کامپایل‌شده است، بدون نیاز به ABI-encode کردن هیچ پارامتری.
 5. آدرس دیپلوی‌شده روی Anvil را نگه دار.
@@ -121,15 +121,24 @@
 1. **الگوریتم سه‌مرحله‌ای برای storage نهایی `ValidatorsRegistry`:**
    - **(الف)** بایت‌کد deploy‌شده‌ی قرارداد اصلی — طبق روش ۴.۱.
    - **(ب)** storage پیچیده (mapping/آرایه) از خروجی `anvil_dumpState` روی `ValidatorsRegistry_GenesisSeed` — طبق مراحل ۱ تا ۷ بالا.
-   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب):
+   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب). ⚠️ **فهرست کامل (تصحیح‌شده — نسخه‌ی قبلی این فهرست ناقص بود و فقط پارامترهای اقتصادی را داشت):**
      - `verifier` (از `genesis-config.json`، آدرس کلید عملیاتی وریفای)
      - `entryThresholdBase` (باید `500000 ether` باشد، مگر تصمیم تازه‌ای گرفته شده باشد)
      - `growthFactorPerValidator` (باید `1017479692102686336` باشد)
      - `membershipFeeBps` (باید `400` باشد)
      - `lastEconomicParamChangeTime` (باید `0` بماند — پیش‌فرض Solidity، بدون نیاز به نوشتن صریح)
-     - هر پارامتر امنیتی دیگری که `🔶 FILL_IN` دارد (مثلاً `slashBps`, `exitCooldown` — به بخش «سؤالات باز» `sur-tokenomics.md` مراجعه کن که آیا این‌ها قبل از genesis نهایی شده‌اند)
+     - ✅ **پارامترهای امنیتی/چرخه‌ی عمر (همه در قرارداد فعلی `🔶 FILL_IN` هستند — باید قبل از تولید genesis نهایی شده باشند؛ به `sur-master-open-items.md` مراجعه کن که آیا این تصمیم گرفته شده):**
+       - `maxEntriesPerWindow`
+       - `entryWindowSeconds`
+       - `probationPeriod`
+       - `minLivenessConfirmationsToActivate`
+       - `inactivityThreshold`
+       - `recoveryPeriod`
+       - `slashBps`
+       - `exitCooldown`
+       - ✅ **`windowStart`** — ⚠️ برخلاف بقیه‌ی این فهرست، این یکی از `genesis-config.json` مقداردهی *نمی‌شود*؛ باید دقیقاً برابر `network.genesisTimestamp` (بخش ۳ همین سند) باشد، چون منطق rate-limiting ورود ولیدیتور (`maxEntriesPerWindow` در هر `entryWindowSeconds`) از همین لحظه شروع به شمارش می‌کند.
    - **مهم:** `paidValidatorCount` را در این مرحله **ننویس** — باید روی مقدار پیش‌فرض Solidity (صفر) بماند؛ نوشتن هر مقداری دیگر، حتی صفر صریح، یک اسلات اضافه‌ی غیرلازم در genesis اضافه می‌کند (بی‌ضرر، ولی غیرضروری).
-2. **✅ Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند:** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
+2. ✅ **Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند (فهرست تصحیح‌شده — نسخه‌ی قبلی ناقص بود و فقط پارامترهای اقتصادی و مجموعه‌ی ولیدیتورها را داشت):** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
    ```
    ValidatorsRegistry.paidValidatorCount() == 0
    ValidatorsRegistry.getActiveValidatorCount() == (تعداد initialValidators در config)
@@ -137,11 +146,20 @@
    ValidatorsRegistry.entryThresholdBase() == 500000 ether
    ValidatorsRegistry.growthFactorPerValidator() == 1017479692102686336
    ValidatorsRegistry.membershipFeeBps() == 400
+   ValidatorsRegistry.maxEntriesPerWindow() == (مقدار config)
+   ValidatorsRegistry.entryWindowSeconds() == (مقدار config)
+   ValidatorsRegistry.probationPeriod() == (مقدار config)
+   ValidatorsRegistry.minLivenessConfirmationsToActivate() == (مقدار config)
+   ValidatorsRegistry.inactivityThreshold() == (مقدار config)
+   ValidatorsRegistry.recoveryPeriod() == (مقدار config)
+   ValidatorsRegistry.slashBps() == (مقدار config)
+   ValidatorsRegistry.exitCooldown() == (مقدار config)
+   ValidatorsRegistry.windowStart() == network.genesisTimestamp
    برای هر آدرس در initialValidators:
      ValidatorsRegistry.isValidator(address) == true
      validators(address).isPaidEntrant == false
    ```
-   این چک‌ها دقیقاً همان کلاس خطایی را می‌گیرند که یک storage layout به‌هم‌ریخته (مثلاً اگر آفست بین فایل کمکی و قرارداد اصلی جابه‌جا شده باشد) تولید می‌کند — بدون این‌ها، چنین خطایی فقط زمانی کشف می‌شود که شبکه‌ی واقعی با یک genesis state خراب بالا بیاید.
+   این چک‌ها دقیقاً همان کلاس خطایی را می‌گیرند که یک storage layout به‌هم‌ریخته (مثلاً اگر آفست بین فایل کمکی و قرارداد اصلی جابه‌جا شده باشد) یا یک اسکالر جامانده در overlay تولید می‌کند — بدون این‌ها، چنین خطایی فقط زمانی کشف می‌شود که شبکه‌ی واقعی با یک genesis state خراب یا ناقص بالا بیاید.
 
 ### ۴.۳ تخصیص‌های سه‌ردیفی genesis برای `FoundationDAO`
 

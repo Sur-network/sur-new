@@ -35,11 +35,17 @@ interface IERC20 {
 ///         checks for or restricts this overlap.
 ///
 ///         IMPORTANT — governance boundary (design doc section 4): the foundation has NO
-///         control whatsoever over the network, validators, or any oracle. The earlier design
+///         control over the network, validators, or any oracle related to consensus/validator
+///         status. ✅ CORRECTED (was stale — the absolute "any oracle" claim below omitted a
+///         real exception): this contract DOES still control two oracles tied to its own
+///         off-chain operations — identityOracle (in IdentityRegistry, rotatable via
+///         proposeExecute) and paymentOracle (in SurenSale) — neither of which has any bearing
+///         on consensus or validator eligibility. The earlier design
 ///         where this contract (as `MemberDAO`) held `setDistributionOracle` /
 ///         `setValidatorSyncOracle` power over BlockRewardDistributor has been fully retired —
 ///         those functions, the old BLOCK_REWARD_DISTRIBUTOR constant, and the corresponding
-///         proposal types have been removed entirely, not just deprecated. Oracle control now
+///         proposal types have been removed entirely, not just deprecated. Oracle control over
+///         consensus/validator-related oracles now
 ///         belongs exclusively to ValidatorsBoard (routine rotation) and a full validator vote
 ///         (structural changes) — see ValidatorsBoard.sol and BlockRewardDistributor.sol.
 ///
