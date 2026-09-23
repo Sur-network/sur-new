@@ -98,7 +98,7 @@
 - `ValidatorsRegistry_GenesisSeed.sol`
 - `ValidatorsBoard_GenesisSeed.sol`
 
-هرکدام یک `constructor` واقعی دارند که دقیقاً همان منطق seed کردن قرارداد اصلی را پیاده می‌کنند، و ساختار storage‌شان (ترتیب و نوع متغیرها) دقیقاً با قرارداد اصلی یکی است.
+هرکدام یک `constructor` واقعی دارند که دقیقاً همان منطق seed کردن قرارداد اصلی را پیاده می‌کنند. ⚠️ **تصحیح مهم (بعد از یک بازبینی مستقل):** جمله‌ی «ساختار storage‌شان دقیقاً با قرارداد اصلی یکی است» فقط برای `FoundationDAO_GenesisSeed` و `ValidatorsBoard_GenesisSeed` کاملاً درست است. برای **`ValidatorsRegistry_GenesisSeed` این‌طور نیست** — قرارداد اصلی چند متغیر اسکالر (`paidValidatorCount`, `verifier`, `entryThresholdBase`, `growthFactorPerValidator`, `membershipFeeBps`, و پارامترهای امنیتی) دارد که فایل کمکی یا اصلاً ندارد یا فقط به‌عنوان placeholder برای حفظ ترتیب صحیح slot نگه داشته (بدون این‌که constructor کمکی مقدار واقعی‌شان را بنویسد). یعنی برای `ValidatorsRegistry` به‌تنهایی، **روش ۴.۱ و ۴.۲ باید ترکیب شوند** — به بخش ۴.۲.۱ پایین مراجعه کن.
 
 **الگوریتم دقیق (به‌روزشده — قراردادهای کمکی دیگر آرگومان constructor نمی‌گیرند):**
 
@@ -113,6 +113,35 @@
 7. از خروجی `anvil_dumpState`، فقط `storage` مربوط به آدرس هرکدام از سه قرارداد `_GenesisSeed` را استخراج کن.
 8. ⚠️ برای `code` این سه قرارداد در genesis نهایی، **از بایت‌کد deploy‌شده‌ی قرارداد اصلی** (`FoundationDAO.sol`, نه `FoundationDAO_GenesisSeed.sol`) استفاده کن — چون قرارداد کمکی فقط برای محاسبه‌ی storage است، نباید خودش روی زنجیره‌ی واقعی برود. بایت‌کد قرارداد اصلی را طبق روش ۴.۱ (کامپایل استاتیک، بدون نیاز به دیپلوی) به دست بیاور.
 9. Anvil را متوقف و state موقتش را کاملاً دور بینداز. نسخه‌ی «جایگزینی‌شده»ی سورس هم (که مقادیر واقعی داخلش هاردکد شده) باید بعد از این مرحله امن نگه‌داری یا دور انداخته شود — بسته به سیاست حفظ اسناد پروژه؛ خودِ فایل اصلی (با placeholderهای `🔶 FILL_IN`) در ریپو دست‌نخورده می‌ماند.
+
+### ✅ ۴.۲.۱ مرحله‌ی تازه — Overlay اسکالرهای `ValidatorsRegistry` (پیدا و اصلاح‌شده بعد از یک بازبینی مستقل)
+
+مراحل ۱ تا ۹ بالا فقط `mapping`/آرایه‌های پیچیده (`validators`, `activeValidators`, `activeIndex`) را از طریق شبیه‌سازی پر می‌کنند. اما `ValidatorsRegistry.sol` واقعی چند متغیر اسکالر مهم هم دارد که در همان محدوده‌ی storage قرار گرفته‌اند و **هیچ‌کدام از این مقادیر توسط `anvil_dumpState` به‌درستی مقداردهی نمی‌شوند** — چون constructor فایل کمکی هرگز آن‌ها را لمس نمی‌کند (به کامنت `paidValidatorCount`/`verifier` در خودِ `ValidatorsRegistry_GenesisSeed.sol` مراجعه کن). این ابزار باید یک مرحله‌ی سوم و جداگانه (بعد از مرحله‌ی ۷، قبل از نوشتن نهایی storage در genesis) اجرا کند:
+
+1. **الگوریتم سه‌مرحله‌ای برای storage نهایی `ValidatorsRegistry`:**
+   - **(الف)** بایت‌کد deploy‌شده‌ی قرارداد اصلی — طبق روش ۴.۱.
+   - **(ب)** storage پیچیده (mapping/آرایه) از خروجی `anvil_dumpState` روی `ValidatorsRegistry_GenesisSeed` — طبق مراحل ۱ تا ۷ بالا.
+   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب):
+     - `verifier` (از `genesis-config.json`، آدرس کلید عملیاتی وریفای)
+     - `entryThresholdBase` (باید `500000 ether` باشد، مگر تصمیم تازه‌ای گرفته شده باشد)
+     - `growthFactorPerValidator` (باید `1017479692102686336` باشد)
+     - `membershipFeeBps` (باید `400` باشد)
+     - `lastEconomicParamChangeTime` (باید `0` بماند — پیش‌فرض Solidity، بدون نیاز به نوشتن صریح)
+     - هر پارامتر امنیتی دیگری که `🔶 FILL_IN` دارد (مثلاً `slashBps`, `exitCooldown` — به بخش «سؤالات باز» `sur-tokenomics.md` مراجعه کن که آیا این‌ها قبل از genesis نهایی شده‌اند)
+   - **مهم:** `paidValidatorCount` را در این مرحله **ننویس** — باید روی مقدار پیش‌فرض Solidity (صفر) بماند؛ نوشتن هر مقداری دیگر، حتی صفر صریح، یک اسلات اضافه‌ی غیرلازم در genesis اضافه می‌کند (بی‌ضرر، ولی غیرضروری).
+2. **✅ Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند:** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
+   ```
+   ValidatorsRegistry.paidValidatorCount() == 0
+   ValidatorsRegistry.getActiveValidatorCount() == (تعداد initialValidators در config)
+   ValidatorsRegistry.verifier() == (آدرس verifier در config)
+   ValidatorsRegistry.entryThresholdBase() == 500000 ether
+   ValidatorsRegistry.growthFactorPerValidator() == 1017479692102686336
+   ValidatorsRegistry.membershipFeeBps() == 400
+   برای هر آدرس در initialValidators:
+     ValidatorsRegistry.isValidator(address) == true
+     validators(address).isPaidEntrant == false
+   ```
+   این چک‌ها دقیقاً همان کلاس خطایی را می‌گیرند که یک storage layout به‌هم‌ریخته (مثلاً اگر آفست بین فایل کمکی و قرارداد اصلی جابه‌جا شده باشد) تولید می‌کند — بدون این‌ها، چنین خطایی فقط زمانی کشف می‌شود که شبکه‌ی واقعی با یک genesis state خراب بالا بیاید.
 
 ### ۴.۳ تخصیص‌های سه‌ردیفی genesis برای `FoundationDAO`
 

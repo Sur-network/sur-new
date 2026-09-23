@@ -60,6 +60,16 @@ contract FoundationDAO {
     enum ProposalType { AddMember, RemoveMember, SendETH, SendERC20, Execute }
     enum ProposalStatus { Pending, Executed }
 
+    /// @dev ✅ اصلاح‌شده (باگ بحرانی رأی مانده‌شده‌ی پیداشده در بازبینی — همون کلاس مشکل هر
+    ///      مکانیزم پیشنهاد/رأی دیگر این پروژه، ولی این یکی توی دور قبلی جا مونده بود):
+    ///      `requiredVotes`/`expiresAt` حالا در لحظه‌ی ثبت پیشنهاد snapshot/ثابت می‌شن — دقیقاً
+    ///      مثل ShareProposal در BlockRewardDistributor، ParamProposal در ValidatorsRegistry، و
+    ///      Expenditure/ParamProposal در ValidatorsTreasury. قبلاً `_requiredVotes()` هر بار
+    ///      زنده از memberList.length *فعلی* محاسبه می‌شد، درحالی‌که `votes` فقط زیاد می‌شد —
+    ///      یعنی یه پیشنهاد (شامل خرج موجودی ۲۰,۰۰۰,۰۰۰ سورن genesis بنیاد، افزودن/حذف عضو، یا
+    ///      یه فراخوانی دلخواه از طریق proposeExecute) که در ۱۵ عضو به نصاب نرسیده بود، می‌تونست
+    ///      بعداً، بدون هیچ رأی تازه‌ای، فقط به‌خاطر کوچیک‌شدن ترکیب اعضا، خودبه‌خود
+    ///      قابل‌اجرا بشه.
     struct Proposal {
         uint256 id;
         ProposalType pType;
@@ -71,10 +81,15 @@ contract FoundationDAO {
         address tokenAddress;   // فقط برای SendERC20
         bytes data;             // فقط برای Execute
         uint256 votes;
+        uint256 requiredVotes; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره حساب نمی‌شه
         uint256 createdAt;
+        uint256 expiresAt; // ✅ تازه — بعد از این دیگه قابل‌رأی/اجرا نیست
         ProposalStatus status;
         mapping(address => bool) hasVoted;
     }
+
+    /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بنیاد بعد از ثبت هنوز قابل‌رأی/اجراست.
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
     // ------------------------------------------------------------------
     // متغیرهای state
@@ -183,7 +198,9 @@ contract FoundationDAO {
         p.amount = amount;
         p.tokenAddress = token;
         p.data = data;
+        p.requiredVotes = _requiredVotes(pType); // ✅ همین لحظه ثابت‌شده
         p.createdAt = block.timestamp;
+        p.expiresAt = block.timestamp + PROPOSAL_EXPIRY; // ✅ تازه
         p.status = ProposalStatus.Pending;
 
         emit ProposalCreated(id, pType, msg.sender);
@@ -205,15 +222,15 @@ contract FoundationDAO {
         Proposal storage p = proposals[proposalId];
         require(p.id != 0, "FoundationDAO: proposal not found");
         require(p.status == ProposalStatus.Pending, "FoundationDAO: proposal not pending");
+        require(block.timestamp <= p.expiresAt, "FoundationDAO: proposal has expired");
         require(!p.hasVoted[voter], "FoundationDAO: already voted");
 
         p.hasVoted[voter] = true;
         p.votes++;
 
-        uint256 required = _requiredVotes(p.pType);
-        emit Voted(proposalId, voter, p.votes, required);
+        emit Voted(proposalId, voter, p.votes, p.requiredVotes);
 
-        if (p.votes >= required) {
+        if (p.votes >= p.requiredVotes) {
             _execute(p);
         }
     }

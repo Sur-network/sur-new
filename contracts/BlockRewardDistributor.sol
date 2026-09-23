@@ -144,9 +144,11 @@ contract BlockRewardDistributor {
     ///         removed (no longer a fixed "50% reward cut" — see validatorDirectShareBps).
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
-    /// @notice FoundationDAO — receives the new automatic 15%-of-treasury-cut share every
-    ///         epoch. This is the only inbound connection FoundationDAO has to the reward flow;
-    ///         it never needs to call anything to receive it (see FoundationDAO.sol comments).
+    /// @notice FoundationDAO — receives the automatic 15% share of TOTAL rewards every epoch
+    ///         (FOUNDATION_SHARE_BPS, taken directly off the top — see the header comment above
+    ///         for why this is deliberately not computed as a percentage of the treasury cut).
+    ///         This is the only inbound connection FoundationDAO has to the reward flow; it
+    ///         never needs to call anything to receive it (see FoundationDAO.sol comments).
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     /// @notice ValidatorsRegistry is also the only address allowed to forward pending

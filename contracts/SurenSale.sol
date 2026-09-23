@@ -148,6 +148,7 @@ contract SurenSale {
         uint256 tomanAmount,
         uint256 surenAmount,
         uint256 priceTomanPerSuren,
+        uint256 priceMilliTomanPerSuren, // ✅ NEW — the exact precision actually used for settlement
         string paymentReference
     );
     event UnsoldSurenSweeped(address indexed to, uint256 amount);
@@ -193,7 +194,22 @@ contract SurenSale {
     /// @notice ✅ NEW: the full-precision transition price (whole Toman * 1000), for any
     ///         off-chain consumer (e.g. a dashboard) that wants to show sub-Toman movement
     ///         instead of the rounded value currentPriceToman() returns.
+    /// @notice ✅ FIXED (second critical bug found in review, alongside reportPayment() below):
+    ///         this used to always return monthlyPriceToman[5] (the LAST fixed-period price)
+    ///         during the fixed period, regardless of which month it actually was — because it
+    ///         never checked isSaleActive() at all, unlike currentPriceToman() right above it.
+    ///         A buyer paying in, say, month 2 of the fixed period would have been quoted
+    ///         month-2's correct whole-Toman price via currentPriceToman(), but this function
+    ///         (if it had been used anywhere during the fixed period) would have silently
+    ///         reported month-5's price instead. Fixed to mirror currentPriceToman()'s own
+    ///         branching exactly, just scaled by TRANSITION_PRICE_PRECISION.
     function currentPriceMilliToman() public view returns (uint256) {
+        if (isSaleActive()) {
+            uint256 elapsed = block.timestamp - saleStartTime;
+            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
+            if (monthIndex > 5) monthIndex = 5;
+            return monthlyPriceToman[monthIndex] * TRANSITION_PRICE_PRECISION;
+        }
         return transitionPriceMilliToman == 0
             ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
             : transitionPriceMilliToman;
@@ -318,8 +334,16 @@ contract SurenSale {
             advanceTransitionPrice();
         }
 
-        uint256 price = currentPriceToman();
-        uint256 surenAmount = (tomanAmount * 1 ether) / price;
+        // ✅ FIXED (critical bug found in review — the actual point of the milli-Toman
+        // precision fix above only worked if it was actually USED here; it wasn't before):
+        // this used to call currentPriceToman() (whole Toman, floored) for the REAL settlement
+        // math — meaning even though transitionPriceMilliToman moved by fractional-Toman steps
+        // internally, every buyer was still settled at a price that only ever changed in whole-
+        // Toman increments (e.g. 116 → 117, a real jump of ~0.86%, not the intended ±0.5%
+        // daily step). Using currentPriceMilliToman() here means the actual number of Suren a
+        // buyer receives now reflects the full-precision price, not its rounded display value.
+        uint256 priceMilli = currentPriceMilliToman();
+        uint256 surenAmount = (tomanAmount * 1 ether * TRANSITION_PRICE_PRECISION) / priceMilli;
 
         require(surenAmount <= address(this).balance, "SurenSale: insufficient Suren balance");
 
@@ -333,7 +357,7 @@ contract SurenSale {
         (bool success, ) = buyer.call{value: surenAmount}("");
         require(success, "SurenSale: transfer to buyer failed");
 
-        emit PaymentReported(buyer, tomanAmount, surenAmount, price, paymentReference);
+        emit PaymentReported(buyer, tomanAmount, surenAmount, priceMilli / TRANSITION_PRICE_PRECISION, priceMilli, paymentReference);
     }
 
     // ------------------------------------------------------------------

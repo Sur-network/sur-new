@@ -65,6 +65,18 @@ contract FoundationDAO {
     enum ProposalType { AddMember, RemoveMember, SendETH, SendERC20, Execute }
     enum ProposalStatus { Pending, Executed }
 
+    /// @dev ✅ FIXED (critical stale-vote bug found in review — same class as every other
+    ///      proposal/vote mechanism in this project, but this one was missed in the earlier
+    ///      pass): `requiredVotes`/`expiresAt` are now snapshotted/fixed at proposal creation,
+    ///      exactly like BlockRewardDistributor's ShareProposal, ValidatorsRegistry's
+    ///      ParamProposal, and ValidatorsTreasury's Expenditure/ParamProposal. Previously,
+    ///      `_requiredVotes()` was recomputed live from the CURRENT memberList.length on every
+    ///      vote, while `votes` only ever increased — meaning a proposal (including one to
+    ///      spend the Foundation's 20,000,000 Suren genesis balance, add/remove members, or
+    ///      make an arbitrary call via proposeExecute) that failed to reach its threshold at 15
+    ///      members could later become executable with ZERO new votes, purely because
+    ///      membership shrank enough that the live-recomputed threshold fell below the old,
+    ///      frozen tally.
     struct Proposal {
         uint256 id;
         ProposalType pType;
@@ -76,10 +88,18 @@ contract FoundationDAO {
         address tokenAddress;   // only for SendERC20
         bytes data;             // only for Execute
         uint256 votes;
+        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, never recomputed
         uint256 createdAt;
+        uint256 expiresAt; // ✅ NEW — proposal can no longer be voted on or executed after this
         ProposalStatus status;
         mapping(address => bool) hasVoted;
     }
+
+    /// @notice ✅ NEW: how long a Foundation proposal remains votable/executable after
+    ///         creation. A proposal that can't gather the required majority within this window
+    ///         should be re-proposed fresh (with a fresh membership snapshot) rather than left
+    ///         open indefinitely.
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
     // ------------------------------------------------------------------
     // State variables
@@ -189,7 +209,9 @@ contract FoundationDAO {
         p.amount = amount;
         p.tokenAddress = token;
         p.data = data;
+        p.requiredVotes = _requiredVotes(pType); // ✅ frozen now, at creation time
         p.createdAt = block.timestamp;
+        p.expiresAt = block.timestamp + PROPOSAL_EXPIRY; // ✅ NEW
         p.status = ProposalStatus.Pending;
 
         emit ProposalCreated(id, pType, msg.sender);
@@ -211,15 +233,15 @@ contract FoundationDAO {
         Proposal storage p = proposals[proposalId];
         require(p.id != 0, "FoundationDAO: proposal not found");
         require(p.status == ProposalStatus.Pending, "FoundationDAO: proposal not pending");
+        require(block.timestamp <= p.expiresAt, "FoundationDAO: proposal has expired");
         require(!p.hasVoted[voter], "FoundationDAO: already voted");
 
         p.hasVoted[voter] = true;
         p.votes++;
 
-        uint256 required = _requiredVotes(p.pType);
-        emit Voted(proposalId, voter, p.votes, required);
+        emit Voted(proposalId, voter, p.votes, p.requiredVotes);
 
-        if (p.votes >= required) {
+        if (p.votes >= p.requiredVotes) {
             _execute(p);
         }
     }

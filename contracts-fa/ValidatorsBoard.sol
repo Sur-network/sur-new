@@ -173,14 +173,28 @@ contract ValidatorsBoard {
     ///      رأی‌های ثبت‌شده توسط اعضای سابقِ عوض‌شده می‌تونستن با رأی یه عضو فعلی ترکیب بشن و
     ///      به اکثریت برسن، حتی اگه هیچ‌وقت یه هیأت‌مدیره‌ی واقعی ۵نفره هم‌زمان روش توافق
     ///      نکرده باشه. `expiresAt` این پنجره رو محدود می‌کنه.
+    /// @dev ✅ اصلاح‌شده (این قبلاً فقط نیمه‌کاره اصلاح شده بود — دور قبلی فقط `expiresAt`
+    ///      اضافه کرد، ولی این استدلال غلط رو داشت که «نیازی به snapshot نداره چون همیشه از
+    ///      BOARD_SIZE ثابت میاد». اون استدلال غلط بود: refreshBoard() پایین هیأت‌مدیره رو با
+    ///      هرچقدر کاندیدای *مجزا* که حداقل یک رأی گرفته باشن پر می‌کنه، تا سقف BOARD_SIZE —
+    ///      اگه کمتر از ۵ کاندیدا واجد شرایط باشن (واقع‌بینانه در اوایل عمر شبکه، یا بعد از
+    ///      یه موج خروج ولیدیتور)، `boardMembers.length` واقعاً کمتر از ۵ است، و
+    ///      `_voteAction()` مقدار `required` رو از همین طول زنده و کوچیک‌شونده حساب می‌کرد،
+    ///      نه از ثابت. این دقیقاً همون کلاس باگ رأی-مانده‌شده‌ی بقیه‌ی مکانیزم‌های پیشنهاد
+    ///      این پروژه‌ست: `votes` فقط زیاد می‌شه، درحالی‌که `required` می‌تونست بین دو رأی،
+    ///      با رفرش هیأت‌مدیره، کوچیک بشه. `requiredVotes` حالا در لحظه‌ی ثبت snapshot می‌شه،
+    ///      دقیقاً مثل ShareProposal در BlockRewardDistributor، ParamProposal در
+    ///      ValidatorsRegistry، Expenditure/ParamProposal در ValidatorsTreasury، و Proposal در
+    ///      FoundationDAO.
     struct BoardAction {
         ActionType atype;
         address target;      // آدرس اوراکل جدید، یا گیرنده‌ی بودجه (برای اقدامات پارامتر اقتصادی استفاده نمی‌شود)
         uint256 amount;       // مبلغ بودجه برای ApproveBudget، یا مقدار جدید برای اقدامات پارامتر اقتصادی
         string description;   // فقط برای ApproveBudget استفاده می‌شود
         uint256 votes;
+        uint256 requiredVotes; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره حساب نمی‌شه
         uint256 createdAt;
-        uint256 expiresAt; // ✅ تازه
+        uint256 expiresAt;
         bool executed;
     }
 
@@ -434,6 +448,7 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
+            requiredVotes: (boardMembers.length / 2) + 1, // ✅ همین لحظه، از اندازه‌ی *واقعی* فعلی هیأت‌مدیره ثابت‌شده
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
@@ -452,10 +467,9 @@ contract ValidatorsBoard {
         actionHasVoted[id][voter] = true;
         a.votes++;
 
-        uint256 required = (boardMembers.length / 2) + 1;
-        emit ActionVoted(id, voter, a.votes, required);
+        emit ActionVoted(id, voter, a.votes, a.requiredVotes);
 
-        if (a.votes >= required) {
+        if (a.votes >= a.requiredVotes) {
             a.executed = true;
             if (a.atype == ActionType.RotateOracle) {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);

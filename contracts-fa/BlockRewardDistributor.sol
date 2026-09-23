@@ -140,9 +140,11 @@ contract BlockRewardDistributor {
     ///         ۵۰٪» نیست — به validatorDirectShareBps مراجعه کن).
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
-    /// @notice FoundationDAO — سهم تازه‌ی خودکار ۱۵٪-از-سهم-خزانه را هر epoch دریافت می‌کند.
-    ///         این تنها اتصال ورودی بنیاد به جریان ریوارد است؛ هیچ‌وقت نیازی به فراخوانی
-    ///         چیزی برای دریافتش ندارد (کامنت‌های FoundationDAO.sol را ببینید).
+    /// @notice FoundationDAO — سهم خودکار ۱۵٪ از کل ریوارد را هر epoch دریافت می‌کند
+    ///         (FOUNDATION_SHARE_BPS، مستقیم از بالای کل کسر می‌شود — به کامنت هدر بالا مراجعه
+    ///         کن که چرا عمداً به‌عنوان درصدی از سهم خزانه محاسبه نمی‌شود). این تنها اتصال
+    ///         ورودی بنیاد به جریان ریوارد است؛ هیچ‌وقت نیازی به فراخوانی چیزی برای دریافتش
+    ///         ندارد (کامنت‌های FoundationDAO.sol را ببینید).
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     /// @notice ValidatorsRegistry تنها آدرسی است که مجاز به ارسال کارمزد عضویت معلق از

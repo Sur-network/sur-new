@@ -177,14 +177,28 @@ contract ValidatorsBoard {
     ///      enough votes accumulate — meaning votes cast by since-replaced ex-board-members
     ///      could combine with a current member's vote to reach majority, even though no real
     ///      5-person board ever agreed on it at the same time. `expiresAt` bounds that window.
+    /// @dev ✅ FIXED (this was only PARTIALLY fixed before — the earlier pass added `expiresAt`
+    ///      but incorrectly reasoned that `required` didn't need snapshotting because it's
+    ///      "always derived from the fixed BOARD_SIZE." That reasoning was wrong: refreshBoard()
+    ///      below fills the board with however many DISTINCT candidates received at least one
+    ///      vote, up to BOARD_SIZE — if fewer than 5 candidates qualify (realistic early in the
+    ///      network's life, or after a wave of validators leave), `boardMembers.length` is
+    ///      genuinely less than 5, and `_voteAction()` computed `required` from that LIVE,
+    ///      shrinkable length, not the constant. This is the exact same stale-vote bug class as
+    ///      every other proposal mechanism in this project: `votes` only ever increases, while
+    ///      `required` could shrink between votes as the board is refreshed. `requiredVotes` is
+    ///      now snapshotted at creation, exactly like BlockRewardDistributor's ShareProposal,
+    ///      ValidatorsRegistry's ParamProposal, ValidatorsTreasury's Expenditure/ParamProposal,
+    ///      and FoundationDAO's Proposal.
     struct BoardAction {
         ActionType atype;
         address target;      // new oracle address, or budget recipient (unused for economic-param actions)
         uint256 amount;       // budget amount for ApproveBudget, OR the new value for economic-param actions
         string description;   // only used for ApproveBudget
         uint256 votes;
+        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, never recomputed
         uint256 createdAt;
-        uint256 expiresAt; // ✅ NEW
+        uint256 expiresAt;
         bool executed;
     }
 
@@ -439,6 +453,7 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
+            requiredVotes: (boardMembers.length / 2) + 1, // ✅ frozen now, from the ACTUAL current board size
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
@@ -457,10 +472,9 @@ contract ValidatorsBoard {
         actionHasVoted[id][voter] = true;
         a.votes++;
 
-        uint256 required = (boardMembers.length / 2) + 1;
-        emit ActionVoted(id, voter, a.votes, required);
+        emit ActionVoted(id, voter, a.votes, a.requiredVotes);
 
-        if (a.votes >= required) {
+        if (a.votes >= a.requiredVotes) {
             a.executed = true;
             if (a.atype == ActionType.RotateOracle) {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);

@@ -282,14 +282,31 @@ contract ValidatorsRegistry {
 
     /// @notice Safety/gas cap: active validator count is clamped to this many when computing the
     ///         entry threshold, so the exponent — and therefore the multiplier — never grows
-    ///         unboundedly. ✅ CHANGED: 1280 = 40 * 32, preserving the same maximum multiplier
-    ///         (2^32) the cap has always represented, now scaled to the widened 40-paid-validator
-    ///         doubling period (was 512 = 16*32, for the original 16-validator period).
+    ///         unboundedly. ✅ CORRECTED (was stale — the "always 2^32" claim below no longer
+    ///         holds since growthFactorPerValidator became board-governable within
+    ///         [GROWTH_FACTOR_MIN, GROWTH_FACTOR_MAX]): 1280 was originally chosen as
+    ///         40 * 32 to preserve a 2^32 maximum multiplier at the ORIGINAL, then-fixed
+    ///         40-validator doubling period. Now that the doubling period can itself range from
+    ///         20 to 80 (via the board, within its own guardrail bounds — see
+    ///         ENTRY_THRESHOLD_BASE_MIN and friends above), the actual maximum multiplier this
+    ///         cap allows varies with whatever growthFactorPerValidator currently is: as low as
+    ///         2^(1280/80) = 2^16 at the slowest allowed growth, or as high as 2^(1280/20) = 2^64
+    ///         at the fastest. Both remain comfortably far from any real overflow risk in this
+    ///         contract's fixed-point (18-decimal) arithmetic — entryThresholdBase (max 2,000,000
+    ///         ether) times even 2^64 is many orders of magnitude below uint256's ~1.15e77
+    ///         ceiling — so 1280 was never a precisely-tuned overflow boundary, just a
+    ///         conservative constant that happens to keep every governable combination safe. It
+    ///         does not need to change alongside growthFactorPerValidator.
     uint256 private constant MAX_GROWTH_VALIDATORS = 1280;
 
     /// @notice Membership fee, as a fraction of currentEntryThreshold(), paid IN ADDITION to
-    ///         the collateral and sent immediately to ValidatorsTreasury (non-refundable — see
-    ///         "MEMBERSHIP FEE" note above). 400 = 4% of the collateral amount.
+    ///         the collateral. ✅ CORRECTED (was stale — used to say "sent immediately to
+    ///         ValidatorsTreasury," describing pre-redesign behavior): forwarded to
+    ///         BlockRewardDistributor.receiveMembershipFee() instead, where it is folded into
+    ///         the next distribution epoch and paid 100%-pro-rata-by-blocks to active
+    ///         validators (fully exempt from the 30% ordinary-fee burn) — see
+    ///         "MEMBERSHIP FEE" note above and sur-tokenomics.md section 6. Still non-refundable
+    ///         either way. 400 = 4% of the collateral amount.
     uint256 public membershipFeeBps = 400;
 
     /// @notice Maximum number of new membership requests allowed within entryWindowSeconds.
@@ -442,8 +459,9 @@ contract ValidatorsRegistry {
     }
 
     /// @notice Current membership fee — a governed fraction of currentEntryThreshold(), paid on
-    ///         top of the collateral and sent straight to ValidatorsTreasury. See the
-    ///         "MEMBERSHIP FEE" note in the contract-level doc comment above.
+    ///         top of the collateral. ✅ CORRECTED (was stale): NOT sent to ValidatorsTreasury —
+    ///         forwarded to BlockRewardDistributor instead, paid out to active validators in the
+    ///         next epoch. See the "MEMBERSHIP FEE" note in the contract-level doc comment above.
     function currentMembershipFee() public view returns (uint256) {
         return (currentEntryThreshold() * membershipFeeBps) / BPS_DENOMINATOR;
     }

@@ -142,6 +142,7 @@ contract SurenSale {
         uint256 tomanAmount,
         uint256 surenAmount,
         uint256 priceTomanPerSuren,
+        uint256 priceMilliTomanPerSuren, // ✅ تازه — دقت کاملی که واقعاً برای تسویه استفاده شده
         string paymentReference
     );
     event UnsoldSurenSweeped(address indexed to, uint256 amount);
@@ -185,7 +186,21 @@ contract SurenSale {
     /// @notice ✅ تازه: قیمت دوره‌ی گذار با دقت کامل (تومان کامل × ۱۰۰۰)، برای هر مصرف‌کننده‌ی
     ///         آف‌چین (مثل یه داشبورد) که بخواد حرکت زیرتومانی رو ببینه، نه فقط مقدار
     ///         رندشده‌ای که currentPriceToman() برمی‌گردونه.
+    /// @notice ✅ اصلاح‌شده (باگ بحرانی دوم پیداشده در بازبینی، هم‌راستا با reportPayment
+    ///         پایین): قبلاً همیشه در دوره‌ی ثابت monthlyPriceToman[5] (آخرین قیمت دوره‌ی
+    ///         ثابت) رو برمی‌گردوند، صرف‌نظر از این‌که واقعاً کدوم ماهیم — چون اصلاً
+    ///         isSaleActive() رو چک نمی‌کرد، برخلاف currentPriceToman() درست بالاش. یه خریدار
+    ///         که مثلاً توی ماه ۲ دوره‌ی ثابت پرداخت می‌کرد، از currentPriceToman() قیمت درست
+    ///         ماه ۲ رو می‌گرفت، ولی این تابع (اگه جایی توی دوره‌ی ثابت استفاده می‌شد) قیمت
+    ///         ماه ۵ رو به‌اشتباه گزارش می‌داد. اصلاح شد تا دقیقاً همون شاخه‌بندی
+    ///         currentPriceToman() رو تکرار کنه، فقط با مقیاس TRANSITION_PRICE_PRECISION.
     function currentPriceMilliToman() public view returns (uint256) {
+        if (isSaleActive()) {
+            uint256 elapsed = block.timestamp - saleStartTime;
+            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
+            if (monthIndex > 5) monthIndex = 5;
+            return monthlyPriceToman[monthIndex] * TRANSITION_PRICE_PRECISION;
+        }
         return transitionPriceMilliToman == 0
             ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
             : transitionPriceMilliToman;
@@ -309,8 +324,16 @@ contract SurenSale {
             advanceTransitionPrice();
         }
 
-        uint256 price = currentPriceToman();
-        uint256 surenAmount = (tomanAmount * 1 ether) / price;
+        // ✅ اصلاح‌شده (باگ بحرانی پیداشده در بازبینی — کل هدف اصلاح دقت میلی‌تومان بالا فقط
+        // وقتی محقق می‌شد که اینجا واقعاً استفاده بشه؛ قبلاً نمی‌شد): قبلاً currentPriceToman()
+        // (تومان کامل، رند به پایین) رو برای محاسبه‌ی *واقعی* تسویه صدا می‌زد — یعنی با این‌که
+        // transitionPriceMilliToman داخلی با گام‌های کسری تومان حرکت می‌کرد، هر خریدار همچنان
+        // با قیمتی تسویه می‌شد که فقط با پله‌های کامل تومان عوض می‌شد (مثلاً ۱۱۶→۱۱۷، یه پرش
+        // واقعی حدود ۰.۸۶٪، نه گام مقصودِ ±۰.۵٪ روزانه). استفاده از currentPriceMilliToman()
+        // اینجا یعنی تعداد سورنی که خریدار واقعاً می‌گیره، حالا قیمت با دقت کامل رو منعکس
+        // می‌کنه، نه مقدار نمایشی رندشده‌اش.
+        uint256 priceMilli = currentPriceMilliToman();
+        uint256 surenAmount = (tomanAmount * 1 ether * TRANSITION_PRICE_PRECISION) / priceMilli;
 
         require(surenAmount <= address(this).balance, "SurenSale: insufficient Suren balance");
 
@@ -324,7 +347,7 @@ contract SurenSale {
         (bool success, ) = buyer.call{value: surenAmount}("");
         require(success, "SurenSale: transfer to buyer failed");
 
-        emit PaymentReported(buyer, tomanAmount, surenAmount, price, paymentReference);
+        emit PaymentReported(buyer, tomanAmount, surenAmount, priceMilli / TRANSITION_PRICE_PRECISION, priceMilli, paymentReference);
     }
 
     // ------------------------------------------------------------------
