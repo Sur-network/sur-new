@@ -114,6 +114,13 @@ contract ValidatorsRegistry {
         uint256 totalLivenessChecksInPeriod; // ✅ تازه: **همه‌ی** گزارش‌های لایوینس (مثبت + منفی)
         // از periodStartedAt به بعد — به requiredLivenessRatioBps پایین مراجعه کن که چرا فقط
         // شمردن مثبت‌ها کافی نبود.
+        uint256 lastCheckedAt; // ✅ تازه: تایم‌استمپ آخرین گزارش لایوینسی که واقعاً **شمرده** شد
+        // (به totalLivenessChecksInPeriod) — جدا از lastLivenessConfirmation (که فقط با گزارش
+        // مثبت به‌روز می‌شه). به MIN_LIVENESS_CHECK_INTERVAL پایین مراجعه کن که چرا این لازمه:
+        // بدون این، هر فراخوان سریع/تکراری reportLiveness() (باگی توی سرویس Verifier آف‌چین،
+        // یا کلید verifier به‌خطرافتاده که پشت‌سرهم می‌زنه) هرکدوم به‌عنوان یه «نوبت» مستقل
+        // توی نسبت شمرده می‌شد، حتی اگه چند ثانیه فاصله داشتن — یعنی «۴۸ ساعت گزارش با نسبت
+        // ۹۵٪» واقعاً به‌معنای ۴۸ ساعت پایش واقعی با فاصله‌ی ~۱۰-۱۵دقیقه‌ای مقصود نبود.
         uint256 demotedAt;          // اگه هرگز دموت نشده/الان در وضعیت Demoted نیست، صفر است
         bool isPaidEntrant;        // ✅ تازه: فقط برای ولیدیتورهایی که واقعاً از طریق
         // requestMembership() پایین پرداخت کرده‌اند true است. پیش‌فرض false برای ولیدیتورهای
@@ -195,7 +202,7 @@ contract ValidatorsRegistry {
     // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هر آدرس ولیدیتور مؤسس v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount برای مؤسسین افزایش پیدا نمی‌کند — یادداشتش را بالا ببین.
@@ -335,7 +342,23 @@ contract ValidatorsRegistry {
     ///         ثابت «N شکست همه‌چیز رو ریست می‌کنه» انتخاب شد (رد شد: یه ریست همه‌یا‌هیچ نزدیک
     ///         خط پایان، مجازات‌کننده‌تر از آموزنده تشخیص داده شد، و یه ریست کامل حتی برای یه
     ///         شکست دیرهنگام بدشانسی، نامتناسب با قابلیت‌اتکای کلی واقعی یه ولیدیتور دیده شد).
-    uint256 public requiredLivenessRatioBps = 9500;
+    /// @dev ✅ تفکیک‌شده (پیداشده در بازبینی — قبلاً یه فیلد مشترک برای هم probation هم recovery
+    ///      بود، یعنی این دو هیچ‌وقت نمی‌تونستن حداقل متفاوت داشته باشن، حتی اگه بعداً بخوایم
+    ///      recovery سخت‌گیرانه‌تر یا شل‌تر از فعال‌سازی اولیه باشه). حالا دو پارامتر مستقل —
+    ///      هردو فعلاً ۹۵٪، ولی هرکدوم جدا حکمرانی‌شونده.
+    uint256 public requiredLivenessRatioBps = 9500; // برای promoteAfterProbation
+    uint256 public requiredRecoveryLivenessRatioBps = 9500; // برای promoteAfterRecovery
+
+    /// @notice ✅ تازه (پیداشده در بازبینی): حداقل زمانی که باید از آخرین چک لایوینس **شمرده‌شده**‌ی
+    ///         یه ولیدیتور بگذره تا چک بعدی هم شمرده بشه. بدون این، هیچی جلوی یه کلید verifier
+    ///         خراب یا به‌خطرافتاده رو نمی‌گرفت که reportLiveness() رو پشت‌سرهم و سریع بزنه —
+    ///         هر فراخوان به‌عنوان یه «چک» مستقل توی نسبت بالا شمرده می‌شد، حتی چند ثانیه فاصله؛
+    ///         یعنی «۴۸ ساعت با نسبت ۹۵٪» واقعاً به‌معنای ۴۸ ساعت پایش واقعی با فاصله‌ی مقصود
+    ///         ~۱۰-۱۵ دقیقه (sur-verifier-service-spec.md) نبود. عمداً به‌وضوح کمتر از اون فاصله
+    ///         تنظیم شده تا گزارش‌های واقعی هیچ‌وقت نادیده گرفته نشن، ولی یه انفجار سریع‌الحرکت
+    ///         حداکثر به یه چک شمرده‌شده در هر بازه محدود بشه.
+    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 5 minutes;
+
     uint256 public inactivityThreshold = 3600;   // ۱ ساعت
     uint256 public recoveryPeriod = 172800;      // ۴۸ ساعت
     uint256 public slashBps = 100;               // ۱٪ — عمداً سبک: پایه‌ی آستانه‌ی ورود مستقلاً
@@ -345,6 +368,26 @@ contract ValidatorsRegistry {
     // برخلاف همون هدف. ۱٪ یه پیامد واقعی و محسوسه، بدون این‌که برای هیچ اندازه‌ای از وثیقه
     // نزدیک فاجعه‌بار باشه.
     uint256 public exitCooldown = 604800;        // ۱ هفته
+
+    /// @notice ✅ تازه (سوپاپ ایمنی دموت دسته‌جمعی، پیداشده در بازبینی به‌عنوان یه نیاز واقعی):
+    ///         از تک‌تک ولیدیتورها در برابر جریمه‌ی ناعادلانه‌ی دسته‌جمعی محافظت می‌کنه، وقتی
+    ///         خودِ سرویس Verifier (یه نقطه‌ی خطای مشترک مستندشده — sur-verifier-service-spec.md)
+    ///         خراب بشه، نه این‌که ولیدیتورها واقعاً آفلاین شده باشن. ⚠️ **محدودیت طراحی حیاتی
+    ///         که این مکانیزم باید رعایت کنه:** هیچ‌وقت نباید حذف از مجموعه‌ی فعال رو متوقف یا
+    ///         به تأخیر بندازه (فراخوان _removeFromActive() در demoteForInactivity() پایین
+    ///         همیشه و بدون قید اجرا می‌شه) — فقط جریمه گاهی متوقف می‌شه. حذف یه ولیدیتور
+    ///         واقعاً غیرفعال از getValidators() دقیقاً همون چیزیه که محاسبه‌ی نصاب QBFT برای
+    ///         کوچیک‌شدن هم‌زمان با کوچیک‌شدن استخر امضاکننده‌های واقعاً زنده نیاز داره (۲f+1 از
+    ///         یه لیست کوچیک‌تر راحت‌تر به‌دست میاد)؛ متوقف‌کردن این حذف — که یه طراحی اولیه‌ی
+    ///         رد‌شده‌ی همین سوپاپ می‌خواست انجام بده — آستانه‌ی نصاب رو دقیقاً وقتی که کمتر
+    ///         ولیدیتور می‌تونه بهش برسه، مصنوعاً بالا نگه می‌داشت — یعنی ریسک ایستادن شبکه در
+    ///         یه سناریوی واقعی خاموشی دسته‌جمعی رو **بدتر** می‌کرد، نه بهتر. جریمه، برخلاف این،
+    ///         یه اثر جانبی صرفاً اقتصادیه بدون هیچ ربطی به اجماع، پس تنها بخشیه که امن می‌تونه
+    ///         شرطی بشه.
+    uint256 public constant MASS_DEMOTION_WINDOW = 1 hours;
+    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // ۲۰٪ — به demoteForInactivity() مراجعه کن
+    uint256 public demotionWindowStart;
+    uint256 public demotionsInWindow;
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
@@ -366,6 +409,7 @@ contract ValidatorsRegistry {
         EntryWindowSeconds,
         ProbationPeriod,
         RequiredLivenessRatioBps,
+        RequiredRecoveryLivenessRatioBps,
         InactivityThreshold,
         RecoveryPeriod,
         SlashBps,
@@ -403,6 +447,7 @@ contract ValidatorsRegistry {
     event MembershipRequested(address indexed validator, uint256 collateralAmount, uint256 feeAmount);
     event ValidatorActivated(address indexed validator);
     event ValidatorDemoted(address indexed validator, uint256 slashedAmount);
+    event MassDemotionSlashPaused(uint256 demotionsInWindow, uint256 referenceValidatorCount); // ✅ تازه
     event ValidatorReactivated(address indexed validator);
     event ExitRequested(address indexed validator, uint256 cooldownEnd);
     event StakeWithdrawn(address indexed validator, uint256 amount);
@@ -576,6 +621,7 @@ contract ValidatorsRegistry {
             lastLivenessConfirmation: block.timestamp,
             livenessConfirmationsInPeriod: 0,
             totalLivenessChecksInPeriod: 0,
+            lastCheckedAt: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
@@ -615,13 +661,22 @@ contract ValidatorsRegistry {
             v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
             "ValidatorsRegistry: validator not eligible for liveness reporting"
         );
-        v.totalLivenessChecksInPeriod++; // ✅ تازه: هر چک، مثبت یا نه، توی مخرج‌کسر حساب می‌شه —
+        emit LivenessReported(validator, isLive, block.timestamp);
+        // ✅ تازه: اگه این گزارش خیلی زود بعد از آخرین چک شمرده‌شده رسیده باشه، شمرده نمی‌شه
+        // (ولی رویداد بالا همچنان ثبت می‌شه، برای شفافیت کامل حسابرسی) — به کامنت
+        // MIN_LIVENESS_CHECK_INTERVAL مراجعه کن که چرا. عمداً revert نمی‌کنه: فراخوان‌کننده‌ی
+        // onlyVerifier یه تراکنش معتبر زده و نباید فقط به‌خاطر سریع‌بودن یه‌باره‌ی خودش، تراکنشش
+        // ناموفق دیده بشه.
+        if (block.timestamp < v.lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
+            return;
+        }
+        v.lastCheckedAt = block.timestamp;
+        v.totalLivenessChecksInPeriod++; // هر چک شمرده‌شده، مثبت یا نه، توی مخرج‌کسر حساب می‌شه —
         // به کامنت requiredLivenessRatioBps مراجعه کن که چرا.
         if (isLive) {
             v.lastLivenessConfirmation = block.timestamp;
             v.livenessConfirmationsInPeriod++;
         }
-        emit LivenessReported(validator, isLive, block.timestamp);
     }
 
     // ------------------------------------------------------------------
@@ -644,25 +699,53 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // دموت به‌خاطر غیرفعالی — بدون نیاز به مجوز
     // ------------------------------------------------------------------
+    /// @notice ✅ تازه: منطق مشترک جریمه‌ی غیرفعالی برای demoteForInactivity() و چک ضدفرار
+    ///         requestExit() پایین. فقط محاسبه/انتقال جریمه رو مدیریت می‌کنه — هرگز به عضویت
+    ///         مجموعه‌ی فعال دست نمی‌زنه (به کامنت MASS_DEMOTION_WINDOW مراجعه کن که چرا این
+    ///         تفکیک یه الزام سخته، نه یه انتخاب سلیقه‌ای).
+    function _applyInactivitySlash(ValidatorInfo storage v) private returns (uint256 slashAmount) {
+        if (block.timestamp >= demotionWindowStart + MASS_DEMOTION_WINDOW) {
+            demotionWindowStart = block.timestamp;
+            demotionsInWindow = 0;
+        }
+        demotionsInWindow++;
+
+        uint256 referenceCount = activeValidators.length + 1; // +۱: این ولیدیتور قبلاً توسط
+        // فراخوان‌کننده از activeValidators حذف شده، پس برای یه برآورد منصفانه‌ی «سهمش از
+        // مجموعه» دوباره اضافه‌اش می‌کنیم.
+        bool looksLikeMassFailure = demotionsInWindow * BPS_DENOMINATOR > referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
+
+        if (looksLikeMassFailure) {
+            emit MassDemotionSlashPaused(demotionsInWindow, referenceCount);
+            return 0;
+        }
+
+        slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        v.lockedStake -= slashAmount;
+        if (slashAmount > 0) {
+            (bool success, ) = TREASURY.call{value: slashAmount}("");
+            require(success, "ValidatorsRegistry: slash transfer failed");
+        }
+    }
+
     function demoteForInactivity(address validator) external nonReentrant {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
         require(block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
 
+        // ✅ بدون قید — به کامنت MASS_DEMOTION_WINDOW مراجعه کن: این هرگز نباید متوقف بشه،
+        // صرف‌نظر از چک خرابی دسته‌جمعی پایین، تا توانایی QBFT برای کوچیک‌کردن نصابش هم‌زمان با
+        // کوچیک‌شدن استخر ولیدیتورهای واقعاً زنده حفظ بشه.
         _removeFromActive(validator);
 
-        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-        v.lockedStake -= slashAmount;
+        uint256 slashAmount = _applyInactivitySlash(v);
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
         v.livenessConfirmationsInPeriod = 0;
         v.totalLivenessChecksInPeriod = 0;
-
-        if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
-        }
+        v.lastCheckedAt = 0; // ✅ تازه — تا اولین چک لایوینس دوره‌ی بازگشت تازه، به‌اشتباه با
+        // یه چک قبل از این ریست throttle نشه.
 
         emit ValidatorDemoted(validator, slashAmount);
     }
@@ -676,7 +759,7 @@ contract ValidatorsRegistry {
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
         require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
         require(
-            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
+            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredRecoveryLivenessRatioBps,
             "ValidatorsRegistry: recovery liveness success rate too low"
         );
         require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
@@ -717,7 +800,20 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
+        uint256 slashAmount = 0;
         if (v.status == Status.Active) {
+            // ✅ تازه (بستن راه فرار «فرار قبل از دموت» پیداشده در بازبینی): اگه این ولیدیتور
+            // همین الان از قبل واجد شرایط demoteForInactivity() بوده (همون معیار خودِ اون تابع)،
+            // دقیقاً همون جریمه اینجا هم اعمال می‌شه، قبل از حذف — وگرنه یه اپراتور که می‌بینه
+            // نودش خراب شده می‌تونست فقط یه لحظه قبل از این‌که کسی demoteForInactivity() رو
+            // صداش بزنه، requestExit() بزنه و با کل وثیقه‌ش، فقط با گذروندن exitCooldown معمولی،
+            // بره. این هیچ معیار قضاوتی تازه‌ای اضافه نمی‌کنه: دقیقاً همون تست «از قبل از
+            // inactivityThreshold رد شده» که demoteForInactivity() خودش چک می‌کنه، اینجا هم
+            // اجرا می‌شه — ولیدیتوری که واقعاً هنوز داخل آستانه بوده، دقیقاً مثل قبل هیچ‌چیز
+            // اضافه‌ای پرداخت نمی‌کنه.
+            if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
+                slashAmount = _applyInactivitySlash(v);
+            }
             _removeFromActive(msg.sender);
         }
 
@@ -733,6 +829,11 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
+        if (slashAmount > 0) {
+            emit ValidatorDemoted(msg.sender, slashAmount); // ✅ همون رویدادی که
+            // demoteForInactivity() می‌زد — خروجی که واقعاً یه دموت دیرگرفته‌شده بود، باید برای
+            // هر پایش آف‌چینی دقیقاً همون‌جوری دیده بشه.
+        }
     }
 
     function withdrawStake() external nonReentrant {
@@ -802,6 +903,9 @@ contract ValidatorsRegistry {
         } else if (key == ParamKey.RequiredLivenessRatioBps) {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
             requiredLivenessRatioBps = value;
+        } else if (key == ParamKey.RequiredRecoveryLivenessRatioBps) {
+            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
+            requiredRecoveryLivenessRatioBps = value;
         } else if (key == ParamKey.InactivityThreshold) {
             inactivityThreshold = value;
         } else if (key == ParamKey.RecoveryPeriod) {

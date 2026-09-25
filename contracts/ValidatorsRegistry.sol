@@ -115,6 +115,14 @@ contract ValidatorsRegistry {
         uint256 totalLivenessChecksInPeriod; // ✅ NEW: ALL liveness reports (positive + negative)
         // since periodStartedAt — see requiredLivenessRatioBps below for why counting only
         // positives was not enough on its own.
+        uint256 lastCheckedAt; // ✅ NEW: timestamp of the last liveness report that was actually
+        // COUNTED (toward totalLivenessChecksInPeriod) — separate from lastLivenessConfirmation
+        // (which only updates on positive reports). See MIN_LIVENESS_CHECK_INTERVAL below for why
+        // this exists: without it, any rapid/duplicate calls to reportLiveness() (a bug in the
+        // off-chain Verifier service, or a compromised verifier key firing repeatedly) would each
+        // count as an independent "turn" toward the ratio, even if they happened seconds apart —
+        // meaning "48 hours of 95% positive reports" would not actually mean 48 hours of
+        // real-world monitoring at the expected ~10-15 minute cadence.
         uint256 demotedAt;          // 0 if never demoted / currently not in Demoted status
         bool isPaidEntrant;        // ✅ NEW: true only for validators who actually paid via
         // requestMembership() below. False (default) for genesis-seeded founding validators,
@@ -193,7 +201,7 @@ contract ValidatorsRegistry {
     // or by direct storage computation) — for each founding validator address v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount is NOT incremented for founders — see its doc comment above.
@@ -337,7 +345,24 @@ contract ValidatorsRegistry {
     ///         nothing reset near the finish line was judged more punishing than informative,
     ///         and a global reset even for a single UNLUCKY late failure was seen as
     ///         disproportionate to a validator's real overall reliability).
-    uint256 public requiredLivenessRatioBps = 9500;
+    /// @dev ✅ SPLIT (found during review — was a single shared field for both probation and
+    ///      recovery, which meant they could never have different minimums even if a future
+    ///      decision wanted recovery to be stricter or looser than initial activation). Now two
+    ///      independent parameters — both currently 95%, but each governable on its own.
+    uint256 public requiredLivenessRatioBps = 9500; // used by promoteAfterProbation
+    uint256 public requiredRecoveryLivenessRatioBps = 9500; // used by promoteAfterRecovery
+
+    /// @notice ✅ NEW (found during review): the minimum time that must pass since a validator's
+    ///         last COUNTED liveness check before another one is counted. Without this, nothing
+    ///         stopped a malfunctioning or compromised verifier key from firing reportLiveness()
+    ///         many times in rapid succession — each call would count as an independent "check"
+    ///         toward the ratio above, even seconds apart, so "48 hours at a 95% ratio" would not
+    ///         actually mean 48 hours of real monitoring at the intended ~10-15 minute cadence
+    ///         (sur-verifier-service-spec.md). Set comfortably below that cadence so legitimate
+    ///         reports are never skipped, while a rapid-fire burst is throttled to at most one
+    ///         counted check per interval.
+    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 5 minutes;
+
     uint256 public inactivityThreshold = 3600;   // 1 hour
     uint256 public recoveryPeriod = 172800;      // 48 hours
     uint256 public slashBps = 100;               // 1% — deliberately light: the entry-threshold
@@ -347,6 +372,26 @@ contract ValidatorsRegistry {
     // an honest infrastructure mistake, working against that same goal. 1% is a real, felt
     // consequence without being close to catastrophic for any validator's collateral size.
     uint256 public exitCooldown = 604800;        // 1 week
+
+    /// @notice ✅ NEW (mass-demotion safety valve, found necessary during review): protects
+    ///         individual validators from being unfairly slashed en masse when the Verifier
+    ///         service itself fails (a documented single point of failure —
+    ///         sur-verifier-service-spec.md) rather than validators actually going offline. ⚠️
+    ///         CRITICAL DESIGN CONSTRAINT this mechanism must respect: it must NEVER pause or
+    ///         delay REMOVAL from the active set (demoteForInactivity's _removeFromActive() call
+    ///         below always runs, unconditionally) — only the SLASH is ever paused. Removing a
+    ///         genuinely-inactive validator from getValidators() is what QBFT's quorum
+    ///         calculation needs to shrink alongside a shrinking pool of live signers (2f+1 of a
+    ///         SMALLER list is easier to reach); pausing that removal — which an earlier,
+    ///         rejected design of this safety valve would have done — would keep the quorum
+    ///         threshold artificially high exactly when fewer validators can actually meet it,
+    ///         making a real mass-outage scenario's chain-halting risk WORSE, not better. Slashing,
+    ///         in contrast, is a purely economic side effect with zero bearing on consensus, so it
+    ///         is the only part that can safely be made conditional.
+    uint256 public constant MASS_DEMOTION_WINDOW = 1 hours;
+    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // 20% — see demoteForInactivity()
+    uint256 public demotionWindowStart;
+    uint256 public demotionsInWindow;
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
@@ -368,6 +413,7 @@ contract ValidatorsRegistry {
         EntryWindowSeconds,
         ProbationPeriod,
         RequiredLivenessRatioBps,
+        RequiredRecoveryLivenessRatioBps,
         InactivityThreshold,
         RecoveryPeriod,
         SlashBps,
@@ -409,6 +455,7 @@ contract ValidatorsRegistry {
     event MembershipRequested(address indexed validator, uint256 collateralAmount, uint256 feeAmount);
     event ValidatorActivated(address indexed validator);
     event ValidatorDemoted(address indexed validator, uint256 slashedAmount);
+    event MassDemotionSlashPaused(uint256 demotionsInWindow, uint256 referenceValidatorCount); // ✅ NEW
     event ValidatorReactivated(address indexed validator);
     event ExitRequested(address indexed validator, uint256 cooldownEnd);
     event StakeWithdrawn(address indexed validator, uint256 amount);
@@ -580,6 +627,7 @@ contract ValidatorsRegistry {
             lastLivenessConfirmation: block.timestamp,
             livenessConfirmationsInPeriod: 0,
             totalLivenessChecksInPeriod: 0,
+            lastCheckedAt: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
@@ -619,13 +667,22 @@ contract ValidatorsRegistry {
             v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
             "ValidatorsRegistry: validator not eligible for liveness reporting"
         );
-        v.totalLivenessChecksInPeriod++; // ✅ NEW: every check counts toward the denominator,
-        // positive or not — see requiredLivenessRatioBps's doc comment for why.
+        emit LivenessReported(validator, isLive, block.timestamp);
+        // ✅ NEW: skip counting (but still emit the event above, for full audit visibility) if
+        // this report arrived too soon after the last COUNTED one — see
+        // MIN_LIVENESS_CHECK_INTERVAL's doc comment for why. Deliberately does not revert: the
+        // onlyVerifier caller made a valid call and should not see a failed transaction just
+        // because its own polling cadence (or a bug in it) was too fast this one time.
+        if (block.timestamp < v.lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
+            return;
+        }
+        v.lastCheckedAt = block.timestamp;
+        v.totalLivenessChecksInPeriod++; // every COUNTED check toward the denominator, positive
+        // or not — see requiredLivenessRatioBps's doc comment for why.
         if (isLive) {
             v.lastLivenessConfirmation = block.timestamp;
             v.livenessConfirmationsInPeriod++;
         }
-        emit LivenessReported(validator, isLive, block.timestamp);
     }
 
     // ------------------------------------------------------------------
@@ -648,25 +705,54 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Demotion for inactivity — permissionless
     // ------------------------------------------------------------------
+    /// @notice ✅ NEW: shared inactivity-slash logic for demoteForInactivity() and
+    ///         requestExit()'s anti-flee check below. Handles ONLY the slash computation/transfer
+    ///         — never touches active-set membership (see MASS_DEMOTION_WINDOW's doc comment for
+    ///         why that separation is a hard requirement, not a style choice).
+    function _applyInactivitySlash(ValidatorInfo storage v) private returns (uint256 slashAmount) {
+        if (block.timestamp >= demotionWindowStart + MASS_DEMOTION_WINDOW) {
+            demotionWindowStart = block.timestamp;
+            demotionsInWindow = 0;
+        }
+        demotionsInWindow++;
+
+        uint256 referenceCount = activeValidators.length + 1; // +1: this validator was already
+        // removed from activeValidators by the caller before this runs, so add it back for a
+        // fair "share of the set this represents" estimate.
+        bool looksLikeMassFailure = demotionsInWindow * BPS_DENOMINATOR > referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
+
+        if (looksLikeMassFailure) {
+            emit MassDemotionSlashPaused(demotionsInWindow, referenceCount);
+            return 0;
+        }
+
+        slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        v.lockedStake -= slashAmount;
+        if (slashAmount > 0) {
+            (bool success, ) = TREASURY.call{value: slashAmount}("");
+            require(success, "ValidatorsRegistry: slash transfer failed");
+        }
+    }
+
     function demoteForInactivity(address validator) external nonReentrant {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
         require(block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
 
+        // ✅ UNCONDITIONAL — see MASS_DEMOTION_WINDOW's doc comment: this must never be paused,
+        // regardless of the mass-failure check below, to protect QBFT's ability to shrink its
+        // quorum requirement alongside a shrinking pool of genuinely live validators.
         _removeFromActive(validator);
 
-        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-        v.lockedStake -= slashAmount;
+        uint256 slashAmount = _applyInactivitySlash(v);
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // recovery period starts now
         v.livenessConfirmationsInPeriod = 0;
         v.totalLivenessChecksInPeriod = 0;
-
-        if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
-        }
+        v.lastCheckedAt = 0; // ✅ NEW — so the very first liveness check of the fresh recovery
+        // period is never accidentally throttled by MIN_LIVENESS_CHECK_INTERVAL referencing a
+        // check from before this reset.
 
         emit ValidatorDemoted(validator, slashAmount);
     }
@@ -680,7 +766,7 @@ contract ValidatorsRegistry {
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
         require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
         require(
-            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
+            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredRecoveryLivenessRatioBps,
             "ValidatorsRegistry: recovery liveness success rate too low"
         );
         require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
@@ -721,7 +807,21 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
+        uint256 slashAmount = 0;
         if (v.status == Status.Active) {
+            // ✅ NEW (closes the "flee before demotion" loophole found during review): if this
+            // validator was ALREADY eligible for demoteForInactivity() at this exact moment
+            // (same criterion that function itself checks), apply the same slash right here,
+            // before removal — otherwise an operator watching their own node fail could simply
+            // call requestExit() a moment before someone calls demoteForInactivity() on them,
+            // and walk away with their full collateral after nothing but the ordinary
+            // exitCooldown. This does not introduce any NEW judgment call: it is the exact same
+            // "already past inactivityThreshold" test demoteForInactivity() uses, applied here
+            // instead of there — a validator that was genuinely still within the threshold pays
+            // nothing extra, exactly as before.
+            if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
+                slashAmount = _applyInactivitySlash(v);
+            }
             _removeFromActive(msg.sender);
         }
 
@@ -737,6 +837,11 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
+        if (slashAmount > 0) {
+            emit ValidatorDemoted(msg.sender, slashAmount); // ✅ same event demoteForInactivity
+            // would have emitted — an exit that was really a late-caught inactivity demotion
+            // should be visible to any off-chain monitoring exactly the same way.
+        }
     }
 
     function withdrawStake() external nonReentrant {
@@ -806,6 +911,9 @@ contract ValidatorsRegistry {
         } else if (key == ParamKey.RequiredLivenessRatioBps) {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
             requiredLivenessRatioBps = value;
+        } else if (key == ParamKey.RequiredRecoveryLivenessRatioBps) {
+            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
+            requiredRecoveryLivenessRatioBps = value;
         } else if (key == ParamKey.InactivityThreshold) {
             inactivityThreshold = value;
         } else if (key == ParamKey.RecoveryPeriod) {
