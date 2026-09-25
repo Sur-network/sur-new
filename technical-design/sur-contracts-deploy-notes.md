@@ -99,7 +99,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 ✅ **به‌روزرسانی:** هر چهار آدرس اوراکل (`verifier`، `distributionOracle`، `identityOracle`، و `paymentOracle` در `SurenSale`) نهایی شده و مستقیم در سورس هاردکد شده‌اند — دیگر جزو موارد باز فهرست زیر نیستند. جزئیات کامل آدرس‌ها در `sur-contracts-oracles-accounts-report.md`.
 
-1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، پارامترهای امنیتی (`maxEntriesPerWindow`, `entryWindowSeconds`, `probationPeriod`, `minLivenessConfirmationsToActivate`, `inactivityThreshold`, `recoveryPeriod`, `slashBps`, `exitCooldown`), `windowStart` (= genesis timestamp واقعی). **بدون** آدرس توکن — سورن ارز بومی شبکه است.
+1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، پارامترهای امنیتی (✅ همه نهایی: `maxEntriesPerWindow=1`, `entryWindowSeconds=86400`, `probationPeriod=604800`, `requiredLivenessRatioBps=9500`, `inactivityThreshold=3600`, `recoveryPeriod=172800`, `slashBps=100`, `exitCooldown=604800`), `windowStart` (= genesis timestamp واقعی). **بدون** آدرس توکن — سورن ارز بومی شبکه است.
 2. `ValidatorsBoard` — لیست **دقیقاً ۵** عضو اولیه‌ی هیأت (نیازمند شبیه‌سازی).
 3. `ValidatorsTreasury` — `smallBudgetCap` اولیه (مقدار ساده).
 4. `BlockRewardDistributor` — `deployTime` (= genesis timestamp واقعی؛ چون `immutable` است، باید مستقیم در سورس جایگزین و دوباره کامپایل شود).
@@ -116,7 +116,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 ### پارامترهای امنیتی — با رأی کامل ولیدیتورها قابل‌تغییرند
 - `maxEntriesPerWindow`, `entryWindowSeconds` (سقف نرخ ورود) — در `ValidatorsRegistry`
 - `probationPeriod` (پیشنهاد سند: ۱ هفته) — در `ValidatorsRegistry`
-- `minLivenessConfirmationsToActivate` (هنوز باز) — در `ValidatorsRegistry`؛ `inactivityThreshold` ✅ **تصمیم قطعی = ۱ ساعت** (بخش «دوره‌ی جریمه‌ی غیرفعالی» پایین)
+- ✅ **همه‌ی پارامترهای امنیتی نهایی شدند** — `requiredLivenessRatioBps = ۹۵٪` (جایگزین `minLivenessConfirmationsToActivate` قدیمی؛ نسبت موفقیت، نه شمارش خام)؛ `inactivityThreshold` ✅ **تصمیم قطعی = ۱ ساعت** (بخش «دوره‌ی جریمه‌ی غیرفعالی» پایین)
 - `recoveryPeriod` ✅ **تصمیم قطعی = ۴۸ ساعت** (بخش «دوره‌ی جریمه‌ی غیرفعالی» پایین) — در `ValidatorsRegistry`
 - `slashBps` (درصد دقیق اسلشینگ — سند هنوز عدد پیشنهاد نداده بود) — در `ValidatorsRegistry`
 - `exitCooldown` — در `ValidatorsRegistry`

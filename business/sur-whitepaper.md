@@ -252,7 +252,7 @@
 **هدف:** رساندن شبکه از وضعیت «طراحی کامل» به «آماده‌ی راه‌اندازی واقعی».
 
 **اقدامات اجرایی:**
-- تکمیل پارامترهای امنیتی باز `ValidatorsRegistry` (`slashBps`, `probationPeriod`, `inactivityThreshold`, `recoveryPeriod`, `exitCooldown`, `maxEntriesPerWindow`, `entryWindowSeconds`, `minLivenessConfirmationsToActivate`).
+- ✅ **تکمیل شد:** پارامترهای امنیتی `ValidatorsRegistry` (`slashBps=۱٪`, `probationPeriod=۱هفته`, `inactivityThreshold=۱ساعت`, `recoveryPeriod=۴۸ساعت`, `exitCooldown=۱هفته`, `maxEntriesPerWindow=۱`, `entryWindowSeconds=۲۴ساعت`, `requiredLivenessRatioBps=۹۵٪`).
 - نهایی‌کردن مبلغ دقیق ردیف ۲ توزیع genesis (جبران خسارت ولیدیتورهای شبکه‌ی قبلی).
 - انتخاب سرویس‌دهنده‌های خارجی: eKYC، پیامک/تلگرام برای OTP، درگاه پرداخت تومانی.
 - تکمیل آدرس‌های واقعی (نه فقط نام) هر ۱۵ عضو بنیاد، هر ولیدیتور مؤسس، و هر ۵ عضو هیأت‌مدیره‌ی ولیدیتورها.

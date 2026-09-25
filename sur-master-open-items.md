@@ -112,7 +112,7 @@
 | عدد دقیق مدت نگه‌داری داده‌ی خام KYC | `sur-identity-registry-spec.md` |
 | بازبینی دستی برای موارد پرریسک بازیابی هویت | `sur-identity-registry-spec.md` |
 | اجرای واقعی ابزار ساخت genesis.json (مشخصات فنی آماده؛ فقط پیاده‌سازی باقی مانده) — ⚠️ **یادآوری صادقانه:** خودِ ابزار هنوز نوشته/اجرا نشده، و نتیجه‌ی تست `--verify` روی یک Besu واقعی هنوز وجود ندارد؛ «سند کامل شد» به‌معنی «genesis آماده و آزموده‌شده» نیست | `sur-genesis-builder-tool-spec.md` |
-| 🔶 چند پارامتر امنیتی چرخه‌ی عمر ولیدیتور (`slashBps`, `exitCooldown`, `probationPeriod`, `minLivenessConfirmationsToActivate`, `inactivityThreshold`, `recoveryPeriod`, `maxEntriesPerWindow`, `entryWindowSeconds`) هنوز مقدار `🔶 FILL_IN` (صفر) دارند در خودِ `ValidatorsRegistry.sol` — باید قبل از genesis نهایی مقداردهی شوند | `ValidatorsRegistry.sol` |
+| ✅ هر ۸ پارامتر امنیتی چرخه‌ی عمر ولیدیتور نهایی شد: `maxEntriesPerWindow=1`, `entryWindowSeconds=۲۴ساعت`, `probationPeriod=۱هفته`, `requiredLivenessRatioBps=۹۵٪` (✅ **بازطراحی‌شده از یه شمارش خام قدیمی — به نسبت موفقیت، چون شمارش خام از گزارش منفی کاملاً بی‌تأثیر بود؛ جزئیات کامل در `sur-tokenomics.md` بخش ۶**), `inactivityThreshold=۱ساعت`, `recoveryPeriod=۴۸ساعت`, `slashBps=۱٪`, `exitCooldown=۱هفته` | `ValidatorsRegistry.sol` |
 | 🔶 مبلغ کل دقیق و فهرست آدرس‌به‌آدرس ردیف «جبران ولیدیتورهای شبکه‌ی قبلی» | `sur-tokenomics.md` |
 | به‌روزرسانی جدول پیش‌بینی عرضه‌ی کل بعد از مشخص‌شدن مبلغ ردیف «جبران ولیدیتور» | `sur-tokenomics.md` |
 

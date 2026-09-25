@@ -57,7 +57,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، پس هیچ `constructor`ی ندارد | پارامترهای امنیتی ساده (`slashBps` و بقیه) + `verifier` + `windowStart`: مستقیم در سورس اصلی با علامت `🔶 FILL_IN`. لیست ولیدیتورهای اولیه (فعلاً ۷ نفر): از طریق قرارداد کمکی موقت `ValidatorsRegistry_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | ابزار genesis این مقادیر را قبل از تولید `genesis.json` پر می‌کند — جزئیات کامل در `sur-genesis-builder-tool-spec.md` |
+| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، پس هیچ `constructor`ی ندارد | ✅ پارامترهای امنیتی ساده (`slashBps=۱٪` و بقیه، همه نهایی) + `verifier` + `windowStart`: مستقیم در سورس اصلی نوشته می‌شوند. لیست ولیدیتورهای اولیه (فعلاً ۷ نفر): از طریق قرارداد کمکی موقت `ValidatorsRegistry_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | ابزار genesis این مقادیر را قبل از تولید `genesis.json` پر می‌کند — جزئیات کامل در `sur-genesis-builder-tool-spec.md` |
 | `getValidators()` | هرکسی (در عمل: خودِ کلاینت Besu، هر بلاک) | — | `address[]` | لیست فعلی ولیدیتورهای `Active` |
 | `isValidator(address who)` | هرکسی (در عمل: `BlockRewardDistributor`) | آدرس | `bool` | آیا `who` الان `Active` است |
 | `getActiveValidatorCount()` | هرکسی | — | `uint256` | تعداد ولیدیتورهای فعال |

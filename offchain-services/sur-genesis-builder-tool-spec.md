@@ -40,14 +40,14 @@
   },
   "validatorsRegistry": {
     "initialValidators": ["0x....", "0x....", "..."],
-    "maxEntriesPerWindow": 0,
-    "entryWindowSeconds": 0,
-    "probationPeriod": 0,
-    "minLivenessConfirmationsToActivate": 0,
-    "inactivityThreshold": 0,
-    "recoveryPeriod": 0,
-    "slashBps": 0,
-    "exitCooldown": 0
+    "maxEntriesPerWindow": 1,
+    "entryWindowSeconds": 86400,
+    "probationPeriod": 604800,
+    "requiredLivenessRatioBps": 9500,
+    "inactivityThreshold": 3600,
+    "recoveryPeriod": 172800,
+    "slashBps": 100,
+    "exitCooldown": 604800
   },
   "validatorsBoard": {
     "initialBoardMembers": ["0x....", "0x....", "0x....", "0x....", "0x...."]
@@ -127,15 +127,15 @@
      - `growthFactorPerValidator` (باید `1017479692102686336` باشد)
      - `membershipFeeBps` (باید `400` باشد)
      - `lastEconomicParamChangeTime` (باید `0` بماند — پیش‌فرض Solidity، بدون نیاز به نوشتن صریح)
-     - ✅ **پارامترهای امنیتی/چرخه‌ی عمر (همه در قرارداد فعلی `🔶 FILL_IN` هستند — باید قبل از تولید genesis نهایی شده باشند؛ به `sur-master-open-items.md` مراجعه کن که آیا این تصمیم گرفته شده):**
-       - `maxEntriesPerWindow`
-       - `entryWindowSeconds`
-       - `probationPeriod`
-       - `minLivenessConfirmationsToActivate`
-       - `inactivityThreshold`
-       - `recoveryPeriod`
-       - `slashBps`
-       - `exitCooldown`
+     - ✅ **پارامترهای امنیتی/چرخه‌ی عمر (✅ همه در قرارداد فعلی نهایی و مقداردهی شده‌اند — دیگر `🔶 FILL_IN` نیستند؛ به `sur-tokenomics.md` بخش ۶ برای مقادیر و استدلال کامل مراجعه کن):**
+       - `maxEntriesPerWindow` (۱)
+       - `entryWindowSeconds` (۸۶۴۰۰ — ۲۴ ساعت)
+       - `probationPeriod` (۶۰۴۸۰۰ — ۱ هفته)
+       - `requiredLivenessRatioBps` (۹۵۰۰ — ✅ **جایگزین `minLivenessConfirmationsToActivate` قدیمی** — دیگر یه شمارش خام مثبت‌ها نیست، یه نسبت موفقیته؛ به تصمیم مربوطه در `sur-tokenomics.md` مراجعه کن)
+       - `inactivityThreshold` (۳۶۰۰ — ۱ ساعت)
+       - `recoveryPeriod` (۱۷۲۸۰۰ — ۴۸ ساعت)
+       - `slashBps` (۱۰۰ — ۱٪)
+       - `exitCooldown` (۶۰۴۸۰۰ — ۱ هفته)
        - ✅ **`windowStart`** — ⚠️ برخلاف بقیه‌ی این فهرست، این یکی از `genesis-config.json` مقداردهی *نمی‌شود*؛ باید دقیقاً برابر `network.genesisTimestamp` (بخش ۳ همین سند) باشد، چون منطق rate-limiting ورود ولیدیتور (`maxEntriesPerWindow` در هر `entryWindowSeconds`) از همین لحظه شروع به شمارش می‌کند.
    - **مهم:** `paidValidatorCount` را در این مرحله **ننویس** — باید روی مقدار پیش‌فرض Solidity (صفر) بماند؛ نوشتن هر مقداری دیگر، حتی صفر صریح، یک اسلات اضافه‌ی غیرلازم در genesis اضافه می‌کند (بی‌ضرر، ولی غیرضروری).
 2. ✅ **Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند (فهرست تصحیح‌شده — نسخه‌ی قبلی ناقص بود و فقط پارامترهای اقتصادی و مجموعه‌ی ولیدیتورها را داشت):** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
@@ -149,7 +149,7 @@
    ValidatorsRegistry.maxEntriesPerWindow() == (مقدار config)
    ValidatorsRegistry.entryWindowSeconds() == (مقدار config)
    ValidatorsRegistry.probationPeriod() == (مقدار config)
-   ValidatorsRegistry.minLivenessConfirmationsToActivate() == (مقدار config)
+   ValidatorsRegistry.requiredLivenessRatioBps() == (مقدار config)
    ValidatorsRegistry.inactivityThreshold() == (مقدار config)
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)

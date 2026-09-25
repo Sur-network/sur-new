@@ -65,6 +65,9 @@ contract ValidatorsRegistry_GenesisSeed {
         uint256 periodStartedAt;
         uint256 lastLivenessConfirmation;
         uint256 livenessConfirmationsInPeriod;
+        uint256 totalLivenessChecksInPeriod; // ✅ اضافه شد — باید دقیقاً با struct واقعی یکی
+        // باشه (همون استدلال isPaidEntrant پایین: اندازه‌ی struct روی محاسبه‌ی slot هر
+        // ورودی بعدی mapping اثر می‌ذاره).
         uint256 demotedAt;
         bool isPaidEntrant; // ✅ اضافه شد — باید دقیقاً با struct واقعی یکی باشه، وگرنه اندازه‌ی
         // هر ورودی struct (و درنتیجه محاسبه‌ی slot هر ورودی بعدی mapping) حتی برای خودِ
@@ -118,6 +121,7 @@ contract ValidatorsRegistry_GenesisSeed {
                 periodStartedAt: genesisTimestamp,
                 lastLivenessConfirmation: genesisTimestamp,
                 livenessConfirmationsInPeriod: 0,
+                totalLivenessChecksInPeriod: 0,
                 demotedAt: 0,
                 isPaidEntrant: false // مؤسسین همیشه رایگانند، هرگز پرداخت‌کننده نیستند
             });

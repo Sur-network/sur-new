@@ -111,6 +111,9 @@ contract ValidatorsRegistry {
         uint256 periodStartedAt;   // شروع پنجره‌ی probation یا بازگشت یا cooldown خروج فعلی
         uint256 lastLivenessConfirmation;
         uint256 livenessConfirmationsInPeriod; // گزارش‌های لایوینس مثبت از periodStartedAt به بعد (هر دوره ریست می‌شود)
+        uint256 totalLivenessChecksInPeriod; // ✅ تازه: **همه‌ی** گزارش‌های لایوینس (مثبت + منفی)
+        // از periodStartedAt به بعد — به requiredLivenessRatioBps پایین مراجعه کن که چرا فقط
+        // شمردن مثبت‌ها کافی نبود.
         uint256 demotedAt;          // اگه هرگز دموت نشده/الان در وضعیت Demoted نیست، صفر است
         bool isPaidEntrant;        // ✅ تازه: فقط برای ولیدیتورهایی که واقعاً از طریق
         // requestMembership() پایین پرداخت کرده‌اند true است. پیش‌فرض false برای ولیدیتورهای
@@ -192,7 +195,7 @@ contract ValidatorsRegistry {
     // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هر آدرس ولیدیتور مؤسس v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount برای مؤسسین افزایش پیدا نمی‌کند — یادداشتش را بالا ببین.
@@ -310,17 +313,38 @@ contract ValidatorsRegistry {
     uint256 public membershipFeeBps = 400;
 
     /// @notice حداکثر تعداد درخواست عضویت تازه‌ی مجاز در entryWindowSeconds.
-    /// @dev 🔶 FILL_IN: همه‌ی پارامترهای امنیتی پایین قبل از genesis نیازمند یک تصمیم معادل
-    ///      رأی کامل ولیدیتورها هستند — sur-master-open-items.md را ببین.
-    uint256 public maxEntriesPerWindow = 0;
-    uint256 public entryWindowSeconds = 0;
+    /// @dev ✅ نهایی‌شده — هر ۸ پارامتر امنیتی پایین حالا مقدار واقعی و تصمیم‌گیری‌شده دارند
+    ///      (تا اکثر مسیر طراحی این پروژه، placeholder با علامت 🔶 FILL_IN بودند؛ به
+    ///      sur-master-open-items.md برای بحثی که هرکدوم رو نهایی کرد مراجعه کن).
+    uint256 public maxEntriesPerWindow = 1;
+    uint256 public entryWindowSeconds = 86400; // ۲۴ ساعت — حداکثر ۱ ولیدیتور تازه در روز
 
-    uint256 public probationPeriod = 0;          // 🔶 FILL_IN — مثلاً ۱ هفته
-    uint256 public minLivenessConfirmationsToActivate = 0;  // 🔶 FILL_IN — تعداد گزارش لایوینس مثبت لازم در طول probation قبل از فعال‌سازی
-    uint256 public inactivityThreshold = 0;      // 🔶 FILL_IN — غیبت پیوسته‌ی گزارش لایوینس مثبت قبل از این‌که دموت مجاز شود
-    uint256 public recoveryPeriod = 0;           // 🔶 FILL_IN — دوره‌ی پیوسته‌ی گزارش لایوینس مثبت لازم بعد از دموت
-    uint256 public slashBps = 0;                 // 🔶 FILL_IN — کسری از استیک قفل‌شده که در دموت به‌خاطر غیرفعالی اسلش می‌شود (باید <= BPS_DENOMINATOR باشد)
-    uint256 public exitCooldown = 0;             // 🔶 FILL_IN — زمان انتظار بین requestExit() و withdrawStake()
+    uint256 public probationPeriod = 604800; // ۱ هفته
+
+    /// @notice ✅ بازطراحی‌شده (جایگزین minLivenessConfirmationsToActivate قبلی — یه شمارش خام
+    ///         از گزارش‌های مثبت، که در بازبینی یه ضعف واقعی توش پیدا شد): یه شمارش خام فقط با
+    ///         گزارش مثبت زیاد می‌شه و کاملاً از گزارش‌های منفی بی‌تأثیره — یعنی یه ولیدیتوری
+    ///         که فقط توی چند روز آخر probation قابل‌اتکا آنلاین بوده (بعد از این‌که قبلش
+    ///         آفلاین بوده)، دقیقاً به همون راحتیِ ولیدیتوری که کل دوره قابل‌اتکا بوده رد
+    ///         می‌شد، به شرطی که مثبت‌های آخر کافی جمع کنه. این فیلد به‌جاش یه **حداقل نرخ
+    ///         موفقیت** روی **همه‌ی** چک‌های لایوینس طول دوره می‌خواد (مثبت و منفی هردو توی
+    ///         مخرج‌کسر حساب می‌شن — به totalLivenessChecksInPeriod بالا مراجعه کن)، پس
+    ///         بی‌ثباتی پراکنده هرجای پنجره، به‌نسبت منعکس می‌شه، نه این‌که با یه فینیش قوی
+    ///         پنهان بشه. ✅ **تصمیم نهایی: ۹۵۰۰ = ۹۵٪** — به sur-tokenomics.md بخش ۶ برای بحث
+    ///         کامل چرایی انتخاب ۹۵٪ (نه یه ۹۰٪ شل‌تر) مراجعه کن، و چرا یه نسبت به‌جای یه قانون
+    ///         ثابت «N شکست همه‌چیز رو ریست می‌کنه» انتخاب شد (رد شد: یه ریست همه‌یا‌هیچ نزدیک
+    ///         خط پایان، مجازات‌کننده‌تر از آموزنده تشخیص داده شد، و یه ریست کامل حتی برای یه
+    ///         شکست دیرهنگام بدشانسی، نامتناسب با قابلیت‌اتکای کلی واقعی یه ولیدیتور دیده شد).
+    uint256 public requiredLivenessRatioBps = 9500;
+    uint256 public inactivityThreshold = 3600;   // ۱ ساعت
+    uint256 public recoveryPeriod = 172800;      // ۴۸ ساعت
+    uint256 public slashBps = 100;               // ۱٪ — عمداً سبک: پایه‌ی آستانه‌ی ورود مستقلاً
+    // کاهش داده شد (۲,۰۰۰,۰۰۰ → ۵۰۰,۰۰۰ سورن) دقیقاً برای گسترش طیف کسانی که واقعاً از پس
+    // ولیدیتورشدن برمیان؛ یه اسلش سنگین روی همون وثیقه‌ی کوچیک‌تر، بخش قابل‌توجهی از سرمایه‌ی
+    // یه ولیدیتور تازه‌کار/کوچیک‌تر رو برای یه اشتباه صادقانه‌ی زیرساختی پس می‌گرفت — دقیقاً
+    // برخلاف همون هدف. ۱٪ یه پیامد واقعی و محسوسه، بدون این‌که برای هیچ اندازه‌ای از وثیقه
+    // نزدیک فاجعه‌بار باشه.
+    uint256 public exitCooldown = 604800;        // ۱ هفته
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
@@ -341,7 +365,7 @@ contract ValidatorsRegistry {
         MaxEntriesPerWindow,
         EntryWindowSeconds,
         ProbationPeriod,
-        MinLivenessConfirmationsToActivate,
+        RequiredLivenessRatioBps,
         InactivityThreshold,
         RecoveryPeriod,
         SlashBps,
@@ -551,6 +575,7 @@ contract ValidatorsRegistry {
             periodStartedAt: block.timestamp,
             lastLivenessConfirmation: block.timestamp,
             livenessConfirmationsInPeriod: 0,
+            totalLivenessChecksInPeriod: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
@@ -590,6 +615,8 @@ contract ValidatorsRegistry {
             v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
             "ValidatorsRegistry: validator not eligible for liveness reporting"
         );
+        v.totalLivenessChecksInPeriod++; // ✅ تازه: هر چک، مثبت یا نه، توی مخرج‌کسر حساب می‌شه —
+        // به کامنت requiredLivenessRatioBps مراجعه کن که چرا.
         if (isLive) {
             v.lastLivenessConfirmation = block.timestamp;
             v.livenessConfirmationsInPeriod++;
@@ -604,7 +631,11 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
-        require(v.livenessConfirmationsInPeriod >= minLivenessConfirmationsToActivate, "ValidatorsRegistry: insufficient liveness confirmations");
+        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
+            "ValidatorsRegistry: liveness success rate too low"
+        );
         require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
 
         _activate(candidate);
@@ -626,6 +657,7 @@ contract ValidatorsRegistry {
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
         v.livenessConfirmationsInPeriod = 0;
+        v.totalLivenessChecksInPeriod = 0;
 
         if (slashAmount > 0) {
             (bool success, ) = TREASURY.call{value: slashAmount}("");
@@ -642,7 +674,11 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
-        require(v.livenessConfirmationsInPeriod >= minLivenessConfirmationsToActivate, "ValidatorsRegistry: insufficient recovery liveness confirmations");
+        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
+            "ValidatorsRegistry: recovery liveness success rate too low"
+        );
         require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
 
         _activate(validator);
@@ -763,8 +799,9 @@ contract ValidatorsRegistry {
             entryWindowSeconds = value;
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
-        } else if (key == ParamKey.MinLivenessConfirmationsToActivate) {
-            minLivenessConfirmationsToActivate = value;
+        } else if (key == ParamKey.RequiredLivenessRatioBps) {
+            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
+            requiredLivenessRatioBps = value;
         } else if (key == ParamKey.InactivityThreshold) {
             inactivityThreshold = value;
         } else if (key == ParamKey.RecoveryPeriod) {
@@ -787,11 +824,12 @@ contract ValidatorsRegistry {
         uint256 periodStartedAt,
         uint256 lastLivenessConfirmation,
         uint256 livenessConfirmationsInPeriod,
+        uint256 totalLivenessChecksInPeriod,
         uint256 demotedAt,
         bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.demotedAt, v.isPaidEntrant);
+        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.totalLivenessChecksInPeriod, v.demotedAt, v.isPaidEntrant);
     }
 
     function requiredVotesNow() external view returns (uint256) {

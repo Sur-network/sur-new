@@ -69,6 +69,9 @@ contract ValidatorsRegistry_GenesisSeed {
         uint256 periodStartedAt;
         uint256 lastLivenessConfirmation;
         uint256 livenessConfirmationsInPeriod;
+        uint256 totalLivenessChecksInPeriod; // ✅ ADDED — must match the real struct exactly
+        // (same reasoning as isPaidEntrant below: struct size affects every subsequent
+        // mapping-entry slot computation).
         uint256 demotedAt;
         bool isPaidEntrant; // ✅ ADDED — must match the real struct exactly, or the per-entry
         // struct size (and therefore every subsequent mapping-entry slot computation) would be
@@ -123,6 +126,7 @@ contract ValidatorsRegistry_GenesisSeed {
                 periodStartedAt: genesisTimestamp,
                 lastLivenessConfirmation: genesisTimestamp,
                 livenessConfirmationsInPeriod: 0,
+                totalLivenessChecksInPeriod: 0,
                 demotedAt: 0,
                 isPaidEntrant: false // founders are always free, never paid entrants
             });
