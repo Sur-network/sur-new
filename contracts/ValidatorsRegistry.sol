@@ -123,6 +123,9 @@ contract ValidatorsRegistry {
         // count as an independent "turn" toward the ratio, even if they happened seconds apart —
         // meaning "48 hours of 95% positive reports" would not actually mean 48 hours of
         // real-world monitoring at the expected ~10-15 minute cadence.
+        uint256 pendingSlashEpoch; // ✅ NEW: nonzero while this validator has an unresolved
+        // inactivity-slash decision awaiting resolvePendingSlash() — see DemotionEpoch's doc
+        // comment above for the full mechanism this supports. Zero means "no pending slash."
         uint256 demotedAt;          // 0 if never demoted / currently not in Demoted status
         bool isPaidEntrant;        // ✅ NEW: true only for validators who actually paid via
         // requestMembership() below. False (default) for genesis-seeded founding validators,
@@ -201,7 +204,7 @@ contract ValidatorsRegistry {
     // or by direct storage computation) — for each founding validator address v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount is NOT incremented for founders — see its doc comment above.
@@ -329,6 +332,22 @@ contract ValidatorsRegistry {
 
     uint256 public probationPeriod = 604800; // 1 week
 
+    /// @notice ✅ NEW (found during a follow-up review — the ratio check alone had a real gap):
+    ///         the minimum FRACTION of the maximum possible checks (period duration divided by
+    ///         MIN_LIVENESS_CHECK_INTERVAL) that must actually have been recorded before the
+    ///         ratio requirement is even evaluated. Without this, `totalLivenessChecksInPeriod >
+    ///         0` alone let a single positive check — arriving at any point, even right at the
+    ///         end of the window — produce a 100% ratio and satisfy requiredLivenessRatioBps
+    ///         with zero real monitoring history. This ties the minimum sample size to whatever
+    ///         probationPeriod/recoveryPeriod and MIN_LIVENESS_CHECK_INTERVAL currently are
+    ///         (see _minRequiredChecks() below), so it stays consistent automatically if those
+    ///         are ever changed, rather than being a separate hardcoded number that could drift
+    ///         out of sync with them. 50% is deliberately not close to 100%: the Verifier's real
+    ///         cadence (10-15 minutes) is itself slower than MIN_LIVENESS_CHECK_INTERVAL's 5, so
+    ///         even perfect real-world monitoring will land around 33-50% of the theoretical
+    ///         maximum, not near it.
+    uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // 50%
+
     /// @notice ✅ REDESIGNED (replaces the earlier minLivenessConfirmationsToActivate — a raw
     ///         count of positive reports, found during review to have a real flaw): a raw count
     ///         only ever increases on a positive report and is completely unaffected by
@@ -373,25 +392,51 @@ contract ValidatorsRegistry {
     // consequence without being close to catastrophic for any validator's collateral size.
     uint256 public exitCooldown = 604800;        // 1 week
 
-    /// @notice ✅ NEW (mass-demotion safety valve, found necessary during review): protects
-    ///         individual validators from being unfairly slashed en masse when the Verifier
-    ///         service itself fails (a documented single point of failure —
-    ///         sur-verifier-service-spec.md) rather than validators actually going offline. ⚠️
-    ///         CRITICAL DESIGN CONSTRAINT this mechanism must respect: it must NEVER pause or
-    ///         delay REMOVAL from the active set (demoteForInactivity's _removeFromActive() call
-    ///         below always runs, unconditionally) — only the SLASH is ever paused. Removing a
-    ///         genuinely-inactive validator from getValidators() is what QBFT's quorum
-    ///         calculation needs to shrink alongside a shrinking pool of live signers (2f+1 of a
-    ///         SMALLER list is easier to reach); pausing that removal — which an earlier,
-    ///         rejected design of this safety valve would have done — would keep the quorum
-    ///         threshold artificially high exactly when fewer validators can actually meet it,
-    ///         making a real mass-outage scenario's chain-halting risk WORSE, not better. Slashing,
-    ///         in contrast, is a purely economic side effect with zero bearing on consensus, so it
-    ///         is the only part that can safely be made conditional.
+    /// @notice ✅ REDESIGNED (found during a follow-up review to have a real fairness gap): the
+    ///         first version of this safety valve applied the slash IMMEDIATELY at demotion time,
+    ///         only switching to "no slash" once the running counter crossed the 20% threshold.
+    ///         That meant (a) whichever validators happened to get their demotion transaction
+    ///         processed FIRST within a mass-failure window were slashed while later ones in the
+    ///         SAME failure were not — an outcome that depends on transaction ordering, not on
+    ///         anything the validator did differently; (b) once slashed, those early validators'
+    ///         penalties were never reversed even after the pattern became clearly a mass
+    ///         failure; (c) the reference count used for the 20% comparison was the LIVE active-
+    ///         set size, which itself kept shrinking with each removal, so the threshold being
+    ///         compared against was a moving target within the same window. Fixed by deferring
+    ///         the slash decision itself: every demotion within a fixed time window (a
+    ///         "DemotionEpoch") is recorded but NOT slashed immediately; only once that window
+    ///         has fully closed does a single, permissionless call
+    ///         (resolvePendingSlash() below) decide — for every validator demoted in that epoch,
+    ///         uniformly — whether the FINAL demotion count for the whole window exceeded the
+    ///         mass-failure threshold. This makes the outcome depend only on the total pattern
+    ///         across the whole window, never on which transaction happened to land first.
+    ///         ⚠️ CRITICAL DESIGN CONSTRAINT unchanged from the original version: this must NEVER
+    ///         pause or delay REMOVAL from the active set (demoteForInactivity's
+    ///         _removeFromActive() call always runs, unconditionally, the moment inactivity is
+    ///         detected) — only the SLASH decision is ever deferred. Removing a genuinely-
+    ///         inactive validator from getValidators() is what QBFT's quorum calculation needs to
+    ///         shrink alongside a shrinking pool of live signers (2f+1 of a smaller list is
+    ///         easier to reach); delaying that removal would keep the quorum threshold
+    ///         artificially high exactly when fewer validators can actually meet it, making a
+    ///         real mass-outage scenario's chain-halting risk WORSE, not better. The slash
+    ///         decision, in contrast, is a purely economic matter with zero bearing on consensus,
+    ///         so it is the only part that can safely wait for the full picture.
+    struct DemotionEpoch {
+        uint256 startedAt;
+        uint256 referenceCount; // active-validator-count snapshot taken ONCE, when this epoch
+        // began — fixed for the epoch's whole lifetime, so the 20% comparison is never a moving
+        // target partway through resolving it.
+        uint256 demotionCount; // total demotions recorded in this epoch — only ever grows while
+        // the epoch is open, then is fixed forever once resolved.
+        bool resolved;
+        bool wasMassFailure;
+    }
+
+    mapping(uint256 => DemotionEpoch) public demotionEpochs;
+    uint256 public currentDemotionEpochId; // 0 means "no epoch opened yet"
+
     uint256 public constant MASS_DEMOTION_WINDOW = 1 hours;
-    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // 20% — see demoteForInactivity()
-    uint256 public demotionWindowStart;
-    uint256 public demotionsInWindow;
+    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // 20% — see resolvePendingSlash()
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
@@ -454,8 +499,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     event MembershipRequested(address indexed validator, uint256 collateralAmount, uint256 feeAmount);
     event ValidatorActivated(address indexed validator);
-    event ValidatorDemoted(address indexed validator, uint256 slashedAmount);
-    event MassDemotionSlashPaused(uint256 demotionsInWindow, uint256 referenceValidatorCount); // ✅ NEW
+    event ValidatorDemoted(address indexed validator, uint256 pendingSlashEpoch); // ✅ CHANGED: no
+    // longer carries a slashed amount (the slash is now deferred — see DemotionEpoch's doc
+    // comment) — carries the epoch ID instead, so off-chain monitoring can find the eventual
+    // SlashResolved event for this same epoch.
+    event SlashResolved(address indexed validator, uint256 slashedAmount, bool wasMassFailure); // ✅ NEW
     event ValidatorReactivated(address indexed validator);
     event ExitRequested(address indexed validator, uint256 cooldownEnd);
     event StakeWithdrawn(address indexed validator, uint256 amount);
@@ -628,6 +676,7 @@ contract ValidatorsRegistry {
             livenessConfirmationsInPeriod: 0,
             totalLivenessChecksInPeriod: 0,
             lastCheckedAt: 0,
+            pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
@@ -688,11 +737,20 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Activation after probation — permissionless
     // ------------------------------------------------------------------
+    /// @notice ✅ NEW: minimum number of COUNTED liveness checks required before a period's
+    ///         ratio requirement is evaluated — see MIN_CHECK_COVERAGE_BPS's doc comment above.
+    function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
+        return (periodDuration / MIN_LIVENESS_CHECK_INTERVAL) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+    }
+
     function promoteAfterProbation(address candidate) external {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
-        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.totalLivenessChecksInPeriod >= _minRequiredChecks(probationPeriod),
+            "ValidatorsRegistry: not enough liveness checks recorded yet"
+        );
         require(
             v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
             "ValidatorsRegistry: liveness success rate too low"
@@ -705,33 +763,58 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Demotion for inactivity — permissionless
     // ------------------------------------------------------------------
-    /// @notice ✅ NEW: shared inactivity-slash logic for demoteForInactivity() and
-    ///         requestExit()'s anti-flee check below. Handles ONLY the slash computation/transfer
-    ///         — never touches active-set membership (see MASS_DEMOTION_WINDOW's doc comment for
-    ///         why that separation is a hard requirement, not a style choice).
-    function _applyInactivitySlash(ValidatorInfo storage v) private returns (uint256 slashAmount) {
-        if (block.timestamp >= demotionWindowStart + MASS_DEMOTION_WINDOW) {
-            demotionWindowStart = block.timestamp;
-            demotionsInWindow = 0;
+    /// @notice ✅ NEW: records this demotion into the current (or a freshly-opened) DemotionEpoch
+    ///         and marks the validator as having a pending slash decision — does NOT touch
+    ///         lockedStake or transfer anything. Called by demoteForInactivity() and
+    ///         requestExit()'s anti-flee check below. Never touches active-set membership (see
+    ///         DemotionEpoch's doc comment for why that separation is a hard requirement).
+    function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
+        if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
+            currentDemotionEpochId++;
+            DemotionEpoch storage fresh = demotionEpochs[currentDemotionEpochId];
+            fresh.startedAt = block.timestamp;
+            fresh.referenceCount = activeValidators.length + 1; // +1: this validator was already
+            // removed from activeValidators by the caller before this runs — snapshotted ONCE
+            // here and never touched again, so later removals within the same epoch cannot shift
+            // what this epoch's demotions are being measured against.
         }
-        demotionsInWindow++;
+        epochId = currentDemotionEpochId;
+        demotionEpochs[epochId].demotionCount++;
+        v.pendingSlashEpoch = epochId;
+    }
 
-        uint256 referenceCount = activeValidators.length + 1; // +1: this validator was already
-        // removed from activeValidators by the caller before this runs, so add it back for a
-        // fair "share of the set this represents" estimate.
-        bool looksLikeMassFailure = demotionsInWindow * BPS_DENOMINATOR > referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
+    /// @notice ✅ NEW: permissionless — anyone may call this once a validator's DemotionEpoch has
+    ///         fully closed, to resolve whether their slash actually applies. Deliberately
+    ///         separate from _recordDemotion(): by the time this runs, the epoch's final
+    ///         demotionCount is fixed (the window has closed, so no more demotions can be added
+    ///         to it), so every validator demoted within the same epoch gets exactly the same
+    ///         answer, regardless of the order their individual demotions or resolve calls
+    ///         happened in.
+    function resolvePendingSlash(address validator) external nonReentrant {
+        ValidatorInfo storage v = validators[validator];
+        uint256 epochId = v.pendingSlashEpoch;
+        require(epochId != 0, "ValidatorsRegistry: no pending slash for this validator");
+        DemotionEpoch storage epoch = demotionEpochs[epochId];
+        require(block.timestamp >= epoch.startedAt + MASS_DEMOTION_WINDOW, "ValidatorsRegistry: demotion epoch not yet closed");
 
-        if (looksLikeMassFailure) {
-            emit MassDemotionSlashPaused(demotionsInWindow, referenceCount);
-            return 0;
+        if (!epoch.resolved) {
+            epoch.resolved = true;
+            epoch.wasMassFailure = epoch.demotionCount * BPS_DENOMINATOR > epoch.referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
         }
 
-        slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-        v.lockedStake -= slashAmount;
-        if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
+        v.pendingSlashEpoch = 0;
+
+        uint256 slashAmount = 0;
+        if (!epoch.wasMassFailure) {
+            slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+            v.lockedStake -= slashAmount;
+            if (slashAmount > 0) {
+                (bool success, ) = TREASURY.call{value: slashAmount}("");
+                require(success, "ValidatorsRegistry: slash transfer failed");
+            }
         }
+
+        emit SlashResolved(validator, slashAmount, epoch.wasMassFailure);
     }
 
     function demoteForInactivity(address validator) external nonReentrant {
@@ -739,12 +822,13 @@ contract ValidatorsRegistry {
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
         require(block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
 
-        // ✅ UNCONDITIONAL — see MASS_DEMOTION_WINDOW's doc comment: this must never be paused,
-        // regardless of the mass-failure check below, to protect QBFT's ability to shrink its
-        // quorum requirement alongside a shrinking pool of genuinely live validators.
+        // ✅ UNCONDITIONAL — see DemotionEpoch's doc comment: this must never be paused or
+        // delayed, regardless of the mass-failure question resolved later, to protect QBFT's
+        // ability to shrink its quorum requirement alongside a shrinking pool of genuinely live
+        // validators.
         _removeFromActive(validator);
 
-        uint256 slashAmount = _applyInactivitySlash(v);
+        uint256 epochId = _recordDemotion(v); // slash decision deferred — see resolvePendingSlash()
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // recovery period starts now
@@ -754,7 +838,7 @@ contract ValidatorsRegistry {
         // period is never accidentally throttled by MIN_LIVENESS_CHECK_INTERVAL referencing a
         // check from before this reset.
 
-        emit ValidatorDemoted(validator, slashAmount);
+        emit ValidatorDemoted(validator, epochId);
     }
 
     // ------------------------------------------------------------------
@@ -764,7 +848,10 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
-        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.totalLivenessChecksInPeriod >= _minRequiredChecks(recoveryPeriod),
+            "ValidatorsRegistry: not enough liveness checks recorded yet"
+        );
         require(
             v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredRecoveryLivenessRatioBps,
             "ValidatorsRegistry: recovery liveness success rate too low"
@@ -807,20 +894,21 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
-        uint256 slashAmount = 0;
+        bool hasPendingSlash = false;
         if (v.status == Status.Active) {
             // ✅ NEW (closes the "flee before demotion" loophole found during review): if this
             // validator was ALREADY eligible for demoteForInactivity() at this exact moment
-            // (same criterion that function itself checks), apply the same slash right here,
-            // before removal — otherwise an operator watching their own node fail could simply
-            // call requestExit() a moment before someone calls demoteForInactivity() on them,
-            // and walk away with their full collateral after nothing but the ordinary
-            // exitCooldown. This does not introduce any NEW judgment call: it is the exact same
-            // "already past inactivityThreshold" test demoteForInactivity() uses, applied here
-            // instead of there — a validator that was genuinely still within the threshold pays
-            // nothing extra, exactly as before.
+            // (same criterion that function itself checks), record the same deferred slash
+            // decision right here, before removal — otherwise an operator watching their own
+            // node fail could simply call requestExit() a moment before someone calls
+            // demoteForInactivity() on them, and walk away with their full collateral after
+            // nothing but the ordinary exitCooldown. This does not introduce any NEW judgment
+            // call: it is the exact same "already past inactivityThreshold" test
+            // demoteForInactivity() uses, applied here instead of there — a validator that was
+            // genuinely still within the threshold owes nothing extra, exactly as before.
             if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
-                slashAmount = _applyInactivitySlash(v);
+                _recordDemotion(v);
+                hasPendingSlash = true;
             }
             _removeFromActive(msg.sender);
         }
@@ -837,10 +925,11 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
-        if (slashAmount > 0) {
-            emit ValidatorDemoted(msg.sender, slashAmount); // ✅ same event demoteForInactivity
-            // would have emitted — an exit that was really a late-caught inactivity demotion
-            // should be visible to any off-chain monitoring exactly the same way.
+        if (hasPendingSlash) {
+            emit ValidatorDemoted(msg.sender, v.pendingSlashEpoch); // ✅ same event
+            // demoteForInactivity() would have emitted — an exit that was really a late-caught
+            // inactivity demotion should be visible to any off-chain monitoring exactly the same
+            // way, resolvePendingSlash() included.
         }
     }
 
@@ -848,6 +937,13 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[msg.sender];
         require(v.status == Status.Exiting, "ValidatorsRegistry: not exiting");
         require(block.timestamp >= v.periodStartedAt + exitCooldown, "ValidatorsRegistry: exit cooldown not elapsed");
+        // ✅ NEW: closes a residual loophole — without this, a validator with a still-unresolved
+        // pending slash (see DemotionEpoch's doc comment) could withdraw their FULL collateral
+        // before resolvePendingSlash() ever gets a chance to run, permanently avoiding it.
+        // MASS_DEMOTION_WINDOW (1 hour) is always far shorter than exitCooldown (1 week), so this
+        // should essentially never actually block a legitimate withdrawal in practice — it exists
+        // purely as a safety net.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
 
         uint256 amount = v.lockedStake;
         delete validators[msg.sender];

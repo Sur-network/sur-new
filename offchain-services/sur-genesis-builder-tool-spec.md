@@ -44,6 +44,7 @@
     "entryWindowSeconds": 86400,
     "probationPeriod": 604800,
     "requiredLivenessRatioBps": 9500,
+    "requiredRecoveryLivenessRatioBps": 9500,
     "inactivityThreshold": 3600,
     "recoveryPeriod": 172800,
     "slashBps": 100,
@@ -132,6 +133,7 @@
        - `entryWindowSeconds` (۸۶۴۰۰ — ۲۴ ساعت)
        - `probationPeriod` (۶۰۴۸۰۰ — ۱ هفته)
        - `requiredLivenessRatioBps` (۹۵۰۰ — ✅ **جایگزین `minLivenessConfirmationsToActivate` قدیمی** — دیگر یه شمارش خام مثبت‌ها نیست، یه نسبت موفقیته؛ به تصمیم مربوطه در `sur-tokenomics.md` مراجعه کن)
+       - ✅ **`requiredRecoveryLivenessRatioBps` (۹۵۰۰ — پارامتر تازه، از یک بازبینی بعدی: قبلاً با بالا یه فیلد مشترک بود؛ حالا مستقل. ⚠️ اگر این جا بماند، مقدار پیش‌فرض Solidity (صفر) می‌ماند و شرط بازگشت بعد از دموت عملاً همیشه true می‌شود — چون قرارداد initializerهای اسکالر را از طریق تزریق runtime bytecode اجرا نمی‌کند.)**
        - `inactivityThreshold` (۳۶۰۰ — ۱ ساعت)
        - `recoveryPeriod` (۱۷۲۸۰۰ — ۴۸ ساعت)
        - `slashBps` (۱۰۰ — ۱٪)
@@ -150,6 +152,7 @@
    ValidatorsRegistry.entryWindowSeconds() == (مقدار config)
    ValidatorsRegistry.probationPeriod() == (مقدار config)
    ValidatorsRegistry.requiredLivenessRatioBps() == (مقدار config)
+   ValidatorsRegistry.requiredRecoveryLivenessRatioBps() == (مقدار config)
    ValidatorsRegistry.inactivityThreshold() == (مقدار config)
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)

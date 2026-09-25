@@ -121,6 +121,10 @@ contract ValidatorsRegistry {
         // یا کلید verifier به‌خطرافتاده که پشت‌سرهم می‌زنه) هرکدوم به‌عنوان یه «نوبت» مستقل
         // توی نسبت شمرده می‌شد، حتی اگه چند ثانیه فاصله داشتن — یعنی «۴۸ ساعت گزارش با نسبت
         // ۹۵٪» واقعاً به‌معنای ۴۸ ساعت پایش واقعی با فاصله‌ی ~۱۰-۱۵دقیقه‌ای مقصود نبود.
+        uint256 pendingSlashEpoch; // ✅ تازه: غیرصفر تا وقتی این ولیدیتور یه تصمیم جریمه‌ی
+        // غیرفعالیِ حل‌نشده منتظر resolvePendingSlash() داشته باشه — به کامنت DemotionEpoch
+        // بالا برای کل مکانیزمی که ازش پشتیبانی می‌کنه مراجعه کن. صفر یعنی «هیچ جریمه‌ی معلقی
+        // نیست.»
         uint256 demotedAt;          // اگه هرگز دموت نشده/الان در وضعیت Demoted نیست، صفر است
         bool isPaidEntrant;        // ✅ تازه: فقط برای ولیدیتورهایی که واقعاً از طریق
         // requestMembership() پایین پرداخت کرده‌اند true است. پیش‌فرض false برای ولیدیتورهای
@@ -202,7 +206,7 @@ contract ValidatorsRegistry {
     // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هر آدرس ولیدیتور مؤسس v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount برای مؤسسین افزایش پیدا نمی‌کند — یادداشتش را بالا ببین.
@@ -328,6 +332,20 @@ contract ValidatorsRegistry {
 
     uint256 public probationPeriod = 604800; // ۱ هفته
 
+    /// @notice ✅ تازه (پیداشده در یک بازبینی بعدی — خودِ چک نسبت به‌تنهایی یه شکاف واقعی
+    ///         داشت): حداقل **کسری** از حداکثر چک‌های ممکن (طول دوره تقسیم بر
+    ///         MIN_LIVENESS_CHECK_INTERVAL) که باید واقعاً ثبت شده باشه قبل از این‌که اصلاً شرط
+    ///         نسبت ارزیابی بشه. بدون این، `totalLivenessChecksInPeriod > 0` به‌تنهایی اجازه
+    ///         می‌داد یه چک مثبت تنها — که هر لحظه، حتی درست انتهای پنجره برسه — نسبت ۱۰۰٪
+    ///         بسازه و requiredLivenessRatioBps رو با صفر تاریخچه‌ی پایش واقعی برآورده کنه. این
+    ///         حداقل نمونه رو به هرچی probationPeriod/recoveryPeriod و
+    ///         MIN_LIVENESS_CHECK_INTERVAL فعلاً باشن گره می‌زنه (به _minRequiredChecks() پایین
+    ///         مراجعه کن)، پس اگه این‌ها بعداً عوض بشن، خودکار هماهنگ می‌مونه، نه یه عدد جدای
+    ///         هاردکدشده که می‌تونه ازشون جا بمونه. ۵۰٪ عمداً نزدیک ۱۰۰٪ نیست: چون سرعت واقعی
+    ///         Verifier (۱۰-۱۵ دقیقه) خودش کندتر از فاصله‌ی ۵دقیقه‌ای MIN_LIVENESS_CHECK_INTERVAL
+    ///         است، حتی پایش کاملاً بی‌نقص واقعی هم حدود ۳۳-۵۰٪ حداکثر نظری می‌شه، نه نزدیک بهش.
+    uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // ۵۰٪
+
     /// @notice ✅ بازطراحی‌شده (جایگزین minLivenessConfirmationsToActivate قبلی — یه شمارش خام
     ///         از گزارش‌های مثبت، که در بازبینی یه ضعف واقعی توش پیدا شد): یه شمارش خام فقط با
     ///         گزارش مثبت زیاد می‌شه و کاملاً از گزارش‌های منفی بی‌تأثیره — یعنی یه ولیدیتوری
@@ -369,25 +387,48 @@ contract ValidatorsRegistry {
     // نزدیک فاجعه‌بار باشه.
     uint256 public exitCooldown = 604800;        // ۱ هفته
 
-    /// @notice ✅ تازه (سوپاپ ایمنی دموت دسته‌جمعی، پیداشده در بازبینی به‌عنوان یه نیاز واقعی):
-    ///         از تک‌تک ولیدیتورها در برابر جریمه‌ی ناعادلانه‌ی دسته‌جمعی محافظت می‌کنه، وقتی
-    ///         خودِ سرویس Verifier (یه نقطه‌ی خطای مشترک مستندشده — sur-verifier-service-spec.md)
-    ///         خراب بشه، نه این‌که ولیدیتورها واقعاً آفلاین شده باشن. ⚠️ **محدودیت طراحی حیاتی
-    ///         که این مکانیزم باید رعایت کنه:** هیچ‌وقت نباید حذف از مجموعه‌ی فعال رو متوقف یا
-    ///         به تأخیر بندازه (فراخوان _removeFromActive() در demoteForInactivity() پایین
-    ///         همیشه و بدون قید اجرا می‌شه) — فقط جریمه گاهی متوقف می‌شه. حذف یه ولیدیتور
-    ///         واقعاً غیرفعال از getValidators() دقیقاً همون چیزیه که محاسبه‌ی نصاب QBFT برای
-    ///         کوچیک‌شدن هم‌زمان با کوچیک‌شدن استخر امضاکننده‌های واقعاً زنده نیاز داره (۲f+1 از
-    ///         یه لیست کوچیک‌تر راحت‌تر به‌دست میاد)؛ متوقف‌کردن این حذف — که یه طراحی اولیه‌ی
-    ///         رد‌شده‌ی همین سوپاپ می‌خواست انجام بده — آستانه‌ی نصاب رو دقیقاً وقتی که کمتر
-    ///         ولیدیتور می‌تونه بهش برسه، مصنوعاً بالا نگه می‌داشت — یعنی ریسک ایستادن شبکه در
-    ///         یه سناریوی واقعی خاموشی دسته‌جمعی رو **بدتر** می‌کرد، نه بهتر. جریمه، برخلاف این،
-    ///         یه اثر جانبی صرفاً اقتصادیه بدون هیچ ربطی به اجماع، پس تنها بخشیه که امن می‌تونه
-    ///         شرطی بشه.
+    /// @notice ✅ بازطراحی‌شده (پیداشده در یه بازبینی بعدی که یه شکاف انصاف واقعی توش بود):
+    ///         نسخه‌ی اول این سوپاپ ایمنی، جریمه رو **بلافاصله** لحظه‌ی دموت اعمال می‌کرد، و
+    ///         فقط وقتی شمارنده‌ی زنده از آستانه‌ی ۲۰٪ رد می‌شد، به «بدون جریمه» سوییچ می‌کرد.
+    ///         یعنی: (الف) هر ولیدیتوری که تراکنش دموتش تصادفاً **اول** پردازش می‌شد، توی یه
+    ///         خرابی دسته‌جمعی جریمه می‌خورد ولی بقیه‌ی همون خرابی نه — یه نتیجه‌ای که به ترتیب
+    ///         تراکنش‌ها وابسته بود، نه چیزی که ولیدیتور فرق داشته باشه؛ (ب) جریمه‌ی همون
+    ///         اولی‌ها، حتی وقتی الگو واضحاً یه خرابی دسته‌جمعی می‌شد، هرگز برنمی‌گشت؛ (پ) مخرج
+    ///         مقایسه‌ی ۲۰٪ خودِ اندازه‌ی زنده‌ی مجموعه‌ی فعال بود، که با هر حذف کوچیک‌تر می‌شد،
+    ///         پس آستانه‌ی مقایسه‌شده *داخل همون پنجره* یه هدف متحرک بود. اصلاح شد با به‌تعویق‌
+    ///         انداختن خودِ تصمیم جریمه: هر دموت داخل یه بازه‌ی زمانی ثابت («DemotionEpoch»)
+    ///         ثبت می‌شه ولی **فوری جریمه نمی‌شه**؛ فقط بعد از بسته‌شدن کامل اون پنجره، یه
+    ///         فراخوان تکی و permissionless (resolvePendingSlash() پایین) تصمیم می‌گیره — برای
+    ///         هر ولیدیتوری که توی اون پنجره دموت شده، یکسان — که آیا تعداد *نهایی* دموت‌های کل
+    ///         پنجره از آستانه‌ی خرابی دسته‌جمعی رد شده یا نه. این باعث می‌شه نتیجه فقط به الگوی
+    ///         کلی کل پنجره وابسته باشه، هرگز به این‌که کدوم تراکنش اول رسیده.
+    ///         ⚠️ **محدودیت طراحی حیاتی، بدون تغییر نسبت به نسخه‌ی اول:** این هرگز نباید حذف از
+    ///         مجموعه‌ی فعال رو متوقف یا به تأخیر بندازه (فراخوان _removeFromActive() در
+    ///         demoteForInactivity() همیشه، همون لحظه‌ی تشخیص غیرفعالی، بدون قید اجرا می‌شه) —
+    ///         فقط **تصمیم جریمه** به تعویق می‌افته. حذف یه ولیدیتور واقعاً غیرفعال از
+    ///         getValidators() دقیقاً همون چیزیه که محاسبه‌ی نصاب QBFT برای کوچیک‌شدن هم‌زمان با
+    ///         کوچیک‌شدن استخر امضاکننده‌های واقعاً زنده نیاز داره (۲f+1 از یه لیست کوچیک‌تر
+    ///         راحت‌تر به‌دست میاد)؛ به‌تأخیرانداختن این حذف، آستانه‌ی نصاب رو دقیقاً وقتی که
+    ///         کمتر ولیدیتور می‌تونه بهش برسه، مصنوعاً بالا نگه می‌داشت — یعنی ریسک ایستادن
+    ///         شبکه در یه سناریوی واقعی خاموشی دسته‌جمعی رو **بدتر** می‌کرد، نه بهتر. تصمیم
+    ///         جریمه، برخلاف این، یه مسئله‌ی صرفاً اقتصادیه بدون هیچ ربطی به اجماع، پس تنها
+    ///         بخشیه که امن می‌تونه منتظر تصویر کامل بمونه.
+    struct DemotionEpoch {
+        uint256 startedAt;
+        uint256 referenceCount; // اسنپ‌شات تعداد ولیدیتور فعال، فقط **یک‌بار** موقع شروع این
+        // پنجره گرفته می‌شه — برای کل عمر پنجره ثابت می‌مونه، پس مقایسه‌ی ۲۰٪ هیچ‌وقت وسط
+        // resolve کردنش یه هدف متحرک نیست.
+        uint256 demotionCount; // مجموع دموت‌های ثبت‌شده توی این پنجره — فقط تا وقتی پنجره بازه
+        // زیاد می‌شه، بعد برای همیشه بعد از resolve شدن ثابت می‌مونه.
+        bool resolved;
+        bool wasMassFailure;
+    }
+
+    mapping(uint256 => DemotionEpoch) public demotionEpochs;
+    uint256 public currentDemotionEpochId; // صفر یعنی «هنوز هیچ پنجره‌ای باز نشده»
+
     uint256 public constant MASS_DEMOTION_WINDOW = 1 hours;
-    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // ۲۰٪ — به demoteForInactivity() مراجعه کن
-    uint256 public demotionWindowStart;
-    uint256 public demotionsInWindow;
+    uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // ۲۰٪ — به resolvePendingSlash() مراجعه کن
 
     uint256 private constant BPS_DENOMINATOR = 10000;
 
@@ -446,8 +487,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     event MembershipRequested(address indexed validator, uint256 collateralAmount, uint256 feeAmount);
     event ValidatorActivated(address indexed validator);
-    event ValidatorDemoted(address indexed validator, uint256 slashedAmount);
-    event MassDemotionSlashPaused(uint256 demotionsInWindow, uint256 referenceValidatorCount); // ✅ تازه
+    event ValidatorDemoted(address indexed validator, uint256 pendingSlashEpoch); // ✅ تغییر
+    // کرد: دیگه مبلغ جریمه رو حمل نمی‌کنه (جریمه حالا معلقه — به کامنت DemotionEpoch مراجعه
+    // کن) — به‌جاش شناسه‌ی epoch رو حمل می‌کنه، پس پایش آف‌چین می‌تونه رویداد SlashResolved
+    // متناظر همین epoch رو پیدا کنه.
+    event SlashResolved(address indexed validator, uint256 slashedAmount, bool wasMassFailure); // ✅ تازه
     event ValidatorReactivated(address indexed validator);
     event ExitRequested(address indexed validator, uint256 cooldownEnd);
     event StakeWithdrawn(address indexed validator, uint256 amount);
@@ -622,6 +666,7 @@ contract ValidatorsRegistry {
             livenessConfirmationsInPeriod: 0,
             totalLivenessChecksInPeriod: 0,
             lastCheckedAt: 0,
+            pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
@@ -682,11 +727,20 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // فعال‌سازی بعد از probation — بدون نیاز به مجوز
     // ------------------------------------------------------------------
+    /// @notice ✅ تازه: حداقل تعداد چک لایوینس شمرده‌شده‌ی لازم قبل از این‌که شرط نسبت یه دوره
+    ///         ارزیابی بشه — به کامنت MIN_CHECK_COVERAGE_BPS بالا مراجعه کن.
+    function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
+        return (periodDuration / MIN_LIVENESS_CHECK_INTERVAL) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+    }
+
     function promoteAfterProbation(address candidate) external {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
-        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.totalLivenessChecksInPeriod >= _minRequiredChecks(probationPeriod),
+            "ValidatorsRegistry: not enough liveness checks recorded yet"
+        );
         require(
             v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
             "ValidatorsRegistry: liveness success rate too low"
@@ -703,29 +757,57 @@ contract ValidatorsRegistry {
     ///         requestExit() پایین. فقط محاسبه/انتقال جریمه رو مدیریت می‌کنه — هرگز به عضویت
     ///         مجموعه‌ی فعال دست نمی‌زنه (به کامنت MASS_DEMOTION_WINDOW مراجعه کن که چرا این
     ///         تفکیک یه الزام سخته، نه یه انتخاب سلیقه‌ای).
-    function _applyInactivitySlash(ValidatorInfo storage v) private returns (uint256 slashAmount) {
-        if (block.timestamp >= demotionWindowStart + MASS_DEMOTION_WINDOW) {
-            demotionWindowStart = block.timestamp;
-            demotionsInWindow = 0;
+    /// @notice ✅ تازه: این دموت رو توی DemotionEpoch فعلی (یا یه دونه‌ی تازه‌باز‌شده) ثبت
+    ///         می‌کنه و ولیدیتور رو به‌عنوان دارای یه تصمیم جریمه‌ی معلق علامت می‌زنه — به
+    ///         lockedStake دست نمی‌زنه یا چیزی منتقل نمی‌کنه. توسط demoteForInactivity() و چک
+    ///         ضدفرار requestExit() پایین صدا زده می‌شه. هرگز به عضویت مجموعه‌ی فعال دست
+    ///         نمی‌زنه (به کامنت DemotionEpoch مراجعه کن که چرا این تفکیک یه الزام سخته).
+    function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
+        if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
+            currentDemotionEpochId++;
+            DemotionEpoch storage fresh = demotionEpochs[currentDemotionEpochId];
+            fresh.startedAt = block.timestamp;
+            fresh.referenceCount = activeValidators.length + 1; // +۱: این ولیدیتور قبلاً توسط
+            // فراخوان‌کننده از activeValidators حذف شده — فقط **یک‌بار** همین‌جا اسنپ‌شات
+            // گرفته می‌شه و دیگه هیچ‌وقت دست نمی‌خوره، پس حذف‌های بعدی داخل همین پنجره نمی‌تونن
+            // چیزی که این پنجره باهاش سنجیده می‌شه رو جابه‌جا کنن.
         }
-        demotionsInWindow++;
+        epochId = currentDemotionEpochId;
+        demotionEpochs[epochId].demotionCount++;
+        v.pendingSlashEpoch = epochId;
+    }
 
-        uint256 referenceCount = activeValidators.length + 1; // +۱: این ولیدیتور قبلاً توسط
-        // فراخوان‌کننده از activeValidators حذف شده، پس برای یه برآورد منصفانه‌ی «سهمش از
-        // مجموعه» دوباره اضافه‌اش می‌کنیم.
-        bool looksLikeMassFailure = demotionsInWindow * BPS_DENOMINATOR > referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
+    /// @notice ✅ تازه — بدون نیاز به مجوز: هرکسی می‌تونه این رو صدا بزنه، وقتی
+    ///         DemotionEpoch یه ولیدیتور کاملاً بسته شده، تا مشخص بشه جریمه‌اش واقعاً اعمال
+    ///         بشه یا نه. عمداً از _recordDemotion() جداست: تا این اجرا بشه، demotionCount
+    ///         نهایی اون epoch ثابت شده (پنجره بسته شده، پس دیگه دموتی نمی‌تونه بهش اضافه
+    ///         بشه)، پس هر ولیدیتوری که داخل همون epoch دموت شده، دقیقاً همون جواب رو می‌گیره،
+    ///         صرف‌نظر از این‌که ترتیب دموت‌ها یا فراخوان‌های resolve چی بوده.
+    function resolvePendingSlash(address validator) external nonReentrant {
+        ValidatorInfo storage v = validators[validator];
+        uint256 epochId = v.pendingSlashEpoch;
+        require(epochId != 0, "ValidatorsRegistry: no pending slash for this validator");
+        DemotionEpoch storage epoch = demotionEpochs[epochId];
+        require(block.timestamp >= epoch.startedAt + MASS_DEMOTION_WINDOW, "ValidatorsRegistry: demotion epoch not yet closed");
 
-        if (looksLikeMassFailure) {
-            emit MassDemotionSlashPaused(demotionsInWindow, referenceCount);
-            return 0;
+        if (!epoch.resolved) {
+            epoch.resolved = true;
+            epoch.wasMassFailure = epoch.demotionCount * BPS_DENOMINATOR > epoch.referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
         }
 
-        slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-        v.lockedStake -= slashAmount;
-        if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
+        v.pendingSlashEpoch = 0;
+
+        uint256 slashAmount = 0;
+        if (!epoch.wasMassFailure) {
+            slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+            v.lockedStake -= slashAmount;
+            if (slashAmount > 0) {
+                (bool success, ) = TREASURY.call{value: slashAmount}("");
+                require(success, "ValidatorsRegistry: slash transfer failed");
+            }
         }
+
+        emit SlashResolved(validator, slashAmount, epoch.wasMassFailure);
     }
 
     function demoteForInactivity(address validator) external nonReentrant {
@@ -733,12 +815,12 @@ contract ValidatorsRegistry {
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
         require(block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
 
-        // ✅ بدون قید — به کامنت MASS_DEMOTION_WINDOW مراجعه کن: این هرگز نباید متوقف بشه،
-        // صرف‌نظر از چک خرابی دسته‌جمعی پایین، تا توانایی QBFT برای کوچیک‌کردن نصابش هم‌زمان با
-        // کوچیک‌شدن استخر ولیدیتورهای واقعاً زنده حفظ بشه.
+        // ✅ بدون قید — به کامنت DemotionEpoch مراجعه کن: این هرگز نباید متوقف یا به‌تأخیر
+        // بیفته، صرف‌نظر از سؤال خرابی دسته‌جمعی که بعداً حل می‌شه، تا توانایی QBFT برای
+        // کوچیک‌کردن نصابش هم‌زمان با کوچیک‌شدن استخر ولیدیتورهای واقعاً زنده حفظ بشه.
         _removeFromActive(validator);
 
-        uint256 slashAmount = _applyInactivitySlash(v);
+        uint256 epochId = _recordDemotion(v); // تصمیم جریمه معلقه — به resolvePendingSlash() مراجعه کن
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
@@ -747,7 +829,7 @@ contract ValidatorsRegistry {
         v.lastCheckedAt = 0; // ✅ تازه — تا اولین چک لایوینس دوره‌ی بازگشت تازه، به‌اشتباه با
         // یه چک قبل از این ریست throttle نشه.
 
-        emit ValidatorDemoted(validator, slashAmount);
+        emit ValidatorDemoted(validator, epochId);
     }
 
     // ------------------------------------------------------------------
@@ -757,7 +839,10 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
-        require(v.totalLivenessChecksInPeriod > 0, "ValidatorsRegistry: no liveness checks recorded yet");
+        require(
+            v.totalLivenessChecksInPeriod >= _minRequiredChecks(recoveryPeriod),
+            "ValidatorsRegistry: not enough liveness checks recorded yet"
+        );
         require(
             v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredRecoveryLivenessRatioBps,
             "ValidatorsRegistry: recovery liveness success rate too low"
@@ -800,19 +885,20 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
-        uint256 slashAmount = 0;
+        bool hasPendingSlash = false;
         if (v.status == Status.Active) {
             // ✅ تازه (بستن راه فرار «فرار قبل از دموت» پیداشده در بازبینی): اگه این ولیدیتور
             // همین الان از قبل واجد شرایط demoteForInactivity() بوده (همون معیار خودِ اون تابع)،
-            // دقیقاً همون جریمه اینجا هم اعمال می‌شه، قبل از حذف — وگرنه یه اپراتور که می‌بینه
-            // نودش خراب شده می‌تونست فقط یه لحظه قبل از این‌که کسی demoteForInactivity() رو
-            // صداش بزنه، requestExit() بزنه و با کل وثیقه‌ش، فقط با گذروندن exitCooldown معمولی،
-            // بره. این هیچ معیار قضاوتی تازه‌ای اضافه نمی‌کنه: دقیقاً همون تست «از قبل از
-            // inactivityThreshold رد شده» که demoteForInactivity() خودش چک می‌کنه، اینجا هم
-            // اجرا می‌شه — ولیدیتوری که واقعاً هنوز داخل آستانه بوده، دقیقاً مثل قبل هیچ‌چیز
-            // اضافه‌ای پرداخت نمی‌کنه.
+            // دقیقاً همون تصمیم جریمه‌ی معلق اینجا هم ثبت می‌شه، قبل از حذف — وگرنه یه اپراتور
+            // که می‌بینه نودش خراب شده می‌تونست فقط یه لحظه قبل از این‌که کسی
+            // demoteForInactivity() رو صداش بزنه، requestExit() بزنه و با کل وثیقه‌ش، فقط با
+            // گذروندن exitCooldown معمولی، بره. این هیچ معیار قضاوتی تازه‌ای اضافه نمی‌کنه:
+            // دقیقاً همون تست «از قبل از inactivityThreshold رد شده» که demoteForInactivity()
+            // خودش چک می‌کنه، اینجا هم اجرا می‌شه — ولیدیتوری که واقعاً هنوز داخل آستانه بوده،
+            // دقیقاً مثل قبل هیچ‌چیز اضافه‌ای بدهکار نیست.
             if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
-                slashAmount = _applyInactivitySlash(v);
+                _recordDemotion(v);
+                hasPendingSlash = true;
             }
             _removeFromActive(msg.sender);
         }
@@ -829,10 +915,10 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
-        if (slashAmount > 0) {
-            emit ValidatorDemoted(msg.sender, slashAmount); // ✅ همون رویدادی که
+        if (hasPendingSlash) {
+            emit ValidatorDemoted(msg.sender, v.pendingSlashEpoch); // ✅ همون رویدادی که
             // demoteForInactivity() می‌زد — خروجی که واقعاً یه دموت دیرگرفته‌شده بود، باید برای
-            // هر پایش آف‌چینی دقیقاً همون‌جوری دیده بشه.
+            // هر پایش آف‌چینی دقیقاً همون‌جوری دیده بشه، شامل resolvePendingSlash() بعدیش.
         }
     }
 
@@ -840,6 +926,13 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[msg.sender];
         require(v.status == Status.Exiting, "ValidatorsRegistry: not exiting");
         require(block.timestamp >= v.periodStartedAt + exitCooldown, "ValidatorsRegistry: exit cooldown not elapsed");
+        // ✅ تازه: بستن یه راه فرار باقیمانده — بدون این، یه ولیدیتور با یه جریمه‌ی معلق
+        // حل‌نشده (به کامنت DemotionEpoch مراجعه کن) می‌تونست کل وثیقه‌ش رو، قبل از این‌که
+        // resolvePendingSlash() فرصت اجراشدن پیدا کنه، برداره — یعنی برای همیشه ازش فرار
+        // کنه. MASS_DEMOTION_WINDOW (۱ ساعت) همیشه خیلی کوتاه‌تر از exitCooldown (۱ هفته)
+        // است، پس این عملاً هیچ‌وقت نباید یه برداشت مشروع واقعی رو مسدود کنه — فقط یه توری
+        // ایمنیه.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
 
         uint256 amount = v.lockedStake;
         delete validators[msg.sender];
