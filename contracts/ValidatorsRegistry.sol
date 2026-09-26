@@ -333,31 +333,33 @@ contract ValidatorsRegistry {
     uint256 public probationPeriod = 604800; // 1 week
 
     /// @notice ✅ FIXED (found during a follow-up review — the previous version had a real
-    ///         numerical bug): the minimum FRACTION of checks that must actually have been
-    ///         recorded before the ratio requirement is even evaluated. ⚠️ The earlier version
-    ///         computed the "maximum possible checks" using MIN_LIVENESS_CHECK_INTERVAL (5
-    ///         minutes) — which is a THROTTLE bound (how fast a check CAN legally be counted),
-    ///         not the Verifier's actual real-world cadence (10-15 minutes, per
-    ///         sur-verifier-service-spec.md). For a 1-week probation that gave a minimum of 1008
-    ///         checks, but a perfectly healthy validator running at the documented 15-minute
-    ///         cadence only ever accumulates ~672 checks in a week — meaning that validator could
-    ///         NEVER pass, no matter how reliable it actually was. Fixed by basing the
-    ///         calculation on EXPECTED_VERIFIER_CADENCE_SECONDS (the SLOWEST documented cadence,
-    ///         used deliberately as the conservative baseline) instead of the throttle interval —
-    ///         see _minRequiredChecks() below. Without this, a single positive check arriving at
-    ///         any point — even right at the end of the window — would otherwise have produced a
-    ///         100% ratio and satisfied requiredLivenessRatioBps with zero real monitoring
-    ///         history.
+    ///         numerical bug, since resolved by a firm decision): the minimum FRACTION of checks
+    ///         that must actually have been recorded before the ratio requirement is even
+    ///         evaluated. ⚠️ The earlier version computed the "maximum possible checks" using
+    ///         MIN_LIVENESS_CHECK_INTERVAL when it was still a 5-minute THROTTLE bound (how fast
+    ///         a check CAN legally be counted), separate from the Verifier's real-world cadence
+    ///         (previously an ambiguous "10-15 minutes"). That mismatch could have made this
+    ///         requirement impossible to satisfy for a perfectly healthy validator. ✅ RESOLVED:
+    ///         MIN_LIVENESS_CHECK_INTERVAL is now DECIDED at a firm 10 minutes — the Verifier's
+    ///         actual, real polling interval, not just a loose bound below an uncertain range —
+    ///         so it is now correct to use it directly as this calculation's basis (see
+    ///         _minRequiredChecks() below). Both this coverage requirement AND the interval
+    ///         throttle above are deliberately kept as two separate, independent requirements:
+    ///         the interval stops rapid/duplicate counting, this stops too few checks overall.
+    ///         Without this coverage check, a single positive check arriving at any point — even
+    ///         right at the end of the window — would otherwise have produced a 100% ratio and
+    ///         satisfied requiredLivenessRatioBps with zero real monitoring history.
+    /// @dev ⚠️ Known residual limitation, deliberately accepted rather than solved with
+    ///      additional complexity: a minimum TOTAL count does not by itself guarantee the checks
+    ///      were spread evenly across the period — they could legally cluster near the end (e.g.,
+    ///      the required count for probation could all land within the last ~3.5 days of the
+    ///      week, at the 10-minute interval) while the earlier days went unmonitored. This was
+    ///      raised explicitly during design and kept as-is: adding a maximum-gap constraint on
+    ///      top would close it, but was judged not worth the added contract complexity given the
+    ///      other layers already in place (the interval throttle, the 95% ratio requirement
+    ///      itself, and the separate recency check below) — this can be revisited later if
+    ///      real-world monitoring shows validators exploiting the gap in practice.
     uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // 50%
-
-    /// @notice ✅ NEW: the SLOWEST cadence the Verifier service is documented to run at
-    ///         (sur-verifier-service-spec.md says "every 10-15 minutes") — used as the
-    ///         conservative baseline for _minRequiredChecks() below. Deliberately NOT the same
-    ///         as MIN_LIVENESS_CHECK_INTERVAL above: that constant throttles how fast a check CAN
-    ///         be counted (an anti-abuse bound), while this one estimates how many checks a
-    ///         genuinely healthy validator SHOULD have accumulated by now (a monitoring-coverage
-    ///         bound) — conflating the two was exactly the bug this fixes.
-    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 900; // 15 minutes
 
     /// @notice ✅ REDESIGNED (replaces the earlier minLivenessConfirmationsToActivate — a raw
     ///         count of positive reports, found during review to have a real flaw): a raw count
@@ -382,16 +384,16 @@ contract ValidatorsRegistry {
     uint256 public requiredLivenessRatioBps = 9500; // used by promoteAfterProbation
     uint256 public requiredRecoveryLivenessRatioBps = 9500; // used by promoteAfterRecovery
 
-    /// @notice ✅ NEW (found during review): the minimum time that must pass since a validator's
-    ///         last COUNTED liveness check before another one is counted. Without this, nothing
-    ///         stopped a malfunctioning or compromised verifier key from firing reportLiveness()
-    ///         many times in rapid succession — each call would count as an independent "check"
-    ///         toward the ratio above, even seconds apart, so "48 hours at a 95% ratio" would not
-    ///         actually mean 48 hours of real monitoring at the intended ~10-15 minute cadence
-    ///         (sur-verifier-service-spec.md). Set comfortably below that cadence so legitimate
-    ///         reports are never skipped, while a rapid-fire burst is throttled to at most one
-    ///         counted check per interval.
-    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 5 minutes;
+    /// @notice ✅ DECIDED (10 minutes, final): the minimum time that must pass since a
+    ///         validator's last COUNTED liveness check before another one is counted — this now
+    ///         IS the Verifier's real, firm polling interval (no longer a "10-15 minute" range;
+    ///         see sur-verifier-service-spec.md for the confirmed decision), not just a loose
+    ///         anti-abuse throttle set below it. Without this, nothing stopped a malfunctioning
+    ///         or compromised verifier key from firing reportLiveness() many times in rapid
+    ///         succession — each call would count as an independent "check" toward the ratio
+    ///         above, even seconds apart. See MIN_CHECK_COVERAGE_BPS above for how this interval
+    ///         also feeds into the separate minimum-total-checks requirement.
+    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 10 minutes;
 
     uint256 public inactivityThreshold = 3600;   // 1 hour
     uint256 public recoveryPeriod = 172800;      // 48 hours
@@ -748,11 +750,12 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Activation after probation — permissionless
     // ------------------------------------------------------------------
-    /// @notice ✅ FIXED: now based on EXPECTED_VERIFIER_CADENCE_SECONDS (the realistic worst-case
-    ///         Verifier cadence), not MIN_LIVENESS_CHECK_INTERVAL (a throttle bound) — see
+    /// @notice ✅ FIXED: now that MIN_LIVENESS_CHECK_INTERVAL is DECIDED as the Verifier's real,
+    ///         firm 10-minute polling interval (not just an ambiguous throttle bound below an
+    ///         uncertain 10-15 minute range), it is correct to use it directly here — see
     ///         MIN_CHECK_COVERAGE_BPS's doc comment above for the numerical bug this fixes.
     function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
-        return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+        return (periodDuration / MIN_LIVENESS_CHECK_INTERVAL) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
     }
 
     function promoteAfterProbation(address candidate) external {

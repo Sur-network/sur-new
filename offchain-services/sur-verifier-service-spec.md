@@ -54,7 +54,7 @@
 ### ۳.۱ تراکنش‌های on-chain (امضاشده با کلید `verifier`)
 | تابع | چه زمانی صدا زده می‌شود |
 |---|---|
-| `ValidatorsRegistry.reportLiveness(address, bool)` | هر دوره‌ی polling (۱۰-۱۵ دقیقه)، برای هر ولیدیتور تحت پایش |
+| `ValidatorsRegistry.reportLiveness(address, bool)` | هر دوره‌ی polling (✅ **تصمیم قطعی: هر ۱۰ دقیقه** — نه بازه‌ی قبلی ۱۰-۱۵؛ باید دقیقاً با `MIN_LIVENESS_CHECK_INTERVAL` قرارداد هماهنگ باشه)، برای هر ولیدیتور تحت پایش |
 | `ValidatorsRegistry.setPhoneVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای پیامکی |
 | `ValidatorsRegistry.setTelegramVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای تلگرامی |
 
@@ -169,7 +169,7 @@
 
 ---
 
-## ۶. جریان کاری — هر دوره‌ی polling (هر ۱۰-۱۵ دقیقه)
+## ۶. جریان کاری — هر دوره‌ی polling (✅ تصمیم قطعی: هر ۱۰ دقیقه)
 
 1. از `ValidatorsRegistry.getValidators()` + جدول داخلی، فهرست کامل ولیدیتورهای تحت پایش را بساز (`Probation` + `Active` + `Demoted` در حال بازگشت).
 2. `admin_peers` را از نود مانیتورینگ بخوان؛ جدول `node_discovery_cache` را به‌روزرسانی کن.
