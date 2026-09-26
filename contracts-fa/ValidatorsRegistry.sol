@@ -332,19 +332,30 @@ contract ValidatorsRegistry {
 
     uint256 public probationPeriod = 604800; // ۱ هفته
 
-    /// @notice ✅ تازه (پیداشده در یک بازبینی بعدی — خودِ چک نسبت به‌تنهایی یه شکاف واقعی
-    ///         داشت): حداقل **کسری** از حداکثر چک‌های ممکن (طول دوره تقسیم بر
-    ///         MIN_LIVENESS_CHECK_INTERVAL) که باید واقعاً ثبت شده باشه قبل از این‌که اصلاً شرط
-    ///         نسبت ارزیابی بشه. بدون این، `totalLivenessChecksInPeriod > 0` به‌تنهایی اجازه
-    ///         می‌داد یه چک مثبت تنها — که هر لحظه، حتی درست انتهای پنجره برسه — نسبت ۱۰۰٪
-    ///         بسازه و requiredLivenessRatioBps رو با صفر تاریخچه‌ی پایش واقعی برآورده کنه. این
-    ///         حداقل نمونه رو به هرچی probationPeriod/recoveryPeriod و
-    ///         MIN_LIVENESS_CHECK_INTERVAL فعلاً باشن گره می‌زنه (به _minRequiredChecks() پایین
-    ///         مراجعه کن)، پس اگه این‌ها بعداً عوض بشن، خودکار هماهنگ می‌مونه، نه یه عدد جدای
-    ///         هاردکدشده که می‌تونه ازشون جا بمونه. ۵۰٪ عمداً نزدیک ۱۰۰٪ نیست: چون سرعت واقعی
-    ///         Verifier (۱۰-۱۵ دقیقه) خودش کندتر از فاصله‌ی ۵دقیقه‌ای MIN_LIVENESS_CHECK_INTERVAL
-    ///         است، حتی پایش کاملاً بی‌نقص واقعی هم حدود ۳۳-۵۰٪ حداکثر نظری می‌شه، نه نزدیک بهش.
+    /// @notice ✅ اصلاح‌شده (پیداشده در یک بازبینی بعدی — نسخه‌ی قبلی یه باگ عددی واقعی داشت):
+    ///         حداقل **کسری** از چک‌هایی که باید واقعاً ثبت شده باشه قبل از این‌که اصلاً شرط
+    ///         نسبت ارزیابی بشه. ⚠️ نسخه‌ی قبلی «حداکثر چک‌های ممکن» رو با
+    ///         MIN_LIVENESS_CHECK_INTERVAL (۵ دقیقه) حساب می‌کرد — که یه مرز throttle است
+    ///         (سریع‌ترین سرعتی که یه چک می‌تونه قانوناً شمرده بشه)، نه سرعت واقعی Verifier
+    ///         (۱۰-۱۵ دقیقه، طبق sur-verifier-service-spec.md). برای probation یک‌هفته‌ای این
+    ///         حداقل ۱۰۰۸ چک می‌داد، ولی یه ولیدیتور کاملاً سالم با سرعت مستندشده‌ی ۱۵دقیقه‌ای
+    ///         فقط ~۶۷۲ چک توی یه هفته جمع می‌کنه — یعنی اون ولیدیتور **هرگز** نمی‌تونست رد
+    ///         بشه، هرچقدرم واقعاً قابل‌اتکا بود. با پایه‌گذاری محاسبه روی
+    ///         EXPECTED_VERIFIER_CADENCE_SECONDS (کندترین سرعت مستندشده، عمداً به‌عنوان مبنای
+    ///         محافظه‌کارانه) به‌جای فاصله‌ی throttle، اصلاح شد — به _minRequiredChecks() پایین
+    ///         مراجعه کن. بدون این، یه چک مثبت تنها — که هر لحظه، حتی درست انتهای پنجره برسه —
+    ///         نسبت ۱۰۰٪ می‌ساخت و requiredLivenessRatioBps رو با صفر تاریخچه‌ی پایش واقعی
+    ///         برآورده می‌کرد.
     uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // ۵۰٪
+
+    /// @notice ✅ تازه: کندترین سرعتی که سرویس Verifier مستندشده که باهاش اجرا بشه
+    ///         (sur-verifier-service-spec.md می‌گه «هر ۱۰-۱۵ دقیقه») — به‌عنوان مبنای
+    ///         محافظه‌کارانه‌ی _minRequiredChecks() پایین استفاده می‌شه. عمداً با
+    ///         MIN_LIVENESS_CHECK_INTERVAL بالا یکی نیست: اون ثابت مرز سرعت شمرده‌شدن یه چک رو
+    ///         محدود می‌کنه (یه مرز ضدسوءاستفاده)، درحالی‌که این یکی برآورد می‌کنه یه ولیدیتور
+    ///         واقعاً سالم تا الان چند چک باید جمع کرده باشه (یه مرز پوشش پایش) — قاطی‌کردن
+    ///         این دو دقیقاً همون باگی بود که این اصلاح رفعش می‌کنه.
+    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 900; // ۱۵ دقیقه
 
     /// @notice ✅ بازطراحی‌شده (جایگزین minLivenessConfirmationsToActivate قبلی — یه شمارش خام
     ///         از گزارش‌های مثبت، که در بازبینی یه ضعف واقعی توش پیدا شد): یه شمارش خام فقط با
@@ -727,10 +738,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // فعال‌سازی بعد از probation — بدون نیاز به مجوز
     // ------------------------------------------------------------------
-    /// @notice ✅ تازه: حداقل تعداد چک لایوینس شمرده‌شده‌ی لازم قبل از این‌که شرط نسبت یه دوره
-    ///         ارزیابی بشه — به کامنت MIN_CHECK_COVERAGE_BPS بالا مراجعه کن.
+    /// @notice ✅ اصلاح‌شده: حالا بر مبنای EXPECTED_VERIFIER_CADENCE_SECONDS (بدترین‌حالت واقعی
+    ///         سرعت Verifier) است، نه MIN_LIVENESS_CHECK_INTERVAL (یه مرز throttle) — به کامنت
+    ///         MIN_CHECK_COVERAGE_BPS بالا برای باگ عددی‌ای که این رفعش می‌کنه مراجعه کن.
     function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
-        return (periodDuration / MIN_LIVENESS_CHECK_INTERVAL) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+        return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
     }
 
     function promoteAfterProbation(address candidate) external {
@@ -838,6 +850,14 @@ contract ValidatorsRegistry {
     function promoteAfterRecovery(address validator) external {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
+        // ✅ تازه (پیداشده در یک بازبینی بعدی — یه شکاف حسابداری واقعی): بدون این، یه ولیدیتور
+        // می‌تونست با یه pendingSlashEpoch حل‌نشده از همین دموت به Active برگرده، بعد دوباره
+        // دموت بشه — که در اون لحظه _recordDemotion() مقدار pendingSlashEpoch رو با شناسه‌ی
+        // epoch تازه **بازنویسی** می‌کرد و برای همیشه هر راهی برای رسیدن به تصمیم جریمه‌ی
+        // معلق اول رو گم می‌کرد (هرگز حل نمی‌شد، و سورنش برای همیشه توی موجودی این قرارداد
+        // گیر می‌کرد، بدون این‌که جایی پیگیری بشه). الزام حل‌شدن اول این رو تمیز می‌بنده، با
+        // استفاده از همون resolvePendingSlash() که هرکسی از قبل می‌تونه صداش بزنه.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
         require(
             v.totalLivenessChecksInPeriod >= _minRequiredChecks(recoveryPeriod),
@@ -896,11 +916,18 @@ contract ValidatorsRegistry {
             // دقیقاً همون تست «از قبل از inactivityThreshold رد شده» که demoteForInactivity()
             // خودش چک می‌کنه، اینجا هم اجرا می‌شه — ولیدیتوری که واقعاً هنوز داخل آستانه بوده،
             // دقیقاً مثل قبل هیچ‌چیز اضافه‌ای بدهکار نیست.
+            // ✅ اصلاح‌شده (پیداشده در یک بازبینی بعدی): _removeFromActive() باید *قبل* از
+            // _recordDemotion() اینجا اجرا بشه، دقیقاً هم‌ترازِ ترتیب demoteForInactivity() —
+            // وگرنه اسنپ‌شات referenceCount این epoch (activeValidators.length + 1) درحالی
+            // گرفته می‌شه که این ولیدیتور هنوز توی activeValidators حساب می‌شه، یعنی دقیقاً
+            // یکی بیشتر از دموت معادل از طریق demoteForInactivity(). نزدیک مرز خرابی
+            // دسته‌جمعی ۲۰٪، همین تفاوت یکی می‌تونه نتیجه رو فقط بر مبنای این‌که کدوم مسیر
+            // کد باعث دموت شده عوض کنه — نه چیزی درباره‌ی الگوی واقعی خرابی.
+            _removeFromActive(msg.sender);
             if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
                 _recordDemotion(v);
                 hasPendingSlash = true;
             }
-            _removeFromActive(msg.sender);
         }
 
         // ✅ تازه: خروج یک ولیدیتور پرداخت‌کرده، جایش را در منحنی رشد آزاد می‌کند — عضو

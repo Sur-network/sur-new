@@ -332,21 +332,32 @@ contract ValidatorsRegistry {
 
     uint256 public probationPeriod = 604800; // 1 week
 
-    /// @notice ✅ NEW (found during a follow-up review — the ratio check alone had a real gap):
-    ///         the minimum FRACTION of the maximum possible checks (period duration divided by
-    ///         MIN_LIVENESS_CHECK_INTERVAL) that must actually have been recorded before the
-    ///         ratio requirement is even evaluated. Without this, `totalLivenessChecksInPeriod >
-    ///         0` alone let a single positive check — arriving at any point, even right at the
-    ///         end of the window — produce a 100% ratio and satisfy requiredLivenessRatioBps
-    ///         with zero real monitoring history. This ties the minimum sample size to whatever
-    ///         probationPeriod/recoveryPeriod and MIN_LIVENESS_CHECK_INTERVAL currently are
-    ///         (see _minRequiredChecks() below), so it stays consistent automatically if those
-    ///         are ever changed, rather than being a separate hardcoded number that could drift
-    ///         out of sync with them. 50% is deliberately not close to 100%: the Verifier's real
-    ///         cadence (10-15 minutes) is itself slower than MIN_LIVENESS_CHECK_INTERVAL's 5, so
-    ///         even perfect real-world monitoring will land around 33-50% of the theoretical
-    ///         maximum, not near it.
+    /// @notice ✅ FIXED (found during a follow-up review — the previous version had a real
+    ///         numerical bug): the minimum FRACTION of checks that must actually have been
+    ///         recorded before the ratio requirement is even evaluated. ⚠️ The earlier version
+    ///         computed the "maximum possible checks" using MIN_LIVENESS_CHECK_INTERVAL (5
+    ///         minutes) — which is a THROTTLE bound (how fast a check CAN legally be counted),
+    ///         not the Verifier's actual real-world cadence (10-15 minutes, per
+    ///         sur-verifier-service-spec.md). For a 1-week probation that gave a minimum of 1008
+    ///         checks, but a perfectly healthy validator running at the documented 15-minute
+    ///         cadence only ever accumulates ~672 checks in a week — meaning that validator could
+    ///         NEVER pass, no matter how reliable it actually was. Fixed by basing the
+    ///         calculation on EXPECTED_VERIFIER_CADENCE_SECONDS (the SLOWEST documented cadence,
+    ///         used deliberately as the conservative baseline) instead of the throttle interval —
+    ///         see _minRequiredChecks() below. Without this, a single positive check arriving at
+    ///         any point — even right at the end of the window — would otherwise have produced a
+    ///         100% ratio and satisfied requiredLivenessRatioBps with zero real monitoring
+    ///         history.
     uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // 50%
+
+    /// @notice ✅ NEW: the SLOWEST cadence the Verifier service is documented to run at
+    ///         (sur-verifier-service-spec.md says "every 10-15 minutes") — used as the
+    ///         conservative baseline for _minRequiredChecks() below. Deliberately NOT the same
+    ///         as MIN_LIVENESS_CHECK_INTERVAL above: that constant throttles how fast a check CAN
+    ///         be counted (an anti-abuse bound), while this one estimates how many checks a
+    ///         genuinely healthy validator SHOULD have accumulated by now (a monitoring-coverage
+    ///         bound) — conflating the two was exactly the bug this fixes.
+    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 900; // 15 minutes
 
     /// @notice ✅ REDESIGNED (replaces the earlier minLivenessConfirmationsToActivate — a raw
     ///         count of positive reports, found during review to have a real flaw): a raw count
@@ -737,10 +748,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Activation after probation — permissionless
     // ------------------------------------------------------------------
-    /// @notice ✅ NEW: minimum number of COUNTED liveness checks required before a period's
-    ///         ratio requirement is evaluated — see MIN_CHECK_COVERAGE_BPS's doc comment above.
+    /// @notice ✅ FIXED: now based on EXPECTED_VERIFIER_CADENCE_SECONDS (the realistic worst-case
+    ///         Verifier cadence), not MIN_LIVENESS_CHECK_INTERVAL (a throttle bound) — see
+    ///         MIN_CHECK_COVERAGE_BPS's doc comment above for the numerical bug this fixes.
     function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
-        return (periodDuration / MIN_LIVENESS_CHECK_INTERVAL) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+        return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
     }
 
     function promoteAfterProbation(address candidate) external {
@@ -847,6 +859,15 @@ contract ValidatorsRegistry {
     function promoteAfterRecovery(address validator) external {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
+        // ✅ NEW (found during a follow-up review — a real accounting gap): without this, a
+        // validator could return to Active with a still-unresolved pendingSlashEpoch from THIS
+        // demotion, then be demoted again later — at which point _recordDemotion() would
+        // OVERWRITE pendingSlashEpoch with the new epoch's ID, permanently losing any way to
+        // reach the first pending slash decision (it would never be resolved, and its Suren
+        // would sit stuck in this contract's balance forever, tracked nowhere). Requiring
+        // resolution first closes this cleanly, using the same permissionless
+        // resolvePendingSlash() anyone can already call.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
         require(
             v.totalLivenessChecksInPeriod >= _minRequiredChecks(recoveryPeriod),
@@ -906,11 +927,19 @@ contract ValidatorsRegistry {
             // call: it is the exact same "already past inactivityThreshold" test
             // demoteForInactivity() uses, applied here instead of there — a validator that was
             // genuinely still within the threshold owes nothing extra, exactly as before.
+            // ✅ FIXED (found during a follow-up review): _removeFromActive() must run BEFORE
+            // _recordDemotion() here, exactly matching demoteForInactivity()'s order — otherwise
+            // the epoch's referenceCount snapshot (activeValidators.length + 1) would be taken
+            // while this validator was STILL counted in activeValidators, making it exactly one
+            // higher than an equivalent demotion via demoteForInactivity() would produce. Near
+            // the 20% mass-failure boundary, that one-off difference could change the outcome
+            // depending purely on which code path triggered the demotion — not anything about
+            // the actual failure pattern.
+            _removeFromActive(msg.sender);
             if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
                 _recordDemotion(v);
                 hasPendingSlash = true;
             }
-            _removeFromActive(msg.sender);
         }
 
         // ✅ NEW: a paid entrant leaving frees up their slot in the growth curve — the next
