@@ -86,7 +86,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 | `ValidatorsRegistry` | ✅ بله | `validators` (mapping به `struct`)، `activeValidators`/`activeIndex` |
 | `ValidatorsBoard` | ✅ بله | `boardMembers` (آرایه‌ی پویا)، `isBoardMember` (mapping) |
 | `BlockRewardDistributor` | ❌ خیر | فقط `distributionOracle` و `deployTime` — هر دو مقدار ساده |
-| `ValidatorsTreasury` | ❌ خیر | فقط `smallBudgetCap` — مقدار ساده |
+| `ValidatorsTreasury` | ❌ خیر | فقط `perPaymentCap`/`periodCap` — مقادیر ساده (✅ به‌روز: `smallBudgetCap` قدیمی با این دو جایگزین شد؛ به `sur-tokenomics.md` بخش ۶ مراجعه کن) |
 | `IdentityRegistry` | ❌ خیر | فقط `identityOracle` — مقدار ساده |
 
 برای سه قرارداد ستون «خیر»، کافی است مقادیر `🔶 FILL_IN` در سورس جایگزین شوند و مستقیم کامپایل شوند — چون همان کامپایل، storage اولیه‌ی درست را تولید می‌کند، بدون نیاز به هیچ شبیه‌سازی جداگانه‌ای.
@@ -99,9 +99,9 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 ✅ **به‌روزرسانی:** هر چهار آدرس اوراکل (`verifier`، `distributionOracle`، `identityOracle`، و `paymentOracle` در `SurenSale`) نهایی شده و مستقیم در سورس هاردکد شده‌اند — دیگر جزو موارد باز فهرست زیر نیستند. جزئیات کامل آدرس‌ها در `sur-contracts-oracles-accounts-report.md`.
 
-1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، پارامترهای امنیتی (✅ همه نهایی: `maxEntriesPerWindow=1`, `entryWindowSeconds=86400`, `probationPeriod=604800`, `requiredLivenessRatioBps=9500`, `inactivityThreshold=3600`, `recoveryPeriod=172800`, `slashBps=100`, `exitCooldown=604800`), `windowStart` (= genesis timestamp واقعی). **بدون** آدرس توکن — سورن ارز بومی شبکه است.
+1. `ValidatorsRegistry` — لیست ولیدیتورهای اولیه (نیازمند شبیه‌سازی)، پارامترهای امنیتی (✅ همه نهایی: `maxEntriesPerWindow=1`, `entryWindowSeconds=86400`, `probationPeriod=604800`, `recoveryPeriod=172800`, `slashBps=100`, `exitCooldown=604800`)، `windowStart` (= genesis timestamp واقعی). ⚠️ **به‌روز:** `requiredLivenessRatioBps` و `inactivityThreshold` دیگر وجود ندارند — کل مکانیزم liveness به معماری وریفای آف‌چین (تصمیم/تحویل/اعتراض/رأی) منتقل شد؛ به یادداشت معماری بالای `recordSuspension()` در خودِ `ValidatorsRegistry.sol` و `sur-tokenomics.md`/`sur-verifier-service-spec.md` مراجعه کن. **بدون** آدرس توکن — سورن ارز بومی شبکه است.
 2. `ValidatorsBoard` — لیست **دقیقاً ۵** عضو اولیه‌ی هیأت (نیازمند شبیه‌سازی).
-3. `ValidatorsTreasury` — `smallBudgetCap` اولیه (مقدار ساده).
+3. `ValidatorsTreasury` — `perPaymentCap`/`periodCap` اولیه (هردو مقدار ساده؛ 🔶 هنوز `FILL_IN`، طبق تصمیم صریح — عدد نباید حدس زده شود). `CAP_CHANGE_TIMELOCK_DELAY` هم یه پارامتر placeholder باز است.
 4. `BlockRewardDistributor` — `deployTime` (= genesis timestamp واقعی؛ چون `immutable` است، باید مستقیم در سورس جایگزین و دوباره کامپایل شود).
 5. `FoundationDAO` — نام و آدرس ۱۵ عضو اولیه‌ی بنیاد (نیازمند شبیه‌سازی). ✅ **علاوه بر این، در `alloc` genesis (نه از طریق مقداردهی قرارداد)، سه ردیف مجزا و additive تخصیص می‌یابد** — تصمیم قطعی، جزئیات کامل در `sur-tokenomics.md`:
    - ۲۰,۰۰۰,۰۰۰ سورن به آدرس خودِ `FoundationDAO` (توسعه/آموزش/تبلیغات، ماده ۳-۶ اساسنامه).
@@ -116,11 +116,11 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 ### پارامترهای امنیتی — با رأی کامل ولیدیتورها قابل‌تغییرند
 - `maxEntriesPerWindow`, `entryWindowSeconds` (سقف نرخ ورود) — در `ValidatorsRegistry`
 - `probationPeriod` (پیشنهاد سند: ۱ هفته) — در `ValidatorsRegistry`
-- ✅ **همه‌ی پارامترهای امنیتی نهایی شدند** — `requiredLivenessRatioBps = ۹۵٪` (جایگزین `minLivenessConfirmationsToActivate` قدیمی؛ نسبت موفقیت، نه شمارش خام)؛ `inactivityThreshold` ✅ **تصمیم قطعی = ۱ ساعت** (بخش «دوره‌ی جریمه‌ی غیرفعالی» پایین)
-- `recoveryPeriod` ✅ **تصمیم قطعی = ۴۸ ساعت** (بخش «دوره‌ی جریمه‌ی غیرفعالی» پایین) — در `ValidatorsRegistry`
+- ⚠️ **به‌روز (بازطراحی کامل معماری راستی‌آزمایی):** `requiredLivenessRatioBps`/`inactivityThreshold`/`minLivenessConfirmationsToActivate` دیگر روی زنجیره وجود ندارند — نسبت موفقیت ۹۵٪ الان کاملاً آف‌چین توسط سرویس Verifier محاسبه می‌شود؛ فقط تصمیمات نهایی وضعیت (فعال‌سازی/تعلیق/بازگشت)، هرکدام با یه هش شواهد، on-chain ثبت می‌شوند. به یادداشت معماری بالای `recordSuspension()` در `ValidatorsRegistry.sol` و `sur-tokenomics.md` بخش ۶ مراجعه کن.
+- `recoveryPeriod` ✅ **تصمیم قطعی = ۴۸ ساعت** (چک زمانی ساده‌ی on-chain قبل از تلاش بازگشت — بدون تغییر نسبت به قبل) — در `ValidatorsRegistry`
 - `slashBps` (درصد دقیق اسلشینگ — سند هنوز عدد پیشنهاد نداده بود) — در `ValidatorsRegistry`
 - `exitCooldown` — در `ValidatorsRegistry`
-- `smallBudgetCap` — در `ValidatorsTreasury`
+- ⚠️ **به‌روز:** `smallBudgetCap` دیگر وجود ندارد — با `perPaymentCap`/`periodCap` جایگزین شد (تصمیم صریح: مسیر مجمع کامل برای خرج خزانه حذف شد؛ فقط هیأت‌مدیره، محدود به این دو سقف، خرج می‌کند) — در `ValidatorsTreasury`
 - لیست دقیق ۷ ولیدیتور اولیه، **۵ عضو اولیه‌ی هیأت‌مدیره‌ی ولیدیتورها** (نه ۳ تا ۷)، و ۱۵ عضو اولیه‌ی بنیاد
 - ✅ **تازه:** آدرس اولیه‌ی کلید `verifier` (چه کسی/چه سرویسی این نقش را بازی می‌کند — مقدار ساده، مستقیم در سورس `ValidatorsRegistry.sol` با علامت `🔶 FILL_IN`، **نه** آرگومان constructor، چون این قرارداد اصلاً constructor ندارد — بخش «ثبت هویت ولیدیتورها» پایین را ببین)
 
@@ -176,14 +176,17 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 - ✅ **تازه:** `setKycVerified` نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره، جایگزین دفترخانه‌ی اسناد رسمی طبق استاندارد قدیمی SIP001) را ثبت می‌کند؛ داده‌ی خام هرگز on-chain نمی‌رود، فقط یک فلگ بولی + یک commitment برای اثبات عدم‌دستکاری در دعاوی حقوقی.
 - ✅ تأییدشده توسط کاربر: نام (نه شماره/آیدی/مدارک KYC) روی زنجیره‌ی عمومی و دائمی باقی می‌ماند — عمداً پذیرفته‌شده (شفافیت مدنظر است).
 
-⚠️ **`ValidatorsRegistry.verifier` هنوز وجود دارد ولی معنایش عوض شده:** این کلید دیگر ربطی به هویت ندارد، فقط برای `reportLiveness` (زیر) است — کاملاً جدا از `identityOracle` بالا.
+⚠️ **`ValidatorsRegistry.verifier` هنوز وجود دارد، ولی نقشش کاملاً بازطراحی شد:** این کلید دیگر گزارش‌دهی liveness on-chain (که کلاً حذف شد) نیست — الان فقط تصمیمات نهایی تغییر وضعیت را گزارش می‌کند: `recordActivation`/`recordSuspension`/`recordRecovery`. کاملاً جدا از `identityOracle` بالا.
 
-## دوره‌ی جریمه‌ی غیرفعالی — مقادیر قطعی (تصمیم تازه)
+## ✅ بازطراحی کامل معماری راستی‌آزمایی — liveness کاملاً آف‌چین شد (تصمیم صریح کاربر)
 
-- `inactivityThreshold = 1 ساعت` (۳۶۰۰ ثانیه) — غیبت پیوسته‌ی گزارش مثبت `reportLiveness` که باعث `demoteForInactivity` می‌شود.
-- `recoveryPeriod = 48 ساعت` (۱۷۲۸۰۰ ثانیه) — دوره‌ی جریمه؛ verifier باید این مدت گزارش مثبت پیوسته بفرستد تا ولیدیتور با `promoteAfterRecovery` برگردد.
-- این دو عدد هنوز آرگومان `constructor` هستند (نه هاردکد)، فقط مقدار *اولیه*شان در genesis همین دو عدد باشد؛ بعداً هم مثل بقیه‌ی پارامترهای امنیتی فقط با رأی کامل ولیدیتورها قابل‌تغییرند.
-- `STALE_VOTE_CLEAR_DELAY = 30 روز` (در `ValidatorsBoard`، `constant`، نه قابل‌تغییر) — یعنی پاک‌سازی کامل رأی‌های یک ولیدیتور معلق فقط بعد از `demotedAt + 48 ساعت + 30 روز` ممکن است.
+⚠️ **این بخش قبلاً `inactivityThreshold`/`reportLiveness`/`demoteForInactivity`/`promoteAfterRecovery` را توصیف می‌کرد — همه‌ی این‌ها کاملاً از قرارداد حذف شدند.** جزئیات کامل معماری تازه (بسته‌ی شواهد، هش on-chain، مکانیزم تحویل/اعتراض/رأی) در یادداشت معماری بالای `recordSuspension()` در خودِ `ValidatorsRegistry.sol`، و در `sur-tokenomics.md`/`sur-verifier-service-spec.md`. خلاصه‌ی چیزی که روی زنجیره باقی مانده:
+
+- `probationPeriod = 1 هفته` و `recoveryPeriod = 48 ساعت` — هردو صرفاً چک زمانی ساده‌ی on-chain (نه بر مبنای یک لاگ liveness که دیگر وجود ندارد) قبل از این‌که Verifier بتواند `recordActivation`/`recordRecovery` را با موفقیت صدا بزند.
+- نسبت موفقیت ۹۵٪ کاملاً آف‌چین محاسبه می‌شود و فقط هش نتیجه‌اش روی زنجیره می‌رود.
+- تعلیق (`recordSuspension`) بلافاصله و بدون‌قید از لیست فعال حذف می‌کند؛ تصمیم جریمه از یک زنجیره‌ی جداگانه (چک رخداد جمعی → تحویل → پنجره‌ی اعتراض ۷۲ساعته → رأی مجمع در صورت اعتراض) می‌گذرد.
+- `STALE_VOTE_CLEAR_DELAY = 30 روز` (در `ValidatorsBoard`، `constant`) بدون تغییر باقی مانده — پاک‌سازی رأی‌های یک ولیدیتور معلق فقط بعد از `demotedAt + 48 ساعت + 30 روز` ممکن است.
+- 🔶 چند پارامتر زمانی جدید هنوز placeholder‌اند، نه تصمیم نهایی: `DELIVERY_DISPUTE_GRACE_PERIOD`, `APPEAL_FILING_WINDOW`, `APPEAL_VOTING_PERIOD`.
 
 ## حکمرانی بنیاد — نصاب دوسوم و موجودی genesis (تصمیم تازه)
 
@@ -218,13 +221,27 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 - برای `mapping`/آرایه‌ی پویا (که Solidity اصلاً syntax مقداردهی حلقه‌ای خارج از تابع ندارد)، از یک قرارداد کمکی موقت با `constructor` واقعی برای محاسبه‌ی storage استفاده می‌شود — نه از constructor خودِ قرارداد نهایی.
 - تنها استثنا: `SurenSale.sol` — چون این قرارداد genesis نیست (با تراکنش معمولی دیپلوی می‌شود)، `constructor`ش دست‌نخورده و کاملاً صحیح است.
 
-## ✅ تصمیم کامپایل: بدون `viaIR` — تأییدشده با تست واقعی روی هر ۸ قرارداد
+## ✅ تصمیم کامپایل: بدون `viaIR` — با آزمون اجرایی واقعی روی Besu تأیید شد
 
 قبلاً به‌عنوان یه ترجیح کلی گفته بودیم از `viaIR` پرهیز شود؛ حالا این تصمیم با یه دلیل مشخص و مدرک واقعی تقویت شد:
 
 - **چرا مهمه:** `viaIR` مشکل خطای کامپایل «Stack too deep» رو حل می‌کنه (وقتی یه تابع هم‌زمان بیشتر از ۱۶ متغیر محلی نیاز داشته باشه — محدودیت فیزیکی دستورهای `DUP`/`SWAP` در EVM)، ولی بایت‌کدی که تولید می‌کنه با بایت‌کد پایپ‌لاین پیش‌فرض کاملاً متفاوته.
 - ⚠️ **مشکل واقعی:** طبق گزارش باگ رسمی Blockscout (GitHub issue #631، «Blockscout can not verify contracts which require via-ir»)، این اکسپلورر (و حتی Etherscan/Foundry در برخی موارد) اصلاً نمی‌تونه قراردادهایی رو که به `viaIR` نیاز دارن وریفای کنه.
-- **یافته‌ی واقعی:** `BlockRewardDistributor.sol` (تابع `distributeRewards`) دقیقاً به همین خطا برمی‌خورد — هم در نسخه‌ی انگلیسی هم در نسخه‌ی فارسی (`contracts-fa/`)، با `solc` واقعی تست و تأیید شد.
-- ✅ **راه‌حل نهایی:** به‌جای فعال‌کردن `viaIR`، خودِ تابع بازنویسی و به سه تابع خصوصی کوچک‌تر تقسیم شد (`_sumBlocks`، `_checkPhysicalMaximum`، `_payValidators`+`_payOneValidator` با پارامترهای بسته‌بندی‌شده در `struct EpochContext`، `_finalizeEpoch`) — هرکدام stack frame مستقل خودشان، بدون نیاز به `viaIR`. رفتار/event/شرط‌ها کاملاً بدون تغییر. با `solc` واقعی، **بدون** `viaIR` تست و تأیید شد — هر ۸ قرارداد (هم `contracts/` هم `contracts-fa/`) کامپایل تمیز.
+- ⚠️⚠️ **تصحیح صادقانه‌ی ادعای قبلی این سند (باگ جدی، پیداشده حین اولین آزمون اجرایی واقعی روی Besu):** این بخش قبلاً ادعا کرده بود که تقسیم `distributeRewards` به `_sumBlocks`/`_checkPhysicalMaximum`/`_payValidators`+`_payOneValidator`/`_finalizeEpoch` مشکل «Stack too deep» را کامل حل کرده و «با solc واقعی، بدون viaIR، هر ۸ قرارداد کامپایل تمیز» تأیید شده. **این ادعا اشتباه بود.** آزمون اجرایی زنده روی یه شبکه‌ی Besu/QBFT واقعی (سپتامبر ۲۰۲۶) نشون داد `BlockRewardDistributor.sol` — هم انگلیسی هم فارسی — با `solc 0.8.24` و optimizer فعال (تنظیمات واقعی production) هنوز دقیقاً همون خطا رو در فراخوان `_payValidators` داخل `distributeRewards` می‌داد؛ تقسیم‌بندی قبلی تنها بخشی از تابع رو کوچیک کرده بود، نه خودِ `distributeRewards` رو (که هنوز هم قبل‌محاسبه‌ی ۴ مقدار جدا [`membershipFeesThisEpoch`/`effectiveTotalFees`/`feeBurnAmount`/`feesToDistribute`/`totalBlocks`] رو مستقیم توی بدنه‌ی خودش نگه می‌داشت). این نشون می‌ده **کامپایل واقعی، نه فقط استدلال نظری، تنها راه اطمینانه** — دقیقاً همون درسی که این پروژه چند بار دیگه هم (باگ ABI بین Registry/Board، همین اواخر باگ مشابه با افزودن یه فیلد به `StatusDecision`) یاد گرفته.
+- ✅ **راه‌حل واقعاً تأییدشده (این‌بار با کامپایل مستقیم، نه فقط استدلال):** بلوک پیش‌محاسبه‌ی `distributeRewards` به یه تابع کمکی تازه `_prepareEpoch()` منتقل شد که ۴ مقدار نتیجه رو توی یه `struct` حافظه (`EpochPrep`) برمی‌گردونه، نه ۴ متغیر جدا؛ `foundationAmount`/`treasuryAmount` هم به بعد از فراخوان `_payValidators` منتقل شدند (بدون تغییر رفتار، چون هیچ‌کدوم به اون فراخوان وابسته نیستن). با `solc` واقعی، **هم بدون optimizer هم با optimizer فعال**، تست و تأیید شد — هر ۹ قرارداد (هم `contracts/` هم `contracts-fa/`) کامپایل تمیز، بدون `viaIR`.
 - 📌 **نتیجه‌ی عملی:** هر شش قرارداد genesis + `SurenSale.sol` باید همیشه با پایپ‌لاین پیش‌فرض (بدون `viaIR`) کامپایل و دیپلوی شوند — این خودش تضمین می‌کند مسیر استاندارد وریفای روی هر اکسپلورری (نه فقط Blockscout) باز بماند.
 - 📎 گس: طبق مستندات رسمی Solidity، `viaIR` معمولاً گس رو **کاهش** می‌ده، نه افزایش — پس این تصمیم صرفاً برای سازگاری وریفای بود، نه یه تبادل با هزینه‌ی گس بالاتر.
+
+## ✅ اولین آزمون اجرایی واقعی روی Besu/QBFT — تأیید شد (سپتامبر ۲۰۲۶)
+
+بعد از ماه‌ها آزمون فقط با کامپایل + شبیه‌سازی Hardhat، این پروژه اولین‌بار روی یه شبکه‌ی Besu/QBFT واقعی (۴+۱ نود، نسخه‌ی ۲۶.۹.۰، ساخته‌شده از صفر روی ویندوز طبق دستورالعمل رسمی این پروژه) اجرا و آزموده شد. خلاصه‌ی یافته‌های کلیدی (جزئیات کامل در گزارش اصلی آزمون):
+
+- ✅ **تزریق genesis واقعاً کار می‌کند:** هر ۴ نود از بلاک صفر، `code` یکسان (۳۷,۲۱۸ کاراکتر، sha256 یکسان) برای `ValidatorsRegistry` گزارش کردند — اولین تأیید واقعی این‌که تزریق `alloc` بدون constructor، یه قرارداد واقعاً کارکن می‌سازه.
+- ✅ **`qbft.validatorcontractaddress` واقعاً `getValidators()` رو برای انتخاب پیشنهاددهنده‌ی بلاک می‌خونه:** چرخش تمیز round-robin دقیقاً بین ۴ ولیدیتور seed‌شده‌ی قرارداد، بلوک‌به‌بلوک تأیید شد.
+- ✅ **فعال‌سازی on-chain واقعاً یه پیشنهاددهنده‌ی QBFT واقعی می‌سازه:** یه ولیدیتور تازه که فقط از طریق `recordActivation()` فعال شده بود، وقتی نودش واقعاً بالا اومد، بلافاصله شروع به پیشنهاد بلاک کرد.
+- ✅ **تعلیق واقعاً و بلافاصله نصاب QBFT رو تطبیق می‌ده:** بعد از `recordSuspension`، شبکه بدون هیچ وقفه‌ای با ولیدیتورهای باقی‌مانده ادامه داد. ⚠️ **محدودیت این آزمون:** تعداد ولیدیتور هرگز به زیر نصاب BFT نرسید — سؤال «آیا شبکه واقعاً متوقف می‌شه اگه به زیر نصاب برسه» هنوز پاسخ داده نشده.
+- ✅ **جریان کامل تحویل→بی‌اعتراض→جریمه‌ی خودکار با زمان واقعی wall-clock (نه شبیه‌سازی) کار کرد.** ⚠️ **محدودیت این آزمون:** ولیدیتوری که جریمه شد یه مؤسس genesis-seeded با `lockedStake=0` بود، پس اثر *مالی* واقعی جریمه (نه فقط تغییر وضعیت) هنوز روی یه عضو *پرداخت‌کننده*‌ی واقعی تست نشده.
+- ✅ **رأی‌گیری هیأت‌مدیره و پرداخت خزانه با تراکنش‌های کاملاً واقعی تأیید شد** — شامل تأیید عملی این‌که رأی خودِ پیشنهاددهنده اتوماتیک شمرده می‌شه.
+- 🔶 **باگ زیرساختی مستقل، بدون ربط به قرارداد:** روی Besu ۲۶.۹.۰ نسخه‌ی ویندوز، `--bootnodes` (هم CLI هم TOML) با هر enode URL (حتی رشته‌ی ساختگی) خطای `Illegal char <:> at index 5` می‌ده — به‌نظر یه اعتبارسنج به‌سبک `java.nio.file.Path` (که فقط دونقطه در ایندکس ۱ ویندوزی رو قبول می‌کنه) به‌اشتباه روی این گزینه اعمال شده. راه‌حل استاندارد Besu (`static-nodes.json` به‌جای `--bootnodes`) بدون مشکل کار کرد. این یه یادداشت عملیاتی برای هرکسی‌ست که بعداً می‌خواهد شبکه را روی ویندوز راه‌اندازی کند — ربطی به قراردادها ندارد.
+
+

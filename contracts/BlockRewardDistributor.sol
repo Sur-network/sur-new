@@ -492,16 +492,95 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: too soon since last distribution"
         );
 
+        // ✅ FIXED (real bug found during live Besu/QBFT execution testing — this contradicted an
+        // earlier, incorrect claim that this file already compiled clean without viaIR): the
+        // pre-computation block that used to sit directly here (membership-fee folding, fee-burn
+        // math, block-count sum/physical-maximum check) hit a genuine "Stack too deep" compiler
+        // error at the _payValidators call further down, under the optimizer — too many
+        // simultaneously-live local variables in this function's own stack frame. Extracted into
+        // _prepareEpoch() below, which bundles the 4 result values into ONE memory struct
+        // (`prep`) instead of 4 separate live locals — this is what actually fixes the stack
+        // depth, not merely reformatting. Not a viaIR workaround (this project deliberately
+        // avoids viaIR) — same require()s, same order, same math, just computed inside a helper
+        // instead of inline.
+        EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
+
+        epochCount++;
+        uint256 epochId = epochCount;
+
+        // ✅ FIXED (same stack-too-deep fix as above): foundationAmount/treasuryAmount are
+        // computed AFTER the _payValidators call now, not before — they don't feed into that
+        // call and _payValidators doesn't depend on them, so this reordering is fully
+        // behavior-preserving. It exists purely to reduce how many locals are simultaneously
+        // live at the _payValidators call site, not to change what gets computed or when its
+        // effects become visible (both still happen within the same transaction, before
+        // _finalizeEpoch below).
+        // validatorDirectShareBps is governable (bicameral vote, [40%, 65%]) — see the
+        // contract-level doc comment. ValidatorsTreasury receives whatever remains of the
+        // reward pool after Foundation's fixed share and this governable share are both
+        // removed.
+        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+
+        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
+            _payValidators(
+                validators,
+                blocksMined,
+                EpochContext({
+                    epochId: epochId,
+                    remainingRewards: validatorDirectAmount,
+                    totalFees: prep.feesToDistribute,
+                    totalBlocks: prep.totalBlocks
+                })
+            );
+
+        // ✅ CHANGED: Foundation's cut is a fixed 15% of TOTAL rewards, taken independently off
+        // the top — never affected by validatorDirectShareBps above. Only REWARDS are split this
+        // way; FEES are never touched by any of these three shares.
+        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
+
+        _finalizeEpoch(
+            epochId,
+            totalRewards,
+            prep.effectiveTotalFees,
+            prep.feeBurnAmount,
+            treasuryAmount,
+            foundationAmount,
+            prep.totalBlocks,
+            validatorCount,
+            distributedRewards,
+            distributedFees
+        );
+    }
+
+    /// @dev ✅ NEW (added purely to fix the "Stack too deep" error above distributeRewards —
+    ///      bundles the pre-computation phase's 4 result scalars into one memory struct pointer
+    ///      instead of 4 separate live stack locals).
+    struct EpochPrep {
+        uint256 effectiveTotalFees;
+        uint256 feeBurnAmount;
+        uint256 feesToDistribute;
+        uint256 totalBlocks;
+    }
+
+    /// @dev ✅ NEW helper extracted from distributeRewards()'s original inline body — same
+    ///      require()s, same order, same math, just isolated into its own stack frame so that
+    ///      distributeRewards() itself has fewer simultaneously-live locals at the
+    ///      _payValidators call site. See the fix note on distributeRewards() above.
+    function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
+        private
+        returns (EpochPrep memory prep)
+    {
         // Fold any membership fees forwarded by ValidatorsRegistry since the last epoch into
         // this epoch's fee pool — they are already sitting in this contract's balance (received
         // via receiveMembershipFee()), so they simply join ordinary fees and get the exact same
         // 100%-pro-rata-by-blocks treatment. See sur-tokenomics.md section 6.
         uint256 membershipFeesThisEpoch = pendingMembershipFees;
         pendingMembershipFees = 0;
-        uint256 effectiveTotalFees = totalFees + membershipFeesThisEpoch;
+        prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
 
-        require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+        require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
         // ✅ NEW: burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
         // deliberately NOT of membershipFeesThisEpoch. Rationale (see sur-tokenomics.md
@@ -511,51 +590,12 @@ contract BlockRewardDistributor {
         // incentive mechanism as an unintended side effect of a later, unrelated decision
         // (the general fee-burn). Ordinary fees have no such earmarked purpose, so they are
         // the correct — and only — burn target.
-        uint256 feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
-        uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
+        prep.feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        prep.feesToDistribute = prep.effectiveTotalFees - prep.feeBurnAmount;
 
-        uint256 totalBlocks = _sumBlocks(blocksMined);
-        require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
-        _checkPhysicalMaximum(totalBlocks);
-
-        epochCount++;
-        uint256 epochId = epochCount;
-
-        // ✅ CHANGED: Foundation's cut is now a fixed 15% of TOTAL rewards, taken independently
-        // off the top — never affected by validatorDirectShareBps below. Only REWARDS are
-        // split this way; FEES (below) are never touched by any of these three shares.
-        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
-        // validatorDirectShareBps is governable (bicameral vote, [40%, 65%]) — see the
-        // contract-level doc comment. ValidatorsTreasury receives whatever remains of the
-        // reward pool after Foundation's fixed share and this governable share are both
-        // removed.
-        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
-
-        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
-            _payValidators(
-                validators,
-                blocksMined,
-                EpochContext({
-                    epochId: epochId,
-                    remainingRewards: validatorDirectAmount,
-                    totalFees: feesToDistribute,
-                    totalBlocks: totalBlocks
-                })
-            );
-
-        _finalizeEpoch(
-            epochId,
-            totalRewards,
-            effectiveTotalFees,
-            feeBurnAmount,
-            treasuryAmount,
-            foundationAmount,
-            totalBlocks,
-            validatorCount,
-            distributedRewards,
-            distributedFees
-        );
+        prep.totalBlocks = _sumBlocks(blocksMined);
+        require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
+        _checkPhysicalMaximum(prep.totalBlocks);
     }
 
     /// @dev Sums the reported per-validator block counts. Split out of distributeRewards purely

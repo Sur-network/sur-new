@@ -483,45 +483,31 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: too soon since last distribution"
         );
 
-        // هر کارمزد عضویتی که از epoch قبلی ValidatorsRegistry فرستاده به استخر فی همین epoch
-        // اضافه می‌شود — از قبل در موجودی این قرارداد هست (از طریق receiveMembershipFee()
-        // دریافت شده). ✅ این کارمزد عضویت با فی معمولی یکی نیست: کاملاً از سوزاندن ۳۰٪ زیر
-        // معاف است (فقط totalFees معمولی سوزانده می‌شود، نه membershipFeesThisEpoch) — فقط
-        // از نظر نحوه‌ی تقسیم نهایی بین ولیدیتورها همان رفتار ۱۰۰٪-به‌نسبت-بلاک را می‌گیرد.
-        // به sur-tokenomics.md بخش ۶ مراجعه کنید.
-        uint256 membershipFeesThisEpoch = pendingMembershipFees;
-        pendingMembershipFees = 0;
-        uint256 effectiveTotalFees = totalFees + membershipFeesThisEpoch;
-
-        require(totalRewards + effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
-
-        // ✅ تازه: ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
-        // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
-        // اصلاً یه فی عمومی شبکه نیست — یه پرداخت هدفمند و یک‌باره‌ی جبران رقیق‌شدن به
-        // ولیدیتورهای موجوده، که با ورود ولیدیتور تازه فعال می‌شه. سوزوندن بخشی ازش، این
-        // انگیزه‌ی مشخص رو به‌عنوان یه اثر جانبی ناخواسته‌ی یه تصمیم بعدی و بی‌ربط (سوزاندن
-        // عمومی فی) ضعیف می‌کنه. فی معمولی چنین هدف‌گذاری‌ای نداره، پس هدف درست — و تنها هدف
-        // — سوزاندنه.
-        uint256 feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
-        uint256 feesToDistribute = effectiveTotalFees - feeBurnAmount;
-
-        uint256 totalBlocks = _sumBlocks(blocksMined);
-        require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
-        _checkPhysicalMaximum(totalBlocks);
+        // ✅ اصلاح‌شده (باگ واقعی پیداشده حین آزمون اجرایی زنده روی Besu/QBFT — این با یه ادعای
+        // قبلیِ نادرست که این فایل از قبل بدون viaIR تمیز کامپایل می‌شه در تناقض بود): بلوک
+        // پیش‌محاسبه‌ای که قبلاً مستقیم اینجا بود (تاخوردن کارمزد عضویت، محاسبه‌ی سوزاندن فی،
+        // چک جمع/حداکثر فیزیکی تعداد بلاک) به یه خطای واقعی «Stack too deep» توی فراخوان
+        // _payValidators پایین‌تر برخورد می‌کرد، زیر optimizer — تعداد زیاد متغیرهای local
+        // هم‌زمان زنده توی stack frame خودِ این تابع. استخراج شد به _prepareEpoch() پایین، که
+        // ۴ مقدار نتیجه رو توی یه struct حافظه (`prep`) جمع می‌کنه به‌جای ۴ متغیر local جدا —
+        // این چیزیه که واقعاً عمق stack رو حل می‌کنه، نه صرفاً بازآرایی ظاهری. یه راه‌حل viaIR
+        // نیست (این پروژه عمداً از viaIR دوری می‌کنه) — همون require ها، همون ترتیب، همون
+        // ریاضی، فقط داخل یه تابع کمکی محاسبه می‌شه به‌جای inline.
+        EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
 
         epochCount++;
         uint256 epochId = epochCount;
 
-        // ✅ تغییر کرد: سهم بنیاد اکنون ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
-        // می‌شود — هرگز تحت‌تأثیر validatorDirectShareBps پایین نیست. فقط ریوارد این‌طور
-        // تقسیم می‌شود؛ فی (پایین) هرگز توسط هیچ‌کدام از این سه سهم لمس نمی‌شود.
-        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        // ✅ اصلاح‌شده (همون اصلاح stack-too-deep بالا): foundationAmount/treasuryAmount الان
+        // *بعد* از فراخوان _payValidators محاسبه می‌شن، نه قبلش — به اون فراخوان وابسته نیستن
+        // و _payValidators هم به این‌ها وابسته نیست، پس این بازآرایی کاملاً رفتار رو حفظ
+        // می‌کنه. فقط برای کاهش تعداد متغیرهای local هم‌زمان زنده در لحظه‌ی فراخوان
+        // _payValidators هست، نه برای تغییر این‌که چی محاسبه می‌شه یا کِی اثرش دیده می‌شه
+        // (هردو همچنان توی همون تراکنش، قبل از _finalizeEpoch پایین، اتفاق می‌افتن).
         // validatorDirectShareBps حکمرانی‌شونده است (رأی دومجلسی، [۴۰٪, ۶۵٪]) — کامنت سطح
         // قرارداد بالا را ببینید. ValidatorsTreasury هرچه بعد از سهم ثابت بنیاد و این سهم
         // حکمرانی‌شونده باقی بماند را دریافت می‌کند.
         uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
 
         (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
             _payValidators(
@@ -530,23 +516,75 @@ contract BlockRewardDistributor {
                 EpochContext({
                     epochId: epochId,
                     remainingRewards: validatorDirectAmount,
-                    totalFees: feesToDistribute,
-                    totalBlocks: totalBlocks
+                    totalFees: prep.feesToDistribute,
+                    totalBlocks: prep.totalBlocks
                 })
             );
+
+        // ✅ تغییر کرد: سهم بنیاد اکنون ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
+        // می‌شود — هرگز تحت‌تأثیر validatorDirectShareBps بالا نیست. فقط ریوارد این‌طور
+        // تقسیم می‌شود؛ فی هرگز توسط هیچ‌کدام از این سه سهم لمس نمی‌شود.
+        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
 
         _finalizeEpoch(
             epochId,
             totalRewards,
-            effectiveTotalFees,
-            feeBurnAmount,
+            prep.effectiveTotalFees,
+            prep.feeBurnAmount,
             treasuryAmount,
             foundationAmount,
-            totalBlocks,
+            prep.totalBlocks,
             validatorCount,
             distributedRewards,
             distributedFees
         );
+    }
+
+    /// @dev ✅ تازه (فقط برای رفع خطای «Stack too deep» بالای distributeRewards اضافه شد —
+    ///      ۴ مقدار نتیجه‌ی فاز پیش‌محاسبه رو توی یه اشاره‌گر struct حافظه جمع می‌کنه به‌جای
+    ///      ۴ متغیر local جدا و هم‌زمان زنده).
+    struct EpochPrep {
+        uint256 effectiveTotalFees;
+        uint256 feeBurnAmount;
+        uint256 feesToDistribute;
+        uint256 totalBlocks;
+    }
+
+    /// @dev ✅ تابع کمکی تازه، استخراج‌شده از بدنه‌ی inline اصلی distributeRewards() — همون
+    ///      require ها، همون ترتیب، همون ریاضی، فقط توی stack frame جدای خودش ایزوله شده تا
+    ///      خودِ distributeRewards() متغیرهای local هم‌زمان زنده‌ی کمتری در لحظه‌ی فراخوان
+    ///      _payValidators داشته باشه. به یادداشت اصلاح روی distributeRewards() بالا مراجعه کن.
+    function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
+        private
+        returns (EpochPrep memory prep)
+    {
+        // هر کارمزد عضویتی که از epoch قبلی ValidatorsRegistry فرستاده به استخر فی همین epoch
+        // اضافه می‌شود — از قبل در موجودی این قرارداد هست (از طریق receiveMembershipFee()
+        // دریافت شده). ✅ این کارمزد عضویت با فی معمولی یکی نیست: کاملاً از سوزاندن ۳۰٪ زیر
+        // معاف است (فقط totalFees معمولی سوزانده می‌شود، نه membershipFeesThisEpoch) — فقط
+        // از نظر نحوه‌ی تقسیم نهایی بین ولیدیتورها همان رفتار ۱۰۰٪-به‌نسبت-بلاک را می‌گیرد.
+        // به sur-tokenomics.md بخش ۶ مراجعه کنید.
+        uint256 membershipFeesThisEpoch = pendingMembershipFees;
+        pendingMembershipFees = 0;
+        prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
+
+        require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+
+        // ✅ تازه: ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
+        // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
+        // اصلاً یه فی عمومی شبکه نیست — یه پرداخت هدفمند و یک‌باره‌ی جبران رقیق‌شدن به
+        // ولیدیتورهای موجوده، که با ورود ولیدیتور تازه فعال می‌شه. سوزوندن بخشی ازش، این
+        // انگیزه‌ی مشخص رو به‌عنوان یه اثر جانبی ناخواسته‌ی یه تصمیم بعدی و بی‌ربط (سوزاندن
+        // عمومی فی) ضعیف می‌کنه. فی معمولی چنین هدف‌گذاری‌ای نداره، پس هدف درست — و تنها هدف
+        // — سوزاندنه.
+        prep.feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
+        prep.feesToDistribute = prep.effectiveTotalFees - prep.feeBurnAmount;
+
+        prep.totalBlocks = _sumBlocks(blocksMined);
+        require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
+        _checkPhysicalMaximum(prep.totalBlocks);
     }
 
     /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. فقط برای کوچک‌نگه‌داشتن stack frame خودِ
