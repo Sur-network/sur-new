@@ -375,6 +375,24 @@ contract ValidatorsBoard {
             _voteTally[seenCandidates[i]] = 0;
         }
 
+        // ✅ FIXED (bug found in independent review — the previous version of this fix bumped
+        // boardVersion UNCONDITIONALLY on every successful refreshBoard() call, even when the
+        // resulting membership was identical to before. Since this function is permissionless
+        // and has no cooldown, anyone could call it repeatedly — even with zero actual
+        // membership change — purely to keep invalidating any board action sitting open for a
+        // vote, an indefinitely repeatable griefing vector). Compare the actual member SET
+        // (order-independent) BEFORE clearing the old isBoardMember flags below — only bump the
+        // version if membership genuinely changed.
+        bool membershipChanged = (boardMembers.length != filled);
+        if (!membershipChanged) {
+            for (uint256 i = 0; i < filled; i++) {
+                if (!isBoardMember[newBoard[i]]) {
+                    membershipChanged = true;
+                    break;
+                }
+            }
+        }
+
         // apply: clear old membership flags, install the new set
         for (uint256 i = 0; i < boardMembers.length; i++) {
             isBoardMember[boardMembers[i]] = false;
@@ -390,12 +408,14 @@ contract ValidatorsBoard {
             finalVotes[i] = newBoardVotes[i];
         }
 
-        // ✅ FIXED (bug found in independent review — see boardVersionAtCreation's doc comment
-        // above): bump the board version every time membership is (re)installed, so any action
-        // proposed and partly voted on under the old membership is invalidated — its votes,
-        // including any cast by members who are no longer on the board, can never count toward
-        // a decision made by the new board.
-        boardVersion++;
+        // ✅ FIXED: bump the board version ONLY when membership genuinely changed (see
+        // membershipChanged above) — so any action proposed and partly voted on under the old
+        // membership is correctly invalidated when the board actually changes, without giving
+        // anyone a free, repeatable way to invalidate open actions by calling refreshBoard()
+        // with no real effect.
+        if (membershipChanged) {
+            boardVersion++;
+        }
 
         emit BoardRefreshed(finalBoard, finalVotes);
     }

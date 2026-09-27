@@ -492,6 +492,25 @@ contract ValidatorsRegistry {
         SlashOutcome slashOutcome;
     }
 
+    /// @notice ✅ FIXED (critical bug found in independent review): resolveMassFailureCheck()
+    ///         used to only mark the shared DemotionEpoch as `resolved` and set
+    ///         `slashOutcome = ExemptMassFailure` for the ONE decisionId passed to it. If two
+    ///         suspensions fell in the same epoch, calling resolveMassFailureCheck() for just ONE
+    ///         of them would set `demotionEpochs[...].resolved = true` — and
+    ///         `_massFailureResolved()` below checked ONLY that epoch-level flag, meaning the
+    ///         SECOND decision could pass straight into confirmDelivery/fileAppeal/slash
+    ///         execution WITHOUT ever having resolveMassFailureCheck() called for it
+    ///         specifically — even if the epoch actually was a mass failure that should have
+    ///         exempted it too. This mapping (keyed by decisionId, deliberately kept as a
+    ///         SEPARATE mapping rather than a field on StatusDecision above — adding one more
+    ///         field there pushed several functions past Solidity's stack-depth limit under the
+    ///         optimizer, a real compiler constraint hit while implementing this exact fix, not
+    ///         a stylistic choice) closes that gap: resolveMassFailureCheck() now must be called
+    ///         once PER DECISION (reusing the shared epoch-level wasMassFailure computation,
+    ///         computed only once), and _massFailureResolved() checks this decision-level
+    ///         mapping instead of the epoch-level flag.
+    mapping(uint256 => bool) private massFailureChecked;
+
     mapping(uint256 => StatusDecision) public statusDecisions;
     uint256 public statusDecisionCount;
     mapping(uint256 => mapping(address => bool)) private hasVotedOnSlash;
@@ -897,7 +916,7 @@ contract ValidatorsRegistry {
     function resolveMassFailureCheck(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
-        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(!massFailureChecked[decisionId], "ValidatorsRegistry: already checked for this decision");
         DemotionEpoch storage epoch = demotionEpochs[d.demotionEpochId];
         require(block.timestamp >= epoch.startedAt + MASS_DEMOTION_WINDOW, "ValidatorsRegistry: demotion epoch not yet closed");
 
@@ -905,6 +924,13 @@ contract ValidatorsRegistry {
             epoch.resolved = true;
             epoch.wasMassFailure = epoch.demotionCount * BPS_DENOMINATOR > epoch.referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
         }
+
+        // ✅ FIXED: this MUST be set unconditionally, for every decision individually, whether
+        // or not the epoch turns out to be a mass failure — this is exactly the flag
+        // _massFailureResolved() checks below. Reusing epoch.wasMassFailure (computed once,
+        // above) means the shared computation is not repeated, but every decision in the epoch
+        // must still go through this function once for itself before it can proceed.
+        massFailureChecked[decisionId] = true;
 
         if (epoch.wasMassFailure) {
             d.slashOutcome = SlashOutcome.ExemptMassFailure;
@@ -937,15 +963,15 @@ contract ValidatorsRegistry {
     ///         SlashOutcome this way, resolveMassFailureCheck() itself would revert afterward
     ///         (its own `slashOutcome == Undetermined` guard), permanently locking out any later
     ///         mass-failure exemption for that case.
-    function _massFailureResolved(StatusDecision storage d) private view returns (bool) {
-        return demotionEpochs[d.demotionEpochId].resolved;
+    function _massFailureResolved(uint256 decisionId) private view returns (bool) {
+        return massFailureChecked[decisionId];
     }
 
     function confirmDelivery(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may confirm delivery");
-        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
+        require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
         require(d.delivery == DeliveryStatus.Pending || d.delivery == DeliveryStatus.Disputed, "ValidatorsRegistry: delivery already confirmed");
 
@@ -975,7 +1001,7 @@ contract ValidatorsRegistry {
     function assertDeliveryDisputed(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
-        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
+        require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
         require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
         require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
@@ -1059,7 +1085,7 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may file an appeal");
-        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
+        require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: appeal already filed");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
@@ -1114,7 +1140,7 @@ contract ValidatorsRegistry {
     function executeUncontestedSlash(uint256 decisionId) external nonReentrant {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
-        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
+        require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: an appeal was filed for this decision");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
