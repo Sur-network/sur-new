@@ -72,7 +72,7 @@
 
 ### ۳.۱ اعضای FoundationDAO (۱۵ نفر، در genesis تزریق می‌شوند)
 - **قرارداد میزبان:** FoundationDAO.sol — بدون constructor؛ ۱۵ عضو اولیه توسط ابزار ساخت genesis (شبیه‌سازی یا نوشتن مستقیم storage) تزریق می‌شوند.
-- **انواع پیشنهاد (Proposal):** `AddMember`، `RemoveMember`، `SendETH` (نیازمند اکثریت دوسوم — `ceil(2n/3)`) و `SendERC20`، `Execute` (اکثریت ساده — `floor(n/2)+1`).
+- **انواع پیشنهاد (Proposal):** `AddMember`، `RemoveMember` (نیازمند اکثریت دوسوم — `ceil(2n/3)`) و `SendETH`، `SendERC20`، `Execute` (اکثریت ساده — `floor(n/2)+1`؛ ⚠️ تصحیح‌شده: `SendETH` قبلاً اشتباهاً زیر نصاب دوسوم دسته‌بندی شده بود).
 - `SendETH` در واقع همان مسیر توزیع ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis به این قرارداد است (ماده ۳-۶ منشور بنیاد) — چون Suren ارز بومی است نه توکن، نیازی به قرارداد توزیع جداگانه نیست.
 - **محدودیت صریح حکمرانی:** این قرارداد هیچ کنترلی روی شبکه، ولیدیتورها یا هیچ اوراکلِ مرتبط با اجماع ندارد؛ مسیر قدیمی `proposeRequestTreasuryBudget` (درخواست بودجه از ValidatorsTreasury) و اختیار `setDistributionOracle`/`setValidatorSyncOracle` که قبلاً تحت نام MemberDAO داشت، به‌طور کامل حذف شده‌اند.
 - عضویت در این DAO منافاتی با ولیدیتور بودن یا عضویت در ValidatorsBoard ندارد — هیچ کدام از قراردادها این هم‌پوشانی را بررسی یا محدود نمی‌کنند.
@@ -131,7 +131,7 @@
 - از مجموع پاداش‌ها (Rewards): ۱۵٪ ثابت (`FOUNDATION_SHARE_BPS`) → FoundationDAO؛ ۴۰٪-۶۵٪ حکمرانی‌شونده (`validatorDirectShareBps`، شروع ۵۰٪) → مستقیم به نسبت بلاک تولیدی بین ولیدیتورها؛ باقی‌مانده → ValidatorsTreasury.
 - از مجموع کارمزدها (Fees): ۱۰۰٪ متناسب با تعداد بلاک تولیدی بین ولیدیتورها — بدون هیچ سهمی برای خزانه.
 - در ValidatorsRegistry: ✅ **به‌روزشده:** کارمزد عضویت (membership fee) هر ولیدیتور جدید دیگر مستقیم به ValidatorsTreasury نمی‌رود — به `BlockRewardDistributor` فوروارد و در epoch فی بعدی، ۱۰۰٪-به‌نسبت-بلاک بین ولیدیتورهای فعال تقسیم می‌شود (بدون سوزاندن، برخلاف فی معمولی). فقط سپرده‌ی جریمه‌شده (slashed) در غیرفعالی مستقیماً به ValidatorsTreasury می‌رود.
-- در FoundationDAO: ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis، فقط از طریق `proposeSendETH` (دوسوم رأی) قابل خروج است — از جمله برای تأمین دوره‌ای SurenSale.
+- در FoundationDAO: ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis، فقط از طریق `proposeSendETH` (نصاب اکثریت ساده) قابل خروج است — از جمله برای تأمین دوره‌ای SurenSale.
 - ValidatorsTreasury دو مسیر خرج دارد: ۱) رأی کامل ولیدیتورهای فعال (بدون سقف)، ۲) تصویب board برای مبالغ کوچک زیر `smallBudgetCap` (که خودش فقط با رأی کامل ولیدیتورها قابل تغییر است، نه توسط board).
 
 ---

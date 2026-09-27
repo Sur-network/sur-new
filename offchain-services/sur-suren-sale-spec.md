@@ -50,7 +50,7 @@ uint256[6] public monthlyPriceToman = [100, 103, 106, 109, 113, 116];
 از طریق فراخوانی عمومی `FoundationDAO.proposeExecute(...)` (که از قبل در `FoundationDAO.sol` وجود دارد — نیازی به تغییر آن قرارداد نیست) با calldata متناظر با `SurenSale.setPaymentOracle(newAddress)`. این مسیر **اکثریت ساده** است، نه دوسوم — چون با تأمین مالی دوره‌ای (بالا)، سقف ریسک این کلید محدود نگه داشته می‌شود. 🔶 اگر بعداً مبالغ تأمین‌شده در هر دوره بزرگ‌تر شد، این تصمیم باید بازبینی و احتمالاً به نصاب دوسوم (نیازمند افزودن یک نوع پیشنهاد جدید به `FoundationDAO.sol`) ارتقا یابد.
 
 ### تأمین مالی خودِ قرارداد
-از طریق `FoundationDAO.proposeSendETH(description, SurenSaleAddress, amount)` — نصاب **دوسوم**، چون این خرج واقعی دارایی بنیاد است (طبق قاعده‌ی موجود در `FoundationDAO.sol`).
+از طریق `FoundationDAO.proposeSendETH(description, SurenSaleAddress, amount)` — ✅ **تصحیح‌شده: نصاب اکثریت ساده** (نه دوسوم — طبق تصمیم صریح، هر نوع پرداخت بنیاد اکثریت ساده است، طبق قاعده‌ی موجود در `FoundationDAO.sol`).
 
 ---
 

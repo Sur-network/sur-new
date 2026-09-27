@@ -67,12 +67,10 @@ contract ValidatorsRegistry_GenesisSeed {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;
-        uint256 lastLivenessConfirmation;
-        uint256 livenessConfirmationsInPeriod;
-        uint256 totalLivenessChecksInPeriod; // ✅ ADDED — must match the real struct exactly
-        // (same reasoning as isPaidEntrant below: struct size affects every subsequent
-        // mapping-entry slot computation).
-        uint256 lastCheckedAt; // ✅ ADDED — same reasoning
+        uint256 livenessPacked; // ✅ CHANGED — must match the real struct's packed liveness field
+        // exactly (bit layout: [0:40)=lastCheckedAt, [40:80)=lastLivenessConfirmation,
+        // [80:112)=totalLivenessChecksInPeriod, [112:144)=livenessConfirmationsInPeriod — see the
+        // real ValidatorsRegistry.sol's ValidatorInfo struct doc comment for the full rationale).
         uint256 pendingSlashEpoch; // ✅ ADDED — same reasoning
         uint256 demotedAt;
         bool isPaidEntrant; // ✅ ADDED — must match the real struct exactly, or the per-entry
@@ -126,10 +124,8 @@ contract ValidatorsRegistry_GenesisSeed {
                 status: Status.Active,
                 lockedStake: 0,
                 periodStartedAt: genesisTimestamp,
-                lastLivenessConfirmation: genesisTimestamp,
-                livenessConfirmationsInPeriod: 0,
-                totalLivenessChecksInPeriod: 0,
-                lastCheckedAt: 0,
+                // packed: lastCheckedAt=0, lastLivenessConfirmation=genesisTimestamp, totalChecks=0, confirmedChecks=0
+                livenessPacked: uint256(genesisTimestamp) << 40,
                 pendingSlashEpoch: 0,
                 demotedAt: 0,
                 isPaidEntrant: false // founders are always free, never paid entrants

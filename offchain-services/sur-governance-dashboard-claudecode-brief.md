@@ -84,7 +84,7 @@
 برای هر پیشنهاد با `status == Pending`:
 - نوع (`AddMember`/`RemoveMember`/`SendETH`/`SendERC20`/`Execute`) با برچسب فارسی.
 - توضیح (`description`)، پیشنهاددهنده (`proposer`).
-- نوار پیشرفت رأی: `votes` از `requiredVotesNow(pType)` (دوسوم برای `AddMember`/`RemoveMember`/`SendETH`، اکثریت ساده برای بقیه — همیشه از تابع خوانده شود).
+- نوار پیشرفت رأی: `votes` از `requiredVotesNow(pType)` (✅ تصحیح‌شده: دوسوم فقط برای `AddMember`/`RemoveMember`، اکثریت ساده برای بقیه شامل `SendETH` — همیشه از تابع خوانده شود).
 - دکمه‌ی «رأی موافق» (فقط اگر `hasVoted(id, msg.sender) === false`) → `vote(proposalId)`.
 
 ### فرم پیشنهاد تازه (فقط اعضا — چک `isMember(address)`)

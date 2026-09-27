@@ -110,19 +110,27 @@ contract ValidatorsRegistry {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;   // start of current probation OR recovery OR exit-cooldown window
-        uint256 lastLivenessConfirmation;
-        uint256 livenessConfirmationsInPeriod; // positive liveness reports since periodStartedAt (reset each period)
-        uint256 totalLivenessChecksInPeriod; // ✅ NEW: ALL liveness reports (positive + negative)
-        // since periodStartedAt — see requiredLivenessRatioBps below for why counting only
-        // positives was not enough on its own.
-        uint256 lastCheckedAt; // ✅ NEW: timestamp of the last liveness report that was actually
-        // COUNTED (toward totalLivenessChecksInPeriod) — separate from lastLivenessConfirmation
-        // (which only updates on positive reports). See MIN_LIVENESS_CHECK_INTERVAL below for why
-        // this exists: without it, any rapid/duplicate calls to reportLiveness() (a bug in the
-        // off-chain Verifier service, or a compromised verifier key firing repeatedly) would each
-        // count as an independent "turn" toward the ratio, even if they happened seconds apart —
-        // meaning "48 hours of 95% positive reports" would not actually mean 48 hours of
-        // real-world monitoring at the expected ~10-15 minute cadence.
+        // ✅ REDESIGNED (found during a gas-optimization review to be a real, measured win): the
+        // four liveness fields below — lastLivenessConfirmation, livenessConfirmationsInPeriod,
+        // totalLivenessChecksInPeriod, lastCheckedAt — used to be four separate uint256 fields,
+        // each its own 32-byte storage slot. Empirically measured (real Hardhat deployment, not
+        // estimated): a normal positive reportLiveness() call cost ~48,546 gas that way. Packed
+        // into ONE uint256 (bit-packed via _packLiveness()/_unpackLiveness() below), the same
+        // call costs ~27,588 gas (43% less) — because writing 4 separate slots becomes writing
+        // ONE. Layout (see _packLiveness()/_unpackLiveness() for the authoritative bit math):
+        //   bits [0:40)    lastCheckedAt              (uint40 — timestamps fit until year 36812)
+        //   bits [40:80)   lastLivenessConfirmation   (uint40)
+        //   bits [80:112)  totalLivenessChecksInPeriod (uint32 — periodic reset keeps this far
+        //                                               below its ~4.3 billion ceiling)
+        //   bits [112:144) livenessConfirmationsInPeriod (uint32)
+        // ⚠️ Trade-off, stated plainly: this is genuinely less readable than four named fields —
+        // anyone auditing this contract must trust _packLiveness()/_unpackLiveness() rather than
+        // reading a field name directly. Kept anyway because the gas saving is large and
+        // compounds directly with reportLivenessBatch() below (see MASS_DEMOTION_WINDOW-era
+        // review notes in sur-tokenomics.md section 6 for the full economic case: combined with
+        // batching, this took Verifier gas cost from exceeding the Treasury's entire daily 35%
+        // share to a small fraction of it).
+        uint256 livenessPacked;
         uint256 pendingSlashEpoch; // ✅ NEW: nonzero while this validator has an unresolved
         // inactivity-slash decision awaiting resolvePendingSlash() — see DemotionEpoch's doc
         // comment above for the full mechanism this supports. Zero means "no pending slash."
@@ -204,7 +212,7 @@ contract ValidatorsRegistry {
     // or by direct storage computation) — for each founding validator address v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessConfirmationsInPeriod: 0, totalLivenessChecksInPeriod: 0, lastCheckedAt: 0, pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
+    //     livenessPacked: _packLiveness(0, GENESIS_TIMESTAMP, 0, 0), pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount is NOT incremented for founders — see its doc comment above.
@@ -335,12 +343,12 @@ contract ValidatorsRegistry {
     /// @notice ✅ DECIDED (final): the minimum FRACTION of checks that must actually have been
     ///         recorded before the ratio requirement is even evaluated. Based on
     ///         EXPECTED_VERIFIER_CADENCE_SECONDS below (the Verifier's real, decided polling
-    ///         cycle — 15 minutes) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the separate,
-    ///         13-minute anti-duplicate throttle just below): using the throttle interval here
+    ///         cycle — 60 minutes) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the separate,
+    ///         55-minute anti-duplicate throttle just below): using the throttle interval here
     ///         would have (and, in an earlier version, did) produce an unreachable minimum for a
     ///         perfectly healthy validator, since the throttle is intentionally shorter than the
     ///         real cadence to tolerate timing jitter, not a substitute for it. With 50% coverage
-    ///         this gives 336 required checks for the 1-week probation and 96 for the 48-hour
+    ///         this gives 84 required checks for the 1-week probation and 24 for the 48-hour
     ///         recovery — see _minRequiredChecks() below. Both this coverage requirement AND the
     ///         throttle interval are deliberately kept as two separate, independent
     ///         requirements: the throttle stops rapid/duplicate counting, this stops too few
@@ -351,7 +359,7 @@ contract ValidatorsRegistry {
     /// @dev ⚠️ Known residual limitation, deliberately accepted rather than solved with
     ///      additional complexity, per an explicit decision: a minimum TOTAL count does not by
     ///      itself guarantee the checks were spread evenly across the period — they could legally
-    ///      cluster near the end (e.g., the required 336 checks for probation could all land
+    ///      cluster near the end (e.g., the required 84 checks for probation could all land
     ///      within roughly the last ~3.5 days of the week) while the earlier days went
     ///      unmonitored. This was raised explicitly during design, and a maximum-gap constraint
     ///      that would close it was explicitly considered and REJECTED for now: kept as-is,
@@ -360,17 +368,24 @@ contract ValidatorsRegistry {
     ///      revisit only if real-world monitoring shows validators exploiting the gap in practice.
     uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // 50%
 
-    /// @notice ✅ DECIDED (final): the Verifier's real, firm polling cycle — how often it
-    ///         actually checks and reports on each validator (sur-verifier-service-spec.md).
-    ///         Used ONLY as the basis for the minimum-check-count calculation above
-    ///         (_minRequiredChecks() below) — deliberately a SEPARATE constant from
-    ///         MIN_LIVENESS_CHECK_INTERVAL just below, even though the two are related, because
-    ///         they answer different questions: this one is "how often does the Verifier
-    ///         actually run," while MIN_LIVENESS_CHECK_INTERVAL is "how close together can two
-    ///         COUNTED checks legally be." Keeping them numerically distinct (15 vs. 13 minutes)
-    ///         means ordinary timing jitter in the Verifier's own scheduling never causes a
-    ///         perfectly healthy check to be skipped by the throttle.
-    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 900; // 15 minutes
+    /// @notice ✅ DECIDED (final — explicitly reduced from 15 to 60 minutes to cut gas cost): the
+    ///         Verifier's real, firm polling cycle — how often it actually checks and reports on
+    ///         each validator (sur-verifier-service-spec.md). Used ONLY as the basis for the
+    ///         minimum-check-count calculation above (_minRequiredChecks() below) — deliberately
+    ///         a SEPARATE constant from MIN_LIVENESS_CHECK_INTERVAL just below, even though the
+    ///         two are related, because they answer different questions: this one is "how often
+    ///         does the Verifier actually run," while MIN_LIVENESS_CHECK_INTERVAL is "how close
+    ///         together can two COUNTED checks legally be." Keeping them numerically distinct (60
+    ///         vs. 55 minutes) means ordinary timing jitter in the Verifier's own scheduling never
+    ///         causes a perfectly healthy check to be skipped by the throttle. ⚠️ Reducing
+    ///         frequency 4x (from every 15 to every 60 minutes) was a deliberate economic
+    ///         trade-off found necessary during review: at 15-minute cadence, the on-chain gas
+    ///         cost of reportLiveness() across 50 active validators exceeded 100% of the
+    ///         Treasury's entire daily 35% share of block reward — see sur-tokenomics.md section
+    ///         6 for the full calculation. This directly weakens the freshness of liveness data
+    ///         (inactivityThreshold below was widened to compensate) in exchange for a
+    ///         sustainable operating cost.
+    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 3600; // 60 minutes
 
     /// @notice ✅ REDESIGNED (replaces the earlier minLivenessConfirmationsToActivate — a raw
     ///         count of positive reports, found during review to have a real flaw): a raw count
@@ -395,20 +410,29 @@ contract ValidatorsRegistry {
     uint256 public requiredLivenessRatioBps = 9500; // used by promoteAfterProbation
     uint256 public requiredRecoveryLivenessRatioBps = 9500; // used by promoteAfterRecovery
 
-    /// @notice ✅ DECIDED (13 minutes, final): the minimum time that must pass since a
+    /// @notice ✅ DECIDED (55 minutes, final — updated alongside the cadence reduction to 60
+    ///         minutes): the minimum time that must pass since a
     ///         validator's last COUNTED liveness check before another one is counted — an
-    ///         anti-duplicate THROTTLE, deliberately kept as a SEPARATE, slightly shorter number
-    ///         than EXPECTED_VERIFIER_CADENCE_SECONDS above (13 vs. 15 minutes), not the same
-    ///         value: if this throttle exactly matched the real cadence, ordinary scheduling
+    ///         anti-duplicate THROTTLE, deliberately kept as a SEPARATE, shorter number
+    ///         than EXPECTED_VERIFIER_CADENCE_SECONDS above (55 vs. 60 minutes — a wider 5-minute
+    ///         margin than the previous 2-minute one, since an hourly cron-style schedule
+    ///         realistically drifts more in absolute terms than a 15-minute loop did), not the
+    ///         same value: if this throttle exactly matched the real cadence, ordinary scheduling
     ///         jitter in the Verifier's own polling loop could occasionally cause a perfectly
     ///         legitimate, on-time check to arrive a few seconds early and get silently dropped.
     ///         The 2-minute margin absorbs that jitter without weakening the throttle's actual
     ///         purpose: without it, nothing would stop a malfunctioning or compromised verifier
     ///         key from firing reportLiveness() many times in rapid succession — each call would
     ///         count as an independent "check" toward the ratio above, even seconds apart.
-    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 13 minutes;
+    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 55 minutes;
 
-    uint256 public inactivityThreshold = 3600;   // 1 hour
+    /// @notice ✅ UPDATED (from 1 hour to 4 hours, alongside the Verifier cadence reduction to 60
+    ///         minutes): kept at the SAME 4x-cadence safety margin as before (was 1 hour over a
+    ///         15-minute cadence = 4x; now 4 hours over a 60-minute cadence = 4x again) — a
+    ///         deliberate choice to preserve the original tolerance for missed report cycles
+    ///         (still testnet-provisional; needs real execution testing before mainnet — see
+    ///         sur-tokenomics.md section 6).
+    uint256 public inactivityThreshold = 14400;   // 4 hours
     uint256 public recoveryPeriod = 172800;      // 48 hours
     uint256 public slashBps = 100;               // 1% — deliberately light: the entry-threshold
     // base was independently lowered (2,000,000 → 500,000 Suren) specifically to broaden who
@@ -698,10 +722,10 @@ contract ValidatorsRegistry {
             status: Status.Probation,
             lockedStake: threshold,
             periodStartedAt: block.timestamp,
-            lastLivenessConfirmation: block.timestamp,
-            livenessConfirmationsInPeriod: 0,
-            totalLivenessChecksInPeriod: 0,
-            lastCheckedAt: 0,
+            // ✅ packed: lastCheckedAt=0, lastLivenessConfirmation=block.timestamp (preserves the
+            // original behavior — a brand-new entrant starts with "just confirmed," not stale),
+            // totalChecks=0, confirmedChecks=0
+            livenessPacked: _packLiveness(0, block.timestamp, 0, 0),
             pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
@@ -736,27 +760,69 @@ contract ValidatorsRegistry {
     ///         updates state on a positive confirmation — a negative report is logged (for
     ///         transparency/audit) but does not touch the stored counters, since the whole
     ///         point of inactivity detection is the ABSENCE of positive confirmations over time.
-    function reportLiveness(address validator, bool isLive) external onlyVerifier {
+    /// @notice Shared internal logic for a single validator's liveness report — called by both
+    ///         reportLiveness() (single) and reportLivenessBatch() (looped) below. Kept as one
+    ///         function so the two entry points can never drift apart in behavior.
+    function _recordLivenessCheck(address validator, bool isLive) private {
         ValidatorInfo storage v = validators[validator];
         require(
             v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
             "ValidatorsRegistry: validator not eligible for liveness reporting"
         );
         emit LivenessReported(validator, isLive, block.timestamp);
+
+        uint256 p = v.livenessPacked;
+        uint256 lastCheckedAt = _unpackLastCheckedAt(p);
         // ✅ NEW: skip counting (but still emit the event above, for full audit visibility) if
         // this report arrived too soon after the last COUNTED one — see
         // MIN_LIVENESS_CHECK_INTERVAL's doc comment for why. Deliberately does not revert: the
         // onlyVerifier caller made a valid call and should not see a failed transaction just
         // because its own polling cadence (or a bug in it) was too fast this one time.
-        if (block.timestamp < v.lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
+        if (block.timestamp < lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
             return;
         }
-        v.lastCheckedAt = block.timestamp;
-        v.totalLivenessChecksInPeriod++; // every COUNTED check toward the denominator, positive
-        // or not — see requiredLivenessRatioBps's doc comment for why.
+
+        uint256 lastConfirmed = _unpackLastConfirmed(p);
+        uint256 totalChecks = _unpackTotalChecks(p) + 1; // every COUNTED check toward the
+        // denominator, positive or not — see requiredLivenessRatioBps's doc comment for why.
+        uint256 confirmedChecks = _unpackConfirmedChecks(p);
         if (isLive) {
-            v.lastLivenessConfirmation = block.timestamp;
-            v.livenessConfirmationsInPeriod++;
+            lastConfirmed = block.timestamp;
+            confirmedChecks++;
+        }
+        v.livenessPacked = _packLiveness(block.timestamp, lastConfirmed, totalChecks, confirmedChecks);
+    }
+
+    function reportLiveness(address validator, bool isLive) external onlyVerifier {
+        _recordLivenessCheck(validator, isLive);
+    }
+
+    /// @notice ✅ NEW (found to be a major, empirically-measured gas win alongside packing above):
+    ///         reports liveness for MANY validators in a single transaction. Every
+    ///         reportLiveness() call pays Ethereum's fixed ~21,000 gas base transaction cost
+    ///         REGARDLESS of what it does — reporting 50 validators as 50 separate transactions
+    ///         pays that base cost 50 times over. Batched into one transaction, it's paid once.
+    ///         Measured (real Hardhat deployment): combined with packing above, this took a
+    ///         normal per-validator liveness report from ~48,546 gas down to ~9,225 gas (81%
+    ///         less) — see sur-tokenomics.md section 6 for the full economic case. The Verifier
+    ///         service is expected to collect one polling cycle's results for every validator it
+    ///         watches and submit them here as one call, rather than calling reportLiveness()
+    ///         separately per validator — see sur-verifier-service-spec.md.
+    /// @dev Deliberately does NOT revert the whole batch if one validator's status check fails
+    ///      (e.g., a validator exited between when the Verifier started this polling cycle and
+    ///      when this transaction landed) — that one entry is silently skipped (no event, no
+    ///      state change for it) while the rest of the batch still succeeds. Reverting the entire
+    ///      batch over one stale entry would defeat the purpose of batching: the Verifier would
+    ///      have to retry the whole set instead of just moving on.
+    function reportLivenessBatch(address[] calldata validatorsList, bool[] calldata isLiveList) external onlyVerifier {
+        require(validatorsList.length == isLiveList.length, "ValidatorsRegistry: array length mismatch");
+        for (uint256 i = 0; i < validatorsList.length; i++) {
+            address validator = validatorsList[i];
+            Status s = validators[validator].status;
+            if (s != Status.Probation && s != Status.Active && s != Status.Demoted) {
+                continue; // skip silently — see the @dev note above for why
+            }
+            _recordLivenessCheck(validator, isLiveList[i]);
         }
     }
 
@@ -764,26 +830,68 @@ contract ValidatorsRegistry {
     // Activation after probation — permissionless
     // ------------------------------------------------------------------
     /// @notice ✅ DECIDED (final): based on EXPECTED_VERIFIER_CADENCE_SECONDS (the real, decided
-    ///         15-minute Verifier cycle) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the
-    ///         separate 13-minute anti-duplicate throttle) — see MIN_CHECK_COVERAGE_BPS's doc
+    ///         60-minute Verifier cycle) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the
+    ///         separate 55-minute anti-duplicate throttle) — see MIN_CHECK_COVERAGE_BPS's doc
     ///         comment above for why conflating the two was a bug in an earlier version.
     function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
         return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
+    }
+
+    // ------------------------------------------------------------------
+    // Liveness packing — bit layout for ValidatorInfo.livenessPacked (see the struct's doc
+    // comment above for the full rationale and the empirical gas numbers behind this).
+    // ------------------------------------------------------------------
+    uint256 private constant TS_BITS = 40;
+    uint256 private constant CNT_BITS = 32;
+    uint256 private constant TS_MASK = (1 << TS_BITS) - 1;
+    uint256 private constant CNT_MASK = (1 << CNT_BITS) - 1;
+    uint256 private constant LC_SHIFT = 40;  // lastLivenessConfirmation
+    uint256 private constant TC_SHIFT = 80;  // totalLivenessChecksInPeriod
+    uint256 private constant CC_SHIFT = 112; // livenessConfirmationsInPeriod
+
+    function _unpackLastCheckedAt(uint256 p) private pure returns (uint256) {
+        return p & TS_MASK;
+    }
+
+    function _unpackLastConfirmed(uint256 p) private pure returns (uint256) {
+        return (p >> LC_SHIFT) & TS_MASK;
+    }
+
+    function _unpackTotalChecks(uint256 p) private pure returns (uint256) {
+        return (p >> TC_SHIFT) & CNT_MASK;
+    }
+
+    function _unpackConfirmedChecks(uint256 p) private pure returns (uint256) {
+        return (p >> CC_SHIFT) & CNT_MASK;
+    }
+
+    /// @notice Packs the four liveness values into one uint256. Reverts implicitly (via the
+    ///         `& MASK` truncation being caught by the explicit checks below) if a value would
+    ///         silently overflow its allotted bits — deliberately explicit rather than silent
+    ///         truncation, since silent truncation here would corrupt a validator's liveness
+    ///         history rather than just reverting one transaction.
+    function _packLiveness(uint256 lastCheckedAt, uint256 lastConfirmed, uint256 totalChecks, uint256 confirmedChecks) private pure returns (uint256) {
+        require(lastCheckedAt <= TS_MASK && lastConfirmed <= TS_MASK, "ValidatorsRegistry: timestamp overflow");
+        require(totalChecks <= CNT_MASK && confirmedChecks <= CNT_MASK, "ValidatorsRegistry: liveness counter overflow");
+        return lastCheckedAt | (lastConfirmed << LC_SHIFT) | (totalChecks << TC_SHIFT) | (confirmedChecks << CC_SHIFT);
     }
 
     function promoteAfterProbation(address candidate) external {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
+        uint256 p = v.livenessPacked;
+        uint256 totalChecks = _unpackTotalChecks(p);
+        uint256 confirmedChecks = _unpackConfirmedChecks(p);
         require(
-            v.totalLivenessChecksInPeriod >= _minRequiredChecks(probationPeriod),
+            totalChecks >= _minRequiredChecks(probationPeriod),
             "ValidatorsRegistry: not enough liveness checks recorded yet"
         );
         require(
-            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredLivenessRatioBps,
+            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredLivenessRatioBps,
             "ValidatorsRegistry: liveness success rate too low"
         );
-        require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
+        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
 
         _activate(candidate);
     }
@@ -848,7 +956,7 @@ contract ValidatorsRegistry {
     function demoteForInactivity(address validator) external nonReentrant {
         ValidatorInfo storage v = validators[validator];
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
-        require(block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
+        require(block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
 
         // ✅ UNCONDITIONAL — see DemotionEpoch's doc comment: this must never be paused or
         // delayed, regardless of the mass-failure question resolved later, to protect QBFT's
@@ -860,11 +968,9 @@ contract ValidatorsRegistry {
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // recovery period starts now
-        v.livenessConfirmationsInPeriod = 0;
-        v.totalLivenessChecksInPeriod = 0;
-        v.lastCheckedAt = 0; // ✅ NEW — so the very first liveness check of the fresh recovery
-        // period is never accidentally throttled by MIN_LIVENESS_CHECK_INTERVAL referencing a
-        // check from before this reset.
+        v.livenessPacked = 0; // ✅ resets all four packed liveness fields at once — so the very
+        // first liveness check of the fresh recovery period is never accidentally throttled by
+        // MIN_LIVENESS_CHECK_INTERVAL referencing a check from before this reset.
 
         emit ValidatorDemoted(validator, epochId);
     }
@@ -885,15 +991,18 @@ contract ValidatorsRegistry {
         // resolvePendingSlash() anyone can already call.
         require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
         require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
+        uint256 p = v.livenessPacked;
+        uint256 totalChecks = _unpackTotalChecks(p);
+        uint256 confirmedChecks = _unpackConfirmedChecks(p);
         require(
-            v.totalLivenessChecksInPeriod >= _minRequiredChecks(recoveryPeriod),
+            totalChecks >= _minRequiredChecks(recoveryPeriod),
             "ValidatorsRegistry: not enough liveness checks recorded yet"
         );
         require(
-            v.livenessConfirmationsInPeriod * BPS_DENOMINATOR >= v.totalLivenessChecksInPeriod * requiredRecoveryLivenessRatioBps,
+            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredRecoveryLivenessRatioBps,
             "ValidatorsRegistry: recovery liveness success rate too low"
         );
-        require(block.timestamp - v.lastLivenessConfirmation <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
+        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
 
         _activate(validator);
         emit ValidatorReactivated(validator);
@@ -952,7 +1061,7 @@ contract ValidatorsRegistry {
             // depending purely on which code path triggered the demotion — not anything about
             // the actual failure pattern.
             _removeFromActive(msg.sender);
-            if (block.timestamp - v.lastLivenessConfirmation >= inactivityThreshold) {
+            if (block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold) {
                 _recordDemotion(v);
                 hasPendingSlash = true;
             }
@@ -1082,7 +1191,17 @@ contract ValidatorsRegistry {
         bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        return (v.status, v.lockedStake, v.periodStartedAt, v.lastLivenessConfirmation, v.livenessConfirmationsInPeriod, v.totalLivenessChecksInPeriod, v.demotedAt, v.isPaidEntrant);
+        uint256 p = v.livenessPacked;
+        return (
+            v.status,
+            v.lockedStake,
+            v.periodStartedAt,
+            _unpackLastConfirmed(p),
+            _unpackConfirmedChecks(p),
+            _unpackTotalChecks(p),
+            v.demotedAt,
+            v.isPaidEntrant
+        );
     }
 
     function requiredVotesNow() external view returns (uint256) {

@@ -57,8 +57,8 @@ interface IERC20 {
 ///         Separately, the genesis `alloc` credits this contract's own address with
 ///         20,000,000 Suren (native currency, not a token transfer) — the initial distribution
 ///         of base network tokens the foundation is responsible for per the charter's article
-///         3-6; distributed onward via proposeSendETH proposals, subject to the two-thirds
-///         threshold above.
+///         3-6; distributed onward via proposeSendETH proposals, subject to the simple-majority
+///         threshold like every other kind of Foundation payment.
 contract FoundationDAO {
     // ------------------------------------------------------------------
     // Data structures
@@ -188,8 +188,21 @@ contract FoundationDAO {
     }
 
     /// @notice Execute arbitrary code (data) on a target address, subject to majority member consensus
+    /// @notice ✅ FIXED (governance-bypass bug found in review, kept fixed even after a later
+    ///         quorum decision made it less severe): `Execute` used to accept ANY `value`, and
+    ///         _execute() below forwarded it verbatim via `target.call{value: amount}(data)` —
+    ///         meaning a member could transfer any amount of the Foundation's Suren by calling
+    ///         proposeExecute() with an empty `data` and a nonzero `value`, using this function's
+    ///         quorum instead of proposeSendETH()'s. ✅ DECIDED (later, explicit correction): both
+    ///         functions now use the SAME simple-majority quorum anyway (see _requiredVotes()
+    ///         below — every kind of Foundation payment does), so this particular bypass no
+    ///         longer changes the vote count needed. The `value == 0` requirement is kept
+    ///         regardless, as good separation of concerns: Suren transfers have one dedicated,
+    ///         auditable path (proposeSendETH()), and Execute stays reserved for calls that don't
+    ///         move the Foundation's native balance at all.
     function proposeExecute(string calldata description, address target, uint256 value, bytes calldata data) external onlyMember returns (uint256) {
         require(target != address(0), "FoundationDAO: zero address");
+        require(value == 0, "FoundationDAO: Execute cannot move Suren - use proposeSendETH for that");
         return _createProposal(description, ProposalType.Execute, "", target, value, address(0), data);
     }
 
@@ -253,17 +266,23 @@ contract FoundationDAO {
     }
 
     /// @dev Voting threshold depends on the proposal type:
-    ///      - AddMember, RemoveMember, SendETH (i.e. spending the genesis-allocated 20,000,000
+    ///      - AddMember, RemoveMember: TWO-THIRDS supermajority, ceil(2n/3) — a deliberately
+    ///        higher bar for membership changes specifically.
+    ///      - Everything else, including SendETH (spending the genesis-allocated 20,000,000
     ///        Suren balance this contract holds — Suren is native currency, see design doc
-    ///        section 3-6 / the foundation charter's article 3-6): TWO-THIRDS supermajority,
-    ///        ceil(2n/3) — a deliberately higher bar for membership changes and moving the
-    ///        foundation's native-currency treasury.
-    ///      - Everything else (SendERC20, Execute): simple majority,
-    ///        floor(n/2) + 1, unchanged from before.
+    ///        section 3-6 / the foundation charter's article 3-6), SendERC20, and Execute:
+    ///        simple majority, floor(n/2) + 1. ✅ DECIDED (explicit correction — SendETH was
+    ///        previously grouped with the membership-change supermajority; every kind of
+    ///        Foundation payment now uses the same simple-majority bar instead).
     ///      e.g. 15 members: simple majority -> 8, two-thirds supermajority -> 10.
+    /// @notice ✅ DECIDED (explicit user correction — final): SendETH was previously grouped
+    ///         with AddMember/RemoveMember under a two-thirds quorum. That was wrong — every kind
+    ///         of Foundation payment (spending Suren) uses simple majority, matching SendERC20
+    ///         and Execute, which never required more than that. Only membership changes
+    ///         (AddMember, RemoveMember) keep the two-thirds bar.
     function _requiredVotes(ProposalType pType) private view returns (uint256) {
         uint256 n = memberList.length;
-        if (pType == ProposalType.AddMember || pType == ProposalType.RemoveMember || pType == ProposalType.SendETH) {
+        if (pType == ProposalType.AddMember || pType == ProposalType.RemoveMember) {
             return (2 * n + 2) / 3; // ceil(2n/3)
         }
         return (n / 2) + 1;
@@ -337,7 +356,8 @@ contract FoundationDAO {
     }
 
     /// @notice Voting threshold required right now for a given proposal type — 2/3
-    ///         supermajority for AddMember/RemoveMember/SendETH, simple majority otherwise.
+    ///         supermajority for AddMember/RemoveMember, simple majority for everything else
+    ///         (including SendETH — every kind of Foundation payment).
     function requiredVotesNow(ProposalType pType) external view returns (uint256) {
         return _requiredVotes(pType);
     }

@@ -229,7 +229,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `receive()` | هرکسی | — (`msg.value`) | — | سورن می‌پذیرد (بدون event خاص) |
 | `proposeAddMember(string description, string name, address account)` | فقط عضو | توضیح، نام عضو جدید، آدرس | `id` پیشنهاد | پیشنهاد افزودن عضو — ⚠️ **نصاب دوسوم** |
 | `proposeRemoveMember(string description, address account)` | فقط عضو | توضیح، آدرس عضو | `id` پیشنهاد | پیشنهاد حذف عضو — ⚠️ **نصاب دوسوم** |
-| `proposeSendETH(string description, address to, uint256 amount)` | فقط عضو | توضیح، مقصد، مبلغ | `id` پیشنهاد | پیشنهاد انتقال سورن از دارایی بنیاد — ⚠️ **نصاب دوسوم** |
+| `proposeSendETH(string description, address to, uint256 amount)` | فقط عضو | توضیح، مقصد، مبلغ | `id` پیشنهاد | پیشنهاد انتقال سورن از دارایی بنیاد — نصاب اکثریت ساده (⚠️ تصحیح‌شده: قبلاً اشتباهاً دوسوم بود) |
 | `proposeSendERC20(string description, address token, address to, uint256 amount)` | فقط عضو | توضیح، توکن، مقصد، مبلغ | `id` پیشنهاد | پیشنهاد انتقال یک توکن ERC20 دیگر (نه سورن) — اکثریت ساده |
 | `proposeExecute(string description, address target, uint256 value, bytes data)` | فقط عضو | توضیح، مقصد، مقدار، calldata دلخواه | `id` پیشنهاد | پیشنهاد اجرای هر فراخوانی دلخواه (انعطاف‌پذیر، پرریسک‌ترین مسیر) — اکثریت ساده |
 | `vote(uint256 proposalId)` | فقط عضو | شناسه‌ی پیشنهاد | — | رأی می‌دهد؛ با رسیدن به نصاب (دوسوم یا اکثریت ساده، بسته به نوع پیشنهاد)، فوراً اجرا می‌شود |
@@ -244,8 +244,8 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ### نصاب رأی‌گیری — یکسان نیست
 | نوع پیشنهاد | نصاب |
 |---|---|
-| `AddMember`, `RemoveMember`, `SendETH` | **دوسوم** (`ceil(2n/3)`) — مثلاً با ۱۵ عضو: ۱۰ رأی |
-| `SendERC20`, `Execute` | اکثریت ساده (`floor(n/2)+1`) — مثلاً با ۱۵ عضو: ۸ رأی |
+| `AddMember`, `RemoveMember` | **دوسوم** (`ceil(2n/3)`) — مثلاً با ۱۵ عضو: ۱۰ رأی |
+| `SendETH`, `SendERC20`, `Execute` | **اکثریت ساده** (`floor(n/2)+1`) — مثلاً با ۱۵ عضو: ۸ رأی. هر نوع پرداخت بنیاد اینجاست |
 
 ### متغیرهای عمومی مهم
 `memberList(index)`، `isMember(address)`، `proposalCount`. ⚠️ دیگر هیچ ثابت `TREASURY` یا وابستگی‌ای به `ValidatorsTreasury` وجود ندارد — این قرارداد کاملاً مستقل از خزانه‌ی ولیدیتورهاست.

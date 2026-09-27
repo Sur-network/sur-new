@@ -63,12 +63,11 @@ contract ValidatorsRegistry_GenesisSeed {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;
-        uint256 lastLivenessConfirmation;
-        uint256 livenessConfirmationsInPeriod;
-        uint256 totalLivenessChecksInPeriod; // ✅ اضافه شد — باید دقیقاً با struct واقعی یکی
-        // باشه (همون استدلال isPaidEntrant پایین: اندازه‌ی struct روی محاسبه‌ی slot هر
-        // ورودی بعدی mapping اثر می‌ذاره).
-        uint256 lastCheckedAt; // ✅ اضافه شد — همون استدلال
+        uint256 livenessPacked; // ✅ تغییر کرد — باید دقیقاً با فیلد فشرده‌ی liveness قرارداد
+        // واقعی یکی باشه (چیدمان بیتی: [0:40)=lastCheckedAt، [40:80)=lastLivenessConfirmation،
+        // [80:112)=totalLivenessChecksInPeriod، [112:144)=livenessConfirmationsInPeriod — به
+        // کامنت struct ValidatorInfo در خودِ ValidatorsRegistry.sol واقعی برای استدلال کامل
+        // مراجعه کن).
         uint256 pendingSlashEpoch; // ✅ اضافه شد — همون استدلال
         uint256 demotedAt;
         bool isPaidEntrant; // ✅ اضافه شد — باید دقیقاً با struct واقعی یکی باشه، وگرنه اندازه‌ی
@@ -121,10 +120,8 @@ contract ValidatorsRegistry_GenesisSeed {
                 status: Status.Active,
                 lockedStake: 0,
                 periodStartedAt: genesisTimestamp,
-                lastLivenessConfirmation: genesisTimestamp,
-                livenessConfirmationsInPeriod: 0,
-                totalLivenessChecksInPeriod: 0,
-                lastCheckedAt: 0,
+                // فشرده: lastCheckedAt=0، lastLivenessConfirmation=genesisTimestamp، totalChecks=0، confirmedChecks=0
+                livenessPacked: uint256(genesisTimestamp) << 40,
                 pendingSlashEpoch: 0,
                 demotedAt: 0,
                 isPaidEntrant: false // مؤسسین همیشه رایگانند، هرگز پرداخت‌کننده نیستند
