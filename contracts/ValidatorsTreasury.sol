@@ -71,13 +71,22 @@ contract ValidatorsTreasury {
     ///      before genesis, in native Suren wei).
     uint256 public perPaymentCap = 0;
 
-    /// @notice Ceiling on the SUM of every board-approved payment within the trailing 30 days —
-    ///         a true rolling window (see dailySpend below), not a fixed calendar period that
-    ///         resets and could be gamed right at the boundary (spend up to the cap right before
-    ///         reset, then again right after). Every payment counts toward this same shared
-    ///         total regardless of its destination or description — splitting one large payment
-    ///         into several smaller ones, or sending to different recipients, does not create
-    ///         separate budgets.
+    /// @notice Ceiling on the SUM of every board-approved payment within roughly the trailing 30
+    ///         days — a day-bucketed approximation (see dailySpend below), not an exact
+    ///         to-the-second sliding window. ⚠️ HONEST CORRECTION (found in independent review —
+    ///         an earlier version of this comment overclaimed precision): because `_currentDay()`
+    ///         buckets by calendar day (`block.timestamp / 1 days`, i.e., UTC day boundaries),
+    ///         a payment can age out of the 30-bucket sum up to ~24 hours earlier or later than
+    ///         an exact 30×24-hour window would, depending on what time of day within its bucket
+    ///         it was made. This is still meaningfully better than a naive periodic reset (which
+    ///         has a single, predictable, exploitable boundary every 30 days) — the day-bucket
+    ///         slop is small, bounded, and does not repeat at a fixed exploitable point — but it
+    ///         should not be described as a precise rolling window. If exact-second precision is
+    ///         ever required, the algorithm here would need to change (e.g., a timestamped log
+    ///         summed and pruned per payment, at meaningfully higher gas cost). Every payment
+    ///         counts toward this same shared total regardless of its destination or description
+    ///         — splitting one large payment into several smaller ones, or sending to different
+    ///         recipients, does not create separate budgets.
     /// @dev 🔶 FILL_IN (explicit user instruction: do not guess this number — a real decision
     ///      before genesis, in native Suren wei).
     uint256 public periodCap = 0;
@@ -190,9 +199,11 @@ contract ValidatorsTreasury {
         return block.timestamp / 1 days;
     }
 
-    /// @notice Sums exactly ROLLING_WINDOW_DAYS daily buckets ending today — a genuine trailing
-    ///         30-day window, immune to the "spend at the boundary twice" gaming a simple
-    ///         periodic reset would allow.
+    /// @notice Sums exactly ROLLING_WINDOW_DAYS daily buckets ending today — a day-granularity
+    ///         approximation of a trailing 30-day window (see periodCap's doc comment above for
+    ///         the honest precision caveat), not an exact-to-the-second sliding window. Still
+    ///         meaningfully better than a naive periodic reset: there is no single, fixed,
+    ///         repeatedly-exploitable boundary every 30 days the way a simple reset would have.
     function _rollingWindowSpend() private view returns (uint256 total) {
         uint256 today = _currentDay();
         for (uint256 i = 0; i < ROLLING_WINDOW_DAYS; i++) {

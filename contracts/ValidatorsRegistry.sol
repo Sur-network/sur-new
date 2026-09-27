@@ -925,15 +925,44 @@ contract ValidatorsRegistry {
     ///         admission that the suspension's underlying accusation is true. Starts the
     ///         72-hour appeal-FILING window (not the same as the appeal-VOTING period, which
     ///         only starts once an appeal is actually filed).
+    /// @notice ✅ FIXED (critical bug found in independent review): every function below that
+    ///         moves a suspension's case forward (confirmDelivery, assertDeliveryDisputed,
+    ///         fileAppeal, executeUncontestedSlash) now requires this to be true FIRST. Before
+    ///         this fix, none of them checked whether resolveMassFailureCheck() had even run —
+    ///         meaning a validator could confirm delivery, file an appeal, and have the slash
+    ///         voted on and executed (or rejected) BEFORE the 1-hour mass-failure window even
+    ///         closed, let alone before anyone knew whether this suspension was part of a mass
+    ///         failure. This directly violated the decided rule that mass-failure exemption must
+    ///         take precedence over any individual dispute — and once a case reached a final
+    ///         SlashOutcome this way, resolveMassFailureCheck() itself would revert afterward
+    ///         (its own `slashOutcome == Undetermined` guard), permanently locking out any later
+    ///         mass-failure exemption for that case.
+    function _massFailureResolved(StatusDecision storage d) private view returns (bool) {
+        return demotionEpochs[d.demotionEpochId].resolved;
+    }
+
     function confirmDelivery(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may confirm delivery");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
         require(d.delivery == DeliveryStatus.Pending || d.delivery == DeliveryStatus.Disputed, "ValidatorsRegistry: delivery already confirmed");
 
         d.delivery = DeliveryStatus.Confirmed;
         d.deliveryProvenAt = block.timestamp;
+        // ✅ FIXED (second bug found in the same review — see DeliveryDispute's doc comment):
+        // if a delivery dispute is currently open for this decision, the validator's own
+        // self-confirmation resolves it immediately and consistently — there is no longer any
+        // question left for the assembly to vote on, and leaving the dispute open would let
+        // resolveDeliveryDisputeIfExpired() later overwrite this confirmation with
+        // VoidedNoDelivery if the vote simply times out without quorum.
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        if (disp.filedAt != 0 && !disp.resolved) {
+            disp.resolved = true;
+            disp.deliveryConfirmed = true;
+            emit DeliveryDisputeResolved(decisionId, true);
+        }
         emit DeliveryConfirmed(decisionId, d.validator, block.timestamp);
     }
 
@@ -946,6 +975,7 @@ contract ValidatorsRegistry {
     function assertDeliveryDisputed(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
         require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
         require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
@@ -1029,6 +1059,7 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may file an appeal");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: appeal already filed");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
@@ -1083,6 +1114,7 @@ contract ValidatorsRegistry {
     function executeUncontestedSlash(uint256 decisionId) external nonReentrant {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: an appeal was filed for this decision");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
@@ -1139,19 +1171,28 @@ contract ValidatorsRegistry {
         );
 
         if (v.status == Status.Active) {
-            // ⚠️ CHANGED (explicit user decision — off-chain verification redesign): the
-            // "flee before demotion" anti-loophole that used to live here checked this
-            // validator's on-chain liveness log at the exact moment of exit. That log no longer
-            // exists (liveness is checked off-chain now — see the architecture note above
-            // recordSuspension()), so this contract can no longer independently determine
-            // "was this validator already eligible for suspension right now." The protection
-            // this used to provide now rests entirely on the Verifier: it may call
-            // recordSuspension() on a genuinely-inactive validator at any moment, including
-            // the instant before their requestExit() call lands, which produces the exact same
-            // pendingSlashEpoch-blocks-withdrawal effect as before — just via an explicit
-            // off-chain-verified decision instead of an on-chain self-check. A validator that
-            // exits before the Verifier acts keeps their full collateral, exactly as one that
-            // was genuinely still within tolerance always did.
+            // ⚠️ CHANGED (explicit user decision — off-chain verification redesign) — ⚠️⚠️
+            // HONEST CORRECTION (found in independent review: an earlier version of this comment
+            // overstated this as an equivalent replacement for the old protection; it is not):
+            // the "flee before demotion" anti-loophole that used to live here checked this
+            // validator's on-chain liveness log at the exact moment of exit — a check the
+            // CONTRACT ITSELF performed, independent of any external actor's timing. That log no
+            // longer exists (liveness is checked off-chain now — see the architecture note above
+            // recordSuspension()), so this contract can no longer independently determine "was
+            // this validator already eligible for suspension right now." What replaces it is
+            // NOT equivalent: it depends entirely on the Verifier noticing the inactivity and
+            // getting its recordSuspension() transaction mined BEFORE this requestExit()
+            // transaction — a genuine race condition with no on-chain guarantee either way. If
+            // the Verifier's off-chain detection lags, or its transaction is simply slower to
+            // land (e.g., during network congestion, or if the Verifier's own service is briefly
+            // degraded — the very scenario this mechanism exists to catch), a validator that
+            // knows it has gone inactive can request exit first and keep its full collateral,
+            // something the old on-chain self-check would have caught regardless of timing. This
+            // gap is accepted as a known, real trade-off of moving verification off-chain — not
+            // a solved problem — and is worth revisiting if it proves exploitable in practice
+            // (e.g., by adding a short exit-request delay that gives the Verifier a guaranteed
+            // window to act first, which was not adopted here to avoid slowing down legitimate
+            // exits).
             _removeFromActive(msg.sender);
         }
 

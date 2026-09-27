@@ -208,9 +208,30 @@ contract ValidatorsBoard {
         uint256 createdAt;
         uint256 expiresAt;
         bool executed;
+        /// @notice ✅ FIXED (bug found in independent review — critical for spending decisions
+        ///         specifically): `votes` used to be a simple counter with no link to WHICH
+        ///         addresses cast them or whether those addresses are still board members. Since
+        ///         `refreshBoard()` below can completely replace the board's membership, a
+        ///         proposal created and partly voted on under the OLD board could still reach its
+        ///         vote threshold using votes from members who have since left — e.g., two former
+        ///         members vote, then refreshBoard() replaces them, then just ONE current member
+        ///         casts the "third" vote, and the action executes with only 1 of its 3 counted
+        ///         votes coming from someone who is currently a board member. Fixed by snapshotting
+        ///         the board's version number here at creation, and invalidating (requiring a
+        ///         fresh proposal for) any action whose version no longer matches the current one
+        ///         — see boardVersion below and _voteAction()'s check.
+        uint256 boardVersionAtCreation;
     }
 
     uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
+
+    /// @notice ✅ NEW: increments every time refreshBoard() below actually runs and produces a
+    ///         result (regardless of whether the resulting membership happens to be identical to
+    ///         before — treating every refresh as a version bump is deliberately conservative:
+    ///         the alternative, comparing old vs. new membership sets to decide whether to bump,
+    ///         adds real complexity for a case — an action sitting open across a refresh that
+    ///         changed nothing — that is rare and cheap to just re-propose).
+    uint256 public boardVersion = 1;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
@@ -369,6 +390,13 @@ contract ValidatorsBoard {
             finalVotes[i] = newBoardVotes[i];
         }
 
+        // ✅ FIXED (bug found in independent review — see boardVersionAtCreation's doc comment
+        // above): bump the board version every time membership is (re)installed, so any action
+        // proposed and partly voted on under the old membership is invalidated — its votes,
+        // including any cast by members who are no longer on the board, can never count toward
+        // a decision made by the new board.
+        boardVersion++;
+
         emit BoardRefreshed(finalBoard, finalVotes);
     }
 
@@ -480,7 +508,8 @@ contract ValidatorsBoard {
             // floor, frozen now from the ACTUAL current board size — see the doc comment above
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
-            executed: false
+            executed: false,
+            boardVersionAtCreation: boardVersion
         });
         emit ActionProposed(id, atype, target, amount, msg.sender);
         _voteAction(id, msg.sender);
@@ -491,6 +520,14 @@ contract ValidatorsBoard {
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
         require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
+        // ✅ FIXED (bug found in independent review — see boardVersionAtCreation's doc comment
+        // in the BoardAction struct above): if the board's membership has changed since this
+        // action was proposed, it is invalidated — voters must propose it again under the
+        // current board. This is what actually prevents stale votes from former members (who
+        // voted before leaving) from ever counting toward a fresh board's decisions; simply
+        // checking `isBoardMember` at vote time (which already existed) was not enough, since it
+        // only validates the CURRENT voter, not the historical votes already tallied.
+        require(a.boardVersionAtCreation == boardVersion, "ValidatorsBoard: board membership changed since this action was proposed - propose again");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
         actionHasVoted[id][voter] = true;

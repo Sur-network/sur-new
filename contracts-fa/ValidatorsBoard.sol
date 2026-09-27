@@ -204,9 +204,30 @@ contract ValidatorsBoard {
         uint256 createdAt;
         uint256 expiresAt;
         bool executed;
+        /// @notice ✅ اصلاح‌شده (باگی پیداشده در بازبینی مستقل — حیاتی مخصوصاً برای تصمیمات
+        ///         خرج): `votes` قبلاً یه شمارنده‌ی ساده بود، بدون هیچ ارتباطی با این‌که کدوم
+        ///         آدرس‌ها این رأی‌ها رو زدن یا آیا اون آدرس‌ها هنوز عضو هیأت‌مدیره‌ان یا نه.
+        ///         چون refreshBoard() پایین می‌تونه کل عضویت هیأت‌مدیره رو کاملاً عوض کنه، یه
+        ///         پیشنهاد ساخته‌شده و نیمه‌رأی‌گرفته زیر هیأت‌مدیره‌ی **قدیمی** همچنان می‌تونست
+        ///         به نصابش برسه با استفاده از رأی‌های اعضایی که از اون‌موقع خارج شدن — مثلاً
+        ///         دو عضو سابق رأی می‌دن، بعد refreshBoard() جایگزینشون می‌کنه، بعد فقط **یه**
+        ///         عضو فعلی رأی «سوم» رو می‌زنه، و اقدام با فقط ۱ رأی از ۳ رأی شمرده‌شده که واقعاً
+        ///         از یه عضو *فعلی* هیأت‌مدیره اومده، اجرا می‌شه. اصلاح شد با snapshot‌کردن
+        ///         شماره‌ی نسخه‌ی هیأت‌مدیره اینجا در لحظه‌ی ثبت، و باطل‌کردن (نیاز به پیشنهاد
+        ///         تازه برای) هر اقدامی که نسخه‌اش دیگه با نسخه‌ی فعلی یکی نیست — boardVersion
+        ///         پایین و چک _voteAction() را ببین.
+        uint256 boardVersionAtCreation;
     }
 
     uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
+
+    /// @notice ✅ تازه: هر بار refreshBoard() پایین واقعاً اجرا بشه و یه نتیجه بده افزایش پیدا
+    ///         می‌کنه (صرف‌نظر از این‌که عضویت نهایی اتفاقاً با قبلش یکسان باشه یا نه — رفتار
+    ///         افزایش‌دادن روی هر refresh عمداً محافظه‌کارانه‌ست: جایگزینش، مقایسه‌ی مجموعه‌ی
+    ///         عضویت قدیم/جدید برای تصمیم‌گیری درباره‌ی افزایش، پیچیدگی واقعی اضافه می‌کنه
+    ///         برای یه حالت — یه اقدام باز که روی یه refresh که هیچی رو عوض نکرده گیر کرده —
+    ///         که نادر و ارزون برای دوباره‌پیشنهاددادنه).
+    uint256 public boardVersion = 1;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
@@ -365,6 +386,13 @@ contract ValidatorsBoard {
             finalVotes[i] = newBoardVotes[i];
         }
 
+        // ✅ اصلاح‌شده (باگ پیداشده در بازبینی مستقل — به کامنت boardVersionAtCreation بالا
+        // مراجعه کن): نسخه‌ی هیأت‌مدیره رو هر بار که عضویت (دوباره) نصب می‌شه بالا می‌بریم،
+        // پس هر اقدامی که زیر عضویت قدیمی پیشنهاد و نیمه‌رأی‌گرفته شده باطل می‌شه — رأی‌هاش،
+        // حتی اونایی که اعضای دیگه‌عضونیستِ هیأت‌مدیره زدن، هرگز نمی‌تونن به تصمیم هیأت‌مدیره‌ی
+        // تازه برسن.
+        boardVersion++;
+
         emit BoardRefreshed(finalBoard, finalVotes);
     }
 
@@ -475,7 +503,8 @@ contract ValidatorsBoard {
             // سخت، همین لحظه از اندازه‌ی *واقعی* فعلی هیأت‌مدیره ثابت‌شده — به کامنت بالا مراجعه کن
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
-            executed: false
+            executed: false,
+            boardVersionAtCreation: boardVersion
         });
         emit ActionProposed(id, atype, target, amount, msg.sender);
         _voteAction(id, msg.sender);
@@ -486,6 +515,14 @@ contract ValidatorsBoard {
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
         require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
+        // ✅ اصلاح‌شده (باگ پیداشده در بازبینی مستقل — به کامنت boardVersionAtCreation توی
+        // struct BoardAction بالا مراجعه کن): اگه عضویت هیأت‌مدیره از وقتی این اقدام پیشنهاد
+        // شده عوض شده باشه، باطل می‌شه — رأی‌دهنده‌ها باید دوباره زیر هیأت‌مدیره‌ی فعلی
+        // پیشنهادش بدن. این دقیقاً همون چیزیه که واقعاً جلوی شمرده‌شدن رأی‌های مانده از اعضای
+        // سابق (که قبل از خروج رأی داده بودن) توی تصمیمات یه هیأت‌مدیره‌ی تازه رو می‌گیره؛
+        // فقط چک‌کردن `isBoardMember` در لحظه‌ی رأی (که از قبل بود) کافی نبود، چون فقط
+        // رأی‌دهنده‌ی *فعلی* رو معتبر می‌کنه، نه رأی‌های تاریخی‌ای که قبلاً شمرده شدن.
+        require(a.boardVersionAtCreation == boardVersion, "ValidatorsBoard: board membership changed since this action was proposed - propose again");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
         actionHasVoted[id][voter] = true;

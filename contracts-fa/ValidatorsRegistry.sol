@@ -937,15 +937,43 @@ contract ValidatorsRegistry {
     /// @notice فقط تأیید می‌کنه بسته‌ی شواهد دریافت شده — صریحاً به‌معنای پذیرفتن درستیِ خودِ
     ///         اتهام تعلیق **نیست**. پنجره‌ی ۷۲ساعته‌ی ثبت اعتراض رو شروع می‌کنه (که با دوره‌ی
     ///         رأی‌گیری اعتراض یکی نیست — اون فقط با ثبت واقعی یه اعتراض شروع می‌شه).
+    /// @notice ✅ اصلاح‌شده (باگ بحرانی پیداشده در بازبینی مستقل): هر تابع پایین که پرونده‌ی
+    ///         یه تعلیق رو جلو می‌بره (confirmDelivery، assertDeliveryDisputed، fileAppeal،
+    ///         executeUncontestedSlash) الان اول این رو true می‌خواد. قبل از این اصلاح، هیچ‌کدوم
+    ///         چک نمی‌کردن آیا resolveMassFailureCheck() اصلاً اجرا شده — یعنی یه ولیدیتور
+    ///         می‌تونست تحویل رو تأیید کنه، اعتراض ثبت کنه، و جریمه رأی‌گیری و اجرا (یا رد) بشه
+    ///         **قبل از این‌که حتی پنجره‌ی ۱ساعته‌ی رخداد جمعی بسته بشه**، چه برسه به این‌که
+    ///         معلوم بشه این تعلیق بخشی از یه رخداد جمعی بوده یا نه. این مستقیماً قاعده‌ی
+    ///         تصمیم‌گرفته‌شده رو نقض می‌کرد که معافیت رخداد جمعی باید بر هر اختلاف موردی تقدم
+    ///         داشته باشه — و یه‌بار که یه پرونده این‌طوری به یه SlashOutcome نهایی می‌رسید،
+    ///         خودِ resolveMassFailureCheck() بعداً revert می‌کرد (به‌خاطر شرط خودش
+    ///         `slashOutcome == Undetermined`)، و برای همیشه راه هر معافیت رخداد جمعی بعدی رو
+    ///         برای اون پرونده می‌بست.
+    function _massFailureResolved(StatusDecision storage d) private view returns (bool) {
+        return demotionEpochs[d.demotionEpochId].resolved;
+    }
+
     function confirmDelivery(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may confirm delivery");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
         require(d.delivery == DeliveryStatus.Pending || d.delivery == DeliveryStatus.Disputed, "ValidatorsRegistry: delivery already confirmed");
 
         d.delivery = DeliveryStatus.Confirmed;
         d.deliveryProvenAt = block.timestamp;
+        // ✅ اصلاح‌شده (باگ دومی که توی همین بازبینی پیدا شد — به کامنت DeliveryDispute مراجعه
+        // کن): اگه یه اختلاف تحویل الان برای این تصمیم بازه، خودتأییدی ولیدیتور بلافاصله و
+        // به‌طور سازگار حلش می‌کنه — دیگه هیچ سؤالی برای رأی‌گیری مجمع باقی نمی‌مونه، و باز
+        // گذاشتنش می‌ذاشت resolveDeliveryDisputeIfExpired() بعداً، اگه رأی‌گیری بدون نصاب
+        // تموم بشه، این تأیید رو با VoidedNoDelivery بازنویسی کنه.
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        if (disp.filedAt != 0 && !disp.resolved) {
+            disp.resolved = true;
+            disp.deliveryConfirmed = true;
+            emit DeliveryDisputeResolved(decisionId, true);
+        }
         emit DeliveryConfirmed(decisionId, d.validator, block.timestamp);
     }
 
@@ -957,6 +985,7 @@ contract ValidatorsRegistry {
     function assertDeliveryDisputed(uint256 decisionId) external {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
         require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
         require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
@@ -1040,6 +1069,7 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may file an appeal");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: appeal already filed");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
@@ -1094,6 +1124,7 @@ contract ValidatorsRegistry {
     function executeUncontestedSlash(uint256 decisionId) external nonReentrant {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(_massFailureResolved(d), "ValidatorsRegistry: mass-failure window not resolved yet");
         require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
         require(!d.appealFiled, "ValidatorsRegistry: an appeal was filed for this decision");
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
@@ -1150,17 +1181,26 @@ contract ValidatorsRegistry {
         );
 
         if (v.status == Status.Active) {
-            // ⚠️ تغییرکرده (تصمیم صریح کاربر — بازطراحی راستی‌آزمایی آف‌چین): راه‌فرار ضدِ«فرار
-            // قبل از دموت» که اینجا بود، لحظه‌ی خروج، لاگ liveness on-chain این ولیدیتور رو چک
-            // می‌کرد. اون لاگ دیگه وجود نداره (liveness الان آف‌چین چک می‌شه — به یادداشت
+            // ⚠️ تغییرکرده (تصمیم صریح کاربر — بازطراحی راستی‌آزمایی آف‌چین) — ⚠️⚠️ تصحیح
+            // صادقانه (پیداشده در بازبینی مستقل: یه نسخه‌ی قبلی این کامنت این رو به‌عنوان یه
+            // جایگزین **هم‌ارز** با محافظ قدیمی معرفی کرده بود؛ نیست): راه‌فرار ضدِ«فرار قبل
+            // از دموت» که اینجا بود، لحظه‌ی خروج، لاگ liveness on-chain این ولیدیتور رو چک
+            // می‌کرد — یه چکی که خودِ **قرارداد** انجامش می‌داد، مستقل از زمان‌بندی هر عامل
+            // بیرونی. اون لاگ دیگه وجود نداره (liveness الان آف‌چین چک می‌شه — به یادداشت
             // معماری بالای recordSuspension() مراجعه کن)، پس این قرارداد دیگه نمی‌تونه مستقل
-            // تشخیص بده «آیا این ولیدیتور همین الان واجد شرایط تعلیق بوده». محافظتی که این
-            // قبلاً می‌داد الان کاملاً روی دوش Verifier‌ه: می‌تونه recordSuspension() رو روی
-            // یه ولیدیتور واقعاً غیرفعال، هر لحظه، حتی درست قبل از رسیدن تراکنش
-            // requestExit()‌اش صدا بزنه، که دقیقاً همون اثر «pendingSlashEpoch جلوی برداشت رو
-            // می‌گیره» رو تولید می‌کنه — فقط از طریق یه تصمیم صریح راستی‌آزمایی‌شده‌ی آف‌چین
-            // به‌جای یه خودچک on-chain. ولیدیتوری که قبل از اقدام Verifier خارج بشه، کل
-            // وثیقه‌ش رو نگه می‌داره، دقیقاً مثل کسی که واقعاً هنوز داخل تحمل بوده.
+            // تشخیص بده «آیا این ولیدیتور همین الان واجد شرایط تعلیق بوده». چیزی که جایگزینش
+            // شده **هم‌ارز نیست**: کاملاً به این بستگی داره که Verifier غیرفعالی رو متوجه بشه
+            // و تراکنش recordSuspension()‌اش **قبل از** این تراکنش requestExit() ماین بشه —
+            // یه race condition واقعی، بدون هیچ تضمین on-chain‌ای به هیچ‌طرف. اگه تشخیص
+            // آف‌چین Verifier عقب بیفته، یا تراکنشش صرفاً کندتر برسه (مثلاً موقع ازدحام شبکه،
+            // یا اگه خودِ سرویس Verifier یه‌لحظه دچار افت بشه — دقیقاً همون سناریویی که این
+            // مکانیزم برای گرفتنش وجود داره)، یه ولیدیتوری که می‌دونه غیرفعال شده می‌تونه
+            // اول درخواست خروج بده و کل وثیقه‌ش رو نگه داره، چیزی که خودچک قدیمی on-chain
+            // صرف‌نظر از زمان‌بندی می‌گرفتش. این شکاف به‌عنوان یه مصالحه‌ی واقعی و شناخته‌شده‌ی
+            // انتقال به راستی‌آزمایی آف‌چین پذیرفته شده — نه یه مسئله‌ی حل‌شده — و اگه در عمل
+            // قابل‌سوءاستفاده ثابت بشه، ارزش بازنگری داره (مثلاً افزودن یه تأخیر کوتاه به
+            // درخواست خروج که به Verifier یه پنجره‌ی تضمین‌شده برای اقدام اول بده، که اینجا
+            // پذیرفته نشد تا خروج‌های مشروع کند نشن).
             _removeFromActive(msg.sender);
         }
 
