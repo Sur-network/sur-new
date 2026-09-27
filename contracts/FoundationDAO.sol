@@ -12,14 +12,14 @@ interface IERC20 {
 ///         Governance contract for the SUR Foundation (renamed from MemberDAO). Manages the
 ///         foundation's own members and funds.
 ///
-///         GOVERNANCE THRESHOLDS (updated decision — no longer uniform across proposal types):
-///           - AddMember, RemoveMember, SendETH: TWO-THIRDS supermajority, ceil(2n/3) of
-///             current members. A deliberately higher bar for membership changes and for
-///             spending native currency (Suren) — including this contract's genesis-allocated
-///             20,000,000 Suren balance (see design doc section 6 / foundation charter article
-///             3-6), since Suren is the chain's native currency and SendETH is how any native
-///             transfer, from any balance this contract holds, is made.
-///           - SendERC20, Execute: unchanged, simple majority, floor(n/2) + 1.
+///         GOVERNANCE THRESHOLDS (final — corrected after an explicit user decision):
+///           - AddMember, RemoveMember: TWO-THIRDS supermajority, ceil(2n/3) of
+///             current members — a deliberately higher bar for membership changes specifically.
+///           - SendETH, SendERC20, Execute: simple majority, floor(n/2) + 1. ✅ CORRECTED:
+///             SendETH (including this contract's genesis-allocated 20,000,000 Suren balance —
+///             see design doc section 6 / foundation charter article 3-6) was previously grouped
+///             under the two-thirds bar above; every kind of Foundation payment now uses the
+///             same simple-majority threshold instead, per an explicit user decision.
 ///
 ///         ⚠️ REMOVED (updated decision): `proposeRequestTreasuryBudget` / `RequestTreasuryBudget`
 ///         — judged not useful and removed entirely. This contract now has NO connection

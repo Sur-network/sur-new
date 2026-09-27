@@ -756,10 +756,6 @@ contract ValidatorsRegistry {
 
     event LivenessReported(address indexed validator, bool isLive, uint256 timestamp);
 
-    /// @notice Report whether `validator` was confirmed live (see method notes above). Only
-    ///         updates state on a positive confirmation — a negative report is logged (for
-    ///         transparency/audit) but does not touch the stored counters, since the whole
-    ///         point of inactivity detection is the ABSENCE of positive confirmations over time.
     /// @notice Shared internal logic for a single validator's liveness report — called by both
     ///         reportLiveness() (single) and reportLivenessBatch() (looped) below. Kept as one
     ///         function so the two entry points can never drift apart in behavior.

@@ -163,8 +163,8 @@ contract SurenSale {
 
     // ------------------------------------------------------------------
     // Funding — the Foundation periodically deposits a portion of its balance here
-    // (`FoundationDAO.proposeSendETH`, two-thirds quorum — since this is a real expenditure of
-    // the Foundation's Suren).
+    // (`FoundationDAO.proposeSendETH`, simple-majority quorum — every kind of Foundation
+    // payment uses this threshold; see FoundationDAO.sol's governance thresholds doc comment).
     // ------------------------------------------------------------------
     receive() external payable {
         emit Funded(msg.sender, msg.value);
