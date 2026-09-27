@@ -333,6 +333,40 @@
 
 🔴 هر دو زبان کامپایل تأیید شده. **آزمون Besu واقعی هنوز انجام نشده.**
 
+## ۲۱. بازطراحی کامل معماری راستی‌آزمایی — از liveness on-chain به وریفای آف‌چین با تحویل/اعتراض/رأی
+
+بزرگ‌ترین بازطراحی این پروژه تا الان. طبق تصمیم صریح کاربر، کل مکانیزم liveness on-chain (که حتی بعد از بهینه‌سازی گس هنوز ~۱۴٪ از تولید خزانه هزینه داشت) کاملاً حذف و با یه معماری جدید جایگزین شد.
+
+### چی حذف شد
+`reportLiveness`, `reportLivenessBatch`, `_recordLivenessCheck`, تمام توابع pack/unpack، `livenessPacked`، `MIN_CHECK_COVERAGE_BPS`, `EXPECTED_VERIFIER_CADENCE_SECONDS`, `MIN_LIVENESS_CHECK_INTERVAL`, `requiredLivenessRatioBps`, `requiredRecoveryLivenessRatioBps`, `inactivityThreshold`، و توابع قدیمی `promoteAfterProbation`/`promoteAfterRecovery`/`demoteForInactivity`/`resolvePendingSlash`.
+
+### چی جایگزینش شد
+- **`recordActivation`/`recordSuspension`/`recordRecovery`** (`onlyVerifier`) — فقط موقع تغییر واقعی وضعیت صدا زده می‌شن، هرکدوم با یه `evidenceHash`.
+- **`resolveMassFailureCheck`** — جایگزین `resolvePendingSlash`؛ فقط گیت رخداد جمعیه، دیگه مستقیم جریمه نمی‌کنه.
+- **`confirmDelivery`, `assertDeliveryDisputed`, `voteOnDelivery`, `resolveDeliveryDisputeIfExpired`** — مکانیزم تحویل بسته‌ی شواهد.
+- **`fileAppeal`, `confirmSlash`, `resolveAppealIfExpired`, `executeUncontestedSlash`** — مکانیزم اعتراض و رأی‌گیری نهایی جریمه.
+- ساختارهای تازه: `StatusDecision`, `DeliveryDispute`, enum‌های `DecisionType`/`DeliveryStatus`/`SlashOutcome`.
+
+### قواعد کلیدی پیاده‌سازی‌شده
+۱. حذف فوری و بدون‌قید از لیست فعال (بدون تغییر)
+۲. رخداد جمعی همیشه اول چک می‌شه، قبل از هر اختلاف موردی
+۳. تحویل = فقط تأیید دریافت، نه پذیرش درستی اتهام
+۴. پنجره‌ی ۷۲ساعته‌ی اعتراض از تحویل *ثابت‌شده*، نه ادعای Verifier
+۵. مهلت رأی‌گیری (۷ روز) جدا از مهلت ثبت اعتراض
+۶. نبود نصاب = رد جریمه، ولی تعلیق اجماعی دست‌نخورده می‌مونه
+۷. مرجع رسیدگی = مجمع کامل، نه هیأت‌مدیره (تضاد منافع `setVerifier`)
+۸. مسیر عدم‌تحویل (اختلاف تحویل) با رأی جدا و مقدم بر رأی جریمه
+
+### باگ‌های اضافی پیدا و اصلاح‌شده حین این بازطراحی
+- کامنت کاملاً قدیمی و غلط کنار منطق liveness (از قبل از بازطراحی نسبت ۹۵٪) که رفتار واقعی کد رو اشتباه توصیف می‌کرد
+- `GenesisSeed` helper (**هر دو زبان**) هنوز `livenessPacked` قدیمی رو داشت بعد از بازطراحی — دقیقاً همون کلاس باگ ABI که قبلاً با `ValidatorsBoard` پیدا شده بود، این‌بار بین Registry و genesis helper خودش. اصلاح شد و با استخراج و مقایسه‌ی مستقیم `storageLayout` واقعی هر دو (هر دو زبان)، **مو‌به‌مو تأیید شد**.
+- `getValidatorInfo` کاملاً بازطراحی شد (۸ خروجی → ۶ خروجی)؛ `ValidatorsBoard.sol` (هر دو زبان) با امضای تازه هماهنگ شد.
+
+### آزمون اجرایی واقعی (نه فقط کامپایل)
+روی Hardhat، با شبیه‌سازی کامل ۱۰ ولیدیتور، هر ۶ مسیر اصلی تست و **کامل تأیید شدند**: فعال‌سازی معمولی، تعلیق+بی‌اعتراض+جریمه‌ی خودکار، رخداد جمعی+معافیت، اعتراض موفق+رأی مجمع، اعتراض+عدم‌نصاب+رد جریمه (با تأیید این‌که تعلیق دست‌نخورده موند)، اختلاف تحویل+رأی مجمع.
+
+🔴 هر دو زبان کامپایل تأیید شده. آزمون Besu واقعی هنوز انجام نشده. اسناد `sur-tokenomics.md` و `sur-verifier-service-spec.md` هر دو با معماری تازه به‌روز شدند.
+
 ## خلاصه‌ی اولویت‌بندی پیشنهادی
 
 

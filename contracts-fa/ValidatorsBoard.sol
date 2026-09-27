@@ -13,13 +13,21 @@ interface IValidatorsRegistry {
     function recoveryPeriod() external view returns (uint256);
     /// @dev `status` معادل ABI-سازگار enum ValidatorsRegistry.Status به صورت uint8 است:
     ///      ۰=None، ۱=Probation، ۲=Active، ۳=Demoted، ۴=Exiting.
+    /// @dev ✅ به‌روزشده (بازطراحی معماری راستی‌آزمایی آف‌چین): تابع واقعی
+    ///      ValidatorsRegistry.getValidatorInfo() دیگه اصلاً هیچ فیلد نسبت liveness ای نداره
+    ///      (کاملاً حذف شدن — liveness الان آف‌چین چک می‌شه). دقیقاً ۶ خروجی به همین ترتیب
+    ///      برمی‌گردونه: status، lockedStake، periodStartedAt، demotedAt، pendingSlashEpoch،
+    ///      isPaidEntrant. این اینترفیس باید دقیقاً همینو، با همون ترتیب، منعکس کنه — به
+    ///      کامنت خودِ تابع واقعی توی ValidatorsRegistry.sol مراجعه کن که چرا یه ناهماهنگی
+    ///      اینجا توی یه نسخه‌ی قبلی یه باگ واقعی و بی‌صدای بین‌قراردادی ساخت (اصلاح‌شده
+    ///      اون‌موقع، ولی ارزش داره هر بار که امضای تابع واقعی دوباره عوض می‌شه، دوباره چک بشه).
     function getValidatorInfo(address who) external view returns (
         uint8 status,
         uint256 lockedStake,
         uint256 periodStartedAt,
-        uint256 lastLivenessConfirmation,
-        uint256 livenessConfirmationsInPeriod,
-        uint256 demotedAt
+        uint256 demotedAt,
+        uint256 pendingSlashEpoch,
+        bool isPaidEntrant
     );
 }
 
@@ -373,7 +381,7 @@ contract ValidatorsBoard {
     ///         refreshBoard() شمرده نمی‌شوند (بالا را ببین) — این تابع فقط storage/جای رأی را
     ///         آزاد می‌کند، خودش تغییری در ترکیب فعلی هیأت نمی‌دهد.
     function clearStaleVotes(address validator) external {
-        (uint8 status, , , , , uint256 demotedAt) = REGISTRY.getValidatorInfo(validator);
+        (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
         require(status == 3, "ValidatorsBoard: validator is not currently demoted"); // ۳ = Status.Demoted
         uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
@@ -396,9 +404,16 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     function proposeRotateOracle(address newOracle) external onlyBoardMember returns (uint256 id) {
         require(newOracle != address(0), "ValidatorsBoard: zero oracle address");
-        id = _createAction(ActionType.RotateOracle, newOracle, 0, "");
+        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", 0);
     }
 
+    /// @notice ✅ تضمین تازه (تصمیم صریح کاربر): برخلاف هر اقدام دیگه‌ی هیأت‌مدیره، یه پیشنهاد
+    ///         ApproveBudget نیاز به یه **حداقل سخت ۳ رأی موافق** داره، صرف‌نظر از این‌که
+    ///         هیأت‌مدیره‌ی فعلی چقدر کوچیک شده باشه (مثلاً با فقط ۳ عضو، فرمول اکثریت ساده
+    ///         فقط ۲ تا لازم داشت — کافی نیست برای یه تصمیم خرج). اگه کمتر از ۳ عضو واجد شرایط
+    ///         هیأت‌مدیره الان وجود داشته باشه، خرج کاملاً متوقف می‌شه (این تابع revert می‌کنه)
+    ///         تا ترکیب هیأت‌مدیره حداقل به ۳ برگرده — هیچ نصاب کوچیک‌تری هرگز نمی‌تونه یه
+    ///         پرداخت رو تصویب کنه، هرچقدرم فوری باشه.
     function proposeApproveBudget(address to, uint256 amount, string calldata description)
         external
         onlyBoardMember
@@ -406,40 +421,48 @@ contract ValidatorsBoard {
     {
         require(to != address(0), "ValidatorsBoard: zero recipient address");
         require(amount > 0, "ValidatorsBoard: zero amount");
-        id = _createAction(ActionType.ApproveBudget, to, amount, description);
+        require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
+        id = _createAction(ActionType.ApproveBudget, to, amount, description, 3);
     }
 
     /// @notice پیشنهاد یک entryThresholdBase تازه روی ValidatorsRegistry (پارامتر اقتصادی
     ///         ورود — تحت حکمرانی هیأت؛ کامنت مستندات سطح قرارداد را ببین).
     function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "");
+        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
     }
 
     /// @notice پیشنهاد یک growthFactorPerValidator تازه روی ValidatorsRegistry (fixed-point، ۱۸
     ///         رقم اعشار؛ باید > ۱.۰ باشد، یعنی > 1_000000000000000000).
     function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
-        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "");
+        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
     }
 
     /// @notice پیشنهاد یک membershipFeeBps تازه روی ValidatorsRegistry.
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
-        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "");
+        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
     }
 
     /// @notice پیشنهاد چرخش کلید احراز هویت (`verifier`) روی ValidatorsRegistry — یک چرخش
     ///         روتین کلید عملیاتی، دقیقاً همان الگوی proposeRotateOracle.
     function proposeRotateVerifier(address newVerifier) external onlyBoardMember returns (uint256 id) {
         require(newVerifier != address(0), "ValidatorsBoard: zero verifier address");
-        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "");
+        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", 0);
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
         _voteAction(id, msg.sender);
     }
 
-    function _createAction(ActionType atype, address target, uint256 amount, string memory description) private returns (uint256 id) {
+    /// @notice ✅ پارامتر تازه (تصمیم صریح کاربر — ApproveBudget به‌طور خاص هرگز نباید با
+    ///         کمتر از ۳ رأی موافق اجرا بشه، حتی اگه هیأت‌مدیره از اندازه‌ی کاملش (۵ نفر)
+    ///         کوچیک‌تر شده باشه). `minRequiredVotes` برای هر نوع اقدام *دیگه* صفره (یعنی «از
+    ///         فرمول اکثریت ساده استفاده کن، بدون حداقل اضافه») و فقط برای ApproveBudget ۳ه —
+    ///         به proposeApproveBudget پایین مراجعه کن که چرا خرج به‌طور خاص به این حداقل
+    ///         سخت‌گیرانه‌تر نیاز داره درحالی‌که اقدامات روتینی مثل چرخش کلید نیازی ندارن.
+    function _createAction(ActionType atype, address target, uint256 amount, string memory description, uint256 minRequiredVotes) private returns (uint256 id) {
+        uint256 majority = (boardMembers.length / 2) + 1;
         actionCount++;
         id = actionCount;
         actions[id] = BoardAction({
@@ -448,7 +471,8 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
-            requiredVotes: (boardMembers.length / 2) + 1, // ✅ همین لحظه، از اندازه‌ی *واقعی* فعلی هیأت‌مدیره ثابت‌شده
+            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes, // ✅ حداقل
+            // سخت، همین لحظه از اندازه‌ی *واقعی* فعلی هیأت‌مدیره ثابت‌شده — به کامنت بالا مراجعه کن
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
@@ -475,6 +499,13 @@ contract ValidatorsBoard {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);
                 emit OracleRotated(a.target);
             } else if (a.atype == ActionType.ApproveBudget) {
+                // ✅ تازه: دوباره در لحظه‌ی *اجرا* چک می‌شه، نه فقط لحظه‌ی پیشنهاد — تصمیم
+                // کاربر صریحاً «اعضای فعلی» رو گفته، یعنی حتی اگه این اقدام از قبل، وقتی
+                // هیأت‌مدیره هنوز ≥۳ عضو داشت، رأی لازمش رو جمع کرده باشه، اجرا باید همچنان
+                // متوقف بشه اگه هیأت‌مدیره از اون‌موقع تا این رأی نهایی به کمتر از ۳ رسیده
+                // باشه. کل تراکنش رأی (شامل همین رأی) در این حالت revert می‌شه، پس هیچ‌چیزی
+                // بی‌صدا رد یا ناقص ثبت نمی‌شه — اول باید ترکیب هیأت‌مدیره درست بشه.
+                require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
             } else if (a.atype == ActionType.SetEntryThresholdBase) {

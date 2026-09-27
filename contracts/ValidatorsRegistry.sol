@@ -110,30 +110,22 @@ contract ValidatorsRegistry {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;   // start of current probation OR recovery OR exit-cooldown window
-        // ✅ REDESIGNED (found during a gas-optimization review to be a real, measured win): the
-        // four liveness fields below — lastLivenessConfirmation, livenessConfirmationsInPeriod,
-        // totalLivenessChecksInPeriod, lastCheckedAt — used to be four separate uint256 fields,
-        // each its own 32-byte storage slot. Empirically measured (real Hardhat deployment, not
-        // estimated): a normal positive reportLiveness() call cost ~48,546 gas that way. Packed
-        // into ONE uint256 (bit-packed via _packLiveness()/_unpackLiveness() below), the same
-        // call costs ~27,588 gas (43% less) — because writing 4 separate slots becomes writing
-        // ONE. Layout (see _packLiveness()/_unpackLiveness() for the authoritative bit math):
-        //   bits [0:40)    lastCheckedAt              (uint40 — timestamps fit until year 36812)
-        //   bits [40:80)   lastLivenessConfirmation   (uint40)
-        //   bits [80:112)  totalLivenessChecksInPeriod (uint32 — periodic reset keeps this far
-        //                                               below its ~4.3 billion ceiling)
-        //   bits [112:144) livenessConfirmationsInPeriod (uint32)
-        // ⚠️ Trade-off, stated plainly: this is genuinely less readable than four named fields —
-        // anyone auditing this contract must trust _packLiveness()/_unpackLiveness() rather than
-        // reading a field name directly. Kept anyway because the gas saving is large and
-        // compounds directly with reportLivenessBatch() below (see MASS_DEMOTION_WINDOW-era
-        // review notes in sur-tokenomics.md section 6 for the full economic case: combined with
-        // batching, this took Verifier gas cost from exceeding the Treasury's entire daily 35%
-        // share to a small fraction of it).
-        uint256 livenessPacked;
-        uint256 pendingSlashEpoch; // ✅ NEW: nonzero while this validator has an unresolved
-        // inactivity-slash decision awaiting resolvePendingSlash() — see DemotionEpoch's doc
-        // comment above for the full mechanism this supports. Zero means "no pending slash."
+        // ✅ REDESIGNED (explicit user decision — moved to fully off-chain verification): the
+        // on-chain liveness-ratio tracking that used to live here (packed lastCheckedAt/
+        // lastLivenessConfirmation/totalLivenessChecksInPeriod/livenessConfirmationsInPeriod)
+        // has been removed entirely. The Verifier now checks every node's liveness off-chain
+        // (hourly) and reports ONLY status CHANGES on-chain — activation after probation,
+        // suspension, or recovery — each carrying a hash of the off-chain evidence package that
+        // justified it (see StatusDecision below), not a running on-chain tally. Rationale
+        // (stated by the user): most polling cycles change nothing, so paying gas for a
+        // transaction every single cycle for every validator was wasteful once the decision was
+        // made to trust the Verifier's off-chain computation, anchor it with a hash for later
+        // dispute, and let a validator or the assembly challenge it rather than have the
+        // contract re-derive the ratio itself from an on-chain log it no longer keeps.
+        uint256 pendingSlashEpoch; // nonzero while this validator has an unresolved
+        // inactivity-slash decision (mass-failure check pending, OR delivery/appeal pending —
+        // see StatusDecision and DemotionEpoch below for the full mechanism). Zero means "no
+        // pending slash." Still blocks withdrawStake() below exactly as before.
         uint256 demotedAt;          // 0 if never demoted / currently not in Demoted status
         bool isPaidEntrant;        // ✅ NEW: true only for validators who actually paid via
         // requestMembership() below. False (default) for genesis-seeded founding validators,
@@ -170,14 +162,16 @@ contract ValidatorsRegistry {
     // validator population; `ValidatorsBoard.voteFor` now checks
     // `IdentityRegistry.hasIdentity(...)` directly, not through this contract.
     //
-    // `verifier` remains here, but for a single purpose only: reporting `reportLiveness`
-    // (further below in this file). This is a completely separate key from `identityOracle` in
-    // `IdentityRegistry.sol` — these two roles (node liveness vs. identity verification) are
-    // deliberately kept independent.
+    // `verifier` remains here, but for a single purpose only: reporting validator status
+    // decisions — recordActivation/recordSuspension/recordRecovery (further below in this
+    // file). This is a completely separate key from `identityOracle` in `IdentityRegistry.sol`
+    // — these two roles (node liveness vs. identity verification) are deliberately kept
+    // independent.
     // ------------------------------------------------------------------
 
-    /// @notice Operational key trusted to report validator liveness — see reportLiveness below.
-    ///         Rotatable by ValidatorsBoard — see setVerifier.
+    /// @notice Operational key trusted to report validator status decisions — see
+    ///         recordActivation/recordSuspension/recordRecovery below. Rotatable by
+    ///         ValidatorsBoard — see setVerifier.
     /// @dev ✅ FILLED: initial verifier address, read from SurAddresses.sol (single source of
     ///      truth for all four oracle addresses — see that file for rationale).
     address public verifier = SurAddresses.VERIFIER;
@@ -212,7 +206,7 @@ contract ValidatorsRegistry {
     // or by direct storage computation) — for each founding validator address v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessPacked: _packLiveness(0, GENESIS_TIMESTAMP, 0, 0), pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
+    //     pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount is NOT incremented for founders — see its doc comment above.
@@ -340,99 +334,19 @@ contract ValidatorsRegistry {
 
     uint256 public probationPeriod = 604800; // 1 week
 
-    /// @notice ✅ DECIDED (final): the minimum FRACTION of checks that must actually have been
-    ///         recorded before the ratio requirement is even evaluated. Based on
-    ///         EXPECTED_VERIFIER_CADENCE_SECONDS below (the Verifier's real, decided polling
-    ///         cycle — 60 minutes) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the separate,
-    ///         55-minute anti-duplicate throttle just below): using the throttle interval here
-    ///         would have (and, in an earlier version, did) produce an unreachable minimum for a
-    ///         perfectly healthy validator, since the throttle is intentionally shorter than the
-    ///         real cadence to tolerate timing jitter, not a substitute for it. With 50% coverage
-    ///         this gives 84 required checks for the 1-week probation and 24 for the 48-hour
-    ///         recovery — see _minRequiredChecks() below. Both this coverage requirement AND the
-    ///         throttle interval are deliberately kept as two separate, independent
-    ///         requirements: the throttle stops rapid/duplicate counting, this stops too few
-    ///         checks overall. Without this coverage check, a single positive check arriving at
-    ///         any point — even right at the end of the window — would otherwise have produced a
-    ///         100% ratio and satisfied requiredLivenessRatioBps with zero real monitoring
-    ///         history.
-    /// @dev ⚠️ Known residual limitation, deliberately accepted rather than solved with
-    ///      additional complexity, per an explicit decision: a minimum TOTAL count does not by
-    ///      itself guarantee the checks were spread evenly across the period — they could legally
-    ///      cluster near the end (e.g., the required 84 checks for probation could all land
-    ///      within roughly the last ~3.5 days of the week) while the earlier days went
-    ///      unmonitored. This was raised explicitly during design, and a maximum-gap constraint
-    ///      that would close it was explicitly considered and REJECTED for now: kept as-is,
-    ///      without that added complexity, given the other layers already in place (the throttle
-    ///      interval, the 95% ratio requirement itself, and the separate recency check below) —
-    ///      revisit only if real-world monitoring shows validators exploiting the gap in practice.
-    uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // 50%
-
-    /// @notice ✅ DECIDED (final — explicitly reduced from 15 to 60 minutes to cut gas cost): the
-    ///         Verifier's real, firm polling cycle — how often it actually checks and reports on
-    ///         each validator (sur-verifier-service-spec.md). Used ONLY as the basis for the
-    ///         minimum-check-count calculation above (_minRequiredChecks() below) — deliberately
-    ///         a SEPARATE constant from MIN_LIVENESS_CHECK_INTERVAL just below, even though the
-    ///         two are related, because they answer different questions: this one is "how often
-    ///         does the Verifier actually run," while MIN_LIVENESS_CHECK_INTERVAL is "how close
-    ///         together can two COUNTED checks legally be." Keeping them numerically distinct (60
-    ///         vs. 55 minutes) means ordinary timing jitter in the Verifier's own scheduling never
-    ///         causes a perfectly healthy check to be skipped by the throttle. ⚠️ Reducing
-    ///         frequency 4x (from every 15 to every 60 minutes) was a deliberate economic
-    ///         trade-off found necessary during review: at 15-minute cadence, the on-chain gas
-    ///         cost of reportLiveness() across 50 active validators exceeded 100% of the
-    ///         Treasury's entire daily 35% share of block reward — see sur-tokenomics.md section
-    ///         6 for the full calculation. This directly weakens the freshness of liveness data
-    ///         (inactivityThreshold below was widened to compensate) in exchange for a
-    ///         sustainable operating cost.
-    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 3600; // 60 minutes
-
-    /// @notice ✅ REDESIGNED (replaces the earlier minLivenessConfirmationsToActivate — a raw
-    ///         count of positive reports, found during review to have a real flaw): a raw count
-    ///         only ever increases on a positive report and is completely unaffected by
-    ///         negative ones — meaning a validator that was reliably online for only the last
-    ///         few days of probation, after being offline earlier, could pass exactly as easily
-    ///         as one that was reliable the entire period, as long as they accumulated enough
-    ///         late positives. This field instead requires a MINIMUM SUCCESS RATE across every
-    ///         liveness check made during the period (positive and negative both count toward
-    ///         the denominator — see totalLivenessChecksInPeriod above), so intermittent
-    ///         unreliability anywhere in the window is reflected proportionally, not hidden by a
-    ///         strong finish. ✅ DECIDED: 9500 = 95% — see sur-tokenomics.md section 6 for the
-    ///         full discussion of why 95% (not a looser 90%) was chosen, and why a ratio was
-    ///         chosen over a fixed "N failures resets everything" rule (rejected: an all-or-
-    ///         nothing reset near the finish line was judged more punishing than informative,
-    ///         and a global reset even for a single UNLUCKY late failure was seen as
-    ///         disproportionate to a validator's real overall reliability).
-    /// @dev ✅ SPLIT (found during review — was a single shared field for both probation and
-    ///      recovery, which meant they could never have different minimums even if a future
-    ///      decision wanted recovery to be stricter or looser than initial activation). Now two
-    ///      independent parameters — both currently 95%, but each governable on its own.
-    uint256 public requiredLivenessRatioBps = 9500; // used by promoteAfterProbation
-    uint256 public requiredRecoveryLivenessRatioBps = 9500; // used by promoteAfterRecovery
-
-    /// @notice ✅ DECIDED (55 minutes, final — updated alongside the cadence reduction to 60
-    ///         minutes): the minimum time that must pass since a
-    ///         validator's last COUNTED liveness check before another one is counted — an
-    ///         anti-duplicate THROTTLE, deliberately kept as a SEPARATE, shorter number
-    ///         than EXPECTED_VERIFIER_CADENCE_SECONDS above (55 vs. 60 minutes — a wider 5-minute
-    ///         margin than the previous 2-minute one, since an hourly cron-style schedule
-    ///         realistically drifts more in absolute terms than a 15-minute loop did), not the
-    ///         same value: if this throttle exactly matched the real cadence, ordinary scheduling
-    ///         jitter in the Verifier's own polling loop could occasionally cause a perfectly
-    ///         legitimate, on-time check to arrive a few seconds early and get silently dropped.
-    ///         The 2-minute margin absorbs that jitter without weakening the throttle's actual
-    ///         purpose: without it, nothing would stop a malfunctioning or compromised verifier
-    ///         key from firing reportLiveness() many times in rapid succession — each call would
-    ///         count as an independent "check" toward the ratio above, even seconds apart.
-    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 55 minutes;
-
-    /// @notice ✅ UPDATED (from 1 hour to 4 hours, alongside the Verifier cadence reduction to 60
-    ///         minutes): kept at the SAME 4x-cadence safety margin as before (was 1 hour over a
-    ///         15-minute cadence = 4x; now 4 hours over a 60-minute cadence = 4x again) — a
-    ///         deliberate choice to preserve the original tolerance for missed report cycles
-    ///         (still testnet-provisional; needs real execution testing before mainnet — see
-    ///         sur-tokenomics.md section 6).
-    uint256 public inactivityThreshold = 14400;   // 4 hours
+    /// @notice ✅ REMOVED (explicit user decision — moved to fully off-chain verification): this
+    ///         project used to track an on-chain liveness ratio (95% success rate, minimum check
+    ///         coverage, an anti-duplicate throttle tuned against the Verifier's polling cadence)
+    ///         computed from a running on-chain log built up by reportLiveness()/
+    ///         reportLivenessBatch(). All of that — MIN_CHECK_COVERAGE_BPS,
+    ///         EXPECTED_VERIFIER_CADENCE_SECONDS, requiredLivenessRatioBps,
+    ///         requiredRecoveryLivenessRatioBps, MIN_LIVENESS_CHECK_INTERVAL, and the packed
+    ///         livenessPacked field itself — has been removed. The Verifier now performs this
+    ///         exact same ratio computation OFF-CHAIN and reports only the resulting decision
+    ///         (StatusDecision below), anchored by a hash of the full evidence package rather
+    ///         than reconstructed on-chain from a log the contract no longer keeps. See
+    ///         sur-tokenomics.md section 6 and sur-verifier-service-spec.md for the full
+    ///         off-chain verification architecture this replaced it with.
     uint256 public recoveryPeriod = 172800;      // 48 hours
     uint256 public slashBps = 100;               // 1% — deliberately light: the entry-threshold
     // base was independently lowered (2,000,000 → 500,000 Suren) specifically to broaden who
@@ -496,6 +410,135 @@ contract ValidatorsRegistry {
     uint256 public windowStart = 0;
     uint256 public entriesInWindow;
 
+    // ------------------------------------------------------------------
+    // ✅ NEW — off-chain verification architecture (explicit user decision, full redesign):
+    //
+    // The Verifier now checks every node's liveness OFF-CHAIN (hourly). Only STATUS CHANGES are
+    // reported on-chain — activation after probation, suspension, or recovery — never a routine
+    // "still fine" heartbeat. Each decision carries a hash of the off-chain evidence package that
+    // justified it (validator address, decision type + reason, time range checked, the rules/
+    // threshold version in effect, timestamped check results for that range, observation source,
+    // block-production/peer-connection data, geo-detection result where it mattered, the
+    // Verifier's signature, and — for Activation/Recovery — the total/positive counts and 95%
+    // ratio computation). The raw evidence itself is NEVER stored on-chain (only its hash) — it
+    // stays off-chain, encrypted, held by at least two custodians independent of the Verifier
+    // operator, retained 90 days (or until a case closes, if longer), with controlled access for
+    // the validator involved and the review authority.
+    //
+    // ⚠️ The hash alone proves the evidence package was not altered AFTER the fact — it does NOT
+    // prove the Verifier's underlying observations were true. This is a deliberate, acknowledged
+    // trade-off (stated explicitly during design): moving verification off-chain trades some of
+    // the previous on-chain-log's independent verifiability for a large reduction in gas cost.
+    // What this mechanism defends against is a Verifier changing its story after being
+    // challenged — not a Verifier fabricating a self-consistent story from the very start.
+    //
+    // Suspension is the only decision type with real teeth (it can lead to a slash), so it is the
+    // only one with the full delivery/appeal/vote machinery below. Activation and Recovery are
+    // purely positive outcomes — nobody has a stake-losing reason to dispute being promoted — so
+    // they only need the evidence hash for transparency, no dispute path.
+    //
+    // Flow for a Suspension's eventual slash decision:
+    //   1. recordSuspension() — validator removed from the active set IMMEDIATELY and
+    //      UNCONDITIONALLY (protects QBFT's quorum-shrinking ability — never delayed by anything
+    //      below), registered into the existing DemotionEpoch mass-failure window above.
+    //   2. Once that DemotionEpoch closes, resolveMassFailureCheck() (permissionless) runs FIRST,
+    //      before anything else can happen to this decision — mass-failure exemption always takes
+    //      precedence over an individual dispute, exactly as it did before this redesign:
+    //        - если mass failure → SlashOutcome.ExemptMassFailure, done, no delivery/appeal ever
+    //          needed for this decision.
+    //        - if not mass failure → moves on to the delivery step below.
+    //   3. The validator can self-confirm having received the evidence package at any time via
+    //      confirmDelivery() — this alone proves delivery (deliveryProvenAt = now) and starts the
+    //      72-hour appeal-FILING window. Confirming delivery is explicitly NOT an admission that
+    //      the accusation itself is true — only that the package was received.
+    //   4. If the validator does not self-confirm within DELIVERY_DISPUTE_GRACE_PERIOD, anyone
+    //      (typically the Verifier) may call assertDeliveryDisputed() to force the question in
+    //      front of the assembly via a dedicated delivery-dispute vote (voteOnDelivery()) — this
+    //      MUST resolve (either way) before any slash-confirmation vote can even be filed. If the
+    //      assembly finds delivery was never genuinely made available, the slash is permanently
+    //      voided (SlashOutcome.VoidedNoDelivery) — the suspension itself (removal from consensus)
+    //      is untouched; only the financial penalty disappears.
+    //   5. Once delivery is proven (either path), a 72-hour window opens during which the
+    //      validator (or anyone acting for them) may fileAppeal(). If they do, the assembly votes
+    //      confirmSlash() — simple majority of active validators EXCLUDING the subject validator,
+    //      snapshotted at filing time — with a hard 7-day voting deadline separate from the 72h
+    //      filing window. No quorum by the deadline means the slash is REJECTED (the burden of
+    //      proof sits with whoever wants to slash), but the suspension itself is NOT automatically
+    //      reversed — returning to consensus still requires separately proving node health via
+    //      the normal recovery path, independent of this vote's outcome.
+    //   6. If no appeal is filed within the 72-hour window, anyone may call
+    //      executeUncontestedSlash() to apply the slash — an uncontested accusation still results
+    //      in the penalty, exactly as an uncontested civil claim would.
+    // ------------------------------------------------------------------
+
+    enum DecisionType { Activation, Suspension, Recovery }
+    enum DeliveryStatus { NotApplicable, Pending, Confirmed, Disputed }
+    enum SlashOutcome { Undetermined, ExemptMassFailure, VoidedNoDelivery, Confirmed, RejectedByVote, RejectedNoQuorum, ExecutedUncontested }
+
+    struct StatusDecision {
+        address validator;
+        DecisionType decisionType;
+        uint256 decidedAt;
+        bytes32 evidenceHash; // hash of the full off-chain evidence package — see the
+        // architecture note above for exactly what that package must contain.
+        uint256 demotionEpochId; // only meaningful for Suspension — links to DemotionEpoch above
+        DeliveryStatus delivery;
+        uint256 deliveryProvenAt; // 0 until proven (by self-confirmation or a delivery-dispute vote)
+        bool appealFiled;
+        uint256 appealFiledAt;
+        uint256 appealVotingDeadline;
+        uint256 confirmVotes;
+        uint256 requiredConfirmVotes; // snapshotted at filing time, from active validators EXCLUDING the subject
+        SlashOutcome slashOutcome;
+    }
+
+    mapping(uint256 => StatusDecision) public statusDecisions;
+    uint256 public statusDecisionCount;
+    mapping(uint256 => mapping(address => bool)) private hasVotedOnSlash;
+
+    /// @notice A separate, smaller vote used ONLY when a validator does not self-confirm
+    ///         delivery within DELIVERY_DISPUTE_GRACE_PERIOD — resolves the narrow factual
+    ///         question "was the evidence package genuinely made available," never the merits of
+    ///         the suspension itself. At most one per decision (a second assertDeliveryDisputed()
+    ///         call on the same decision after one is already open/resolved is rejected).
+    struct DeliveryDispute {
+        uint256 decisionId;
+        uint256 filedAt;
+        uint256 votingDeadline;
+        uint256 votesConfirmingDelivery;
+        uint256 requiredVotes; // snapshotted, from ALL active validators (the subject validator
+        // is NOT excluded here — unlike the slash vote, this question isn't about their guilt,
+        // it's about whether a package reached them, which they have every right to weigh in on).
+        bool resolved;
+        bool deliveryConfirmed;
+    }
+
+    mapping(uint256 => DeliveryDispute) public deliveryDisputes; // keyed by decisionId
+    mapping(uint256 => mapping(address => bool)) private hasVotedOnDelivery;
+
+    uint256 public constant APPEAL_FILING_WINDOW = 72 hours;
+    uint256 public constant APPEAL_VOTING_PERIOD = 7 days;
+    /// @dev 🔶 FILL_IN: how long a validator has to self-confirm delivery before anyone may force
+    ///      the question to a delivery-dispute vote instead. Not one of the two numbers the user
+    ///      explicitly said not to guess, but — same caveat as CAP_CHANGE_TIMELOCK_DELAY in
+    ///      ValidatorsTreasury.sol — this materially affects how long a case can sit unresolved,
+    ///      so it should be confirmed rather than silently relied upon. 7 days used here only as
+    ///      a working placeholder.
+    uint256 public constant DELIVERY_DISPUTE_GRACE_PERIOD = 7 days;
+    uint256 public constant DELIVERY_DISPUTE_VOTING_PERIOD = 7 days;
+
+    // ------------------------------------------------------------------
+    // Events for the off-chain verification architecture
+    // ------------------------------------------------------------------
+    event StatusDecisionRecorded(uint256 indexed decisionId, address indexed validator, DecisionType decisionType, bytes32 evidenceHash);
+    event DeliveryConfirmed(uint256 indexed decisionId, address indexed validator, uint256 provenAt);
+    event DeliveryDisputeFiled(uint256 indexed decisionId, uint256 votingDeadline);
+    event DeliveryDisputeVoted(uint256 indexed decisionId, address indexed voter, uint256 votesConfirming, uint256 required);
+    event DeliveryDisputeResolved(uint256 indexed decisionId, bool deliveryConfirmed);
+    event AppealFiled(uint256 indexed decisionId, uint256 votingDeadline);
+    event SlashVoted(uint256 indexed decisionId, address indexed voter, uint256 votes, uint256 required);
+    event SlashResolved(uint256 indexed decisionId, address indexed validator, SlashOutcome outcome, uint256 slashedAmount);
+
     bool private locked; // reentrancy guard
 
     // ------------------------------------------------------------------
@@ -507,9 +550,6 @@ contract ValidatorsRegistry {
         MaxEntriesPerWindow,
         EntryWindowSeconds,
         ProbationPeriod,
-        RequiredLivenessRatioBps,
-        RequiredRecoveryLivenessRatioBps,
-        InactivityThreshold,
         RecoveryPeriod,
         SlashBps,
         ExitCooldown
@@ -722,10 +762,6 @@ contract ValidatorsRegistry {
             status: Status.Probation,
             lockedStake: threshold,
             periodStartedAt: block.timestamp,
-            // ✅ packed: lastCheckedAt=0, lastLivenessConfirmation=block.timestamp (preserves the
-            // original behavior — a brand-new entrant starts with "just confirmed," not stale),
-            // totalChecks=0, confirmedChecks=0
-            livenessPacked: _packLiveness(0, block.timestamp, 0, 0),
             pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
@@ -759,147 +795,82 @@ contract ValidatorsRegistry {
     /// @notice Shared internal logic for a single validator's liveness report — called by both
     ///         reportLiveness() (single) and reportLivenessBatch() (looped) below. Kept as one
     ///         function so the two entry points can never drift apart in behavior.
-    function _recordLivenessCheck(address validator, bool isLive) private {
-        ValidatorInfo storage v = validators[validator];
-        require(
-            v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
-            "ValidatorsRegistry: validator not eligible for liveness reporting"
-        );
-        emit LivenessReported(validator, isLive, block.timestamp);
-
-        uint256 p = v.livenessPacked;
-        uint256 lastCheckedAt = _unpackLastCheckedAt(p);
-        // ✅ NEW: skip counting (but still emit the event above, for full audit visibility) if
-        // this report arrived too soon after the last COUNTED one — see
-        // MIN_LIVENESS_CHECK_INTERVAL's doc comment for why. Deliberately does not revert: the
-        // onlyVerifier caller made a valid call and should not see a failed transaction just
-        // because its own polling cadence (or a bug in it) was too fast this one time.
-        if (block.timestamp < lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
-            return;
-        }
-
-        uint256 lastConfirmed = _unpackLastConfirmed(p);
-        uint256 totalChecks = _unpackTotalChecks(p) + 1; // every COUNTED check toward the
-        // denominator, positive or not — see requiredLivenessRatioBps's doc comment for why.
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        if (isLive) {
-            lastConfirmed = block.timestamp;
-            confirmedChecks++;
-        }
-        v.livenessPacked = _packLiveness(block.timestamp, lastConfirmed, totalChecks, confirmedChecks);
-    }
-
-    function reportLiveness(address validator, bool isLive) external onlyVerifier {
-        _recordLivenessCheck(validator, isLive);
-    }
-
-    /// @notice ✅ NEW (found to be a major, empirically-measured gas win alongside packing above):
-    ///         reports liveness for MANY validators in a single transaction. Every
-    ///         reportLiveness() call pays Ethereum's fixed ~21,000 gas base transaction cost
-    ///         REGARDLESS of what it does — reporting 50 validators as 50 separate transactions
-    ///         pays that base cost 50 times over. Batched into one transaction, it's paid once.
-    ///         Measured (real Hardhat deployment): combined with packing above, this took a
-    ///         normal per-validator liveness report from ~48,546 gas down to ~9,225 gas (81%
-    ///         less) — see sur-tokenomics.md section 6 for the full economic case. The Verifier
-    ///         service is expected to collect one polling cycle's results for every validator it
-    ///         watches and submit them here as one call, rather than calling reportLiveness()
-    ///         separately per validator — see sur-verifier-service-spec.md.
-    /// @dev Deliberately does NOT revert the whole batch if one validator's status check fails
-    ///      (e.g., a validator exited between when the Verifier started this polling cycle and
-    ///      when this transaction landed) — that one entry is silently skipped (no event, no
-    ///      state change for it) while the rest of the batch still succeeds. Reverting the entire
-    ///      batch over one stale entry would defeat the purpose of batching: the Verifier would
-    ///      have to retry the whole set instead of just moving on.
-    function reportLivenessBatch(address[] calldata validatorsList, bool[] calldata isLiveList) external onlyVerifier {
-        require(validatorsList.length == isLiveList.length, "ValidatorsRegistry: array length mismatch");
-        for (uint256 i = 0; i < validatorsList.length; i++) {
-            address validator = validatorsList[i];
-            Status s = validators[validator].status;
-            if (s != Status.Probation && s != Status.Active && s != Status.Demoted) {
-                continue; // skip silently — see the @dev note above for why
-            }
-            _recordLivenessCheck(validator, isLiveList[i]);
-        }
-    }
-
     // ------------------------------------------------------------------
-    // Activation after probation — permissionless
+    // Activation after probation — Verifier-reported, off-chain-verified (no dispute path: a
+    // purely positive outcome nobody has a stake-losing reason to contest).
     // ------------------------------------------------------------------
-    /// @notice ✅ DECIDED (final): based on EXPECTED_VERIFIER_CADENCE_SECONDS (the real, decided
-    ///         60-minute Verifier cycle) — deliberately NOT MIN_LIVENESS_CHECK_INTERVAL (the
-    ///         separate 55-minute anti-duplicate throttle) — see MIN_CHECK_COVERAGE_BPS's doc
-    ///         comment above for why conflating the two was a bug in an earlier version.
-    function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
-        return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
-    }
-
-    // ------------------------------------------------------------------
-    // Liveness packing — bit layout for ValidatorInfo.livenessPacked (see the struct's doc
-    // comment above for the full rationale and the empirical gas numbers behind this).
-    // ------------------------------------------------------------------
-    uint256 private constant TS_BITS = 40;
-    uint256 private constant CNT_BITS = 32;
-    uint256 private constant TS_MASK = (1 << TS_BITS) - 1;
-    uint256 private constant CNT_MASK = (1 << CNT_BITS) - 1;
-    uint256 private constant LC_SHIFT = 40;  // lastLivenessConfirmation
-    uint256 private constant TC_SHIFT = 80;  // totalLivenessChecksInPeriod
-    uint256 private constant CC_SHIFT = 112; // livenessConfirmationsInPeriod
-
-    function _unpackLastCheckedAt(uint256 p) private pure returns (uint256) {
-        return p & TS_MASK;
-    }
-
-    function _unpackLastConfirmed(uint256 p) private pure returns (uint256) {
-        return (p >> LC_SHIFT) & TS_MASK;
-    }
-
-    function _unpackTotalChecks(uint256 p) private pure returns (uint256) {
-        return (p >> TC_SHIFT) & CNT_MASK;
-    }
-
-    function _unpackConfirmedChecks(uint256 p) private pure returns (uint256) {
-        return (p >> CC_SHIFT) & CNT_MASK;
-    }
-
-    /// @notice Packs the four liveness values into one uint256. Reverts implicitly (via the
-    ///         `& MASK` truncation being caught by the explicit checks below) if a value would
-    ///         silently overflow its allotted bits — deliberately explicit rather than silent
-    ///         truncation, since silent truncation here would corrupt a validator's liveness
-    ///         history rather than just reverting one transaction.
-    function _packLiveness(uint256 lastCheckedAt, uint256 lastConfirmed, uint256 totalChecks, uint256 confirmedChecks) private pure returns (uint256) {
-        require(lastCheckedAt <= TS_MASK && lastConfirmed <= TS_MASK, "ValidatorsRegistry: timestamp overflow");
-        require(totalChecks <= CNT_MASK && confirmedChecks <= CNT_MASK, "ValidatorsRegistry: liveness counter overflow");
-        return lastCheckedAt | (lastConfirmed << LC_SHIFT) | (totalChecks << TC_SHIFT) | (confirmedChecks << CC_SHIFT);
-    }
-
-    function promoteAfterProbation(address candidate) external {
+    function recordActivation(address candidate, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
-        uint256 p = v.livenessPacked;
-        uint256 totalChecks = _unpackTotalChecks(p);
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        require(
-            totalChecks >= _minRequiredChecks(probationPeriod),
-            "ValidatorsRegistry: not enough liveness checks recorded yet"
-        );
-        require(
-            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredLivenessRatioBps,
-            "ValidatorsRegistry: liveness success rate too low"
-        );
-        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
-
         _activate(candidate);
+        decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
     }
 
     // ------------------------------------------------------------------
-    // Demotion for inactivity — permissionless
+    // Recovery after a demotion's recoveryPeriod — same "no dispute path" reasoning as activation.
     // ------------------------------------------------------------------
-    /// @notice ✅ NEW: records this demotion into the current (or a freshly-opened) DemotionEpoch
-    ///         and marks the validator as having a pending slash decision — does NOT touch
-    ///         lockedStake or transfer anything. Called by demoteForInactivity() and
-    ///         requestExit()'s anti-flee check below. Never touches active-set membership (see
-    ///         DemotionEpoch's doc comment for why that separation is a hard requirement).
+    function recordRecovery(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
+        // ✅ Same accounting-gap protection as before the redesign: a still-unresolved
+        // pendingSlashEpoch from the demotion being recovered from must be settled first, or a
+        // later re-demotion could overwrite it and permanently lose track of it.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
+        require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
+        _activate(validator);
+        decisionId = _recordDecision(validator, DecisionType.Recovery, evidenceHash, 0);
+        emit ValidatorReactivated(validator);
+    }
+
+    // ------------------------------------------------------------------
+    // Suspension — Verifier-reported. Removal from the active set is IMMEDIATE and
+    // UNCONDITIONAL (see the architecture note above); only the eventual slash decision goes
+    // through the mass-failure check, then the delivery/appeal/vote machinery below.
+    // ------------------------------------------------------------------
+    function recordSuspension(address validator, bytes32 evidenceHash) external onlyVerifier nonReentrant returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Active, "ValidatorsRegistry: not active");
+
+        _removeFromActive(validator);
+
+        uint256 epochId = _recordDemotion(v); // slash decision deferred — see resolveMassFailureCheck()
+        v.status = Status.Demoted;
+        v.demotedAt = block.timestamp;
+        v.periodStartedAt = block.timestamp; // recovery period starts now
+
+        decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
+        emit ValidatorDemoted(validator, epochId);
+    }
+
+    function _recordDecision(address validator, DecisionType dtype, bytes32 evidenceHash, uint256 demotionEpochId) private returns (uint256 id) {
+        statusDecisionCount++;
+        id = statusDecisionCount;
+        statusDecisions[id] = StatusDecision({
+            validator: validator,
+            decisionType: dtype,
+            decidedAt: block.timestamp,
+            evidenceHash: evidenceHash,
+            demotionEpochId: demotionEpochId,
+            delivery: dtype == DecisionType.Suspension ? DeliveryStatus.Pending : DeliveryStatus.NotApplicable,
+            deliveryProvenAt: 0,
+            appealFiled: false,
+            appealFiledAt: 0,
+            appealVotingDeadline: 0,
+            confirmVotes: 0,
+            requiredConfirmVotes: 0,
+            slashOutcome: SlashOutcome.Undetermined
+        });
+        emit StatusDecisionRecorded(id, validator, dtype, evidenceHash);
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ NEW: records this demotion into the current (or a freshly-opened) DemotionEpoch and
+    //         marks the validator as having a pending slash decision — does NOT touch
+    //         lockedStake or transfer anything. Called only by recordSuspension() above. Never
+    //         touches active-set membership (see DemotionEpoch's doc comment for why that
+    //         separation is a hard requirement).
+    // ------------------------------------------------------------------
     function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
         if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
             currentDemotionEpochId++;
@@ -915,18 +886,19 @@ contract ValidatorsRegistry {
         v.pendingSlashEpoch = epochId;
     }
 
-    /// @notice ✅ NEW: permissionless — anyone may call this once a validator's DemotionEpoch has
-    ///         fully closed, to resolve whether their slash actually applies. Deliberately
-    ///         separate from _recordDemotion(): by the time this runs, the epoch's final
-    ///         demotionCount is fixed (the window has closed, so no more demotions can be added
-    ///         to it), so every validator demoted within the same epoch gets exactly the same
-    ///         answer, regardless of the order their individual demotions or resolve calls
-    ///         happened in.
-    function resolvePendingSlash(address validator) external nonReentrant {
-        ValidatorInfo storage v = validators[validator];
-        uint256 epochId = v.pendingSlashEpoch;
-        require(epochId != 0, "ValidatorsRegistry: no pending slash for this validator");
-        DemotionEpoch storage epoch = demotionEpochs[epochId];
+    /// @notice ✅ REDESIGNED: permissionless — anyone may call this once a validator's
+    ///         DemotionEpoch has fully closed. This is now ONLY the mass-failure gate — it no
+    ///         longer directly executes or exempts a slash by itself for the non-mass-failure
+    ///         case; it just decides whether the mass-failure exemption applies AT ALL. If it
+    ///         does, the case is fully closed here (ExemptMassFailure). If it doesn't, the case
+    ///         moves on to the delivery/appeal/vote machinery below — it is no longer
+    ///         automatically slashed the moment mass-failure is ruled out, unlike before this
+    ///         redesign.
+    function resolveMassFailureCheck(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        DemotionEpoch storage epoch = demotionEpochs[d.demotionEpochId];
         require(block.timestamp >= epoch.startedAt + MASS_DEMOTION_WINDOW, "ValidatorsRegistry: demotion epoch not yet closed");
 
         if (!epoch.resolved) {
@@ -934,74 +906,204 @@ contract ValidatorsRegistry {
             epoch.wasMassFailure = epoch.demotionCount * BPS_DENOMINATOR > epoch.referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
         }
 
+        if (epoch.wasMassFailure) {
+            d.slashOutcome = SlashOutcome.ExemptMassFailure;
+            validators[d.validator].pendingSlashEpoch = 0; // fully closed — no delivery/appeal ever needed
+            emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
+        }
+        // if not mass failure: d.delivery is already DeliveryStatus.Pending from _recordDecision
+        // above — nothing else to do here. pendingSlashEpoch stays nonzero, still blocking
+        // withdrawStake() until the flow below fully resolves.
+    }
+
+    // ------------------------------------------------------------------
+    // Delivery of the evidence package — the validator's own on-chain confirmation is the
+    // primary proof. See the architecture note above for the full rationale.
+    // ------------------------------------------------------------------
+
+    /// @notice Confirms ONLY that the evidence package was received — explicitly NOT an
+    ///         admission that the suspension's underlying accusation is true. Starts the
+    ///         72-hour appeal-FILING window (not the same as the appeal-VOTING period, which
+    ///         only starts once an appeal is actually filed).
+    function confirmDelivery(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may confirm delivery");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
+        require(d.delivery == DeliveryStatus.Pending || d.delivery == DeliveryStatus.Disputed, "ValidatorsRegistry: delivery already confirmed");
+
+        d.delivery = DeliveryStatus.Confirmed;
+        d.deliveryProvenAt = block.timestamp;
+        emit DeliveryConfirmed(decisionId, d.validator, block.timestamp);
+    }
+
+    /// @notice If the validator does not self-confirm within DELIVERY_DISPUTE_GRACE_PERIOD,
+    ///         anyone (typically the Verifier) may force the question in front of the assembly
+    ///         instead. This does NOT itself decide anything — it opens a dedicated
+    ///         delivery-dispute vote (voteOnDelivery below) that must resolve BEFORE any
+    ///         slash-confirmation vote can even be filed (per the user's explicit requirement
+    ///         that the review authority decide delivery before addressing the merits).
+    function assertDeliveryDisputed(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
+        require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
+        require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
+
+        d.delivery = DeliveryStatus.Disputed;
+        uint256 votingDeadline = block.timestamp + DELIVERY_DISPUTE_VOTING_PERIOD;
+        deliveryDisputes[decisionId] = DeliveryDispute({
+            decisionId: decisionId,
+            filedAt: block.timestamp,
+            votingDeadline: votingDeadline,
+            votesConfirmingDelivery: 0,
+            requiredVotes: (getActiveValidatorCount() / 2) + 1, // snapshotted — full assembly;
+            // the subject validator is NOT excluded here (see DeliveryDispute's doc comment
+            // above) — but since they are no longer Active (removed by recordSuspension), they
+            // cannot use onlyActiveValidator below anyway, so this is moot in practice.
+            resolved: false,
+            deliveryConfirmed: false
+        });
+        emit DeliveryDisputeFiled(decisionId, votingDeadline);
+    }
+
+    /// @notice Assembly vote on the narrow factual question "was the evidence package genuinely
+    ///         made available to this validator" — never the merits of the suspension itself.
+    function voteOnDelivery(uint256 decisionId, bool confirmsDelivery) external onlyActiveValidator {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        require(disp.filedAt != 0, "ValidatorsRegistry: no delivery dispute for this decision");
+        require(!disp.resolved, "ValidatorsRegistry: delivery dispute already resolved");
+        require(block.timestamp <= disp.votingDeadline, "ValidatorsRegistry: delivery-dispute voting period has ended");
+        require(!hasVotedOnDelivery[decisionId][msg.sender], "ValidatorsRegistry: already voted");
+        hasVotedOnDelivery[decisionId][msg.sender] = true;
+
+        if (confirmsDelivery) {
+            disp.votesConfirmingDelivery++;
+        }
+        emit DeliveryDisputeVoted(decisionId, msg.sender, disp.votesConfirmingDelivery, disp.requiredVotes);
+
+        if (disp.votesConfirmingDelivery >= disp.requiredVotes) {
+            _resolveDeliveryDispute(decisionId, true);
+        }
+    }
+
+    /// @notice Permissionless — if the delivery-dispute voting period expires without reaching
+    ///         quorum to CONFIRM delivery, delivery is treated as never proven (same
+    ///         burden-of-proof default used everywhere else in this mechanism: the party
+    ///         seeking the penalty bears the risk of an inconclusive vote).
+    function resolveDeliveryDisputeIfExpired(uint256 decisionId) external {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        require(disp.filedAt != 0, "ValidatorsRegistry: no delivery dispute for this decision");
+        require(!disp.resolved, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > disp.votingDeadline, "ValidatorsRegistry: voting period not yet over");
+        _resolveDeliveryDispute(decisionId, false);
+    }
+
+    function _resolveDeliveryDispute(uint256 decisionId, bool confirmed) private {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        disp.resolved = true;
+        disp.deliveryConfirmed = confirmed;
+        StatusDecision storage d = statusDecisions[decisionId];
+        if (confirmed) {
+            d.delivery = DeliveryStatus.Confirmed;
+            d.deliveryProvenAt = block.timestamp;
+        } else {
+            // ✅ per the user's explicit rule: a delivery dispute lost by the accuser voids ONLY
+            // the slash — it does NOT return the validator to consensus (that still requires the
+            // normal, independent recovery path).
+            d.slashOutcome = SlashOutcome.VoidedNoDelivery;
+            validators[d.validator].pendingSlashEpoch = 0;
+            emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
+        }
+        emit DeliveryDisputeResolved(decisionId, confirmed);
+    }
+
+    // ------------------------------------------------------------------
+    // Appeal filing and the slash-confirmation vote
+    // ------------------------------------------------------------------
+
+    /// @notice Only the subject validator (the one with the most direct interest, and the only
+    ///         one this mechanism is designed to protect) may file — within 72 hours of PROVEN
+    ///         delivery, not of the Verifier's claim of having sent it.
+    function fileAppeal(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may file an appeal");
+        require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
+        require(!d.appealFiled, "ValidatorsRegistry: appeal already filed");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
+        require(block.timestamp <= d.deliveryProvenAt + APPEAL_FILING_WINDOW, "ValidatorsRegistry: appeal filing window has passed");
+
+        d.appealFiled = true;
+        d.appealFiledAt = block.timestamp;
+        d.appealVotingDeadline = block.timestamp + APPEAL_VOTING_PERIOD;
+        // Required votes: majority of active validators — the subject validator is not
+        // separately excluded because they are already Demoted (not Active), so
+        // onlyActiveValidator below already keeps them out.
+        d.requiredConfirmVotes = (getActiveValidatorCount() / 2) + 1;
+        emit AppealFiled(decisionId, d.appealVotingDeadline);
+    }
+
+    /// @notice Assembly vote to CONFIRM the slash — only reached if an appeal was actually
+    ///         filed. Simple majority, snapshotted at filing time, hard 7-day deadline separate
+    ///         from the 72-hour filing window above.
+    function confirmSlash(uint256 decisionId) external onlyActiveValidator nonReentrant {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.appealFiled, "ValidatorsRegistry: no appeal filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp <= d.appealVotingDeadline, "ValidatorsRegistry: voting period has ended");
+        require(!hasVotedOnSlash[decisionId][msg.sender], "ValidatorsRegistry: already voted");
+
+        hasVotedOnSlash[decisionId][msg.sender] = true;
+        d.confirmVotes++;
+        emit SlashVoted(decisionId, msg.sender, d.confirmVotes, d.requiredConfirmVotes);
+
+        if (d.confirmVotes >= d.requiredConfirmVotes) {
+            _executeSlash(decisionId, SlashOutcome.Confirmed);
+        }
+    }
+
+    /// @notice Permissionless — if the appeal-voting deadline passes without reaching quorum to
+    ///         confirm, the slash is REJECTED (burden of proof sits with whoever wants to
+    ///         slash). The consensus-suspension itself is untouched — returning to Active still
+    ///         requires the independent recordRecovery() path above, regardless of this outcome.
+    function resolveAppealIfExpired(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.appealFiled, "ValidatorsRegistry: no appeal filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
+        d.slashOutcome = SlashOutcome.RejectedNoQuorum;
+        validators[d.validator].pendingSlashEpoch = 0;
+        emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
+    }
+
+    /// @notice Permissionless — if delivery was proven and 72 hours passed with no appeal ever
+    ///         filed, the slash executes uncontested (an unchallenged accusation still results
+    ///         in the penalty, exactly as an uncontested civil claim would).
+    function executeUncontestedSlash(uint256 decisionId) external nonReentrant {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
+        require(!d.appealFiled, "ValidatorsRegistry: an appeal was filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > d.deliveryProvenAt + APPEAL_FILING_WINDOW, "ValidatorsRegistry: appeal filing window still open");
+
+        _executeSlash(decisionId, SlashOutcome.ExecutedUncontested);
+    }
+
+    function _executeSlash(uint256 decisionId, SlashOutcome outcome) private {
+        StatusDecision storage d = statusDecisions[decisionId];
+        d.slashOutcome = outcome;
+        ValidatorInfo storage v = validators[d.validator];
         v.pendingSlashEpoch = 0;
 
-        uint256 slashAmount = 0;
-        if (!epoch.wasMassFailure) {
-            slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-            v.lockedStake -= slashAmount;
-            if (slashAmount > 0) {
-                (bool success, ) = TREASURY.call{value: slashAmount}("");
-                require(success, "ValidatorsRegistry: slash transfer failed");
-            }
+        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        v.lockedStake -= slashAmount;
+        if (slashAmount > 0) {
+            (bool success, ) = TREASURY.call{value: slashAmount}("");
+            require(success, "ValidatorsRegistry: slash transfer failed");
         }
-
-        emit SlashResolved(validator, slashAmount, epoch.wasMassFailure);
-    }
-
-    function demoteForInactivity(address validator) external nonReentrant {
-        ValidatorInfo storage v = validators[validator];
-        require(v.status == Status.Active, "ValidatorsRegistry: not active");
-        require(block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
-
-        // ✅ UNCONDITIONAL — see DemotionEpoch's doc comment: this must never be paused or
-        // delayed, regardless of the mass-failure question resolved later, to protect QBFT's
-        // ability to shrink its quorum requirement alongside a shrinking pool of genuinely live
-        // validators.
-        _removeFromActive(validator);
-
-        uint256 epochId = _recordDemotion(v); // slash decision deferred — see resolvePendingSlash()
-        v.status = Status.Demoted;
-        v.demotedAt = block.timestamp;
-        v.periodStartedAt = block.timestamp; // recovery period starts now
-        v.livenessPacked = 0; // ✅ resets all four packed liveness fields at once — so the very
-        // first liveness check of the fresh recovery period is never accidentally throttled by
-        // MIN_LIVENESS_CHECK_INTERVAL referencing a check from before this reset.
-
-        emit ValidatorDemoted(validator, epochId);
-    }
-
-    // ------------------------------------------------------------------
-    // Reactivation after recovery — permissionless
-    // ------------------------------------------------------------------
-    function promoteAfterRecovery(address validator) external {
-        ValidatorInfo storage v = validators[validator];
-        require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
-        // ✅ NEW (found during a follow-up review — a real accounting gap): without this, a
-        // validator could return to Active with a still-unresolved pendingSlashEpoch from THIS
-        // demotion, then be demoted again later — at which point _recordDemotion() would
-        // OVERWRITE pendingSlashEpoch with the new epoch's ID, permanently losing any way to
-        // reach the first pending slash decision (it would never be resolved, and its Suren
-        // would sit stuck in this contract's balance forever, tracked nowhere). Requiring
-        // resolution first closes this cleanly, using the same permissionless
-        // resolvePendingSlash() anyone can already call.
-        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
-        require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
-        uint256 p = v.livenessPacked;
-        uint256 totalChecks = _unpackTotalChecks(p);
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        require(
-            totalChecks >= _minRequiredChecks(recoveryPeriod),
-            "ValidatorsRegistry: not enough liveness checks recorded yet"
-        );
-        require(
-            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredRecoveryLivenessRatioBps,
-            "ValidatorsRegistry: recovery liveness success rate too low"
-        );
-        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
-
-        _activate(validator);
-        emit ValidatorReactivated(validator);
+        emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
     function _activate(address who) private {
@@ -1036,31 +1138,21 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
-        bool hasPendingSlash = false;
         if (v.status == Status.Active) {
-            // ✅ NEW (closes the "flee before demotion" loophole found during review): if this
-            // validator was ALREADY eligible for demoteForInactivity() at this exact moment
-            // (same criterion that function itself checks), record the same deferred slash
-            // decision right here, before removal — otherwise an operator watching their own
-            // node fail could simply call requestExit() a moment before someone calls
-            // demoteForInactivity() on them, and walk away with their full collateral after
-            // nothing but the ordinary exitCooldown. This does not introduce any NEW judgment
-            // call: it is the exact same "already past inactivityThreshold" test
-            // demoteForInactivity() uses, applied here instead of there — a validator that was
-            // genuinely still within the threshold owes nothing extra, exactly as before.
-            // ✅ FIXED (found during a follow-up review): _removeFromActive() must run BEFORE
-            // _recordDemotion() here, exactly matching demoteForInactivity()'s order — otherwise
-            // the epoch's referenceCount snapshot (activeValidators.length + 1) would be taken
-            // while this validator was STILL counted in activeValidators, making it exactly one
-            // higher than an equivalent demotion via demoteForInactivity() would produce. Near
-            // the 20% mass-failure boundary, that one-off difference could change the outcome
-            // depending purely on which code path triggered the demotion — not anything about
-            // the actual failure pattern.
+            // ⚠️ CHANGED (explicit user decision — off-chain verification redesign): the
+            // "flee before demotion" anti-loophole that used to live here checked this
+            // validator's on-chain liveness log at the exact moment of exit. That log no longer
+            // exists (liveness is checked off-chain now — see the architecture note above
+            // recordSuspension()), so this contract can no longer independently determine
+            // "was this validator already eligible for suspension right now." The protection
+            // this used to provide now rests entirely on the Verifier: it may call
+            // recordSuspension() on a genuinely-inactive validator at any moment, including
+            // the instant before their requestExit() call lands, which produces the exact same
+            // pendingSlashEpoch-blocks-withdrawal effect as before — just via an explicit
+            // off-chain-verified decision instead of an on-chain self-check. A validator that
+            // exits before the Verifier acts keeps their full collateral, exactly as one that
+            // was genuinely still within tolerance always did.
             _removeFromActive(msg.sender);
-            if (block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold) {
-                _recordDemotion(v);
-                hasPendingSlash = true;
-            }
         }
 
         // ✅ NEW: a paid entrant leaving frees up their slot in the growth curve — the next
@@ -1075,12 +1167,6 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
-        if (hasPendingSlash) {
-            emit ValidatorDemoted(msg.sender, v.pendingSlashEpoch); // ✅ same event
-            // demoteForInactivity() would have emitted — an exit that was really a late-caught
-            // inactivity demotion should be visible to any off-chain monitoring exactly the same
-            // way, resolvePendingSlash() included.
-        }
     }
 
     function withdrawStake() external nonReentrant {
@@ -1154,14 +1240,6 @@ contract ValidatorsRegistry {
             entryWindowSeconds = value;
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
-        } else if (key == ParamKey.RequiredLivenessRatioBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
-            requiredLivenessRatioBps = value;
-        } else if (key == ParamKey.RequiredRecoveryLivenessRatioBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
-            requiredRecoveryLivenessRatioBps = value;
-        } else if (key == ParamKey.InactivityThreshold) {
-            inactivityThreshold = value;
         } else if (key == ParamKey.RecoveryPeriod) {
             recoveryPeriod = value;
         } else if (key == ParamKey.SlashBps) {
@@ -1176,26 +1254,29 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // View helpers
     // ------------------------------------------------------------------
+    /// @notice ✅ REDESIGNED (off-chain verification architecture — the liveness-ratio fields
+    ///         this used to return no longer exist on-chain at all; see the architecture note
+    ///         above recordSuspension()). ⚠️ CRITICAL for anyone consuming this ABI externally
+    ///         (see ValidatorsBoard.sol's own copy of this interface, which caused a real
+    ///         cross-contract bug in an earlier version when the two drifted apart): this now
+    ///         returns 6 outputs, in this exact order. Any external interface declaring this
+    ///         function MUST match this exact order and count, since Solidity decodes external
+    ///         call results POSITIONALLY, not by name.
     function getValidatorInfo(address who) external view returns (
         Status status,
         uint256 lockedStake,
         uint256 periodStartedAt,
-        uint256 lastLivenessConfirmation,
-        uint256 livenessConfirmationsInPeriod,
-        uint256 totalLivenessChecksInPeriod,
         uint256 demotedAt,
+        uint256 pendingSlashEpoch,
         bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        uint256 p = v.livenessPacked;
         return (
             v.status,
             v.lockedStake,
             v.periodStartedAt,
-            _unpackLastConfirmed(p),
-            _unpackConfirmedChecks(p),
-            _unpackTotalChecks(p),
             v.demotedAt,
+            v.pendingSlashEpoch,
             v.isPaidEntrant
         );
     }

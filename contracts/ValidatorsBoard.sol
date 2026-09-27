@@ -13,13 +13,21 @@ interface IValidatorsRegistry {
     function recoveryPeriod() external view returns (uint256);
     /// @dev `status` is ValidatorsRegistry.Status's ABI-compatible uint8 encoding:
     ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting.
+    /// @dev ✅ UPDATED (off-chain verification architecture redesign): the real
+    ///      ValidatorsRegistry.getValidatorInfo() no longer has any liveness-ratio fields at all
+    ///      (they were removed entirely — liveness is checked off-chain now). It returns exactly
+    ///      6 outputs in this order: status, lockedStake, periodStartedAt, demotedAt,
+    ///      pendingSlashEpoch, isPaidEntrant. This interface MUST match that exactly, in the same
+    ///      order — see the real function's own doc comment in ValidatorsRegistry.sol for why a
+    ///      mismatch here caused a real, silent cross-contract bug in an earlier version (fixed
+    ///      then, and worth re-checking any time the real function's signature changes again).
     function getValidatorInfo(address who) external view returns (
         uint8 status,
         uint256 lockedStake,
         uint256 periodStartedAt,
-        uint256 lastLivenessConfirmation,
-        uint256 livenessConfirmationsInPeriod,
-        uint256 demotedAt
+        uint256 demotedAt,
+        uint256 pendingSlashEpoch,
+        bool isPaidEntrant
     );
 }
 
@@ -377,7 +385,7 @@ contract ValidatorsBoard {
     ///         — this function only frees storage/vote-slots, it does not itself change who is
     ///         currently on the board.
     function clearStaleVotes(address validator) external {
-        (uint8 status, , , , , uint256 demotedAt) = REGISTRY.getValidatorInfo(validator);
+        (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
         require(status == 3, "ValidatorsBoard: validator is not currently demoted"); // 3 = Status.Demoted
         uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
@@ -400,9 +408,16 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     function proposeRotateOracle(address newOracle) external onlyBoardMember returns (uint256 id) {
         require(newOracle != address(0), "ValidatorsBoard: zero oracle address");
-        id = _createAction(ActionType.RotateOracle, newOracle, 0, "");
+        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", 0);
     }
 
+    /// @notice ✅ NEW guarantee (explicit user decision): unlike every other board action, an
+    ///         ApproveBudget proposal requires a HARD MINIMUM of 3 affirmative votes, regardless
+    ///         of how small the current board has shrunk to (e.g., with only 3 members, the
+    ///         plain-majority formula would need just 2 — not enough for a spending decision).
+    ///         If fewer than 3 eligible board members currently exist, spending halts entirely
+    ///         (this function reverts) until the board's composition is repaired back to at
+    ///         least 3 — no smaller quorum can ever approve a payment, no matter how urgent.
     function proposeApproveBudget(address to, uint256 amount, string calldata description)
         external
         onlyBoardMember
@@ -410,26 +425,27 @@ contract ValidatorsBoard {
     {
         require(to != address(0), "ValidatorsBoard: zero recipient address");
         require(amount > 0, "ValidatorsBoard: zero amount");
-        id = _createAction(ActionType.ApproveBudget, to, amount, description);
+        require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
+        id = _createAction(ActionType.ApproveBudget, to, amount, description, 3);
     }
 
     /// @notice Propose a new entryThresholdBase on ValidatorsRegistry (economic entry
     ///         parameter — board-governed; see contract-level doc comment).
     function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "");
+        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
     }
 
     /// @notice Propose a new growthFactorPerValidator on ValidatorsRegistry (fixed-point, 18
     ///         decimals; must be > 1.0, i.e. > 1_000000000000000000).
     function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
-        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "");
+        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
     }
 
     /// @notice Propose a new membershipFeeBps on ValidatorsRegistry.
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
-        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "");
+        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
     }
 
     /// @notice Propose rotating the identity-verification key (`verifier`) on
@@ -437,14 +453,21 @@ contract ValidatorsBoard {
     ///         proposeRotateOracle.
     function proposeRotateVerifier(address newVerifier) external onlyBoardMember returns (uint256 id) {
         require(newVerifier != address(0), "ValidatorsBoard: zero verifier address");
-        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "");
+        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", 0);
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
         _voteAction(id, msg.sender);
     }
 
-    function _createAction(ActionType atype, address target, uint256 amount, string memory description) private returns (uint256 id) {
+    /// @notice ✅ NEW parameter (explicit user decision — ApproveBudget specifically must never
+    ///         execute with fewer than 3 affirmative votes, even if the board has shrunk below
+    ///         its full size of 5). `minRequiredVotes` is 0 for every OTHER action type (meaning
+    ///         "use the plain majority formula, no extra floor") and 3 only for ApproveBudget —
+    ///         see proposeApproveBudget below for why spending specifically needs this stricter
+    ///         floor while routine actions like key rotation do not.
+    function _createAction(ActionType atype, address target, uint256 amount, string memory description, uint256 minRequiredVotes) private returns (uint256 id) {
+        uint256 majority = (boardMembers.length / 2) + 1;
         actionCount++;
         id = actionCount;
         actions[id] = BoardAction({
@@ -453,7 +476,8 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
-            requiredVotes: (boardMembers.length / 2) + 1, // ✅ frozen now, from the ACTUAL current board size
+            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes, // ✅ hard
+            // floor, frozen now from the ACTUAL current board size — see the doc comment above
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false
@@ -480,6 +504,14 @@ contract ValidatorsBoard {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);
                 emit OracleRotated(a.target);
             } else if (a.atype == ActionType.ApproveBudget) {
+                // ✅ NEW: re-checked at EXECUTION time, not just at proposal time — the user's
+                // decision explicitly said "اعضای فعلی" (CURRENT members), meaning even if this
+                // action already gathered its required votes while the board still had ≥3
+                // members, execution must still be blocked if the board has since shrunk below
+                // 3 before this final vote lands. The whole vote transaction (including this
+                // very vote) reverts in that case, so nothing is silently skipped or partially
+                // recorded — the board's composition must be repaired first.
+                require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
             } else if (a.atype == ActionType.SetEntryThresholdBase) {

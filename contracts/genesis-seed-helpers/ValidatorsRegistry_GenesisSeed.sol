@@ -67,11 +67,14 @@ contract ValidatorsRegistry_GenesisSeed {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;
-        uint256 livenessPacked; // ✅ CHANGED — must match the real struct's packed liveness field
-        // exactly (bit layout: [0:40)=lastCheckedAt, [40:80)=lastLivenessConfirmation,
-        // [80:112)=totalLivenessChecksInPeriod, [112:144)=livenessConfirmationsInPeriod — see the
-        // real ValidatorsRegistry.sol's ValidatorInfo struct doc comment for the full rationale).
-        uint256 pendingSlashEpoch; // ✅ ADDED — same reasoning
+        // ✅ CHANGED (off-chain verification architecture redesign): the packed liveness field
+        // that used to live here was removed entirely from the real ValidatorsRegistry.sol —
+        // liveness is checked off-chain now, with only status-change decisions (and their
+        // evidence hashes) recorded on-chain, in a SEPARATE mapping (statusDecisions) that
+        // genesis does not need to seed for founding validators (they start with none). This
+        // struct must keep matching the real one's field count and order exactly, or every
+        // subsequent mapping-entry slot computation breaks — see isPaidEntrant's comment below.
+        uint256 pendingSlashEpoch;
         uint256 demotedAt;
         bool isPaidEntrant; // ✅ ADDED — must match the real struct exactly, or the per-entry
         // struct size (and therefore every subsequent mapping-entry slot computation) would be
@@ -124,8 +127,6 @@ contract ValidatorsRegistry_GenesisSeed {
                 status: Status.Active,
                 lockedStake: 0,
                 periodStartedAt: genesisTimestamp,
-                // packed: lastCheckedAt=0, lastLivenessConfirmation=genesisTimestamp, totalChecks=0, confirmedChecks=0
-                livenessPacked: uint256(genesisTimestamp) << 40,
                 pendingSlashEpoch: 0,
                 demotedAt: 0,
                 isPaidEntrant: false // founders are always free, never paid entrants

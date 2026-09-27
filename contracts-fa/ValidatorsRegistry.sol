@@ -109,30 +109,21 @@ contract ValidatorsRegistry {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;   // شروع پنجره‌ی probation یا بازگشت یا cooldown خروج فعلی
-        // ✅ بازطراحی‌شده (پیداشده در یک بازبینی بهینه‌سازی گس، یه پیروزی واقعی و اندازه‌گیری‌شده):
-        // چهار فیلد لایوینس پایین — lastLivenessConfirmation، livenessConfirmationsInPeriod،
-        // totalLivenessChecksInPeriod، lastCheckedAt — قبلاً چهار فیلد uint256 جدا بودن، هرکدوم
-        // یه اسلات storage ۳۲بایتی جدا. با اندازه‌گیری واقعی (دیپلوی واقعی Hardhat، نه تخمین): یه
-        // فراخوان معمولی و مثبت reportLiveness() این‌طوری ~۴۸,۵۴۶ گس مصرف می‌کرد. فشرده‌شده توی
-        // یه uint256 (بیت‌شیفت از طریق _packLiveness()/_unpackLiveness() پایین)، همون فراخوان
-        // ~۲۷,۵۸۸ گس مصرف می‌کنه (۴۳٪ کمتر) — چون نوشتن ۴ اسلات جدا تبدیل می‌شه به نوشتن ۱ اسلات.
-        // چیدمان (به _packLiveness()/_unpackLiveness() برای محاسبه‌ی دقیق بیتی مراجعه کن):
-        //   بیت‌های [0:40)    lastCheckedAt              (uint40 — تایم‌استمپ تا سال ۳۶۸۱۲ جا می‌شه)
-        //   بیت‌های [40:80)   lastLivenessConfirmation   (uint40)
-        //   بیت‌های [80:112)  totalLivenessChecksInPeriod (uint32 — ریست دوره‌ای خیلی پایین‌تر از
-        //                                                  سقف ~۴.۳میلیاردی‌اش نگهش می‌داره)
-        //   بیت‌های [112:144) livenessConfirmationsInPeriod (uint32)
-        // ⚠️ مصالحه، صریح گفته بشه: این واقعاً کمتر خواناست از چهار فیلد نام‌گذاری‌شده — هرکسی
-        // که این قرارداد رو حسابرسی می‌کنه باید به _packLiveness()/_unpackLiveness() اعتماد کنه،
-        // نه این‌که مستقیم اسم یه فیلد رو بخونه. با این‌حال نگه داشته شد چون صرفه‌جویی گس بزرگه
-        // و مستقیماً با reportLivenessBatch() پایین ترکیب می‌شه (به sur-tokenomics.md بخش ۶ برای
-        // مورد اقتصادی کامل مراجعه کن: ترکیب‌شده با batch، این هزینه‌ی گس Verifier رو از بیشتر از
-        // کل سهم روزانه‌ی ۳۵٪ خزانه، به یه بخش کوچیک ازش رسوند).
-        uint256 livenessPacked;
-        uint256 pendingSlashEpoch; // ✅ تازه: غیرصفر تا وقتی این ولیدیتور یه تصمیم جریمه‌ی
-        // غیرفعالیِ حل‌نشده منتظر resolvePendingSlash() داشته باشه — به کامنت DemotionEpoch
-        // بالا برای کل مکانیزمی که ازش پشتیبانی می‌کنه مراجعه کن. صفر یعنی «هیچ جریمه‌ی معلقی
-        // نیست.»
+        // ✅ بازطراحی‌شده (تصمیم صریح کاربر — انتقال کامل به راستی‌آزمایی آف‌چین): ردیابی
+        // نسبت liveness که قبلاً اینجا بود (lastCheckedAt/lastLivenessConfirmation/
+        // totalLivenessChecksInPeriod/livenessConfirmationsInPeriod فشرده‌شده) کاملاً حذف شد.
+        // Verifier الان liveness هر نود رو آف‌چین (هر ساعت) چک می‌کنه و فقط تغییرات وضعیت رو
+        // on-chain گزارش می‌ده — فعال‌سازی بعد از probation، تعلیق، یا بازگشت — هرکدوم با یه
+        // هش از بسته‌ی شواهد آف‌چین که توجیهش می‌کنه (StatusDecision پایین را ببین)، نه یه
+        // شمارش جاری on-chain. دلیل (طبق گفته‌ی کاربر): چون اکثر چرخه‌های polling هیچی رو
+        // عوض نمی‌کنن، پرداخت گس برای یه تراکنش در هر چرخه برای هر ولیدیتور، بعد از تصمیم به
+        // اعتماد به محاسبه‌ی آف‌چین Verifier، لنگر‌انداختنش با یه هش برای اختلاف بعدی، و
+        // اجازه‌دادن به ولیدیتور یا مجمع برای به‌چالش‌کشیدنش (به‌جای این‌که قرارداد خودش
+        // نسبت رو از یه لاگ on-chain که دیگه نگه نمی‌داره بازسازی کنه)، اسراف‌آمیز بود.
+        uint256 pendingSlashEpoch; // غیرصفر تا وقتی این ولیدیتور یه تصمیم جریمه‌ی غیرفعالیِ
+        // حل‌نشده داشته باشه (چک رخداد جمعی معلق، یا تحویل/اعتراض معلق — به StatusDecision و
+        // DemotionEpoch پایین برای کل مکانیزم مراجعه کن). صفر یعنی «هیچ جریمه‌ی معلقی نیست.»
+        // همچنان دقیقاً مثل قبل جلوی withdrawStake() پایین رو می‌گیره.
         uint256 demotedAt;          // اگه هرگز دموت نشده/الان در وضعیت Demoted نیست، صفر است
         bool isPaidEntrant;        // ✅ تازه: فقط برای ولیدیتورهایی که واقعاً از طریق
         // requestMembership() پایین پرداخت کرده‌اند true است. پیش‌فرض false برای ولیدیتورهای
@@ -174,13 +165,15 @@ contract ValidatorsRegistry {
     // کاربران شبکه) کاملاً از جمعیت ولیدیتورها جداست؛ `ValidatorsBoard.voteFor` الان مستقیم
     // `IdentityRegistry.hasIdentity(...)` را چک می‌کند، نه از طریق این قرارداد.
     //
-    // `verifier` اینجا باقی مانده، ولی فقط برای یک هدف: گزارش `reportLiveness` (پایین‌تر در
-    // همین فایل). این یک کلید کاملاً جدا از `identityOracle` در `IdentityRegistry.sol` است —
-    // این دو نقش (زنده‌بودن نود در مقابل احراز هویت) عمداً مستقل نگه داشته شده‌اند.
+    // `verifier` اینجا باقی مانده، ولی فقط برای یک هدف: گزارش تصمیمات وضعیت ولیدیتور —
+    // recordActivation/recordSuspension/recordRecovery (پایین‌تر در همین فایل). این یک کلید
+    // کاملاً جدا از `identityOracle` در `IdentityRegistry.sol` است — این دو نقش (زنده‌بودن نود
+    // در مقابل احراز هویت) عمداً مستقل نگه داشته شده‌اند.
     // ------------------------------------------------------------------
 
-    /// @notice کلید عملیاتی مورد اعتماد برای گزارش لایوینس ولیدیتور — reportLiveness پایین را
-    ///         ببین. با ValidatorsBoard قابل‌چرخش است — setVerifier را ببین.
+    /// @notice کلید عملیاتی مورد اعتماد برای گزارش تصمیمات وضعیت ولیدیتور —
+    ///         recordActivation/recordSuspension/recordRecovery پایین را ببین. با
+    ///         ValidatorsBoard قابل‌چرخش است — setVerifier را ببین.
     /// @dev ✅ پرشده: آدرس اولیه‌ی verifier، خوانده‌شده از SurAddresses.sol (منبع واحد صحت
     ///      برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین).
     address public verifier = SurAddresses.VERIFIER;
@@ -214,7 +207,7 @@ contract ValidatorsRegistry {
     // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هر آدرس ولیدیتور مؤسس v:
     //   validators[v] = ValidatorInfo({ status: Active, lockedStake: 0,
     //     periodStartedAt: GENESIS_TIMESTAMP, lastLivenessConfirmation: GENESIS_TIMESTAMP,
-    //     livenessPacked: _packLiveness(0, GENESIS_TIMESTAMP, 0, 0), pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
+    //     pendingSlashEpoch: 0, demotedAt: 0, isPaidEntrant: false });
     //   activeIndex[v] = activeValidators.length + 1;
     //   activeValidators.push(v);
     //   // paidValidatorCount برای مؤسسین افزایش پیدا نمی‌کند — یادداشتش را بالا ببین.
@@ -362,67 +355,18 @@ contract ValidatorsRegistry {
     ///      پیچیدگی اضافه نگه داشته شد، با توجه به لایه‌های دیگه‌ای که از قبل هستن (throttle
     ///      فاصله، خودِ شرط نسبت ۹۵٪، و چک تازگی جداگانه‌ی پایین) — فقط اگه پایش واقعی نشون
     ///      بده ولیدیتورها عملاً از این شکاف سوءاستفاده می‌کنن، بازنگری بشه.
-    uint256 public constant MIN_CHECK_COVERAGE_BPS = 5000; // ۵۰٪
-
-    /// @notice ✅ تصمیم قطعی (عمداً از ۱۵ به ۶۰ دقیقه کاهش یافت برای کاهش هزینه‌ی گس): چرخه‌ی
-    ///         واقعی و ثابت polling سرویس Verifier — هر چند وقت واقعاً هر ولیدیتور رو چک و
-    ///         گزارش می‌کنه (sur-verifier-service-spec.md). فقط به‌عنوان مبنای محاسبه‌ی حداقل
-    ///         تعداد چک بالا استفاده می‌شه (_minRequiredChecks() پایین) — عمداً یه ثابت
-    ///         **جدا** از MIN_LIVENESS_CHECK_INTERVAL درست پایینه، هرچند این دو به‌هم مرتبطن،
-    ///         چون به دو سؤال متفاوت جواب می‌دن: این یکی «Verifier واقعاً هر چندوقت اجرا
-    ///         می‌شه»، اون یکی «دو چک شمرده‌شده چقدر می‌تونن قانوناً به‌هم نزدیک باشن».
-    ///         نگه‌داشتن این دو عدد جداگانه (۶۰ در برابر ۵۵ دقیقه) یعنی نوسان معمولی
-    ///         زمان‌بندی خودِ Verifier هیچ‌وقت باعث نمی‌شه یه چک کاملاً سالم توسط throttle حذف
-    ///         بشه. ⚠️ کاهش فرکانس به یک‌چهارم (از هر ۱۵ به هر ۶۰ دقیقه) یه مصالحه‌ی اقتصادی
-    ///         آگاهانه بود که در بازبینی لازم تشخیص داده شد: با فاصله‌ی ۱۵دقیقه‌ای، هزینه‌ی
-    ///         گس on-chain برای ۵۰ ولیدیتور فعال از کل سهم روزانه‌ی ۳۵٪ خزانه از بلاک‌ریوارد
-    ///         بیشتر می‌شد — به sur-tokenomics.md بخش ۶ برای محاسبه‌ی کامل مراجعه کن. این
-    ///         مستقیماً تازگی داده‌ی liveness رو ضعیف‌تر می‌کنه (برای جبران، inactivityThreshold
-    ///         پایین هم پهن‌تر شد) در ازای یه هزینه‌ی عملیاتی پایدار.
-    uint256 public constant EXPECTED_VERIFIER_CADENCE_SECONDS = 3600; // ۶۰ دقیقه
-
-    /// @notice ✅ بازطراحی‌شده (جایگزین minLivenessConfirmationsToActivate قبلی — یه شمارش خام
-    ///         از گزارش‌های مثبت، که در بازبینی یه ضعف واقعی توش پیدا شد): یه شمارش خام فقط با
-    ///         گزارش مثبت زیاد می‌شه و کاملاً از گزارش‌های منفی بی‌تأثیره — یعنی یه ولیدیتوری
-    ///         که فقط توی چند روز آخر probation قابل‌اتکا آنلاین بوده (بعد از این‌که قبلش
-    ///         آفلاین بوده)، دقیقاً به همون راحتیِ ولیدیتوری که کل دوره قابل‌اتکا بوده رد
-    ///         می‌شد، به شرطی که مثبت‌های آخر کافی جمع کنه. این فیلد به‌جاش یه **حداقل نرخ
-    ///         موفقیت** روی **همه‌ی** چک‌های لایوینس طول دوره می‌خواد (مثبت و منفی هردو توی
-    ///         مخرج‌کسر حساب می‌شن — به totalLivenessChecksInPeriod بالا مراجعه کن)، پس
-    ///         بی‌ثباتی پراکنده هرجای پنجره، به‌نسبت منعکس می‌شه، نه این‌که با یه فینیش قوی
-    ///         پنهان بشه. ✅ **تصمیم نهایی: ۹۵۰۰ = ۹۵٪** — به sur-tokenomics.md بخش ۶ برای بحث
-    ///         کامل چرایی انتخاب ۹۵٪ (نه یه ۹۰٪ شل‌تر) مراجعه کن، و چرا یه نسبت به‌جای یه قانون
-    ///         ثابت «N شکست همه‌چیز رو ریست می‌کنه» انتخاب شد (رد شد: یه ریست همه‌یا‌هیچ نزدیک
-    ///         خط پایان، مجازات‌کننده‌تر از آموزنده تشخیص داده شد، و یه ریست کامل حتی برای یه
-    ///         شکست دیرهنگام بدشانسی، نامتناسب با قابلیت‌اتکای کلی واقعی یه ولیدیتور دیده شد).
-    /// @dev ✅ تفکیک‌شده (پیداشده در بازبینی — قبلاً یه فیلد مشترک برای هم probation هم recovery
-    ///      بود، یعنی این دو هیچ‌وقت نمی‌تونستن حداقل متفاوت داشته باشن، حتی اگه بعداً بخوایم
-    ///      recovery سخت‌گیرانه‌تر یا شل‌تر از فعال‌سازی اولیه باشه). حالا دو پارامتر مستقل —
-    ///      هردو فعلاً ۹۵٪، ولی هرکدوم جدا حکمرانی‌شونده.
-    uint256 public requiredLivenessRatioBps = 9500; // برای promoteAfterProbation
-    uint256 public requiredRecoveryLivenessRatioBps = 9500; // برای promoteAfterRecovery
-
-    /// @notice ✅ تصمیم قطعی (۵۵ دقیقه، نهایی — هم‌زمان با کاهش فرکانس به ۶۰ دقیقه به‌روز شد):
-    ///         حداقل زمانی که باید از آخرین چک لایوینس **شمرده‌شده**‌ی یه ولیدیتور بگذره تا چک
-    ///         بعدی هم شمرده بشه — یه throttle ضدتکرار، عمداً به‌عنوان یه عدد **جداگانه** و
-    ///         کوتاه‌تر از EXPECTED_VERIFIER_CADENCE_SECONDS بالا (۵۵ در برابر ۶۰ دقیقه —
-    ///         حاشیه‌ی ۵دقیقه‌ای بزرگ‌تر از حاشیه‌ی ۲دقیقه‌ای قبلی، چون یه زمان‌بندی
-    ///         cron-وار ساعتی واقع‌بینانه نوسان مطلق بیشتری از حلقه‌ی ۱۵دقیقه‌ای قبلی داره)،
-    ///         نه همون مقدار: اگه این throttle دقیقاً با سرعت واقعی یکی بود، نوسان معمولی
-    ///         زمان‌بندی توی حلقه‌ی polling خودِ Verifier می‌تونست گاهی باعث بشه یه چک کاملاً
-    ///         سالم و به‌موقع چند ثانیه زودتر برسه و بی‌سروصدا حذف بشه. بدون این، هیچی جلوی
-    ///         یه کلید verifier خراب یا به‌خطرافتاده رو نمی‌گرفت که reportLiveness() رو
-    ///         پشت‌سرهم و سریع بزنه — هر فراخوان به‌عنوان یه «چک» مستقل توی نسبت بالا شمرده
-    ///         می‌شد، حتی چند ثانیه فاصله.
-    uint256 public constant MIN_LIVENESS_CHECK_INTERVAL = 55 minutes;
-
-    /// @notice ✅ به‌روزشده (از ۱ ساعت به ۴ ساعت، هم‌زمان با کاهش فرکانس Verifier به ۶۰ دقیقه):
-    ///         همون نسبت ایمنی ۴برابرِ فاصله‌ی چرخه‌ی قبلی حفظ شده (قبلاً ۱ ساعت روی چرخه‌ی
-    ///         ۱۵دقیقه‌ای = ۴برابر؛ حالا ۴ ساعت روی چرخه‌ی ۶۰دقیقه‌ای = دوباره ۴برابر) — یه
-    ///         انتخاب آگاهانه برای حفظ همون میزان تحمل نسبت به چرخه‌های گزارش‌دهی ازدست‌رفته
-    ///         (همچنان مقدار آزمایشی تست‌نت؛ نیازمند آزمون اجرایی واقعی پیش از شبکه‌ی اصلی —
-    ///         به sur-tokenomics.md بخش ۶ مراجعه کن).
-    uint256 public inactivityThreshold = 14400;   // ۴ ساعت
+    /// @notice ✅ حذف‌شده (تصمیم صریح کاربر — انتقال کامل به راستی‌آزمایی آف‌چین): این پروژه
+    ///         قبلاً یه نسبت liveness on-chain (نرخ موفقیت ۹۵٪، حداقل پوشش چک، یه throttle
+    ///         ضدتکرار هم‌تراز با چرخه‌ی polling Verifier) رو ردیابی می‌کرد که از یه لاگ
+    ///         on-chain جاری ساخته‌شده توسط reportLiveness()/reportLivenessBatch() محاسبه
+    ///         می‌شد. همه‌ی این‌ها — MIN_CHECK_COVERAGE_BPS، EXPECTED_VERIFIER_CADENCE_SECONDS،
+    ///         requiredLivenessRatioBps، requiredRecoveryLivenessRatioBps،
+    ///         MIN_LIVENESS_CHECK_INTERVAL، و خودِ فیلد فشرده‌ی livenessPacked — حذف شدن.
+    ///         Verifier الان دقیقاً همین محاسبه‌ی نسبت رو آف‌چین انجام می‌ده و فقط تصمیم
+    ///         نهایی (StatusDecision پایین) رو گزارش می‌ده، لنگرشده با یه هش از کل بسته‌ی
+    ///         شواهد به‌جای بازسازی‌شده on-chain از یه لاگ که قرارداد دیگه نگه نمی‌داره. به
+    ///         sur-tokenomics.md بخش ۶ و sur-verifier-service-spec.md برای کل معماری
+    ///         راستی‌آزمایی آف‌چینی که جایگزینش شد مراجعه کن.
     uint256 public recoveryPeriod = 172800;      // ۴۸ ساعت
     uint256 public slashBps = 100;               // ۱٪ — عمداً سبک: پایه‌ی آستانه‌ی ورود مستقلاً
     // کاهش داده شد (۲,۰۰۰,۰۰۰ → ۵۰۰,۰۰۰ سورن) دقیقاً برای گسترش طیف کسانی که واقعاً از پس
@@ -483,7 +427,135 @@ contract ValidatorsRegistry {
     uint256 public windowStart = 0;
     uint256 public entriesInWindow;
 
+    // ------------------------------------------------------------------
+    // ✅ تازه — معماری راستی‌آزمایی آف‌چین (تصمیم صریح کاربر، بازطراحی کامل):
+    //
+    // الان Verifier liveness هر نود رو آف‌چین (هر ساعت) چک می‌کنه. فقط تغییرات وضعیت on-chain
+    // گزارش می‌شن — فعال‌سازی بعد از probation، تعلیق، یا بازگشت — هرگز یه heartbeat روتینِ
+    // «همچنان سالمه». هر تصمیم یه هش از بسته‌ی شواهد آف‌چینی حمل می‌کنه که توجیهش کرده (آدرس
+    // ولیدیتور، نوع تصمیم + دلیل، بازه‌ی زمانی بررسی‌شده، نسخه‌ی قواعد/آستانه‌های فعال، نتایج
+    // زمان‌دار چک برای اون بازه، منبع مشاهده، داده‌ی تولید‌بلاک/اتصال‌peer، نتیجه‌ی تشخیص
+    // جغرافیایی اگه اثرگذار بوده، امضای Verifier، و — برای فعال‌سازی/بازگشت — جمع کل/مثبت و
+    // محاسبه‌ی نسبت ۹۵٪). خودِ شواهد خام هرگز on-chain ذخیره نمی‌شه (فقط هشش) — آف‌چین،
+    // رمزگذاری‌شده، نزد حداقل دو نگهدارنده‌ی مستقل از اپراتور Verifier می‌مونه، با نگهداری
+    // ۹۰روزه (یا تا بسته‌شدن پرونده، اگه بیشتر طول بکشه)، با دسترسی کنترل‌شده برای ولیدیتور
+    // درگیر و مرجع رسیدگی.
+    //
+    // ⚠️ خودِ هش فقط ثابت می‌کنه بسته‌ی شواهد *بعداً* دستکاری نشده — **ثابت نمی‌کنه** مشاهدات
+    // زیربنایی Verifier درست بودن. این یه مصالحه‌ی آگاهانه و صریحاً گفته‌شده‌ست (موقع طراحی
+    // صریح مطرح شد): انتقال راستی‌آزمایی به آف‌چین، بخشی از قابلیت‌راستی‌آزمایی مستقل لاگ
+    // on-chain قبلی رو با کاهش بزرگ هزینه‌ی گس معاوضه می‌کنه. چیزی که این مکانیزم جلوش رو
+    // می‌گیره اینه که Verifier بعد از به‌چالش‌کشیده‌شدن، داستانش رو عوض کنه — نه این‌که
+    // Verifier از همون اول یه داستان خودسازگار بسازه.
+    //
+    // فقط تعلیق کل ماشین‌آلات تحویل/اعتراض/رأی پایین رو داره (چون فقط اون می‌تونه به جریمه
+    // برسه) — فعال‌سازی و بازگشت پیامدهای کاملاً مثبتن — هیچ‌کس دلیل ازدست‌دادن‌وثیقه‌ای برای
+    // اعتراض به ترفیع‌گرفتن نداره — پس فقط به هش شواهد برای شفافیت نیاز دارن، بدون مسیر اختلاف.
+    //
+    // جریان تصمیم نهایی جریمه‌ی یه تعلیق:
+    //   ۱. recordSuspension() — ولیدیتور بلافاصله و بدون‌قید از لیست فعال حذف می‌شه (توانایی
+    //      QBFT برای کوچیک‌کردن نصاب رو حفظ می‌کنه — هرگز توسط چیزی پایین به‌تأخیر نمی‌افته)،
+    //      توی همون DemotionEpoch رخداد جمعی بالا ثبت می‌شه.
+    //   ۲. بعد از بسته‌شدن اون DemotionEpoch، resolveMassFailureCheck() (بدون نیاز به مجوز)
+    //      اول از همه اجرا می‌شه، قبل از هر اتفاق دیگه‌ای برای این تصمیم — معافیت رخداد جمعی
+    //      همیشه بر یه اختلاف موردی تقدم داره، دقیقاً مثل قبل از این بازطراحی:
+    //        - اگه رخداد جمعی بود → SlashOutcome.ExemptMassFailure، تمام، هیچ تحویل/اعتراضی
+    //          هرگز لازم نمی‌شه.
+    //        - اگه نبود → به گام تحویل پایین می‌ره.
+    //   ۳. ولیدیتور می‌تونه هر لحظه با confirmDelivery() خودش تأیید کنه که بسته‌ی شواهد رو
+    //      گرفته — همین به‌تنهایی تحویل رو ثابت می‌کنه (deliveryProvenAt = الان) و پنجره‌ی
+    //      ثبت اعتراض ۷۲ساعته رو شروع می‌کنه. تأیید تحویل صریحاً به‌معنای پذیرفتن درستیِ خودِ
+    //      اتهام **نیست** — فقط یعنی بسته رسیده.
+    //   ۴. اگه ولیدیتور ظرف DELIVERY_DISPUTE_GRACE_PERIOD خودش تأیید نکنه، هرکسی (معمولاً
+    //      Verifier) می‌تونه با assertDeliveryDisputed() این سؤال رو جلوی مجمع، از طریق یه
+    //      رأی‌گیری اختصاصی تحویل (voteOnDelivery()) ببره — این **باید** قبل از این‌که هر
+    //      رأی‌گیری تأیید-جریمه‌ای حتی بتونه ثبت بشه، حل بشه (طبق الزام صریح کاربر که مرجع
+    //      رسیدگی اول تحویل رو تصمیم بگیره). اگه مجمع تشخیص بده تحویل هرگز واقعاً در دسترس
+    //      نبوده، جریمه برای همیشه باطل می‌شه (SlashOutcome.VoidedNoDelivery) — خودِ تعلیق
+    //      (حذف از اجماع) دست‌نخورده می‌مونه؛ فقط جریمه‌ی مالی از بین می‌ره.
+    //   ۵. به‌محض ثابت‌شدن تحویل (هرکدوم مسیر)، یه پنجره‌ی ۷۲ساعته باز می‌شه که توش ولیدیتور
+    //      (یا هرکسی به‌نمایندگیش) می‌تونه fileAppeal() بزنه. اگه بزنه، مجمع confirmSlash()
+    //      رأی می‌ده — اکثریت ساده‌ی ولیدیتورهای فعال به‌جز خودِ ولیدیتور موضوع، snapshot‌شده
+    //      در لحظه‌ی ثبت — با مهلت سخت ۷روزه‌ی رأی‌گیری، جدا از پنجره‌ی ۷۲ساعته‌ی ثبت. نرسیدن
+    //      به نصاب تا مهلت یعنی جریمه رد می‌شه (بار اثبات با کسیه که می‌خواد جریمه کنه)، ولی
+    //      خودِ تعلیق خودکار لغو **نمی‌شه** — برگشت به اجماع همچنان نیازمند اثبات جداگانه‌ی
+    //      سلامت نود از طریق مسیر بازگشت معمولیه، مستقل از نتیجه‌ی این رأی.
+    //   ۶. اگه ظرف پنجره‌ی ۷۲ساعته هیچ اعتراضی ثبت نشه، هرکسی می‌تونه executeUncontestedSlash()
+    //      رو صدا بزنه تا جریمه اعمال بشه — یه اتهام بی‌اعتراض همچنان به جریمه منجر می‌شه،
+    //      دقیقاً مثل یه دعوی مدنیِ بی‌پاسخ.
+    // ------------------------------------------------------------------
+
+    enum DecisionType { Activation, Suspension, Recovery }
+    enum DeliveryStatus { NotApplicable, Pending, Confirmed, Disputed }
+    enum SlashOutcome { Undetermined, ExemptMassFailure, VoidedNoDelivery, Confirmed, RejectedByVote, RejectedNoQuorum, ExecutedUncontested }
+
+    struct StatusDecision {
+        address validator;
+        DecisionType decisionType;
+        uint256 decidedAt;
+        bytes32 evidenceHash; // هش کل بسته‌ی شواهد آف‌چین — به یادداشت معماری بالا برای
+        // این‌که دقیقاً این بسته باید چی داشته باشه مراجعه کن.
+        uint256 demotionEpochId; // فقط برای Suspension معنادار — به DemotionEpoch بالا لینک می‌شه
+        DeliveryStatus delivery;
+        uint256 deliveryProvenAt; // تا وقتی ثابت نشده (با خودتأییدی یا رأی اختلاف تحویل)، صفره
+        bool appealFiled;
+        uint256 appealFiledAt;
+        uint256 appealVotingDeadline;
+        uint256 confirmVotes;
+        uint256 requiredConfirmVotes; // در لحظه‌ی ثبت، از ولیدیتورهای فعال به‌جز خودِ موضوع، snapshot می‌شه
+        SlashOutcome slashOutcome;
+    }
+
+    mapping(uint256 => StatusDecision) public statusDecisions;
+    uint256 public statusDecisionCount;
+    mapping(uint256 => mapping(address => bool)) private hasVotedOnSlash;
+
+    /// @notice یه رأی‌گیری کوچیک‌تر و جدا که فقط وقتی استفاده می‌شه که یه ولیدیتور ظرف
+    ///         DELIVERY_DISPUTE_GRACE_PERIOD خودش تحویل رو تأیید نکنه — فقط سؤال محدود
+    ///         واقعیت «آیا بسته‌ی شواهد واقعاً در دسترس گذاشته شده» رو حل می‌کنه، هرگز اصل
+    ///         موضوع تعلیق رو. حداکثر یکی به‌ازای هر تصمیم (یه فراخوان دوم
+    ///         assertDeliveryDisputed() روی همون تصمیم بعد از این‌که یکی از قبل باز/حل شده،
+    ///         رد می‌شه).
+    struct DeliveryDispute {
+        uint256 decisionId;
+        uint256 filedAt;
+        uint256 votingDeadline;
+        uint256 votesConfirmingDelivery;
+        uint256 requiredVotes; // snapshot‌شده، از **همه‌ی** ولیدیتورهای فعال (خودِ ولیدیتور
+        // موضوع اینجا exclude نمی‌شه — برخلاف رأی جریمه، این سؤال درباره‌ی گناهکاری اون نیست،
+        // درباره‌ی این‌که آیا یه بسته بهش رسیده یا نه، که کاملاً حق داره درباره‌ش نظر بده).
+        bool resolved;
+        bool deliveryConfirmed;
+    }
+
+    mapping(uint256 => DeliveryDispute) public deliveryDisputes; // با کلید decisionId
+    mapping(uint256 => mapping(address => bool)) private hasVotedOnDelivery;
+
+    uint256 public constant APPEAL_FILING_WINDOW = 72 hours;
+    uint256 public constant APPEAL_VOTING_PERIOD = 7 days;
+    /// @dev 🔶 FILL_IN: ولیدیتور چقدر وقت داره خودش تحویل رو تأیید کنه قبل از این‌که هرکسی
+    ///      بتونه سؤال رو به یه رأی‌گیری اختلاف تحویل ببره. جزو دو عددی نبود که کاربر صریح
+    ///      گفت حدس نزن، ولی — همون هشدار CAP_CHANGE_TIMELOCK_DELAY توی ValidatorsTreasury.sol
+    ///      — این مستقیم روی این‌که یه پرونده چقدر می‌تونه حل‌نشده بمونه اثر می‌ذاره، پس باید
+    ///      تأیید بشه، نه این‌که بی‌صدا بهش تکیه بشه. ۷ روز اینجا فقط به‌عنوان placeholder
+    ///      کاری استفاده شده.
+    uint256 public constant DELIVERY_DISPUTE_GRACE_PERIOD = 7 days;
+    uint256 public constant DELIVERY_DISPUTE_VOTING_PERIOD = 7 days;
+
+    // ------------------------------------------------------------------
+    // رویدادهای معماری راستی‌آزمایی آف‌چین
+    // ------------------------------------------------------------------
+    event StatusDecisionRecorded(uint256 indexed decisionId, address indexed validator, DecisionType decisionType, bytes32 evidenceHash);
+    event DeliveryConfirmed(uint256 indexed decisionId, address indexed validator, uint256 provenAt);
+    event DeliveryDisputeFiled(uint256 indexed decisionId, uint256 votingDeadline);
+    event DeliveryDisputeVoted(uint256 indexed decisionId, address indexed voter, uint256 votesConfirming, uint256 required);
+    event DeliveryDisputeResolved(uint256 indexed decisionId, bool deliveryConfirmed);
+    event AppealFiled(uint256 indexed decisionId, uint256 votingDeadline);
+    event SlashVoted(uint256 indexed decisionId, address indexed voter, uint256 votes, uint256 required);
+    event SlashResolved(uint256 indexed decisionId, address indexed validator, SlashOutcome outcome, uint256 slashedAmount);
+
     bool private locked; // نگهبان reentrancy
+
 
     // ------------------------------------------------------------------
     // حکمرانی پارامتر (رأی کامل ولیدیتورها) — همه‌چیز **به‌جز** سه پارامتر اقتصادی ورود بالا
@@ -494,9 +566,6 @@ contract ValidatorsRegistry {
         MaxEntriesPerWindow,
         EntryWindowSeconds,
         ProbationPeriod,
-        RequiredLivenessRatioBps,
-        RequiredRecoveryLivenessRatioBps,
-        InactivityThreshold,
         RecoveryPeriod,
         SlashBps,
         ExitCooldown
@@ -707,10 +776,6 @@ contract ValidatorsRegistry {
             status: Status.Probation,
             lockedStake: threshold,
             periodStartedAt: block.timestamp,
-            // ✅ فشرده: lastCheckedAt=0، lastLivenessConfirmation=block.timestamp (رفتار اصلی رو
-            // حفظ می‌کنه — یه عضو تازه‌وارد با «همین الان تأیید شده» شروع می‌شه، نه قدیمی)،
-            // totalChecks=0، confirmedChecks=0
-            livenessPacked: _packLiveness(0, block.timestamp, 0, 0),
             pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
@@ -744,175 +809,109 @@ contract ValidatorsRegistry {
     /// @notice منطق داخلی مشترک برای گزارش liveness یک ولیدیتور — توسط هم reportLiveness()
     ///         (تکی) هم reportLivenessBatch() (حلقه‌ای) پایین صدا زده می‌شه. یه تابع نگه داشته
     ///         شده تا این دو نقطه‌ی ورودی هیچ‌وقت توی رفتار از هم جدا نیفتن.
-    function _recordLivenessCheck(address validator, bool isLive) private {
-        ValidatorInfo storage v = validators[validator];
-        require(
-            v.status == Status.Probation || v.status == Status.Active || v.status == Status.Demoted,
-            "ValidatorsRegistry: validator not eligible for liveness reporting"
-        );
-        emit LivenessReported(validator, isLive, block.timestamp);
-
-        uint256 p = v.livenessPacked;
-        uint256 lastCheckedAt = _unpackLastCheckedAt(p);
-        // ✅ تازه: اگه این گزارش خیلی زود بعد از آخرین چک شمرده‌شده رسیده باشه، شمرده نمی‌شه
-        // (ولی رویداد بالا همچنان ثبت می‌شه، برای شفافیت کامل حسابرسی) — به کامنت
-        // MIN_LIVENESS_CHECK_INTERVAL مراجعه کن که چرا. عمداً revert نمی‌کنه: فراخوان‌کننده‌ی
-        // onlyVerifier یه تراکنش معتبر زده و نباید فقط به‌خاطر سریع‌بودن یه‌باره‌ی خودش، تراکنشش
-        // ناموفق دیده بشه.
-        if (block.timestamp < lastCheckedAt + MIN_LIVENESS_CHECK_INTERVAL) {
-            return;
-        }
-
-        uint256 lastConfirmed = _unpackLastConfirmed(p);
-        uint256 totalChecks = _unpackTotalChecks(p) + 1; // هر چک شمرده‌شده، مثبت یا نه، توی
-        // مخرج‌کسر حساب می‌شه — به کامنت requiredLivenessRatioBps مراجعه کن که چرا.
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        if (isLive) {
-            lastConfirmed = block.timestamp;
-            confirmedChecks++;
-        }
-        v.livenessPacked = _packLiveness(block.timestamp, lastConfirmed, totalChecks, confirmedChecks);
-    }
-
-    function reportLiveness(address validator, bool isLive) external onlyVerifier {
-        _recordLivenessCheck(validator, isLive);
-    }
-
-    /// @notice ✅ تازه (یه پیروزی بزرگ و اندازه‌گیری‌شده‌ی گس، در کنار فشرده‌سازی بالا پیدا شد):
-    ///         liveness چند ولیدیتور رو توی یه تراکنش واحد گزارش می‌ده. هر فراخوان
-    ///         reportLiveness() هزینه‌ی پایه‌ی ثابت تراکنش اتریوم (~۲۱,۰۰۰ گس) رو **صرف‌نظر از
-    ///         این‌که چه‌کار می‌کنه** می‌پردازه — گزارش ۵۰ ولیدیتور به‌صورت ۵۰ تراکنش جدا، این
-    ///         هزینه‌ی پایه رو ۵۰ بار می‌پردازه. توی یه تراکنش batch شده، فقط یه‌بار پرداخت
-    ///         می‌شه. اندازه‌گیری‌شده (دیپلوی واقعی Hardhat): ترکیب‌شده با فشرده‌سازی بالا، این
-    ///         یه گزارش معمولی هر ولیدیتور رو از ~۴۸,۵۴۶ گس به ~۹,۲۲۵ گس رسوند (۸۱٪ کمتر) — به
-    ///         sur-tokenomics.md بخش ۶ برای مورد اقتصادی کامل مراجعه کن. انتظار می‌ره سرویس
-    ///         Verifier نتایج یه چرخه‌ی polling رو برای همه‌ی ولیدیتورهایی که پایش می‌کنه جمع
-    ///         کنه و یکجا اینجا بفرسته، نه این‌که reportLiveness() رو جدا برای هر ولیدیتور صدا
-    ///         بزنه — به sur-verifier-service-spec.md مراجعه کن.
-    /// @dev عمداً کل batch رو revert نمی‌کنه اگه چک وضعیت یه ولیدیتور شکست بخوره (مثلاً یه
-    ///      ولیدیتور بین شروع این چرخه‌ی polling توسط Verifier و رسیدن این تراکنش، خارج شده
-    ///      باشه) — همون یه ورودی بی‌صدا نادیده گرفته می‌شه (بدون event، بدون تغییر state
-    ///      براش) درحالی‌که بقیه‌ی batch همچنان موفق می‌شه. revertکردن کل batch به‌خاطر یه
-    ///      ورودی قدیمی، هدف batch‌کردن رو نقض می‌کرد: Verifier باید کل مجموعه رو دوباره تلاش
-    ///      می‌کرد، نه این‌که فقط رد بشه.
-    function reportLivenessBatch(address[] calldata validatorsList, bool[] calldata isLiveList) external onlyVerifier {
-        require(validatorsList.length == isLiveList.length, "ValidatorsRegistry: array length mismatch");
-        for (uint256 i = 0; i < validatorsList.length; i++) {
-            address validator = validatorsList[i];
-            Status s = validators[validator].status;
-            if (s != Status.Probation && s != Status.Active && s != Status.Demoted) {
-                continue; // بی‌صدا رد می‌شه — به یادداشت @dev بالا مراجعه کن که چرا
-            }
-            _recordLivenessCheck(validator, isLiveList[i]);
-        }
-    }
-
     // ------------------------------------------------------------------
-    // فعال‌سازی بعد از probation — بدون نیاز به مجوز
+    // فعال‌سازی بعد از probation — گزارش‌شده توسط Verifier، راستی‌آزمایی‌شده آف‌چین (بدون مسیر
+    // اختلاف: یه پیامد کاملاً مثبت که هیچ‌کس دلیل ازدست‌دادن‌وثیقه‌ای برای اعتراضش نداره).
     // ------------------------------------------------------------------
-    /// @notice ✅ تصمیم قطعی: بر مبنای EXPECTED_VERIFIER_CADENCE_SECONDS (چرخه‌ی واقعی و
-    ///         تصمیم‌گرفته‌شده‌ی ۶۰دقیقه‌ای Verifier) — عمداً *نه* MIN_LIVENESS_CHECK_INTERVAL
-    ///         (throttle ضدتکرار جداگانه‌ی ۵۵دقیقه‌ای) — به کامنت MIN_CHECK_COVERAGE_BPS بالا
-    ///         مراجعه کن که چرا قاطی‌کردن این دو توی یه نسخه‌ی قبلی یه باگ بود.
-    function _minRequiredChecks(uint256 periodDuration) private pure returns (uint256) {
-        return (periodDuration / EXPECTED_VERIFIER_CADENCE_SECONDS) * MIN_CHECK_COVERAGE_BPS / BPS_DENOMINATOR;
-    }
-
-    // ------------------------------------------------------------------
-    // فشرده‌سازی liveness — چیدمان بیتی برای ValidatorInfo.livenessPacked (به کامنت struct بالا
-    // برای استدلال کامل و اعداد واقعی گس مراجعه کن).
-    // ------------------------------------------------------------------
-    uint256 private constant TS_BITS = 40;
-    uint256 private constant CNT_BITS = 32;
-    uint256 private constant TS_MASK = (1 << TS_BITS) - 1;
-    uint256 private constant CNT_MASK = (1 << CNT_BITS) - 1;
-    uint256 private constant LC_SHIFT = 40;  // lastLivenessConfirmation
-    uint256 private constant TC_SHIFT = 80;  // totalLivenessChecksInPeriod
-    uint256 private constant CC_SHIFT = 112; // livenessConfirmationsInPeriod
-
-    function _unpackLastCheckedAt(uint256 p) private pure returns (uint256) {
-        return p & TS_MASK;
-    }
-
-    function _unpackLastConfirmed(uint256 p) private pure returns (uint256) {
-        return (p >> LC_SHIFT) & TS_MASK;
-    }
-
-    function _unpackTotalChecks(uint256 p) private pure returns (uint256) {
-        return (p >> TC_SHIFT) & CNT_MASK;
-    }
-
-    function _unpackConfirmedChecks(uint256 p) private pure returns (uint256) {
-        return (p >> CC_SHIFT) & CNT_MASK;
-    }
-
-    /// @notice چهار مقدار لایوینس رو توی یه uint256 فشرده می‌کنه. اگه یه مقدار بیش از حد بیت‌های
-    ///         تخصیص‌یافته‌اش باشه (به‌جای برش بی‌صدا) صریحاً revert می‌کنه — چون برش بی‌صدا اینجا
-    ///         تاریخچه‌ی لایوینس یه ولیدیتور رو خراب می‌کرد، نه فقط یه تراکنش رو برمی‌گردوند.
-    function _packLiveness(uint256 lastCheckedAt, uint256 lastConfirmed, uint256 totalChecks, uint256 confirmedChecks) private pure returns (uint256) {
-        require(lastCheckedAt <= TS_MASK && lastConfirmed <= TS_MASK, "ValidatorsRegistry: timestamp overflow");
-        require(totalChecks <= CNT_MASK && confirmedChecks <= CNT_MASK, "ValidatorsRegistry: liveness counter overflow");
-        return lastCheckedAt | (lastConfirmed << LC_SHIFT) | (totalChecks << TC_SHIFT) | (confirmedChecks << CC_SHIFT);
-    }
-
-    function promoteAfterProbation(address candidate) external {
+    function recordActivation(address candidate, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
-        uint256 p = v.livenessPacked;
-        uint256 totalChecks = _unpackTotalChecks(p);
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        require(
-            totalChecks >= _minRequiredChecks(probationPeriod),
-            "ValidatorsRegistry: not enough liveness checks recorded yet"
-        );
-        require(
-            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredLivenessRatioBps,
-            "ValidatorsRegistry: liveness success rate too low"
-        );
-        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
-
         _activate(candidate);
+        decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
     }
 
     // ------------------------------------------------------------------
-    // دموت به‌خاطر غیرفعالی — بدون نیاز به مجوز
+    // بازگشت بعد از recoveryPeriod یه دموت — همون استدلال «بدون مسیر اختلاف» فعال‌سازی.
     // ------------------------------------------------------------------
-    /// @notice ✅ تازه: منطق مشترک جریمه‌ی غیرفعالی برای demoteForInactivity() و چک ضدفرار
-    ///         requestExit() پایین. فقط محاسبه/انتقال جریمه رو مدیریت می‌کنه — هرگز به عضویت
-    ///         مجموعه‌ی فعال دست نمی‌زنه (به کامنت MASS_DEMOTION_WINDOW مراجعه کن که چرا این
-    ///         تفکیک یه الزام سخته، نه یه انتخاب سلیقه‌ای).
-    /// @notice ✅ تازه: این دموت رو توی DemotionEpoch فعلی (یا یه دونه‌ی تازه‌باز‌شده) ثبت
-    ///         می‌کنه و ولیدیتور رو به‌عنوان دارای یه تصمیم جریمه‌ی معلق علامت می‌زنه — به
-    ///         lockedStake دست نمی‌زنه یا چیزی منتقل نمی‌کنه. توسط demoteForInactivity() و چک
-    ///         ضدفرار requestExit() پایین صدا زده می‌شه. هرگز به عضویت مجموعه‌ی فعال دست
-    ///         نمی‌زنه (به کامنت DemotionEpoch مراجعه کن که چرا این تفکیک یه الزام سخته).
+    function recordRecovery(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
+        // ✅ همون محافظت شکاف حسابداری قبل از این بازطراحی: یه pendingSlashEpoch حل‌نشده از
+        // همون دموتی که داره ازش بازمی‌گرده، باید اول حل بشه، وگرنه یه دموت بعدی می‌تونه
+        // بازنویسیش کنه و ردیابیش برای همیشه گم بشه.
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
+        require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
+        _activate(validator);
+        decisionId = _recordDecision(validator, DecisionType.Recovery, evidenceHash, 0);
+        emit ValidatorReactivated(validator);
+    }
+
+    // ------------------------------------------------------------------
+    // تعلیق — گزارش‌شده توسط Verifier. حذف از لیست فعال فوری و بدون‌قید است (به یادداشت
+    // معماری بالا مراجعه کن)؛ فقط تصمیم نهایی جریمه از چک رخداد جمعی، بعد ماشین‌آلات
+    // تحویل/اعتراض/رأی پایین می‌گذره.
+    // ------------------------------------------------------------------
+    function recordSuspension(address validator, bytes32 evidenceHash) external onlyVerifier nonReentrant returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Active, "ValidatorsRegistry: not active");
+
+        _removeFromActive(validator);
+
+        uint256 epochId = _recordDemotion(v); // تصمیم جریمه معلقه — به resolveMassFailureCheck() مراجعه کن
+        v.status = Status.Demoted;
+        v.demotedAt = block.timestamp;
+        v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
+
+        decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
+        emit ValidatorDemoted(validator, epochId);
+    }
+
+    function _recordDecision(address validator, DecisionType dtype, bytes32 evidenceHash, uint256 demotionEpochId) private returns (uint256 id) {
+        statusDecisionCount++;
+        id = statusDecisionCount;
+        statusDecisions[id] = StatusDecision({
+            validator: validator,
+            decisionType: dtype,
+            decidedAt: block.timestamp,
+            evidenceHash: evidenceHash,
+            demotionEpochId: demotionEpochId,
+            delivery: dtype == DecisionType.Suspension ? DeliveryStatus.Pending : DeliveryStatus.NotApplicable,
+            deliveryProvenAt: 0,
+            appealFiled: false,
+            appealFiledAt: 0,
+            appealVotingDeadline: 0,
+            confirmVotes: 0,
+            requiredConfirmVotes: 0,
+            slashOutcome: SlashOutcome.Undetermined
+        });
+        emit StatusDecisionRecorded(id, validator, dtype, evidenceHash);
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ تازه: این دموت رو توی DemotionEpoch جاری (یا تازه‌بازشده) ثبت می‌کنه و ولیدیتور رو
+    //         به‌عنوان دارای تصمیم جریمه‌ی معلق علامت می‌زنه — به lockedStake دست نمی‌زنه یا
+    //         چیزی منتقل نمی‌کنه. فقط توسط recordSuspension() بالا صدا زده می‌شه. هرگز به
+    //         عضویت لیست فعال دست نمی‌زنه (به کامنت DemotionEpoch برای این‌که چرا این تفکیک
+    //         یه الزام سخته مراجعه کن).
+    // ------------------------------------------------------------------
     function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
         if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
             currentDemotionEpochId++;
             DemotionEpoch storage fresh = demotionEpochs[currentDemotionEpochId];
             fresh.startedAt = block.timestamp;
-            fresh.referenceCount = activeValidators.length + 1; // +۱: این ولیدیتور قبلاً توسط
-            // فراخوان‌کننده از activeValidators حذف شده — فقط **یک‌بار** همین‌جا اسنپ‌شات
-            // گرفته می‌شه و دیگه هیچ‌وقت دست نمی‌خوره، پس حذف‌های بعدی داخل همین پنجره نمی‌تونن
-            // چیزی که این پنجره باهاش سنجیده می‌شه رو جابه‌جا کنن.
+            fresh.referenceCount = activeValidators.length + 1; // +1: این ولیدیتور قبلاً توسط
+            // فراخوان‌کننده از activeValidators حذف شده — فقط یه‌بار اینجا snapshot می‌شه و
+            // دیگه هرگز دست‌خورده نمی‌شه، پس حذف‌های بعدی توی همون epoch نمی‌تونن اون چیزی که
+            // دموت‌های این epoch باهاش سنجیده می‌شن رو جابه‌جا کنن.
         }
         epochId = currentDemotionEpochId;
         demotionEpochs[epochId].demotionCount++;
         v.pendingSlashEpoch = epochId;
     }
 
-    /// @notice ✅ تازه — بدون نیاز به مجوز: هرکسی می‌تونه این رو صدا بزنه، وقتی
-    ///         DemotionEpoch یه ولیدیتور کاملاً بسته شده، تا مشخص بشه جریمه‌اش واقعاً اعمال
-    ///         بشه یا نه. عمداً از _recordDemotion() جداست: تا این اجرا بشه، demotionCount
-    ///         نهایی اون epoch ثابت شده (پنجره بسته شده، پس دیگه دموتی نمی‌تونه بهش اضافه
-    ///         بشه)، پس هر ولیدیتوری که داخل همون epoch دموت شده، دقیقاً همون جواب رو می‌گیره،
-    ///         صرف‌نظر از این‌که ترتیب دموت‌ها یا فراخوان‌های resolve چی بوده.
-    function resolvePendingSlash(address validator) external nonReentrant {
-        ValidatorInfo storage v = validators[validator];
-        uint256 epochId = v.pendingSlashEpoch;
-        require(epochId != 0, "ValidatorsRegistry: no pending slash for this validator");
-        DemotionEpoch storage epoch = demotionEpochs[epochId];
+    /// @notice ✅ بازطراحی‌شده: بدون نیاز به مجوز — هرکسی می‌تونه این رو بعد از بسته‌شدن کامل
+    ///         DemotionEpoch یه ولیدیتور صدا بزنه. این الان فقط دروازه‌ی رخداد جمعیه — دیگه
+    ///         مستقیم برای حالت غیر-رخداد-جمعی جریمه رو اجرا یا معاف نمی‌کنه؛ فقط تصمیم می‌گیره
+    ///         آیا معافیت رخداد جمعی اصلاً اعمال می‌شه یا نه. اگه بشه، پرونده همین‌جا کاملاً
+    ///         بسته می‌شه (ExemptMassFailure). اگه نشه، پرونده به ماشین‌آلات تحویل/اعتراض/رأی
+    ///         پایین می‌ره — دیگه به‌محض رد‌شدن رخداد جمعی، خودکار جریمه نمی‌شه، برخلاف قبل
+    ///         از این بازطراحی.
+    function resolveMassFailureCheck(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        DemotionEpoch storage epoch = demotionEpochs[d.demotionEpochId];
         require(block.timestamp >= epoch.startedAt + MASS_DEMOTION_WINDOW, "ValidatorsRegistry: demotion epoch not yet closed");
 
         if (!epoch.resolved) {
@@ -920,71 +919,202 @@ contract ValidatorsRegistry {
             epoch.wasMassFailure = epoch.demotionCount * BPS_DENOMINATOR > epoch.referenceCount * MASS_DEMOTION_SLASH_PAUSE_BPS;
         }
 
+        if (epoch.wasMassFailure) {
+            d.slashOutcome = SlashOutcome.ExemptMassFailure;
+            validators[d.validator].pendingSlashEpoch = 0; // کاملاً بسته — دیگه هیچ‌وقت تحویل/اعتراض لازم نمی‌شه
+            emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
+        }
+        // اگه رخداد جمعی نبود: d.delivery از قبل توسط _recordDecision بالا Pending‌شده —
+        // کار دیگه‌ای اینجا لازم نیست. pendingSlashEpoch غیرصفر می‌مونه، همچنان جلوی
+        // withdrawStake() رو می‌گیره تا جریان پایین کاملاً حل بشه.
+    }
+
+    // ------------------------------------------------------------------
+    // تحویل بسته‌ی شواهد — تأیید on-chain خودِ ولیدیتور، شاهد اصلیه. به یادداشت معماری بالا
+    // برای استدلال کامل مراجعه کن.
+    // ------------------------------------------------------------------
+
+    /// @notice فقط تأیید می‌کنه بسته‌ی شواهد دریافت شده — صریحاً به‌معنای پذیرفتن درستیِ خودِ
+    ///         اتهام تعلیق **نیست**. پنجره‌ی ۷۲ساعته‌ی ثبت اعتراض رو شروع می‌کنه (که با دوره‌ی
+    ///         رأی‌گیری اعتراض یکی نیست — اون فقط با ثبت واقعی یه اعتراض شروع می‌شه).
+    function confirmDelivery(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may confirm delivery");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
+        require(d.delivery == DeliveryStatus.Pending || d.delivery == DeliveryStatus.Disputed, "ValidatorsRegistry: delivery already confirmed");
+
+        d.delivery = DeliveryStatus.Confirmed;
+        d.deliveryProvenAt = block.timestamp;
+        emit DeliveryConfirmed(decisionId, d.validator, block.timestamp);
+    }
+
+    /// @notice اگه ولیدیتور ظرف DELIVERY_DISPUTE_GRACE_PERIOD خودش تأیید نکنه، هرکسی (معمولاً
+    ///         Verifier) می‌تونه سؤال رو جلوی مجمع ببره. این خودش هیچی رو تصمیم نمی‌گیره — یه
+    ///         رأی‌گیری اختصاصی اختلاف تحویل باز می‌کنه (voteOnDelivery پایین) که **باید** قبل
+    ///         از این‌که هر رأی‌گیری تأیید-جریمه‌ای حتی ثبت بشه حل بشه (طبق الزام صریح کاربر
+    ///         که مرجع رسیدگی اول تحویل رو تصمیم بگیره، بعد اصل موضوع رو).
+    function assertDeliveryDisputed(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
+        require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
+        require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
+
+        d.delivery = DeliveryStatus.Disputed;
+        uint256 votingDeadline = block.timestamp + DELIVERY_DISPUTE_VOTING_PERIOD;
+        deliveryDisputes[decisionId] = DeliveryDispute({
+            decisionId: decisionId,
+            filedAt: block.timestamp,
+            votingDeadline: votingDeadline,
+            votesConfirmingDelivery: 0,
+            requiredVotes: (getActiveValidatorCount() / 2) + 1, // snapshot‌شده — کل مجمع؛ خودِ
+            // ولیدیتور موضوع اینجا exclude نمی‌شه (به کامنت DeliveryDispute بالا مراجعه کن) —
+            // ولی چون دیگه Active نیست (توسط recordSuspension حذف شده)، عملاً نمی‌تونه از
+            // onlyActiveValidator پایین رد بشه، پس این در عمل بی‌اثره.
+            resolved: false,
+            deliveryConfirmed: false
+        });
+        emit DeliveryDisputeFiled(decisionId, votingDeadline);
+    }
+
+    /// @notice رأی مجمع روی سؤال محدود واقعیت «آیا بسته‌ی شواهد واقعاً در دسترس این ولیدیتور
+    ///         گذاشته شده» — هرگز اصل موضوع خودِ تعلیق.
+    function voteOnDelivery(uint256 decisionId, bool confirmsDelivery) external onlyActiveValidator {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        require(disp.filedAt != 0, "ValidatorsRegistry: no delivery dispute for this decision");
+        require(!disp.resolved, "ValidatorsRegistry: delivery dispute already resolved");
+        require(block.timestamp <= disp.votingDeadline, "ValidatorsRegistry: delivery-dispute voting period has ended");
+        require(!hasVotedOnDelivery[decisionId][msg.sender], "ValidatorsRegistry: already voted");
+        hasVotedOnDelivery[decisionId][msg.sender] = true;
+
+        if (confirmsDelivery) {
+            disp.votesConfirmingDelivery++;
+        }
+        emit DeliveryDisputeVoted(decisionId, msg.sender, disp.votesConfirmingDelivery, disp.requiredVotes);
+
+        if (disp.votesConfirmingDelivery >= disp.requiredVotes) {
+            _resolveDeliveryDispute(decisionId, true);
+        }
+    }
+
+    /// @notice بدون نیاز به مجوز — اگه دوره‌ی رأی‌گیری اختلاف تحویل بدون رسیدن به نصاب برای
+    ///         تأیید تحویل تموم بشه، تحویل به‌عنوان هرگز-ثابت‌نشده درنظر گرفته می‌شه (همون
+    ///         پیش‌فرض بار-اثبات که همه‌جای دیگه‌ی این مکانیزم استفاده شده: طرفی که دنبال
+    ///         جریمه‌ست، ریسک یه رأی‌گیری بی‌نتیجه رو به عهده می‌گیره).
+    function resolveDeliveryDisputeIfExpired(uint256 decisionId) external {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        require(disp.filedAt != 0, "ValidatorsRegistry: no delivery dispute for this decision");
+        require(!disp.resolved, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > disp.votingDeadline, "ValidatorsRegistry: voting period not yet over");
+        _resolveDeliveryDispute(decisionId, false);
+    }
+
+    function _resolveDeliveryDispute(uint256 decisionId, bool confirmed) private {
+        DeliveryDispute storage disp = deliveryDisputes[decisionId];
+        disp.resolved = true;
+        disp.deliveryConfirmed = confirmed;
+        StatusDecision storage d = statusDecisions[decisionId];
+        if (confirmed) {
+            d.delivery = DeliveryStatus.Confirmed;
+            d.deliveryProvenAt = block.timestamp;
+        } else {
+            // ✅ طبق قاعده‌ی صریح کاربر: یه اختلاف تحویل که مدعیش می‌بازه فقط جریمه رو باطل
+            // می‌کنه — ولیدیتور رو به اجماع برنمی‌گردونه (اون همچنان نیازمند مسیر بازگشت
+            // معمولی و مستقله).
+            d.slashOutcome = SlashOutcome.VoidedNoDelivery;
+            validators[d.validator].pendingSlashEpoch = 0;
+            emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
+        }
+        emit DeliveryDisputeResolved(decisionId, confirmed);
+    }
+
+    // ------------------------------------------------------------------
+    // ثبت اعتراض و رأی‌گیری تأیید-جریمه
+    // ------------------------------------------------------------------
+
+    /// @notice فقط خودِ ولیدیتور موضوع (کسی که مستقیم‌ترین نفع رو داره، و تنها کسیه که این
+    ///         مکانیزم برای محافظتش طراحی شده) می‌تونه ثبت کنه — ظرف ۷۲ ساعت از تحویل
+    ///         **ثابت‌شده**، نه ادعای Verifier که فرستادتش.
+    function fileAppeal(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(msg.sender == d.validator, "ValidatorsRegistry: only the subject validator may file an appeal");
+        require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
+        require(!d.appealFiled, "ValidatorsRegistry: appeal already filed");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
+        require(block.timestamp <= d.deliveryProvenAt + APPEAL_FILING_WINDOW, "ValidatorsRegistry: appeal filing window has passed");
+
+        d.appealFiled = true;
+        d.appealFiledAt = block.timestamp;
+        d.appealVotingDeadline = block.timestamp + APPEAL_VOTING_PERIOD;
+        // حداقل رأی لازم: اکثریت ولیدیتورهای فعال — خودِ ولیدیتور موضوع جداگانه exclude
+        // نمی‌شه چون از قبل Demoted (نه Active) هست، پس onlyActiveValidator پایین از قبل
+        // بیرون نگهش می‌داره.
+        d.requiredConfirmVotes = (getActiveValidatorCount() / 2) + 1;
+        emit AppealFiled(decisionId, d.appealVotingDeadline);
+    }
+
+    /// @notice رأی مجمع برای تأیید جریمه — فقط اگه یه اعتراض واقعاً ثبت شده باشه به اینجا
+    ///         می‌رسه. اکثریت ساده، snapshot‌شده در لحظه‌ی ثبت، مهلت سخت ۷روزه جدا از پنجره‌ی
+    ///         ثبت ۷۲ساعته‌ی بالا.
+    function confirmSlash(uint256 decisionId) external onlyActiveValidator nonReentrant {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.appealFiled, "ValidatorsRegistry: no appeal filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp <= d.appealVotingDeadline, "ValidatorsRegistry: voting period has ended");
+        require(!hasVotedOnSlash[decisionId][msg.sender], "ValidatorsRegistry: already voted");
+
+        hasVotedOnSlash[decisionId][msg.sender] = true;
+        d.confirmVotes++;
+        emit SlashVoted(decisionId, msg.sender, d.confirmVotes, d.requiredConfirmVotes);
+
+        if (d.confirmVotes >= d.requiredConfirmVotes) {
+            _executeSlash(decisionId, SlashOutcome.Confirmed);
+        }
+    }
+
+    /// @notice بدون نیاز به مجوز — اگه مهلت رأی‌گیری اعتراض بدون رسیدن به نصاب تأیید تموم
+    ///         بشه، جریمه **رد** می‌شه (بار اثبات با کسیه که می‌خواد جریمه کنه). خودِ تعلیقِ
+    ///         اجماعی دست‌نخورده می‌مونه — برگشت به Active همچنان نیازمند مسیر مستقل
+    ///         recordRecovery() بالاست، صرف‌نظر از این نتیجه.
+    function resolveAppealIfExpired(uint256 decisionId) external {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.appealFiled, "ValidatorsRegistry: no appeal filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
+        d.slashOutcome = SlashOutcome.RejectedNoQuorum;
+        validators[d.validator].pendingSlashEpoch = 0;
+        emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
+    }
+
+    /// @notice بدون نیاز به مجوز — اگه تحویل ثابت شده و ۷۲ ساعت گذشته بدون این‌که هیچ‌وقت
+    ///         اعتراضی ثبت بشه، جریمه بی‌اعتراض اعمال می‌شه (یه اتهام بی‌چالش همچنان به
+    ///         جریمه منجر می‌شه، دقیقاً مثل یه دعوی مدنیِ بی‌پاسخ).
+    function executeUncontestedSlash(uint256 decisionId) external nonReentrant {
+        StatusDecision storage d = statusDecisions[decisionId];
+        require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
+        require(d.delivery == DeliveryStatus.Confirmed, "ValidatorsRegistry: delivery not proven yet");
+        require(!d.appealFiled, "ValidatorsRegistry: an appeal was filed for this decision");
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
+        require(block.timestamp > d.deliveryProvenAt + APPEAL_FILING_WINDOW, "ValidatorsRegistry: appeal filing window still open");
+
+        _executeSlash(decisionId, SlashOutcome.ExecutedUncontested);
+    }
+
+    function _executeSlash(uint256 decisionId, SlashOutcome outcome) private {
+        StatusDecision storage d = statusDecisions[decisionId];
+        d.slashOutcome = outcome;
+        ValidatorInfo storage v = validators[d.validator];
         v.pendingSlashEpoch = 0;
 
-        uint256 slashAmount = 0;
-        if (!epoch.wasMassFailure) {
-            slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
-            v.lockedStake -= slashAmount;
-            if (slashAmount > 0) {
-                (bool success, ) = TREASURY.call{value: slashAmount}("");
-                require(success, "ValidatorsRegistry: slash transfer failed");
-            }
+        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        v.lockedStake -= slashAmount;
+        if (slashAmount > 0) {
+            (bool success, ) = TREASURY.call{value: slashAmount}("");
+            require(success, "ValidatorsRegistry: slash transfer failed");
         }
-
-        emit SlashResolved(validator, slashAmount, epoch.wasMassFailure);
-    }
-
-    function demoteForInactivity(address validator) external nonReentrant {
-        ValidatorInfo storage v = validators[validator];
-        require(v.status == Status.Active, "ValidatorsRegistry: not active");
-        require(block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold, "ValidatorsRegistry: not yet inactive");
-
-        // ✅ بدون قید — به کامنت DemotionEpoch مراجعه کن: این هرگز نباید متوقف یا به‌تأخیر
-        // بیفته، صرف‌نظر از سؤال خرابی دسته‌جمعی که بعداً حل می‌شه، تا توانایی QBFT برای
-        // کوچیک‌کردن نصابش هم‌زمان با کوچیک‌شدن استخر ولیدیتورهای واقعاً زنده حفظ بشه.
-        _removeFromActive(validator);
-
-        uint256 epochId = _recordDemotion(v); // تصمیم جریمه معلقه — به resolvePendingSlash() مراجعه کن
-        v.status = Status.Demoted;
-        v.demotedAt = block.timestamp;
-        v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
-        v.livenessPacked = 0; // ✅ هر چهار فیلد لایوینس فشرده رو یکجا ریست می‌کنه — تا اولین
-        // چک لایوینس دوره‌ی بازگشت تازه، به‌اشتباه با یه چک قبل از این ریست throttle نشه.
-
-        emit ValidatorDemoted(validator, epochId);
-    }
-
-    // ------------------------------------------------------------------
-    // فعال‌سازی مجدد بعد از بازگشت — بدون نیاز به مجوز
-    // ------------------------------------------------------------------
-    function promoteAfterRecovery(address validator) external {
-        ValidatorInfo storage v = validators[validator];
-        require(v.status == Status.Demoted, "ValidatorsRegistry: not demoted");
-        // ✅ تازه (پیداشده در یک بازبینی بعدی — یه شکاف حسابداری واقعی): بدون این، یه ولیدیتور
-        // می‌تونست با یه pendingSlashEpoch حل‌نشده از همین دموت به Active برگرده، بعد دوباره
-        // دموت بشه — که در اون لحظه _recordDemotion() مقدار pendingSlashEpoch رو با شناسه‌ی
-        // epoch تازه **بازنویسی** می‌کرد و برای همیشه هر راهی برای رسیدن به تصمیم جریمه‌ی
-        // معلق اول رو گم می‌کرد (هرگز حل نمی‌شد، و سورنش برای همیشه توی موجودی این قرارداد
-        // گیر می‌کرد، بدون این‌که جایی پیگیری بشه). الزام حل‌شدن اول این رو تمیز می‌بنده، با
-        // استفاده از همون resolvePendingSlash() که هرکسی از قبل می‌تونه صداش بزنه.
-        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
-        require(block.timestamp >= v.periodStartedAt + recoveryPeriod, "ValidatorsRegistry: recovery period not elapsed");
-        uint256 p = v.livenessPacked;
-        uint256 totalChecks = _unpackTotalChecks(p);
-        uint256 confirmedChecks = _unpackConfirmedChecks(p);
-        require(
-            totalChecks >= _minRequiredChecks(recoveryPeriod),
-            "ValidatorsRegistry: not enough liveness checks recorded yet"
-        );
-        require(
-            confirmedChecks * BPS_DENOMINATOR >= totalChecks * requiredRecoveryLivenessRatioBps,
-            "ValidatorsRegistry: recovery liveness success rate too low"
-        );
-        require(block.timestamp - _unpackLastConfirmed(p) <= inactivityThreshold, "ValidatorsRegistry: liveness confirmation stale");
-
-        _activate(validator);
-        emit ValidatorReactivated(validator);
+        emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
     function _activate(address who) private {
@@ -1019,29 +1149,19 @@ contract ValidatorsRegistry {
             "ValidatorsRegistry: nothing to exit"
         );
 
-        bool hasPendingSlash = false;
         if (v.status == Status.Active) {
-            // ✅ تازه (بستن راه فرار «فرار قبل از دموت» پیداشده در بازبینی): اگه این ولیدیتور
-            // همین الان از قبل واجد شرایط demoteForInactivity() بوده (همون معیار خودِ اون تابع)،
-            // دقیقاً همون تصمیم جریمه‌ی معلق اینجا هم ثبت می‌شه، قبل از حذف — وگرنه یه اپراتور
-            // که می‌بینه نودش خراب شده می‌تونست فقط یه لحظه قبل از این‌که کسی
-            // demoteForInactivity() رو صداش بزنه، requestExit() بزنه و با کل وثیقه‌ش، فقط با
-            // گذروندن exitCooldown معمولی، بره. این هیچ معیار قضاوتی تازه‌ای اضافه نمی‌کنه:
-            // دقیقاً همون تست «از قبل از inactivityThreshold رد شده» که demoteForInactivity()
-            // خودش چک می‌کنه، اینجا هم اجرا می‌شه — ولیدیتوری که واقعاً هنوز داخل آستانه بوده،
-            // دقیقاً مثل قبل هیچ‌چیز اضافه‌ای بدهکار نیست.
-            // ✅ اصلاح‌شده (پیداشده در یک بازبینی بعدی): _removeFromActive() باید *قبل* از
-            // _recordDemotion() اینجا اجرا بشه، دقیقاً هم‌ترازِ ترتیب demoteForInactivity() —
-            // وگرنه اسنپ‌شات referenceCount این epoch (activeValidators.length + 1) درحالی
-            // گرفته می‌شه که این ولیدیتور هنوز توی activeValidators حساب می‌شه، یعنی دقیقاً
-            // یکی بیشتر از دموت معادل از طریق demoteForInactivity(). نزدیک مرز خرابی
-            // دسته‌جمعی ۲۰٪، همین تفاوت یکی می‌تونه نتیجه رو فقط بر مبنای این‌که کدوم مسیر
-            // کد باعث دموت شده عوض کنه — نه چیزی درباره‌ی الگوی واقعی خرابی.
+            // ⚠️ تغییرکرده (تصمیم صریح کاربر — بازطراحی راستی‌آزمایی آف‌چین): راه‌فرار ضدِ«فرار
+            // قبل از دموت» که اینجا بود، لحظه‌ی خروج، لاگ liveness on-chain این ولیدیتور رو چک
+            // می‌کرد. اون لاگ دیگه وجود نداره (liveness الان آف‌چین چک می‌شه — به یادداشت
+            // معماری بالای recordSuspension() مراجعه کن)، پس این قرارداد دیگه نمی‌تونه مستقل
+            // تشخیص بده «آیا این ولیدیتور همین الان واجد شرایط تعلیق بوده». محافظتی که این
+            // قبلاً می‌داد الان کاملاً روی دوش Verifier‌ه: می‌تونه recordSuspension() رو روی
+            // یه ولیدیتور واقعاً غیرفعال، هر لحظه، حتی درست قبل از رسیدن تراکنش
+            // requestExit()‌اش صدا بزنه، که دقیقاً همون اثر «pendingSlashEpoch جلوی برداشت رو
+            // می‌گیره» رو تولید می‌کنه — فقط از طریق یه تصمیم صریح راستی‌آزمایی‌شده‌ی آف‌چین
+            // به‌جای یه خودچک on-chain. ولیدیتوری که قبل از اقدام Verifier خارج بشه، کل
+            // وثیقه‌ش رو نگه می‌داره، دقیقاً مثل کسی که واقعاً هنوز داخل تحمل بوده.
             _removeFromActive(msg.sender);
-            if (block.timestamp - _unpackLastConfirmed(v.livenessPacked) >= inactivityThreshold) {
-                _recordDemotion(v);
-                hasPendingSlash = true;
-            }
         }
 
         // ✅ تازه: خروج یک ولیدیتور پرداخت‌کرده، جایش را در منحنی رشد آزاد می‌کند — عضو
@@ -1056,11 +1176,6 @@ contract ValidatorsRegistry {
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
-        if (hasPendingSlash) {
-            emit ValidatorDemoted(msg.sender, v.pendingSlashEpoch); // ✅ همون رویدادی که
-            // demoteForInactivity() می‌زد — خروجی که واقعاً یه دموت دیرگرفته‌شده بود، باید برای
-            // هر پایش آف‌چینی دقیقاً همون‌جوری دیده بشه، شامل resolvePendingSlash() بعدیش.
-        }
     }
 
     function withdrawStake() external nonReentrant {
@@ -1134,14 +1249,6 @@ contract ValidatorsRegistry {
             entryWindowSeconds = value;
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
-        } else if (key == ParamKey.RequiredLivenessRatioBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
-            requiredLivenessRatioBps = value;
-        } else if (key == ParamKey.RequiredRecoveryLivenessRatioBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: ratio cannot exceed 100%");
-            requiredRecoveryLivenessRatioBps = value;
-        } else if (key == ParamKey.InactivityThreshold) {
-            inactivityThreshold = value;
         } else if (key == ParamKey.RecoveryPeriod) {
             recoveryPeriod = value;
         } else if (key == ParamKey.SlashBps) {
@@ -1156,26 +1263,29 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // توابع کمکی view
     // ------------------------------------------------------------------
+    /// @notice ✅ بازطراحی‌شده (معماری راستی‌آزمایی آف‌چین — فیلدهای نسبت liveness که این
+    ///         قبلاً برمی‌گردوند دیگه اصلاً on-chain وجود ندارن؛ به یادداشت معماری بالای
+    ///         recordSuspension() مراجعه کن). ⚠️ حیاتی برای هرکسی که این ABI رو بیرون مصرف
+    ///         می‌کنه (کپی جداگانه‌ی همین اینترفیس توی ValidatorsBoard.sol را ببین، که توی یه
+    ///         نسخه‌ی قبلی وقتی این دو از هم جدا افتادن یه باگ واقعی بین‌قراردادی ساخت): این
+    ///         الان دقیقاً ۶ خروجی برمی‌گردونه، به همین ترتیب. هر اینترفیسی که این تابع رو
+    ///         اعلام می‌کنه باید دقیقاً همین ترتیب و تعداد رو داشته باشه، چون سالیدیتی نتیجه‌ی
+    ///         فراخوان خارجی رو موقعیتی دیکد می‌کنه، نه بر اساس اسم.
     function getValidatorInfo(address who) external view returns (
         Status status,
         uint256 lockedStake,
         uint256 periodStartedAt,
-        uint256 lastLivenessConfirmation,
-        uint256 livenessConfirmationsInPeriod,
-        uint256 totalLivenessChecksInPeriod,
         uint256 demotedAt,
+        uint256 pendingSlashEpoch,
         bool isPaidEntrant
     ) {
         ValidatorInfo storage v = validators[who];
-        uint256 p = v.livenessPacked;
         return (
             v.status,
             v.lockedStake,
             v.periodStartedAt,
-            _unpackLastConfirmed(p),
-            _unpackConfirmedChecks(p),
-            _unpackTotalChecks(p),
             v.demotedAt,
+            v.pendingSlashEpoch,
             v.isPaidEntrant
         );
     }

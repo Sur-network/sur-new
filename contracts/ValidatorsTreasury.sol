@@ -16,94 +16,137 @@ interface IValidatorsRegistry {
 ///         anywhere in this system.
 ///
 ///         Two inflows, both native currency:
-///           - ✅ UPDATED: whatever remains of the block reward after Foundation's fixed 15%
-///             cut (of TOTAL rewards, independent of this) and validators' own direct,
-///             governable share (validatorDirectShareBps, [40%, 65%] of total, changeable via
-///             the bicameral vote in BlockRewardDistributor.sol) are both removed — see
-///             sur-tokenomics.md sections 6.5/6.6 for the full current model; the old fixed
-///             "50% of block reward" description no longer applies. Transaction fees never flow
-///             here — 70% of fees go directly to validators by block ratio, and the remaining
-///             30% is permanently burned (section 7) — treasury gets none of either.
+///           - Whatever remains of the block reward after Foundation's fixed 15% cut (of TOTAL
+///             rewards) and validators' own direct, governable share (validatorDirectShareBps,
+///             [40%, 65%] of total) are both removed — see sur-tokenomics.md sections 6.5/6.6.
+///             Transaction fees never flow here — 70% of fees go directly to validators by block
+///             ratio, and the remaining 30% is permanently burned (section 7) — treasury gets
+///             none of either.
 ///           - The slashed collateral forwarded directly by ValidatorsRegistry on every
-///             inactivity-demotion (see ValidatorsRegistry's "MEMBERSHIP FEE" doc comment for
-///             the hybrid stake model). ✅ Membership fees themselves no longer arrive here —
-///             they go to BlockRewardDistributor instead, folded into the next fee epoch and
-///             paid 100%-pro-rata-by-blocks to active validators (sur-tokenomics.md section 6).
+///             inactivity-demotion. Membership fees go to BlockRewardDistributor instead.
 ///
-///         Two spending paths, matching the governance structure in the design doc:
-///
-///           1. FULL VALIDATOR VOTE (this contract): any expenditure, proposed by an active
-///              validator, approved by a majority of currently active validators.
-///              ⚠️ FoundationDAO has NO access to this contract at all (an earlier
-///              foundation-initiated "budget request" path was removed as unnecessary — see
-///              FoundationDAO.sol). If the foundation needs funds, an active validator or a
-///              ValidatorsBoard member must propose it themselves.
-///           2. BOARD-DELEGATED (ValidatorsBoard only, a fixed genesis address): routine,
-///              small expenditures below SMALL_BUDGET_CAP, callable only after ValidatorsBoard's
-///              own internal board majority has approved the request. The cap itself, like
-///              every other security parameter here, can only be changed by full validator
-///              vote — the board cannot raise its own spending limit.
+///         ✅ REDESIGNED (explicit user decision — full-validator-assembly spending removed
+///         entirely): the assembly (all active validators) no longer has ANY path to propose or
+///         approve an individual payment from this treasury. Its role is now limited strictly to
+///         setting/changing the SPENDING RULES the board must operate within (the per-payment
+///         cap, the rolling 30-day total cap, and how long a rule change is delayed before taking
+///         effect) — never a specific payment. Every actual expenditure now goes through
+///         ValidatorsBoard exclusively, bounded by those assembly-set rules. Rationale (stated by
+///         the user): having two parallel paths to the same kind of decision (assembly vote vs.
+///         board vote) invited "venue shopping" — trying whichever path was more likely to
+///         approve a given payment. A single path with assembly-controlled limits removes that
+///         ambiguity while still keeping the assembly in ultimate control of how much can ever be
+///         spent, just not of any one payment's approval.
 ///
 ///         GENESIS DEPLOYMENT: ValidatorsBoard's address is a fixed constant (see
-///         SurAddresses.sol) rather than mutable state set via a runtime `wire()` step,
-///         because all five structural contracts share a common, pre-agreed genesis address map.
+///         SurAddresses.sol) rather than mutable state set via a runtime `wire()` step, because
+///         all five structural contracts share a common, pre-agreed genesis address map.
 contract ValidatorsTreasury {
     // ------------------------------------------------------------------
     // Fixed cross-contract addresses (see SurAddresses.sol)
     // ------------------------------------------------------------------
 
-    /// @notice The only address allowed to call boardApproveExpenditure (path 2 below).
+    /// @notice The only address allowed to actually spend from this treasury.
     address public constant BOARD = SurAddresses.VALIDATORS_BOARD;
 
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
-    /// @notice Ceiling for board-approved expenditures. Anything at or above this must go
-    ///         through the full validator vote path instead. Changeable only by full
-    ///         validator vote (see proposeSmallBudgetCap below) — the board cannot raise its
-    ///         own limit.
-    /// @dev 🔶 FILL_IN: initial small-budget cap (in wei of native Suren).
-    uint256 public smallBudgetCap = 0;
-
     bool private locked; // reentrancy guard
 
+    uint256 public totalDistributedToTreasury; // lifetime inflow received (reward share + slashed stake)
+    uint256 public totalSpent;                 // lifetime amount paid out by the board
+
     // ------------------------------------------------------------------
-    // Full-vote expenditure proposals
+    // ✅ NEW — spending rules (assembly-governed limits the board must operate within)
     // ------------------------------------------------------------------
-    /// @dev ✅ FIXED (critical stale-vote bug found in review — same class as
-    ///      BlockRewardDistributor's ShareProposal and ValidatorsRegistry's ParamProposal):
-    ///      `required` used to be recomputed live from REGISTRY.getValidators().length on every
-    ///      vote, while `votes` only ever increased. `requiredVotes`/`expiresAt` are now
-    ///      snapshotted/fixed at proposal creation — see ShareProposal's doc comment in
-    ///      BlockRewardDistributor.sol for the full reasoning.
-    struct Expenditure {
-        address to;
-        uint256 amount;
-        string description;
+
+    /// @notice Ceiling for any single board-approved payment. Any payment at or above this is
+    ///         rejected outright — there is deliberately NO alternate path for a larger payment
+    ///         (see the contract-level doc comment: the old "full validator vote for any amount"
+    ///         escape hatch was removed on purpose). The only way to make a larger payment is to
+    ///         first raise this cap via proposeCapChange() below, wait out
+    ///         CAP_CHANGE_TIMELOCK_DELAY, and then spend under the new cap through the normal
+    ///         path — never in the same transaction or vote as the cap change itself.
+    /// @dev 🔶 FILL_IN (explicit user instruction: do not guess this number — a real decision
+    ///      before genesis, in native Suren wei).
+    uint256 public perPaymentCap = 0;
+
+    /// @notice Ceiling on the SUM of every board-approved payment within the trailing 30 days —
+    ///         a true rolling window (see dailySpend below), not a fixed calendar period that
+    ///         resets and could be gamed right at the boundary (spend up to the cap right before
+    ///         reset, then again right after). Every payment counts toward this same shared
+    ///         total regardless of its destination or description — splitting one large payment
+    ///         into several smaller ones, or sending to different recipients, does not create
+    ///         separate budgets.
+    /// @dev 🔶 FILL_IN (explicit user instruction: do not guess this number — a real decision
+    ///      before genesis, in native Suren wei).
+    uint256 public periodCap = 0;
+
+    /// @notice How long an assembly-approved change to perPaymentCap or periodCap must wait
+    ///         before taking effect — deliberately separate from the vote itself, so a cap
+    ///         increase and a payment under the new, larger cap can never happen in the same
+    ///         moment (per the user's explicit instruction: "افزایش سقف و خرج‌کردن در همان لحظه
+    ///         ممکن نباشد"). 🔶 FILL_IN: this specific delay was not part of the two numbers the
+    ///         user explicitly said not to guess, but given how directly it affects how fast a
+    ///         cap increase could be exploited, it should still be confirmed rather than silently
+    ///         relied upon — 7 days is used here ONLY as a working placeholder (matching the
+    ///         voting-deadline scale used elsewhere in this project's newer governance
+    ///         mechanisms), not a decided value.
+    uint256 public constant CAP_CHANGE_TIMELOCK_DELAY = 7 days;
+
+    /// @notice Number of daily buckets summed for the rolling-window check — fixed at 30 to
+    ///         match "30 days" exactly; each check sums exactly this many storage reads, a
+    ///         small, constant, predictable gas cost (not unbounded, not dependent on how many
+    ///         payments have ever been made).
+    uint256 public constant ROLLING_WINDOW_DAYS = 30;
+
+    /// @notice Total board-approved spend recorded for a given day index (block.timestamp / 1
+    ///         days). Used only to compute the rolling 30-day sum in
+    ///         _rollingWindowSpend() below — never read or written any other way.
+    mapping(uint256 => uint256) public dailySpend;
+
+    enum CapKind { PerPayment, Period }
+
+    /// @dev ✅ FIXED (same stale-vote class as every other proposal struct in this project):
+    ///      requiredVotes/expiresAt are snapshotted at creation, never recomputed live.
+    struct CapChangeProposal {
+        CapKind kind;
+        uint256 newValue;
         uint256 votes;
-        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, never recomputed
+        uint256 requiredVotes;
         uint256 createdAt;
-        uint256 expiresAt; // ✅ NEW
-        bool executed;
+        uint256 expiresAt;
+        bool executed; // true once the ASSEMBLY VOTE passed — separate from whether the
+        // timelock has elapsed and the new value has actually taken effect (see
+        // pendingCapChange below and applyPendingCapChange()).
     }
 
     uint256 public constant TREASURY_PROPOSAL_EXPIRY = 30 days;
 
-    mapping(uint256 => Expenditure) public expenditures;
-    mapping(uint256 => mapping(address => bool)) private expenditureHasVoted;
-    uint256 public expenditureCount;
+    mapping(uint256 => CapChangeProposal) public capChangeProposals;
+    mapping(uint256 => mapping(address => bool)) private capChangeHasVoted;
+    uint256 public capChangeProposalCount;
 
-    uint256 public totalDistributedToTreasury; // lifetime inflow received (reward share + membership fees/slashed stake)
-    uint256 public totalSpent;                 // lifetime amount paid out (both spending paths combined)
+    /// @notice The single pending cap change awaiting its timelock, per cap kind — a second
+    ///         proposal of the SAME kind passing while one is already pending simply replaces
+    ///         it (with a freshly-started timelock), rather than queueing multiple changes.
+    struct PendingCapChange {
+        uint256 newValue;
+        uint256 effectiveAt;
+        bool exists;
+    }
+
+    mapping(uint256 => PendingCapChange) public pendingCapChange; // keyed by uint256(CapKind)
 
     // ------------------------------------------------------------------
     // Events
     // ------------------------------------------------------------------
     event RewardsReceived(address indexed from, uint256 amount);
-    event ExpenditureProposed(uint256 indexed id, address indexed to, uint256 amount, string description, address indexed proposer);
-    event ExpenditureVoted(uint256 indexed id, address indexed voter, uint256 votes, uint256 required);
-    event ExpenditureExecuted(uint256 indexed id, address indexed to, uint256 amount);
     event BoardExpenditureExecuted(address indexed to, uint256 amount, string description);
-    event SmallBudgetCapUpdated(uint256 oldCap, uint256 newCap);
+    event CapChangeProposed(uint256 indexed id, CapKind kind, uint256 newValue, address indexed proposer);
+    event CapChangeVoted(uint256 indexed id, address indexed voter, uint256 votes, uint256 required);
+    event CapChangeQueued(CapKind kind, uint256 newValue, uint256 effectiveAt);
+    event CapChangeApplied(CapKind kind, uint256 oldValue, uint256 newValue);
 
     // ------------------------------------------------------------------
     // Modifiers
@@ -132,10 +175,7 @@ contract ValidatorsTreasury {
     // ------------------------------------------------------------------
 
     // ------------------------------------------------------------------
-    // Automatic receipt of native Suren — ✅ UPDATED: from BlockRewardDistributor's remainder
-    // share (after Foundation's fixed 15% and validators' governable direct share are both
-    // removed — no longer a fixed 50%), and from ValidatorsRegistry's slashed collateral only
-    // (membership fees go to BlockRewardDistributor instead, not here).
+    // Automatic receipt of native Suren
     // ------------------------------------------------------------------
     receive() external payable {
         totalDistributedToTreasury += msg.value;
@@ -143,81 +183,45 @@ contract ValidatorsTreasury {
     }
 
     // ------------------------------------------------------------------
-    // Path 1: full validator vote
+    // ✅ THE ONLY spending path — board-only, bounded by assembly-set rules
     // ------------------------------------------------------------------
 
-    /// @notice Propose an expenditure. Callable only by an active validator — FoundationDAO has
-    ///         no connection to this contract at all (an earlier `proposeRequestTreasuryBudget`
-    ///         path on FoundationDAO was removed as unnecessary; if the foundation ever needs
-    ///         SUR funds, an active validator or ValidatorsBoard member must propose it here or
-    ///         via boardApproveExpenditure themselves).
-    function proposeExpenditure(address to, uint256 amount, string calldata description) external onlyActiveValidator returns (uint256 id) {
-        require(to != address(0), "ValidatorsTreasury: zero recipient address");
-        require(amount > 0, "ValidatorsTreasury: zero amount");
-
-        expenditureCount++;
-        id = expenditureCount;
-        expenditures[id] = Expenditure({
-            to: to,
-            amount: amount,
-            description: description,
-            votes: 0,
-            requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // frozen now
-            createdAt: block.timestamp,
-            expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
-            executed: false
-        });
-        emit ExpenditureProposed(id, to, amount, description, msg.sender);
-
-        _voteExpenditure(id, msg.sender);
+    function _currentDay() private view returns (uint256) {
+        return block.timestamp / 1 days;
     }
 
-    function voteExpenditure(uint256 id) external onlyActiveValidator {
-        _voteExpenditure(id, msg.sender);
-    }
-
-    function _voteExpenditure(uint256 id, address voter) private {
-        Expenditure storage e = expenditures[id];
-        require(e.createdAt != 0, "ValidatorsTreasury: expenditure not found");
-        require(!e.executed, "ValidatorsTreasury: already executed");
-        require(block.timestamp <= e.expiresAt, "ValidatorsTreasury: expenditure proposal has expired");
-        require(!expenditureHasVoted[id][voter], "ValidatorsTreasury: already voted");
-
-        expenditureHasVoted[id][voter] = true;
-        e.votes++;
-
-        emit ExpenditureVoted(id, voter, e.votes, e.requiredVotes);
-
-        if (e.votes >= e.requiredVotes) {
-            _executeExpenditure(id);
+    /// @notice Sums exactly ROLLING_WINDOW_DAYS daily buckets ending today — a genuine trailing
+    ///         30-day window, immune to the "spend at the boundary twice" gaming a simple
+    ///         periodic reset would allow.
+    function _rollingWindowSpend() private view returns (uint256 total) {
+        uint256 today = _currentDay();
+        for (uint256 i = 0; i < ROLLING_WINDOW_DAYS; i++) {
+            total += dailySpend[today - i];
         }
     }
 
-    function _executeExpenditure(uint256 id) private nonReentrant {
-        Expenditure storage e = expenditures[id];
-        require(!e.executed, "ValidatorsTreasury: already executed");
-        require(e.amount <= address(this).balance, "ValidatorsTreasury: insufficient balance");
-        e.executed = true;
-
-        totalSpent += e.amount;
-        (bool success, ) = e.to.call{value: e.amount}("");
-        require(success, "ValidatorsTreasury: transfer failed");
-
-        emit ExpenditureExecuted(id, e.to, e.amount);
+    /// @notice View so the board (or anyone) can check remaining rolling-window headroom before
+    ///         proposing a payment.
+    function rollingWindowSpendNow() external view returns (uint256) {
+        return _rollingWindowSpend();
     }
 
-    // ------------------------------------------------------------------
-    // Path 2: board-delegated small budgets
-    // ------------------------------------------------------------------
-
-    /// @notice Called only by ValidatorsBoard, only after its own internal board majority has
-    ///         approved the request. Capped at smallBudgetCap regardless of what the board
-    ///         voted for.
+    /// @notice Called only by ValidatorsBoard, only after its own internal board majority
+    ///         (minimum 3 votes, hard-floored regardless of current board size — see
+    ///         ValidatorsBoard.sol's proposeApproveBudget doc comment) has approved the request.
+    ///         ✅ NO alternate path exists for a payment at or above perPaymentCap — it simply
+    ///         reverts. This is deliberate: raising the cap (assembly vote + timelock) is the
+    ///         only way to make a larger payment possible, and never in the same moment as
+    ///         spending under it.
     function boardApproveExpenditure(address to, uint256 amount, string calldata description) external onlyBoard nonReentrant {
         require(to != address(0), "ValidatorsTreasury: zero recipient address");
-        require(amount > 0 && amount < smallBudgetCap, "ValidatorsTreasury: amount outside board cap");
+        require(amount > 0 && amount < perPaymentCap, "ValidatorsTreasury: amount outside per-payment cap");
         require(amount <= address(this).balance, "ValidatorsTreasury: insufficient balance");
+        require(_rollingWindowSpend() + amount <= periodCap, "ValidatorsTreasury: 30-day period cap exceeded");
 
+        dailySpend[_currentDay()] += amount; // counts toward the shared rolling total regardless
+        // of `to` or `description` — splitting into multiple smaller payments or different
+        // recipients does not create separate budgets (see periodCap's doc comment).
         totalSpent += amount;
         (bool success, ) = to.call{value: amount}("");
         require(success, "ValidatorsTreasury: transfer failed");
@@ -226,57 +230,77 @@ contract ValidatorsTreasury {
     }
 
     // ------------------------------------------------------------------
-    // Parameter governance — full active-validator majority vote. The board cap is the only
-    // remaining treasury-specific parameter; BOARD is a fixed genesis address (SurAddresses.sol)
-    // and cannot be changed without a full contract redeployment.
+    // ✅ Rule governance — full active-validator assembly vote, cap changes ONLY (never an
+    // individual payment). Sets the rules the board must spend within; does not itself spend.
     // ------------------------------------------------------------------
 
-    struct ParamProposal {
-        uint256 newCap;
-        uint256 votes;
-        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, same fix as Expenditure above
-        uint256 createdAt;
-        uint256 expiresAt; // ✅ NEW
-        bool executed;
-    }
-
-    mapping(uint256 => ParamProposal) public paramProposals;
-    mapping(uint256 => mapping(address => bool)) private paramHasVoted;
-    uint256 public paramProposalCount;
-
-    function proposeSmallBudgetCap(uint256 newCap) external onlyActiveValidator returns (uint256 id) {
-        paramProposalCount++;
-        id = paramProposalCount;
-        paramProposals[id] = ParamProposal({
-            newCap: newCap,
+    /// @notice Propose changing perPaymentCap or periodCap. Passing the vote does NOT take
+    ///         effect immediately — it queues the change behind CAP_CHANGE_TIMELOCK_DELAY (see
+    ///         applyPendingCapChange() below), so a cap increase can never be exploited for an
+    ///         immediate larger payment.
+    function proposeCapChange(CapKind kind, uint256 newValue) external onlyActiveValidator returns (uint256 id) {
+        capChangeProposalCount++;
+        id = capChangeProposalCount;
+        capChangeProposals[id] = CapChangeProposal({
+            kind: kind,
+            newValue: newValue,
             votes: 0,
             requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // frozen now
             createdAt: block.timestamp,
             expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
             executed: false
         });
-        _voteParam(id, msg.sender);
+        emit CapChangeProposed(id, kind, newValue, msg.sender);
+        _voteCapChange(id, msg.sender);
     }
 
-    function voteParameterChange(uint256 id) external onlyActiveValidator {
-        _voteParam(id, msg.sender);
+    function voteCapChange(uint256 id) external onlyActiveValidator {
+        _voteCapChange(id, msg.sender);
     }
 
-    function _voteParam(uint256 id, address voter) private {
-        ParamProposal storage p = paramProposals[id];
+    function _voteCapChange(uint256 id, address voter) private {
+        CapChangeProposal storage p = capChangeProposals[id];
         require(p.createdAt != 0, "ValidatorsTreasury: proposal not found");
         require(!p.executed, "ValidatorsTreasury: already executed");
         require(block.timestamp <= p.expiresAt, "ValidatorsTreasury: proposal has expired");
-        require(!paramHasVoted[id][voter], "ValidatorsTreasury: already voted");
+        require(!capChangeHasVoted[id][voter], "ValidatorsTreasury: already voted");
 
-        paramHasVoted[id][voter] = true;
+        capChangeHasVoted[id][voter] = true;
         p.votes++;
+
+        emit CapChangeVoted(id, voter, p.votes, p.requiredVotes);
 
         if (p.votes >= p.requiredVotes) {
             p.executed = true;
-            emit SmallBudgetCapUpdated(smallBudgetCap, p.newCap);
-            smallBudgetCap = p.newCap;
+            uint256 effectiveAt = block.timestamp + CAP_CHANGE_TIMELOCK_DELAY;
+            pendingCapChange[uint256(p.kind)] = PendingCapChange({
+                newValue: p.newValue,
+                effectiveAt: effectiveAt,
+                exists: true
+            });
+            emit CapChangeQueued(p.kind, p.newValue, effectiveAt);
         }
+    }
+
+    /// @notice Permissionless — applies a queued cap change once its timelock has elapsed.
+    ///         Separate from the vote itself (same "decision now, effect later" pattern used for
+    ///         ValidatorsRegistry's economic-parameter timer elsewhere in this project) so the
+    ///         moment a larger cap becomes spendable is always at least CAP_CHANGE_TIMELOCK_DELAY
+    ///         away from the vote that approved it — never the same transaction, never the same
+    ///         block.
+    function applyPendingCapChange(CapKind kind) external {
+        PendingCapChange storage pending = pendingCapChange[uint256(kind)];
+        require(pending.exists, "ValidatorsTreasury: no pending change for this cap");
+        require(block.timestamp >= pending.effectiveAt, "ValidatorsTreasury: timelock not elapsed");
+
+        if (kind == CapKind.PerPayment) {
+            emit CapChangeApplied(kind, perPaymentCap, pending.newValue);
+            perPaymentCap = pending.newValue;
+        } else {
+            emit CapChangeApplied(kind, periodCap, pending.newValue);
+            periodCap = pending.newValue;
+        }
+        delete pendingCapChange[uint256(kind)];
     }
 
     // ------------------------------------------------------------------
