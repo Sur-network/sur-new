@@ -511,6 +511,23 @@ contract ValidatorsRegistry {
     ///         mapping instead of the epoch-level flag.
     mapping(uint256 => bool) private massFailureChecked;
 
+    /// @notice ✅ FIXED (found in independent review): closes a class of bug where a resigned
+    ///         validator's OLD board seat/authority could be resurrected. `requestExit()` sets
+    ///         this to `true` forever (never cleared, survives `delete validators[msg.sender]`),
+    ///         and `requestMembership()` refuses any address for which it is `true`. Coming back
+    ///         is a brand-new membership with a brand-new address — no vote, board seat, or
+    ///         history carries over. Applies equally to a zero-stake genesis founder: exiting
+    ///         and returning under a new address does not resurrect the founder's original terms.
+    mapping(address => bool) public permanentlyExited;
+    /// @notice ✅ FIXED (independent review, defense in depth against the SAME bug — a second,
+    ///         independent layer that does not rely on `permanentlyExited` above): bumped every
+    ///         time this address voluntarily exits. `ValidatorsBoard` stamps the epoch value at
+    ///         the moment it seats an address, and treats a later mismatch as "no longer this
+    ///         membership" regardless of current status — so even if some future code path ever
+    ///         let an exited address reach a live status again, a stale board seat could not
+    ///         resurrect authority from it.
+    mapping(address => uint256) public membershipEpoch;
+
     // ------------------------------------------------------------------
     // P04 (final decisions): exit handling + reserved amount + exact case binding
     // ------------------------------------------------------------------
@@ -782,6 +799,7 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     function requestMembership() external payable nonReentrant {
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
+        require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
 
         uint256 threshold = currentEntryThreshold();
         uint256 fee = currentMembershipFee();
@@ -1284,6 +1302,11 @@ contract ValidatorsRegistry {
         statusBeforeExit[msg.sender] = uint8(v.status); // read BEFORE the status changes below
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
+        // ✅ FIXED: this membership's board authority (if any) is over for good the moment exit is
+        // requested — permanentlyExited blocks this address from ever registering again, and
+        // membershipEpoch invalidates any board seat still stamped with the old epoch.
+        permanentlyExited[msg.sender] = true;
+        membershipEpoch[msg.sender]++;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }

@@ -524,6 +524,22 @@ contract ValidatorsRegistry {
     ///         _massFailureResolved() این mapping سطح‌پرونده رو چک می‌کنه، نه پرچم سطح‌epoch رو.
     mapping(uint256 => bool) private massFailureChecked;
 
+    /// @notice ✅ اصلاح‌شده (پیداشده در بازبینی مستقل): جلوی یک رده از باگ را می‌گیرد که در آن اختیار/کرسی
+    ///         هیأتِ **قدیمیِ** یک ولیدیتور خروج‌کرده می‌توانست دوباره زنده شود. `requestExit()` این را
+    ///         برای همیشه `true` می‌کند (هرگز پاک نمی‌شود، از `delete validators[msg.sender]` هم جان
+    ///         سالم به‌در می‌برد)، و `requestMembership()` هر آدرسی را که این مقدارش `true` باشد رد
+    ///         می‌کند. بازگشت یعنی عضویت کاملاً تازه با آدرس کاملاً تازه — هیچ رأی، کرسی هیأت یا سابقه‌ای
+    ///         منتقل نمی‌شود. برای مؤسس با وثیقه‌ی صفر هم عیناً همین است: خروج و بازگشت با آدرس تازه،
+    ///         شرایط اصلی مؤسس را احیا نمی‌کند.
+    mapping(address => bool) public permanentlyExited;
+    /// @notice ✅ اصلاح‌شده (بازبینی مستقل، دفاع مضاعف در برابر **همان** باگ — یک لایه‌ی مستقل دوم که به
+    ///         `permanentlyExited` بالا وابسته نیست): هر بار این آدرس داوطلبانه خروج می‌دهد افزایش
+    ///         می‌یابد. `ValidatorsBoard` مقدار اپوک را در لحظه‌ی نشاندن یک آدرس روی کرسی ثبت می‌کند و
+    ///         هر ناهمخوانی بعدی را — صرف‌نظر از وضعیت فعلی — «دیگر همین عضویت نیست» می‌داند؛ پس حتی اگر
+    ///         یک مسیر کد دیگر در آینده به یک آدرس خروج‌کرده اجازه‌ی رسیدن به وضعیت زنده را بدهد، یک کرسی
+    ///         هیأتِ کهنه نمی‌تواند اختیار را از آن زنده کند.
+    mapping(address => uint256) public membershipEpoch;
+
     // ------------------------------------------------------------------
     // P04 (تصمیم نهایی): رسیدگی پس از درخواست خروج + مبلغ محفوظ + اتصال دقیق به پرونده
     // ------------------------------------------------------------------
@@ -794,6 +810,7 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     function requestMembership() external payable nonReentrant {
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
+        require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
 
         uint256 threshold = currentEntryThreshold();
         uint256 fee = currentMembershipFee();
@@ -1292,6 +1309,11 @@ contract ValidatorsRegistry {
         statusBeforeExit[msg.sender] = uint8(v.status); // قبل از تغییر وضعیت پایین خوانده می‌شود
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
+        // ✅ اصلاح‌شده: اختیار هیأتِ این عضویت (اگر بود) همین لحظه‌ی درخواست خروج برای همیشه تمام
+        // می‌شود — permanentlyExited این آدرس را برای همیشه از عضویت دوباره منع می‌کند، و
+        // membershipEpoch هر کرسی هیأتی را که هنوز با اپوک قدیمی مهر خورده باطل می‌کند.
+        permanentlyExited[msg.sender] = true;
+        membershipEpoch[msg.sender]++;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }

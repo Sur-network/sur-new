@@ -7,6 +7,17 @@ M2  removed the 30-day rule in ValidatorsBoard.refreshBoard
     -> scripts/test_P01_P02_board.js            : exit 1  (P01-b, P01-d, G-b failed)
 M3  removed the explicit revert for invalidated actions in ValidatorsBoard._voteAction
     -> scripts/test_P01_P02_board.js            : exit 1  (P01-g, P02-g failed)
-Restored the original contracts and rebuilt -> scripts/test_P01_P02_board.js : exit 0
+M4  removed the permanent-exit-address ban in ValidatorsRegistry.requestMembership (layer 1 of the
+    board-authority-resurrection fix, found in independent review)
+    -> scripts/reproduce_board_authority_resurrection.js : exit 0 (layer 2, membershipEpoch, still
+       catches it independently — this is the intended defense-in-depth result, not a miss)
+M5  removed the membershipEpoch check in ValidatorsBoard._hasAuthority (layer 2 of the same fix)
+    -> scripts/test_board_authority_epoch_defense.js : exit 1 ("hasBoardAuthority(v2) با وجود دور
+       زدن لایه‌ی اول: true")
+M6  removed BOTH layers of the board-authority-resurrection fix at once
+    -> scripts/reproduce_board_authority_resurrection.js : exit 1 (the underlying bug reproduces
+       exactly as in independent review: a resigned board member regains authority in Probation
+       status after a full exit -> withdraw -> re-register cycle, with no vote or election)
+Restored the original contracts and rebuilt -> all tests : exit 0
 
-Only these three mutations were tried. This is NOT a full mutation-testing campaign.
+Only these six mutations were tried. This is NOT a full mutation-testing campaign.

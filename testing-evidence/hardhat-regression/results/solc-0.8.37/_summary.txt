@@ -10,3 +10,5 @@
 0 test_P01_P02_board
 0 test_P05_distributor_ranges
 0 test_P06_treasury_caps
+0 reproduce_board_authority_resurrection
+0 test_board_authority_epoch_defense

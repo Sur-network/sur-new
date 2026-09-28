@@ -11,6 +11,8 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
+    // ✅ FIXED / اصلاح‌شده — لایه‌ی دوم دفاع در برابر بازگشتِ اختیار کرسی کهنه؛ ValidatorsRegistry.sol را ببین.
+    function membershipEpoch(address who) external view returns (uint256);
     /// @dev `status` is ValidatorsRegistry.Status's ABI-compatible uint8 encoding:
     ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting.
     /// @dev ✅ UPDATED (off-chain verification architecture redesign): the real
@@ -245,6 +247,17 @@ contract ValidatorsBoard {
     event BoardMemberAuthorityEnded(address indexed member);
     event BoardSuccession(address indexed newMember);
 
+    /// @notice ✅ FIXED (independent review — closes a real bug: `_hasAuthority` used to treat
+    ///         "has a seat AND status not None/Exiting" as sufficient, so a member who exited,
+    ///         withdrew, and later re-registered under the SAME address could land back in
+    ///         Probation and regain the OLD seat's authority before anyone called syncBoard()).
+    ///         Stamped with `REGISTRY.membershipEpoch(addr)` the moment an address takes a seat
+    ///         (refreshBoard / _fillVacancies); `_hasAuthority` requires this to still match the
+    ///         registry's current value. `ValidatorsRegistry.requestExit()` now also permanently
+    ///         bans the address from ever calling requestMembership() again — the two fixes are
+    ///         independent layers, not alternatives.
+    mapping(address => uint256) public seatMembershipEpoch;
+
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
@@ -376,6 +389,7 @@ contract ValidatorsBoard {
         for (uint256 i = 0; i < filled; i++) {
             boardMembers.push(newBoard[i]);
             isBoardMember[newBoard[i]] = true;
+            seatMembershipEpoch[newBoard[i]] = REGISTRY.membershipEpoch(newBoard[i]);
             finalBoard[i] = newBoard[i];
             finalVotes[i] = newBoardVotes[i];
         }
@@ -408,6 +422,7 @@ contract ValidatorsBoard {
     /// @dev P02 authority test (see the onlyBoardMember doc comment).
     function _hasAuthority(address who) private view returns (bool) {
         if (!isBoardMember[who]) return false;
+        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false; // ✅ FIXED: exited since being seated
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
         return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
     }
@@ -469,6 +484,7 @@ contract ValidatorsBoard {
         for (uint256 i = 0; i < n; i++) {
             boardMembers.push(picks[i]);
             isBoardMember[picks[i]] = true;
+            seatMembershipEpoch[picks[i]] = REGISTRY.membershipEpoch(picks[i]);
             emit BoardSuccession(picks[i]);
         }
         if (n > 0) {

@@ -1,0 +1,12 @@
+۱۲ ولیدیتور فعال شدند
+v2 عضو هیأت است؟ true
+
+--- v2 درخواست خروج می‌دهد (اختیارش فوراً باید قطع شود) ---
+hasBoardAuthority(v2) بلافاصله بعد از خروج: false (باید false باشد)
+
+--- هیچ‌کس syncBoard() نمی‌زند؛ v2 بعد از ۷ روز برداشت می‌کند ---
+وضعیت v2 بعد از برداشت: 0 (باید 0=None باشد)
+
+--- v2 با همان آدرس دوباره requestMembership می‌زند ---
+requestMembership رد شد: VM Exception while processing transaction: reverted with reason string 'ValidatorsRegistry: this address has exited before and may not rejoin'
+✅ اصلاح‌شده: ثبت‌نام دوباره با همان آدرس اصلاً ممکن نیست.

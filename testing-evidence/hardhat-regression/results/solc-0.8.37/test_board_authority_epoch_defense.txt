@@ -1,0 +1,10 @@
+v2 عضو هیأت، اپوک ثبت‌شده روی کرسی: 0n
+membershipEpoch(v2) بعد از خروج: 1n (باید ۱ باشد؛ کرسی هنوز ۰ دارد)
+
+--- شبیه‌سازی دور زدن لایه‌ی اول: permanentlyExited را مستقیم روی storage false می‌کنیم (فرض یک باگ فرضی دیگر) ---
+permanentlyExited(v2) بعد از دستکاری: false (false — یعنی لایه‌ی اول را نادیده گرفتیم)
+وضعیت v2 بعد از ثبت‌نام دوباره: 1 (1=Probation)
+membershipEpoch(v2): 1n vs seatMembershipEpoch(v2) کرسی کهنه: 0n
+
+🔍 hasBoardAuthority(v2) با وجود دور زدن لایه‌ی اول: false
+✅✅✅ لایه‌ی دوم (membershipEpoch) مستقلاً جلوی زنده‌شدن اختیار کرسی کهنه را گرفت.

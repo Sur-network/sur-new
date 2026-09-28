@@ -1,2 +1,25 @@
-✅ کل ۹ قرارداد با هم کامپایل شدند، بدون viaIR، بدون warning
-exit 0
+node:internal/modules/cjs/loader:1386
+  throw err;
+  ^
+
+Error: Cannot find module 'solc'
+Require stack:
+- /mnt/user-data/outputs/testing-evidence/hardhat-regression/static-checks/check_compile_all.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/mnt/user-data/outputs/testing-evidence/hardhat-regression/static-checks/check_compile_all.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1705:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/mnt/user-data/outputs/testing-evidence/hardhat-regression/static-checks/check_compile_all.js'
+  ]
+}
+
+Node.js v22.22.2
+exit 1

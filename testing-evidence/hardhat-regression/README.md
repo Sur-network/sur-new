@@ -58,3 +58,40 @@ Mutation checks (tests can really fail): `results/mutation-checks.txt` (3 mutati
 ## Known limits
 Hardhat only · English contracts only · a few contracts are mocked (`MockRegistry`, `AllValid`, etc.) · not a full mutation campaign ·
 the tests do not exercise `FoundationDAO`, `IdentityRegistry`, `ServiceStaking` or `SurenSale`.
+
+## Update 2026-09-28 (second pass — board authority resurrection bug)
+
+Independent review found a real bug: `ValidatorsBoard._hasAuthority` treated "has a seat AND status
+not None/Exiting" as sufficient authority. A board member who resigned (`requestExit`), withdrew
+after the cooldown (`withdrawStake`, which deletes their `ValidatorInfo`), and later called
+`requestMembership()` again with the **same address** would land in `Probation` status — which
+passes the old check — and regain the OLD seat's authority with no vote or election, as long as
+nobody had called `syncBoard()` in the meantime.
+
+**Reproduced first** — the SAME script (`reproduce_board_authority_resurrection.js`) run once against
+the pre-fix contract source (confirmed the bug, printed "باگ تأیید شد") and once against the fixed
+source (confirmed the fix). No separate script; only the compiled contract source differed — the
+pre-fix source is not kept in this package, only its sha256 differs from `contracts-tested.sha256`.
+**Then fixed with two independent layers**, per the explicit instruction that address-reuse alone is
+not a sufficient fix:
+1. `ValidatorsRegistry.permanentlyExited` — set forever in `requestExit()`; `requestMembership()`
+   refuses any address for which it is `true`. A returning person must use a brand-new address;
+   no vote, seat, or history carries over. Applies to zero-stake genesis founders too.
+2. `ValidatorsRegistry.membershipEpoch` — bumped in `requestExit()`; `ValidatorsBoard` stamps
+   `seatMembershipEpoch[addr]` the moment an address takes a seat (`refreshBoard`/`_fillVacancies`)
+   and `_hasAuthority` requires it to still match. This works even if layer 1 were ever bypassed.
+
+New tests, both against the **fixed** contracts:
+* `reproduce_board_authority_resurrection.js` — reproduces the exact scenario from the review
+  end-to-end (join → activate → seat → exit → withdraw → re-register with the same address) and
+  confirms it no longer works (`requestMembership` reverts).
+* `test_board_authority_epoch_defense.js` — deliberately re-enables the address (simulating a
+  hypothetical bypass of layer 1) and confirms layer 2 alone still blocks authority.
+* `test_P01_P02_board.js` gained scenarios E-a..E-e (a full exit/re-election cycle against the
+  `MockRegistry`, including a legitimate re-election after exit, to confirm the fix doesn't block
+  a genuinely re-elected returning validator — it only blocks *automatic* resurrection of the old
+  seat).
+
+Six mutation checks now (`results/mutation-checks.txt`), including removing each defense layer
+independently (M4, M5) and both at once (M6, which reproduces the original bug from a mutated
+"fixed" contract — confirming the test suite would have caught it before this fix existed).

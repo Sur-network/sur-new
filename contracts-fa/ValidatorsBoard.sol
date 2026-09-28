@@ -11,6 +11,8 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
+    // ✅ FIXED / اصلاح‌شده — لایه‌ی دوم دفاع در برابر بازگشتِ اختیار کرسی کهنه؛ ValidatorsRegistry.sol را ببین.
+    function membershipEpoch(address who) external view returns (uint256);
     /// @dev `status` معادل ABI-سازگار enum ValidatorsRegistry.Status به صورت uint8 است:
     ///      ۰=None، ۱=Probation، ۲=Active، ۳=Demoted، ۴=Exiting.
     /// @dev ✅ به‌روزشده (بازطراحی معماری راستی‌آزمایی آف‌چین): تابع واقعی
@@ -241,6 +243,16 @@ contract ValidatorsBoard {
     event BoardMemberAuthorityEnded(address indexed member);
     event BoardSuccession(address indexed newMember);
 
+    /// @notice ✅ اصلاح‌شده (بازبینی مستقل — یک باگ واقعی را می‌بندد: `_hasAuthority` قبلاً «داشتن کرسی
+    ///         و وضعیتِ غیر از None/Exiting» را کافی می‌دانست، پس عضوی که خروج داده، برداشت کرده و بعداً
+    ///         با **همان آدرس** دوباره ثبت‌نام کرده بود می‌توانست به Probation برسد و پیش از این‌که کسی
+    ///         syncBoard() بزند اختیار کرسی **قدیمی** را دوباره به‌دست بیاورد). در لحظه‌ی نشستن یک آدرس روی
+    ///         کرسی (refreshBoard / _fillVacancies) با `REGISTRY.membershipEpoch(addr)` مهر می‌خورد؛
+    ///         `_hasAuthority` می‌خواهد این هنوز با مقدار جاری Registry یکی باشد. `ValidatorsRegistry.
+    ///         requestExit()` الان همان آدرس را برای همیشه از فراخوانی دوباره‌ی requestMembership() هم
+    ///         منع می‌کند — این دو اصلاح دو لایه‌ی مستقل‌اند، نه جایگزین هم.
+    mapping(address => uint256) public seatMembershipEpoch;
+
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
@@ -372,6 +384,7 @@ contract ValidatorsBoard {
         for (uint256 i = 0; i < filled; i++) {
             boardMembers.push(newBoard[i]);
             isBoardMember[newBoard[i]] = true;
+            seatMembershipEpoch[newBoard[i]] = REGISTRY.membershipEpoch(newBoard[i]);
             finalBoard[i] = newBoard[i];
             finalVotes[i] = newBoardVotes[i];
         }
@@ -404,6 +417,7 @@ contract ValidatorsBoard {
     /// @dev آزمون اختیار P02 (کامنت مودیفایر onlyBoardMember را ببینید).
     function _hasAuthority(address who) private view returns (bool) {
         if (!isBoardMember[who]) return false;
+        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false; // ✅ اصلاح‌شده: از زمان نشستن روی کرسی خروج داده
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
         return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
     }
@@ -465,6 +479,7 @@ contract ValidatorsBoard {
         for (uint256 i = 0; i < n; i++) {
             boardMembers.push(picks[i]);
             isBoardMember[picks[i]] = true;
+            seatMembershipEpoch[picks[i]] = REGISTRY.membershipEpoch(picks[i]);
             emit BoardSuccession(picks[i]);
         }
         if (n > 0) {

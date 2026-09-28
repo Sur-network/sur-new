@@ -18,7 +18,9 @@ contract MockRegistry { address[] public vals; mapping(address=>bool) public act
  function isValidator(address a) external view returns (bool) { return active[a]; }
  function getValidators() external view returns (address[] memory) { return vals; }
  function getValidatorInfo(address a) external view returns (uint8,uint256,uint256,uint256,uint256,bool) { return (st[a],0,0,0,0,false); }
- function recoveryPeriod() external pure returns (uint256) { return 172800; } }
+ function recoveryPeriod() external pure returns (uint256) { return 172800; }
+ mapping(address=>uint256) public membershipEpoch;
+ function bumpEpoch(address a) external { membershipEpoch[a]++; } }
 contract MockIdentity { function hasIdentity(address) external pure returns (bool) { return true; } }`;
 
 async function install(addr, abi, bytecode) { const f = new hre.ethers.ContractFactory(abi, bytecode, deployer); const t = await f.deploy(); await t.waitForDeployment(); await hre.network.provider.send("hardhat_setCode", [addr, await hre.network.provider.send("eth_getCode", [await t.getAddress(), "latest"])]); }
@@ -112,6 +114,22 @@ async function setup() {
     ok("Pay-a) ۱٬۰۰۰ سورن با ۳ رأی هیأت اجرا و به گیرنده رسید", await pay(1000, true));
     ok("Pay-b) ۴۹٬۹۹۹ زیر سقف هر پرداخت (۵۰٬۰۰۰) اجرا شد", await pay(49999, true));
     ok("Pay-c) ۵۰٬۰۰۰ (برابر سقف؛ باید کمتر باشد) رد شد", await pay(50000, false)); }
+
+  // ---- دفاع membershipEpoch مستقیماً روی همین Mock (بدون تکیه بر منطق واقعی Registry) ----
+  await fresh(); { const v = A[2]; // شبیه‌سازی واقعی یک چرخه‌ی کامل خروج: هم غیرفعال می‌شود هم اپوکش عوض می‌شود
+    ok("E-a) v عضو هیأت است", await has(v));
+    await (await reg.setActive(v.address, false)).wait(); await (await reg.setStatus(v.address, 4)).wait(); // Exiting
+    await (await reg.bumpEpoch(v.address)).wait(); // Registry واقعی همین کار را در requestExit خودش می‌کند
+    ok("E-b) اختیار کرسی کهنه بلافاصله باطل می‌شود (هم به‌خاطر وضعیت هم به‌خاطر اپوک)", (await board.hasBoardAuthority(v.address)) === false);
+    await (await board.connect(A[0]).syncBoard()).wait();
+    ok("E-c) syncBoard کرسی را برمی‌دارد (بدون کاندیدای واجد جانشین چون v غیرفعال است، فقط ۴ عضو می‌ماند)", !(await has(v)) && (await members()).length === 4);
+    // حالا «بازگشت با همان آدرس»: وضعیت را به Probation برگردان ولی هنوز فعال (isValidator) نکن — دقیقاً مثل Registry واقعی بعد از requestMembership
+    await (await reg.setStatus(v.address, 1)).wait(); // Probation
+    ok("E-d) در وضعیت Probation، بدون هیچ رأی یا انتخابات تازه‌ای، هنوز عضو هیأت نیست", !(await has(v)) && (await board.hasBoardAuthority(v.address)) === false);
+    // فقط وقتی از نو فعال شود و از نو انتخاب شود (fillVacancies/refreshBoard) کرسی می‌گیرد — با اپوک تازه
+    await (await reg.setActive(v.address, true)).wait(); await (await reg.setStatus(v.address, 2)).wait(); // Active دوباره
+    await (await board.connect(A[0]).fillVacancies()).wait();
+    ok("E-e) فقط با انتخاب/جانشینیِ تازه (نه خودکار) دوباره کرسی می‌گیرد، و این‌بار با اپوک تازه‌ی مطابق", (await has(v)) === true && (await board.seatMembershipEpoch(v.address)) === (await reg.membershipEpoch(v.address))); }
 
   // ---- سناریوهای genesis: هیأت اولیه‌ی seed‌شده + lastBoardRefreshAt (تصمیم P01 — ثبات ۳۰ روز اول) ----
   const seedBoard = async (lastRefresh) => { await hre.network.provider.send("evm_revert", [snapPre]); snapPre2 = await hre.network.provider.send("evm_snapshot");
