@@ -113,7 +113,8 @@ async function setup() {
       return expectOk ? (r === false && after - before === hre.ethers.parseEther(String(amt))) : (r === true && after === before); };
     ok("Pay-a) ۱٬۰۰۰ سورن با ۳ رأی هیأت اجرا و به گیرنده رسید", await pay(1000, true));
     ok("Pay-b) ۴۹٬۹۹۹ زیر سقف هر پرداخت (۵۰٬۰۰۰) اجرا شد", await pay(49999, true));
-    ok("Pay-c) ۵۰٬۰۰۰ (برابر سقف؛ باید کمتر باشد) رد شد", await pay(50000, false)); }
+    ok("Pay-c) ۵۰٬۰۰۰ (برابر سقف، تصمیم نهایی <=) اجرا شد", await pay(50000, true));
+    ok("Pay-d) ۵۰٬۰۰۰٫۰۰۰...۰۰۱ (۱ واحد بیشتر از سقف) رد شد", await reverts(() => board.connect(A[2]).voteAction((async()=>{ const id=(await board.actionCount())+1n; await (await board.connect(A[0]).proposeApproveBudget(recipient.address, hre.ethers.parseEther("50000")+1n, "p")).wait(); await (await board.connect(A[1]).voteAction(id)).wait(); return id; })()), "per-payment cap") ); }
 
   // ---- دفاع membershipEpoch مستقیماً روی همین Mock (بدون تکیه بر منطق واقعی Registry) ----
   await fresh(); { const v = A[2]; // شبیه‌سازی واقعی یک چرخه‌ی کامل خروج: هم غیرفعال می‌شود هم اپوکش عوض می‌شود
@@ -132,7 +133,9 @@ async function setup() {
     ok("E-e) فقط با انتخاب/جانشینیِ تازه (نه خودکار) دوباره کرسی می‌گیرد، و این‌بار با اپوک تازه‌ی مطابق", (await has(v)) === true && (await board.seatMembershipEpoch(v.address)) === (await reg.membershipEpoch(v.address))); }
 
   // ---- سناریوهای genesis: هیأت اولیه‌ی seed‌شده + lastBoardRefreshAt (تصمیم P01 — ثبات ۳۰ روز اول) ----
-  const seedBoard = async (lastRefresh) => { await hre.network.provider.send("evm_revert", [snapPre]); snapPre2 = await hre.network.provider.send("evm_snapshot");
+  let seedSnap = snapPre; // مثل fresh(): هر بار revert+resnapshot تا قابل‌استفاده‌ی نامحدود بماند (snapPre تک‌مصرفی است)
+  const seedBoard = async (lastRefreshOrNow) => { await hre.network.provider.send("evm_revert", [seedSnap]); seedSnap = await hre.network.provider.send("evm_snapshot"); snapPre2 = seedSnap;
+    const lastRefresh = lastRefreshOrNow === "NOW" ? BigInt((await hre.ethers.provider.getBlock("latest")).timestamp) : lastRefreshOrNow; // زمان را همیشه بعد از revert بخوان، نه قبلش
     const bm = BigInt(b.layout.storage.find(x => x.label === "boardMembers").slot), im = BigInt(b.layout.storage.find(x => x.label === "isBoardMember").slot);
     const put = (addr, slotHex, val) => hre.network.provider.send("hardhat_setStorageAt", [addr, slotHex, hre.ethers.zeroPadValue(hre.ethers.toBeHex(val), 32)]);
     await put(BOARD, hre.ethers.toBeHex(bm), 5n); const base = BigInt(hre.ethers.keccak256(hre.ethers.zeroPadValue(hre.ethers.toBeHex(bm), 32)));
@@ -147,9 +150,68 @@ async function setup() {
     await inc(2 * 86400); await (await board.refreshBoard()).wait(); ok("G-d) بعد از ۳۰ روز اولین بازتعیین عادی مجاز است", (await board.lastBoardRefreshAt()) > genesisTs); }
   { await seedBoard(0n); // مستندسازی رفتار: اگر ابزار genesis این slot را overlay نکند
     ok("G-e) (رفتار مستند) بدون overlay (lastBoardRefreshAt=0) اولین refresh فوراً پذیرفته می‌شود → به همین دلیل ابزار genesis باید مقدار را overlay و assert کند", (await reverts(() => board.refreshBoard(), "once every 30 days")) === false);
-    await seedBoard(0n); for (let v = 0; v < 10; v++) for (let c = 0; c < 5; c++) await (await board.connect(A[v]).unvoteFor(A[c].address)).wait();
+  }
+
+  // ---- ✅ تصمیم نهایی (بازطراحی refreshBoard): صفر رأی دیگر هیأت را خالی نمی‌کند ----
+  { // هیأت اولیه‌ی seed‌شده (۵ عضو، A0..A4)، سپس همه رأی خودشان را پس می‌گیرند
+    await seedBoard("NOW");
+    for (let v = 0; v < 10; v++) for (let c = 0; c < 5; c++) await (await board.connect(A[v]).unvoteFor(A[c].address)).wait();
+    await inc(30 * 86400 + 1); const v0 = await board.boardVersion();
     await (await board.refreshBoard()).wait();
-    ok("G-f) (رفتار مستند، ⚠️ نیازمند تصمیم) بازتعیین عادی با صفر رأی، کل هیأت را خالی می‌کند — تصمیم P01 درباره‌ی این حالت چیزی نمی‌گوید", (await members()).length === 0); }
+    ok("Z1) صفر رأی معتبر: ۵ عضو Active همچنان کرسی خود را حفظ می‌کنند", (await members()).length === 5 && (await has(A[0])) && (await has(A[4])));
+    ok("Z2) بدون هیچ تغییر واقعی ترکیبی، boardVersion افزایش نیافت", (await board.boardVersion()) === v0); }
+
+  { // رأی ناکافی برای پرکردن همه‌ی کرسی‌ها: یکی از ۵ نفر خارج می‌شود، فقط ۱ کاندیدای واجدِ دیگر رأی دارد
+    await seedBoard("NOW");
+    await (await reg.setActive(A[0].address, false)).wait(); await (await reg.setStatus(A[0].address, 4)).wait(); // A0 خروج داد
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[0].address)).wait(); // رأی‌های او را هم پاک کن (دیگر فعال نیست)
+    for (let v = 0; v < 10; v++) { if (v === 0) continue; await (await board.connect(A[v]).voteFor(A[6].address)).wait(); } // فقط A6 کاندیدای تازه با رأی
+    await inc(30 * 86400 + 1); await (await board.refreshBoard()).wait();
+    ok("Z3) رأی کافی برای پرکردن همه‌ی کرسی‌ها نبود؛ فقط کرسیِ خروج‌کرده با تنها کاندیدای واجد پر شد", (await members()).length === 5 && (await has(A[6])) && (await has(A[1])) && (await has(A[2])) && (await has(A[3])) && (await has(A[4])) && !(await has(A[0]))); }
+
+  { // نامزد تازه با رأی بیشتر از ضعیف‌ترین عضو فعلی، جای او را می‌گیرد (هیأت پر است، بدون کرسی خالی)
+    await seedBoard("NOW");
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[4].address)).wait(); // A4 حالا ۰ رأی (ضعیف‌ترین)
+    for (let v = 0; v < 3; v++) await (await board.connect(A[v]).voteFor(A[7].address)).wait(); // A7: ۳ رأی > ۰ رأی A4
+    await inc(30 * 86400 + 1); const v0 = await board.boardVersion(); await (await board.refreshBoard()).wait();
+    ok("Z4) نامزد تازه با رأی بیشتر (A7=۳) جای ضعیف‌ترین عضو فعلی (A4=۰) را گرفت", (await has(A[7])) && !(await has(A[4])) && (await has(A[0])) && (await has(A[1])) && (await has(A[2])) && (await has(A[3])));
+    ok("Z5) این یک تغییر واقعی بود → boardVersion افزایش یافت", (await board.boardVersion()) === v0 + 1n); }
+
+  { // تساوی رأی: عضو فعلی کرسی‌اش را حفظ می‌کند
+    await seedBoard("NOW");
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[4].address)).wait(); // A4 حالا ۰ رأی
+    // هیچ نامزد تازه‌ای رأی نمی‌گیرد (۰ رأی) — تساوی با A4 (۰ رأی)
+    await inc(30 * 86400 + 1); const v0 = await board.boardVersion(); await (await board.refreshBoard()).wait();
+    ok("Z6) در تساوی (هر دو ۰ رأی)، عضو فعلی (A4) کرسی‌اش را حفظ می‌کند", (await has(A[4])) === true);
+    ok("Z7) بدون تغییر واقعی، boardVersion افزایش نیافت", (await board.boardVersion()) === v0); }
+
+  { // عضو معلق در موعد ماهانه کنار می‌رود، حتی بدون هیچ رأیی برای جایگزین
+    await seedBoard("NOW");
+    await (await reg.setStatus(A[2].address, 3)).wait(); await (await reg.setActive(A[2].address, false)).wait(); // A2: Demoted
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[4].address)).wait(); // بدون کاندیدای جایگزین با رأی
+    ok("Z8) در طول دوره، تعلیق به‌تنهایی اختیار A2 را قطع نمی‌کند", (await board.hasBoardAuthority(A[2].address)) === true);
+    await inc(30 * 86400 + 1); const v0 = await board.boardVersion(); await (await board.refreshBoard()).wait();
+    ok("Z9) در موعد بازتعیین ماهانه، عضو معلق (A2) کنار رفت، حتی بدون هیچ رأیی برای جایگزین", !(await has(A[2])) && (await members()).length === 4);
+    ok("Z10) این حذف، تغییر واقعی ترکیب بود → boardVersion افزایش یافت", (await board.boardVersion()) === v0 + 1n); }
+
+  { // زیر ۳ عضو دارای اختیار پس از بازتعیین ماهانه → توقف پرداخت خزانه
+    await seedBoard("NOW");
+    for (const i of [0, 1, 2]) { await (await reg.setStatus(A[i].address, 3)).wait(); await (await reg.setActive(A[i].address, false)).wait(); }
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[4].address)).wait();
+    await inc(30 * 86400 + 1); await (await board.refreshBoard()).wait();
+    ok("Z11) ۳ عضو معلق در بازتعیین ماهانه حذف شدند → فقط ۲ عضو ماند", (await members()).length === 2);
+    ok("Z12) پرداخت خزانه متوقف است (کمتر از ۳ عضو)", await reverts(() => board.connect(A[3]).proposeApproveBudget(recipient.address, E1, "x"), "spending halted")); }
+
+  { // تغییر واقعی ترکیب (کرسی خالی پر شد) پیشنهادهای ناتمام هیأت قبلی را باطل می‌کند
+    await seedBoard("NOW"); await inc(29 * 86400); // پیشنهاد نزدیک بازتعیین ساخته شود (انقضای اقدام ۱۴ روز است)
+    const id = (await board.actionCount()) + 1n; await (await board.connect(A[0]).proposeApproveBudget(recipient.address, hre.ethers.parseEther("1000"), "t")).wait();
+    await (await board.connect(A[1]).voteAction(id)).wait();
+    await (await reg.setActive(A[3].address, false)).wait(); await (await reg.setStatus(A[3].address, 4)).wait(); // A3 خروج داد
+    for (let v = 0; v < 10; v++) await (await board.connect(A[v]).unvoteFor(A[3].address).catch(() => {})).wait().catch(() => {});
+    for (let v = 0; v < 10; v++) { if (v === 3) continue; await (await board.connect(A[v]).voteFor(A[8].address)).wait(); }
+    await inc(1 * 86400 + 1); await (await board.refreshBoard()).wait();
+    ok("Z13) کرسی خروج‌کرده با کاندیدای تازه پر شد (تغییر واقعی ترکیب)", (await has(A[8])) && !(await has(A[3])));
+    ok("Z14) پیشنهاد ناتمام هیأت قبلی باطل شد (رأی سوم رد می‌شود)", await reverts(() => board.connect(A[2]).voteAction(id), "board membership changed since this action was proposed")); }
 
   const bad = results.filter(x => !x).length; console.log(`\nنتیجه: ${results.length - bad}/${results.length} گذر`); process.exit(bad ? 1 : 0);
 })().catch(e => { console.error("خطا:", e.message); process.exit(1); });

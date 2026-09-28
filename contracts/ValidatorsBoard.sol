@@ -349,63 +349,168 @@ contract ValidatorsBoard {
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @notice P01/P02: ordinary re-selection — the BOARD_SIZE validators with the most current votes, applied at most once every 30
-    ///         days (a fully empty board may be filled at any time). Membership is conditional on being an ACTIVE validator at this
-    ///         moment: only votes cast BY active validators FOR active candidates count, so a suspended member cannot stay on the
-    ///         board past the monthly re-selection. Voting and changing votes stay free at all times (voteFor / unvoteFor).
+    /// @dev Bundles the working state of refreshBoard() into one struct so it can be threaded through
+    ///      private helper functions by reference (a single memory pointer = one stack slot) instead of as
+    ///      many separate local variables — refreshBoard()'s logic alone was too many simultaneous locals
+    ///      for the EVM stack (found by the optimizer during review; same class of issue, same fix pattern,
+    ///      as BlockRewardDistributor's EpochPrep struct).
+    struct RefreshCtx {
+        bool[] keep;
+        uint256 keptCount;
+        address[] seen;
+        uint256 seenCount;
+        bool[] takenAsFiller;
+        address[] filler;
+        uint256 fillerCount;
+        address replacedIncumbent;
+        address challenger;
+    }
+
+    /// @dev Step 1 (see refreshBoard() doc comment): which current incumbents still qualify to
+    ///      automatically keep their seat right now? Clears isBoardMember for the rest immediately.
+    function _dropDisqualified(RefreshCtx memory ctx, uint256 priorCount) private {
+        ctx.keep = new bool[](priorCount);
+        for (uint256 i = 0; i < priorCount; i++) {
+            address m = boardMembers[i];
+            if (_hasAuthority(m)) {
+                (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(m);
+                if (status == 2) { // Active
+                    ctx.keep[i] = true;
+                    ctx.keptCount++;
+                    continue;
+                }
+            }
+            isBoardMember[m] = false;
+        }
+    }
+
+    /// @dev Step 3: fill vacant seats with the highest-voted eligible outside candidates (must have
+    ///      received at least one vote — guaranteed by ctx.seen). Fewer eligible candidates than
+    ///      vacancies is fine: seats stay vacant.
+    function _pickFillers(RefreshCtx memory ctx, uint256 vacancies) private view {
+        ctx.filler = new address[](vacancies);
+        for (uint256 f = 0; f < vacancies; f++) {
+            uint256 bestVotes = 0;
+            uint256 bestIdx = type(uint256).max;
+            for (uint256 j = 0; j < ctx.seenCount; j++) {
+                if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
+                uint256 v = _voteTally[ctx.seen[j]];
+                if (v > bestVotes) { bestVotes = v; bestIdx = j; }
+            }
+            if (bestIdx == type(uint256).max) break;
+            ctx.filler[ctx.fillerCount] = ctx.seen[bestIdx];
+            ctx.takenAsFiller[bestIdx] = true;
+            ctx.fillerCount++;
+        }
+    }
+
+    /// @dev Step 4 (see refreshBoard() doc comment): if the board is full after filling vacancies, at
+    ///      most one fresh challenger may unseat the single current lowest-voted incumbent, and only by
+    ///      STRICTLY outvoting it (a tie leaves the incumbent in place).
+    function _tryChallenge(RefreshCtx memory ctx, uint256 priorCount) private view {
+        uint256 weakestVotes = type(uint256).max;
+        uint256 weakestIdx = type(uint256).max;
+        for (uint256 i = 0; i < priorCount; i++) {
+            if (!ctx.keep[i]) continue;
+            uint256 v = _voteTally[boardMembers[i]];
+            if (v < weakestVotes) { weakestVotes = v; weakestIdx = i; }
+        }
+        uint256 bestOutsideVotes = 0;
+        uint256 bestOutsideIdx = type(uint256).max;
+        for (uint256 j = 0; j < ctx.seenCount; j++) {
+            if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
+            uint256 v = _voteTally[ctx.seen[j]];
+            if (v > bestOutsideVotes) { bestOutsideVotes = v; bestOutsideIdx = j; }
+        }
+        if (bestOutsideIdx != type(uint256).max && bestOutsideVotes > weakestVotes) {
+            ctx.replacedIncumbent = boardMembers[weakestIdx];
+            ctx.challenger = ctx.seen[bestOutsideIdx];
+            ctx.keep[weakestIdx] = false;
+            ctx.keptCount--;
+        }
+    }
+
+    /// @notice ✅ FINAL DECISION (P01, redesigned 2026-09-28 — replaces the earlier "fully recompute the
+    ///         top BOARD_SIZE every time" version). A lack of votes must never, by itself, empty the board:
+    ///         a currently-Active incumbent keeps its seat through this monthly re-selection regardless of
+    ///         its vote count. Only two things ever remove an incumbent HERE: (a) it has lost board authority
+    ///         since last time (exited — `_hasAuthority` false; already cut off immediately elsewhere, this
+    ///         just finalizes it here), or (b) it is currently `Demoted` (suspended) — P02 says suspension
+    ///         alone does not cut authority DURING the period, but at this monthly point a suspended member
+    ///         is not re-confirmed. Vacant seats (from drops, or a board smaller than BOARD_SIZE) are filled
+    ///         by the highest-voted eligible outside candidates. If no vacant seat remains, at most one fresh
+    ///         challenger may unseat the single current lowest-voted incumbent, and only by receiving
+    ///         STRICTLY more votes (a tie leaves the incumbent in place) — deliberately minimal churn. Applied
+    ///         at most once every 30 days (an empty board may be filled anytime). Voting stays free at all
+    ///         times; only this re-selection is on a schedule. The immediate exit-driven succession path
+    ///         (syncBoard / _fillVacancies, P02) is separate and unaffected.
     function refreshBoard() external {
         require(
             boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
             "ValidatorsBoard: ordinary board changes are applied once every 30 days"
         );
-        (address[] memory newBoard, uint256[] memory newBoardVotes, uint256 filled) = _topCandidates(BOARD_SIZE, false);
 
-        // ✅ FIXED (bug found in independent review — the previous version of this fix bumped
-        // boardVersion UNCONDITIONALLY on every successful refreshBoard() call, even when the
-        // resulting membership was identical to before. Since this function is permissionless
-        // and has no cooldown, anyone could call it repeatedly — even with zero actual
-        // membership change — purely to keep invalidating any board action sitting open for a
-        // vote, an indefinitely repeatable griefing vector). Compare the actual member SET
-        // (order-independent) BEFORE clearing the old isBoardMember flags below — only bump the
-        // version if membership genuinely changed.
-        bool membershipChanged = (boardMembers.length != filled);
-        if (!membershipChanged) {
-            for (uint256 i = 0; i < filled; i++) {
-                if (!isBoardMember[newBoard[i]]) {
-                    membershipChanged = true;
-                    break;
-                }
-            }
+        uint256 priorCount = boardMembers.length;
+        RefreshCtx memory ctx;
+        _dropDisqualified(ctx, priorCount);
+        (ctx.seen, ctx.seenCount) = _tallyVotes();
+        ctx.takenAsFiller = new bool[](ctx.seenCount);
+        _pickFillers(ctx, BOARD_SIZE - ctx.keptCount);
+        if (ctx.keptCount + ctx.fillerCount == BOARD_SIZE) {
+            _tryChallenge(ctx, priorCount);
         }
 
-        // apply: clear old membership flags, install the new set
-        for (uint256 i = 0; i < boardMembers.length; i++) {
-            isBoardMember[boardMembers[i]] = false;
+        // assemble the final board and detect whether membership genuinely changed (order-independent set
+        // comparison) BEFORE mutating storage — refreshBoard() is permissionless, so boardVersion (and the
+        // invalidation of open actions it drives) must bump only on a real change, never on a repeated call
+        // that changes nothing.
+        uint256 finalCount = ctx.keptCount + ctx.fillerCount + (ctx.challenger != address(0) ? 1 : 0);
+        address[] memory finalBoard = new address[](finalCount);
+        uint256[] memory finalVotes = new uint256[](finalCount);
+        uint256 w = 0;
+        for (uint256 i = 0; i < priorCount; i++) {
+            if (!ctx.keep[i]) continue;
+            finalBoard[w] = boardMembers[i];
+            finalVotes[w] = _voteTally[boardMembers[i]];
+            w++;
+        }
+        for (uint256 f = 0; f < ctx.fillerCount; f++) {
+            finalBoard[w] = ctx.filler[f];
+            finalVotes[w] = _voteTally[ctx.filler[f]];
+            w++;
+        }
+        if (ctx.challenger != address(0)) {
+            finalBoard[w] = ctx.challenger;
+            finalVotes[w] = _voteTally[ctx.challenger];
+        }
+        bool membershipChanged = (priorCount != finalCount) || ctx.replacedIncumbent != address(0) || ctx.fillerCount > 0;
+
+        // apply: clear the stale flag for a challenge-replaced incumbent (step 1 already cleared dropped
+        // ones; the challenge swap only cleared ctx.keep[], not storage, so do it now), install the new set.
+        if (ctx.replacedIncumbent != address(0)) {
+            isBoardMember[ctx.replacedIncumbent] = false;
         }
         delete boardMembers;
-
-        address[] memory finalBoard = new address[](filled);
-        uint256[] memory finalVotes = new uint256[](filled);
-        for (uint256 i = 0; i < filled; i++) {
-            boardMembers.push(newBoard[i]);
-            isBoardMember[newBoard[i]] = true;
-            seatMembershipEpoch[newBoard[i]] = REGISTRY.membershipEpoch(newBoard[i]);
-            finalBoard[i] = newBoard[i];
-            finalVotes[i] = newBoardVotes[i];
+        for (uint256 i = 0; i < finalCount; i++) {
+            boardMembers.push(finalBoard[i]);
+            isBoardMember[finalBoard[i]] = true;
         }
-
-        // ✅ FIXED: bump the board version ONLY when membership genuinely changed (see
-        // membershipChanged above) — so any action proposed and partly voted on under the old
-        // membership is correctly invalidated when the board actually changes, without giving
-        // anyone a free, repeatable way to invalidate open actions by calling refreshBoard()
-        // with no real effect.
+        for (uint256 f = 0; f < ctx.fillerCount; f++) {
+            seatMembershipEpoch[ctx.filler[f]] = REGISTRY.membershipEpoch(ctx.filler[f]);
+        }
+        if (ctx.challenger != address(0)) {
+            seatMembershipEpoch[ctx.challenger] = REGISTRY.membershipEpoch(ctx.challenger);
+        }
         if (membershipChanged) {
             boardVersion++;
         }
 
-
         lastBoardRefreshAt = block.timestamp;
-        pendingVacancies = 0; // the ordinary re-selection recomputes the whole board; vacancies are not carried over
+        pendingVacancies = 0; // this ordinary re-selection recomputes vacancies fresh; nothing carries over
+
+        for (uint256 j = 0; j < ctx.seenCount; j++) {
+            _voteTally[ctx.seen[j]] = 0; // reset the ephemeral tally
+        }
 
         emit BoardRefreshed(finalBoard, finalVotes);
     }

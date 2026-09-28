@@ -25,6 +25,7 @@
 | ۹ | قرارداد `IdentityRegistry` + سرویس Identity Service | 🔴 ضروری برای راه‌اندازی (پیش‌نیاز رأی‌دادن ولیدیتورها) | ✅ سند کامل — `sur-identity-registry-spec.md` + `contracts/IdentityRegistry.sol` |
 | ۱۰ | اپلیکیشن احراز هویت عمومی (فرانت‌اند `IdentityRegistry`) | 🟡 مهم، نه فوری | ✅ سند کامل — `sur-identity-app-claudecode-brief.md` |
 | ۱۱ | ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) | 🟡 باید پیش از راه‌اندازی آماده باشد، ولی فقط در اضطرار اجرا می‌شود | 🔶 **مشخصات همین سند؛ برنامه هنوز نوشته نشده** — سیاست بازیابی: `governance/sur-emergency-consensus-recovery.md` |
+| ۱۲ | سرویس همراه نود برای بررسی دوره‌ی آزمایشی (SUR_NODE_CHECK_V1) | 🟡 پیش‌نیاز پذیرش نودهای تازه | 🔶 **مشخصات کامل، برنامه هنوز نوشته نشده** — `sur-node-check-protocol-spec.md` |
 
 ---
 

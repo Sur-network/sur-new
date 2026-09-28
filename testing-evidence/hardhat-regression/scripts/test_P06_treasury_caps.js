@@ -33,10 +33,13 @@ const MOCK = `pragma solidity ^0.8.24; contract R { address[] v; mapping(address
 
   const b0 = await hre.ethers.provider.getBalance(recipient.address); await (await pay(49999)).wait();
   ok("5) پرداخت عادی ۴۹٬۹۹۹ فوراً اجرا شد — بدون هیچ تأخیر ۷روزه (تأخیر فقط برای تغییر سقف است)", (await hre.ethers.provider.getBalance(recipient.address)) - b0 === E(49999));
-  ok("6) پرداخت برابر سقف (۵۰٬۰۰۰) رد می‌شود (باید کمتر باشد)", await reverts(() => pay(50000), "outside per-payment cap"));
-  for (let i = 0; i < 3; i++) await (await pay(49999)).wait();
-  ok("7) مجموع ۴ پرداخت ۴۹٬۹۹۹ = ۱۹۹٬۹۹۶ زیر سقف دوره (۲۰۰٬۰۰۰) مجاز بود", true);
-  ok("8) پرداخت پنجم (۵ سورن) مجموع را از ۲۰۰٬۰۰۰ رد می‌کند → رد", await reverts(() => pay(5), "period cap exceeded"));
+  ok("6) پرداخت دقیقاً برابر سقف (۵۰٬۰۰۰، تصمیم نهایی: <=) پذیرفته می‌شود", await reverts(() => pay(50000), "any") === false);
+  ok("6b) پرداخت یک واحد بیشتر از سقف (۵۰٬۰۰۰٫۰۰۰...۰۰۱) رد می‌شود", await reverts(() => tr.connect(board).boardApproveExpenditure(recipient.address, E(50000) + 1n, "p"), "outside per-payment cap"));
+  ok("7) مجموع دو پرداخت ۵۰٬۰۰۰ + ۴۹٬۹۹۹ = ۹۹٬۹۹۹ زیر سقف دوره (۲۰۰٬۰۰۰) مجاز بود", true);
+  await (await pay(49999)).wait();
+  await (await pay(50000)).wait(); // مجموع تا این‌جا: ۴۹٬۹۹۹+۵۰٬۰۰۰+۴۹٬۹۹۹+۵۰٬۰۰۰ = ۱۹۹٬۹۹۸
+  ok("8) دو سورن دیگر دقیقاً به سقف مجموع ۲۰۰٬۰۰۰ می‌رسد (<=) و پذیرفته می‌شود", await reverts(() => pay(2), "any") === false); // مجموع اکنون دقیقاً ۲۰۰٬۰۰۰
+  ok("8b) یک سورن دیگر از سقف مجموع رد می‌شود (مجموع ۲۰۰٬۰۰۱ > ۲۰۰٬۰۰۰)", await reverts(() => pay(1), "period cap exceeded"));
 
   // تغییر سقف: رأی مجمع + تأخیر ۷ روز؛ پرداخت زیر سقف جدید در همان لحظه ممکن نیست
   const rc = await (await tr.connect(signers[2]).proposeCapChange(0, E(100000))).wait();

@@ -1,23 +1,23 @@
-Mutation checks (run 2026-09-28, solc-js 0.8.37, Hardhat 2.29.1). A guard was deliberately removed from the contract source,
-the artifacts were rebuilt, and the relevant test was run. A useful test must FAIL (exit code 1).
+Mutation checks (run 2026-09-29, solc-js 0.8.37, Hardhat 2.29.1). A guard was deliberately removed from the
+contract source, the artifacts were rebuilt, and the relevant test was run. A useful test must FAIL (exit 1).
 
 M1  removed the N01 guard `require(d.slashOutcome == Undetermined)` in assertDeliveryDisputed
-    -> scripts/reproduce_N01_stale_lock_wipe.js : exit 1  ("assertDeliveryDisputed succeeded on an already-closed case")
+    -> reproduce_N01_stale_lock_wipe.js : exit 1
 M2  removed the 30-day rule in ValidatorsBoard.refreshBoard
-    -> scripts/test_P01_P02_board.js            : exit 1  (P01-b, P01-d, G-b failed)
+    -> test_P01_P02_board.js : exit 1 (P01-b, P01-d, G-b failed)
 M3  removed the explicit revert for invalidated actions in ValidatorsBoard._voteAction
-    -> scripts/test_P01_P02_board.js            : exit 1  (P01-g, P02-g failed)
-M4  removed the permanent-exit-address ban in ValidatorsRegistry.requestMembership (layer 1 of the
-    board-authority-resurrection fix, found in independent review)
-    -> scripts/reproduce_board_authority_resurrection.js : exit 0 (layer 2, membershipEpoch, still
-       catches it independently — this is the intended defense-in-depth result, not a miss)
-M5  removed the membershipEpoch check in ValidatorsBoard._hasAuthority (layer 2 of the same fix)
-    -> scripts/test_board_authority_epoch_defense.js : exit 1 ("hasBoardAuthority(v2) با وجود دور
-       زدن لایه‌ی اول: true")
+    -> test_P01_P02_board.js : exit 1 (P01-g, P02-g failed)
+M4  removed the permanent-exit-address ban (layer 1 of the board-authority-resurrection fix)
+    -> reproduce_board_authority_resurrection.js : exit 0 (layer 2, membershipEpoch, still
+       catches it independently — the intended defense-in-depth result, not a miss)
+M5  removed the membershipEpoch check in ValidatorsBoard._hasAuthority (layer 2)
+    -> test_board_authority_epoch_defense.js : exit 1
 M6  removed BOTH layers of the board-authority-resurrection fix at once
-    -> scripts/reproduce_board_authority_resurrection.js : exit 1 (the underlying bug reproduces
-       exactly as in independent review: a resigned board member regains authority in Probation
-       status after a full exit -> withdraw -> re-register cycle, with no vote or election)
+    -> reproduce_board_authority_resurrection.js : exit 1 (the underlying bug reproduces exactly)
+M7  removed the "keep qualifying incumbent regardless of votes" logic in the redesigned refreshBoard
+    -> test_P01_P02_board.js : exit 1 (P01-c, Z1, Z2 failed)
+M8  reverted the per-payment cap boundary from <= back to <
+    -> test_P06_treasury_caps.js : exit 1 (test 6 failed)
 Restored the original contracts and rebuilt -> all tests : exit 0
 
-Only these six mutations were tried. This is NOT a full mutation-testing campaign.
+Only these eight mutations were tried. This is NOT a full mutation-testing campaign.

@@ -1,3 +1,3 @@
-getValidatorInfo: status = 3 | demotedAt(index 3) = 1790629561 | now = 1790629561
+getValidatorInfo: status = 3 | demotedAt(index 3) = 1790631305 | now = 1790631305
 ✅ clearStaleVotes زودهنگام رد شد
 ✅ بعد از recoveryPeriod + 30 روز موفق شد

@@ -344,63 +344,164 @@ contract ValidatorsBoard {
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @notice P01/P02: بازتعیین عادی — BOARD_SIZE ولیدیتوری که بیشترین رأی جاری را دارند، حداکثر هر ۳۰ روز یک‌بار اعمال
-    ///         می‌شود (هیأتِ کاملاً خالی هر زمان قابل‌پرشدن است). ماندن در هیأت مشروط به **فعال‌بودنِ ولیدیتور در همین لحظه** است:
-    ///         فقط رأی‌های ولیدیتورهای فعال به کاندیداهای فعال شمرده می‌شود، پس عضو معلق نمی‌تواند از بازتعیین ماهانه عبور کند.
-    ///         رأی‌دادن و تغییر رأی همیشه آزاد است (voteFor / unvoteFor).
+    /// @dev وضعیت کاریِ refreshBoard() را در یک struct بسته‌بندی می‌کند تا با ارجاع (یک اشاره‌گر memory =
+    ///      یک اسلات استک) بین توابع کمکی خصوصی رد‌وبدل شود، نه به‌شکل چندین متغیر محلی جدا — خودِ منطق
+    ///      refreshBoard() به‌تنهایی متغیرهای هم‌زمانِ بیش از حد برای استک EVM داشت (در بازبینی با optimizer
+    ///      پیدا شد؛ همان رده‌ی مشکل و همان الگوی اصلاح، مثل struct EpochPrep در BlockRewardDistributor).
+    struct RefreshCtx {
+        bool[] keep;
+        uint256 keptCount;
+        address[] seen;
+        uint256 seenCount;
+        bool[] takenAsFiller;
+        address[] filler;
+        uint256 fillerCount;
+        address replacedIncumbent;
+        address challenger;
+    }
+
+    /// @dev گام ۱ (کامنت مستند refreshBoard() را ببین): کدام اعضای فعلی هنوز همین الان واجد شرایط
+    ///      ماندن‌اند؟ isBoardMember بقیه را همین الان پاک می‌کند.
+    function _dropDisqualified(RefreshCtx memory ctx, uint256 priorCount) private {
+        ctx.keep = new bool[](priorCount);
+        for (uint256 i = 0; i < priorCount; i++) {
+            address m = boardMembers[i];
+            if (_hasAuthority(m)) {
+                (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(m);
+                if (status == 2) { // Active
+                    ctx.keep[i] = true;
+                    ctx.keptCount++;
+                    continue;
+                }
+            }
+            isBoardMember[m] = false;
+        }
+    }
+
+    /// @dev گام ۳: کرسی‌های خالی با بالاترین‌رأی‌ترین کاندیداهای واجدِ بیرونی (باید حداقل یک رأی گرفته
+    ///      باشند — ctx.seen این را تضمین می‌کند) پر می‌شود. کاندیدای واجدِ کمتر از جای خالی مشکلی ندارد:
+    ///      کرسی خالی می‌ماند.
+    function _pickFillers(RefreshCtx memory ctx, uint256 vacancies) private view {
+        ctx.filler = new address[](vacancies);
+        for (uint256 f = 0; f < vacancies; f++) {
+            uint256 bestVotes = 0;
+            uint256 bestIdx = type(uint256).max;
+            for (uint256 j = 0; j < ctx.seenCount; j++) {
+                if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
+                uint256 v = _voteTally[ctx.seen[j]];
+                if (v > bestVotes) { bestVotes = v; bestIdx = j; }
+            }
+            if (bestIdx == type(uint256).max) break;
+            ctx.filler[ctx.fillerCount] = ctx.seen[bestIdx];
+            ctx.takenAsFiller[bestIdx] = true;
+            ctx.fillerCount++;
+        }
+    }
+
+    /// @dev گام ۴ (کامنت مستند refreshBoard() را ببین): اگر هیأت بعد از پرکردن جای خالی پر باشد، حداکثر یک
+    ///      نامزد تازه می‌تواند جای تنها عضو دارای کمترین رأیِ فعلی را بگیرد، فقط با رأی اکیداً بیشتر
+    ///      (تساوی عضو فعلی را سرجایش نگه می‌دارد).
+    function _tryChallenge(RefreshCtx memory ctx, uint256 priorCount) private view {
+        uint256 weakestVotes = type(uint256).max;
+        uint256 weakestIdx = type(uint256).max;
+        for (uint256 i = 0; i < priorCount; i++) {
+            if (!ctx.keep[i]) continue;
+            uint256 v = _voteTally[boardMembers[i]];
+            if (v < weakestVotes) { weakestVotes = v; weakestIdx = i; }
+        }
+        uint256 bestOutsideVotes = 0;
+        uint256 bestOutsideIdx = type(uint256).max;
+        for (uint256 j = 0; j < ctx.seenCount; j++) {
+            if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
+            uint256 v = _voteTally[ctx.seen[j]];
+            if (v > bestOutsideVotes) { bestOutsideVotes = v; bestOutsideIdx = j; }
+        }
+        if (bestOutsideIdx != type(uint256).max && bestOutsideVotes > weakestVotes) {
+            ctx.replacedIncumbent = boardMembers[weakestIdx];
+            ctx.challenger = ctx.seen[bestOutsideIdx];
+            ctx.keep[weakestIdx] = false;
+            ctx.keptCount--;
+        }
+    }
+
+    /// @notice ✅ تصمیم نهایی (P01، بازطراحی ۲۰۲۶-۰۹-۲۸ — جایگزین نسخه‌ی قبلیِ «هر بار کل BOARD_SIZE از نو
+    ///         محاسبه شود»). نبود رأی هرگز به‌تنهایی نباید هیأت را خالی کند: عضو فعلی که **Active** است،
+    ///         صرف‌نظر از تعداد رأیش، کرسی خود را در این بازتعیین ماهانه حفظ می‌کند. اینجا فقط دو چیز یک
+    ///         عضو فعلی را حذف می‌کند: (الف) اختیارش را از دست داده (خروج‌کرده — `_hasAuthority` نادرست؛
+    ///         قبلاً جای دیگر فوراً قطع شده، اینجا فقط نهایی می‌شود)، یا (ب) الان **Demoted** (معلق) است —
+    ///         P02 می‌گوید تعلیق به‌تنهایی اختیار را **در طول دوره** قطع نمی‌کند، ولی در همین نقطه‌ی ماهانه
+    ///         عضو معلق دوباره تأیید نمی‌شود. کرسی‌های خالی (از حذف‌ها، یا هیأتی کوچک‌تر از BOARD_SIZE) با
+    ///         بالاترین‌رأی‌ترین کاندیداهای واجدِ بیرونی پر می‌شود. اگر کرسی خالی نماند، حداکثر یک نامزد
+    ///         تازه می‌تواند جای تنها عضو دارای کمترین رأیِ فعلی را بگیرد، فقط با رأی اکیداً بیشتر (تساوی
+    ///         عضو فعلی را سرجایش نگه می‌دارد) — عمداً حداقلیِ آشوب. حداکثر هر ۳۰ روز یک‌بار اعمال می‌شود
+    ///         (هیأت خالی: هر زمان). رأی همیشه آزاد است؛ فقط همین بازتعیین زمان‌بندی‌شده. مسیر جانشینی
+    ///         فوریِ ناشیِ از خروج (syncBoard / _fillVacancies، P02) جدا و بی‌اثرمانده است.
     function refreshBoard() external {
         require(
             boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
             "ValidatorsBoard: ordinary board changes are applied once every 30 days"
         );
-        (address[] memory newBoard, uint256[] memory newBoardVotes, uint256 filled) = _topCandidates(BOARD_SIZE, false);
 
-        // ✅ اصلاح‌شده (باگ پیداشده در بازبینی مستقل — نسخه‌ی قبلی این اصلاح boardVersion رو
-        // بی‌قید و شرط توی هر فراخوان موفق refreshBoard() بالا می‌برد، حتی وقتی عضویت نهایی
-        // عیناً با قبلش یکسان بود. چون این تابع بدون نیاز به مجوز و بدون هیچ cooldown ای هست،
-        // هرکسی می‌تونست پیوسته صداش بزنه — حتی با صفر تغییر واقعی عضویت — فقط برای این‌که هر
-        // اقدام هیأت‌مدیره‌ی باز و منتظر رأی رو مدام باطل کنه، یه بردار آزار بی‌پایان و
-        // تکرارپذیر). مجموعه‌ی *واقعی* اعضا رو (مستقل از ترتیب) قبل از پاک‌کردن فلگ‌های
-        // isBoardMember قدیمی پایین مقایسه می‌کنیم — فقط اگه عضویت واقعاً عوض شده باشه، نسخه
-        // رو بالا می‌بریم.
-        bool membershipChanged = (boardMembers.length != filled);
-        if (!membershipChanged) {
-            for (uint256 i = 0; i < filled; i++) {
-                if (!isBoardMember[newBoard[i]]) {
-                    membershipChanged = true;
-                    break;
-                }
-            }
+        uint256 priorCount = boardMembers.length;
+        RefreshCtx memory ctx;
+        _dropDisqualified(ctx, priorCount);
+        (ctx.seen, ctx.seenCount) = _tallyVotes();
+        ctx.takenAsFiller = new bool[](ctx.seenCount);
+        _pickFillers(ctx, BOARD_SIZE - ctx.keptCount);
+        if (ctx.keptCount + ctx.fillerCount == BOARD_SIZE) {
+            _tryChallenge(ctx, priorCount);
         }
 
-        // اعمال: پاک‌کردن فلگ‌های عضویت قدیم، نصب مجموعه‌ی تازه
-        for (uint256 i = 0; i < boardMembers.length; i++) {
-            isBoardMember[boardMembers[i]] = false;
+        // هیأت نهایی را بساز و پیش از دست‌کاری storage، تغییر واقعیِ عضویت را (مقایسه‌ی مجموعه، مستقل از
+        // ترتیب) تشخیص بده — چون refreshBoard() بدون مجوز است، boardVersion فقط با تغییر واقعی باید بالا
+        // برود، نه با فراخوان تکراریِ بی‌اثر.
+        uint256 finalCount = ctx.keptCount + ctx.fillerCount + (ctx.challenger != address(0) ? 1 : 0);
+        address[] memory finalBoard = new address[](finalCount);
+        uint256[] memory finalVotes = new uint256[](finalCount);
+        uint256 w = 0;
+        for (uint256 i = 0; i < priorCount; i++) {
+            if (!ctx.keep[i]) continue;
+            finalBoard[w] = boardMembers[i];
+            finalVotes[w] = _voteTally[boardMembers[i]];
+            w++;
+        }
+        for (uint256 f = 0; f < ctx.fillerCount; f++) {
+            finalBoard[w] = ctx.filler[f];
+            finalVotes[w] = _voteTally[ctx.filler[f]];
+            w++;
+        }
+        if (ctx.challenger != address(0)) {
+            finalBoard[w] = ctx.challenger;
+            finalVotes[w] = _voteTally[ctx.challenger];
+        }
+        bool membershipChanged = (priorCount != finalCount) || ctx.replacedIncumbent != address(0) || ctx.fillerCount > 0;
+
+        // اعمال: پرچم کهنه‌ی عضو جابه‌جاشده با چالش را پاک کن (گام ۱ قبلاً حذف‌شده‌ها را پاک کرد؛ جابه‌جاییِ
+        // چالش فقط ctx.keep[] را پاک کرد، نه storage را؛ همین الان انجامش بده)، مجموعه‌ی تازه را بنشان.
+        if (ctx.replacedIncumbent != address(0)) {
+            isBoardMember[ctx.replacedIncumbent] = false;
         }
         delete boardMembers;
-
-        address[] memory finalBoard = new address[](filled);
-        uint256[] memory finalVotes = new uint256[](filled);
-        for (uint256 i = 0; i < filled; i++) {
-            boardMembers.push(newBoard[i]);
-            isBoardMember[newBoard[i]] = true;
-            seatMembershipEpoch[newBoard[i]] = REGISTRY.membershipEpoch(newBoard[i]);
-            finalBoard[i] = newBoard[i];
-            finalVotes[i] = newBoardVotes[i];
+        for (uint256 i = 0; i < finalCount; i++) {
+            boardMembers.push(finalBoard[i]);
+            isBoardMember[finalBoard[i]] = true;
         }
-
-        // ✅ اصلاح‌شده: نسخه‌ی هیأت‌مدیره رو فقط وقتی عضویت **واقعاً** عوض شده باشه (به
-        // membershipChanged بالا مراجعه کن) بالا می‌بریم — پس هر اقدامی که زیر عضویت قدیمی
-        // پیشنهاد و نیمه‌رأی‌گرفته شده، وقتی هیأت‌مدیره واقعاً عوض بشه درست باطل می‌شه، بدون
-        // این‌که به هرکسی یه راه رایگان و تکرارپذیر برای باطل‌کردن اقدامات باز با صدازدن
-        // refreshBoard() بدون هیچ اثر واقعی بدیم.
+        for (uint256 f = 0; f < ctx.fillerCount; f++) {
+            seatMembershipEpoch[ctx.filler[f]] = REGISTRY.membershipEpoch(ctx.filler[f]);
+        }
+        if (ctx.challenger != address(0)) {
+            seatMembershipEpoch[ctx.challenger] = REGISTRY.membershipEpoch(ctx.challenger);
+        }
         if (membershipChanged) {
             boardVersion++;
         }
 
-
         lastBoardRefreshAt = block.timestamp;
-        pendingVacancies = 0; // بازتعیین عادی کل هیأت را از نو محاسبه می‌کند؛ جای خالی‌ها منتقل نمی‌شوند
+        pendingVacancies = 0; // این بازتعیین عادی جای خالی‌ها را از نو محاسبه می‌کند؛ چیزی منتقل نمی‌شود
+
+        for (uint256 j = 0; j < ctx.seenCount; j++) {
+            _voteTally[ctx.seen[j]] = 0; // ریست شمارش زودگذر
+        }
 
         emit BoardRefreshed(finalBoard, finalVotes);
     }

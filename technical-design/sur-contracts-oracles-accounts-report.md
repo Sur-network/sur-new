@@ -94,7 +94,7 @@
 - **پاک‌سازی رأی‌های راکد (`clearStaleVotes`):** permissionless، وقتی ولیدیتوری بیش از (دوره بازیابی + ۳۰ روز) پیوسته Demoted بماند، هر کسی می‌تواند رأی‌های داده‌شده و دریافتی او را حذف کند.
 - **اختیارات تفویضی board** (نیازمند رأی اکثریت داخلی اعضای board، نه یک نفر):
   1. `proposeRotateOracle` → چرخش `distributionOracle` در BlockRewardDistributor (برای موارد اضطراری/افشای کلید).
-  2. `proposeApproveBudget` → تصویب پرداخت خزانه (حداقل ۳ رأی هیأت) در سقف‌های `perPaymentCap` (هر پرداخت باید کمتر از آن باشد) و `periodCap` (مجموع حدود ۳۰ روز).
+  2. `proposeApproveBudget` → تصویب پرداخت خزانه (حداقل ۳ رأی هیأت) در سقف‌های `perPaymentCap` (✅ تصمیم نهایی: پرداخت می‌تواند دقیقاً برابر سقف هم باشد، `<=`) و `periodCap` (مجموع حدود ۳۰ روز، همین‌طور شامل مقدار مرزی).
   3. `proposeSetEntryThresholdBase` / `proposeSetGrowthFactorPerValidator` / `proposeSetMembershipFeeBps` → تنظیم پارامترهای اقتصادی ورود در ValidatorsRegistry.
   4. `proposeRotateVerifier` → چرخش `verifier` در ValidatorsRegistry.
 - **محدودیت صریح:** board نمی‌تواند پارامترهای امنیتی سطح‌بالاتر (نرخ محدودیت ورود، probation، liveness، slashing، cooldown) یا سقف بودجه‌ی خودش را تغییر دهد؛ آن‌ها فقط با رأی کامل ولیدیتورها ممکن‌اند. board همچنین نمی‌تواند آدرس هیچ قرارداد ساختاری را تغییر دهد (این آدرس‌ها constant در زمان کامپایل‌اند).

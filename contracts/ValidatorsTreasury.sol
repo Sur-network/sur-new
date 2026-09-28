@@ -222,7 +222,7 @@ contract ValidatorsTreasury {
     ///         spending under it.
     function boardApproveExpenditure(address to, uint256 amount, string calldata description) external onlyBoard nonReentrant {
         require(to != address(0), "ValidatorsTreasury: zero recipient address");
-        require(amount > 0 && amount < perPaymentCap, "ValidatorsTreasury: amount outside per-payment cap");
+        require(amount > 0 && amount <= perPaymentCap, "ValidatorsTreasury: amount outside per-payment cap"); // ✅ FINAL DECISION: amount == perPaymentCap is itself allowed
         require(amount <= address(this).balance, "ValidatorsTreasury: insufficient balance");
         require(_rollingWindowSpend() + amount <= periodCap, "ValidatorsTreasury: 30-day period cap exceeded");
 

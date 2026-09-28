@@ -95,3 +95,34 @@ New tests, both against the **fixed** contracts:
 Six mutation checks now (`results/mutation-checks.txt`), including removing each defense layer
 independently (M4, M5) and both at once (M6, which reproduces the original bug from a mutated
 "fixed" contract — confirming the test suite would have caught it before this fix existed).
+
+## Update 2026-09-29 (third pass — refreshBoard redesign, payment cap boundary)
+
+Per explicit owner decision, three more things changed:
+
+1. **`refreshBoard()` redesigned** so a lack of votes never, by itself, empties the board. A
+   currently-Active incumbent keeps its seat regardless of vote count; only an exited or
+   `Demoted` member is dropped at this monthly point. Vacant seats are filled by the
+   highest-voted eligible outside candidates; if no seat is vacant, at most one fresh
+   challenger may unseat the single current lowest-voted incumbent, and only by strictly
+   outvoting it (a tie keeps the incumbent). Split into `struct RefreshCtx` + three private
+   helpers (`_dropDisqualified`, `_pickFillers`, `_tryChallenge`) to fix a stack-too-deep error
+   from the added local variables — same pattern as `BlockRewardDistributor`'s `EpochPrep`.
+   New: 14 scenarios (Z1–Z14) in `test_P01_P02_board.js` covering zero votes, insufficient
+   votes to fill every seat, a higher-voted challenger, an exact tie, suspension at the
+   monthly point, and invalidation of open actions on a real change. Mutation check M7.
+2. **`ValidatorsTreasury`'s per-payment cap boundary changed from `<` to `<=`** — a payment
+   exactly equal to `perPaymentCap` is now allowed. New boundary tests in
+   `test_P06_treasury_caps.js` (below/at/above the cap, and the exact period-cap boundary) and
+   in `test_P01_P02_board.js` (Pay-c/Pay-d). Mutation check M8.
+3. **N04 (emergency consensus recovery):** option A confirmed as a temporary measure (not a
+   permanent mandate to run consensus outside `ValidatorsRegistry`); option B (two-thirds
+   quorum) explicitly rejected as unreachable in exactly the scenario it's needed for. No code
+   was written for this — see `governance/sur-emergency-consensus-recovery.md` §4 for the open
+   design work (decision authority, a workable quorum, evidence of a missing node, stake
+   status, return rights).
+
+A new, separate, not-yet-implemented protocol (`SUR_NODE_CHECK_V1`, for checking a new node
+during its probationary period) was specified in `offchain-services/sur-node-check-protocol-spec.md`
+— it touches the Verifier service and a new node-companion service, not the contracts, so it
+has no test evidence here.
