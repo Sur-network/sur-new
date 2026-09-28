@@ -225,12 +225,14 @@ contract ValidatorsBoard {
 
     uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
 
-    /// @notice ✅ NEW: increments every time refreshBoard() below actually runs and produces a
-    ///         result (regardless of whether the resulting membership happens to be identical to
-    ///         before — treating every refresh as a version bump is deliberately conservative:
-    ///         the alternative, comparing old vs. new membership sets to decide whether to bump,
-    ///         adds real complexity for a case — an action sitting open across a refresh that
-    ///         changed nothing — that is rare and cheap to just re-propose).
+    /// @notice ✅ Increments ONLY when refreshBoard() below installs a membership that genuinely
+    ///         differs (as an order-independent SET) from the previous one. A refresh that
+    ///         reproduces the identical member set does NOT bump it. (An earlier version bumped on
+    ///         every refresh; because refreshBoard() is permissionless with no cooldown, that let
+    ///         anyone keep invalidating open actions at will — an indefinitely repeatable
+    ///         griefing vector, found in independent review and fixed by the set comparison in
+    ///         refreshBoard().) Every open action records the version it was proposed under and
+    ///         becomes invalid once the version moves on — see boardVersionAtCreation.
     uint256 public boardVersion = 1;
 
     mapping(uint256 => BoardAction) public actions;

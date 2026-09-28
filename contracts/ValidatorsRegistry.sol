@@ -934,7 +934,7 @@ contract ValidatorsRegistry {
 
         if (epoch.wasMassFailure) {
             d.slashOutcome = SlashOutcome.ExemptMassFailure;
-            validators[d.validator].pendingSlashEpoch = 0; // fully closed — no delivery/appeal ever needed
+            _clearPendingSlashIfCurrent(d); // fully closed — no delivery/appeal ever needed
             emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
         }
         // if not mass failure: d.delivery is already DeliveryStatus.Pending from _recordDecision
@@ -946,6 +946,25 @@ contract ValidatorsRegistry {
     // Delivery of the evidence package — the validator's own on-chain confirmation is the
     // primary proof. See the architecture note above for the full rationale.
     // ------------------------------------------------------------------
+
+    /// @notice ✅ FIXED (N01, found in the final independent review and reproduced on a real
+    ///         chain simulation): every place that clears a validator's pending-slash lock used
+    ///         to write `pendingSlashEpoch = 0` unconditionally. But that field lives on the
+    ///         VALIDATOR, not on the decision — so if an OLD decision (A) was resolved late,
+    ///         after the same validator had been suspended AGAIN (decision B, which set a fresh
+    ///         `pendingSlashEpoch`), resolving A silently wiped B's lock, letting the validator
+    ///         request exit and withdraw its full collateral while B was still unresolved.
+    ///         The lock now stores the demotion epoch it belongs to, and a decision may clear it
+    ///         ONLY if the lock still points at that decision's own epoch. (A validator can only
+    ///         be suspended again after recovery, and recoveryPeriod is enforced in code (proposeParameterChange/_applyParam)
+    ///         to stay strictly longer than MASS_DEMOTION_WINDOW, so two suspensions of the same validator
+    ///         can never share a demotion epoch — an epoch match therefore identifies the exact case.)
+    function _clearPendingSlashIfCurrent(StatusDecision storage d) private {
+        ValidatorInfo storage vv = validators[d.validator];
+        if (vv.pendingSlashEpoch == d.demotionEpochId) {
+            vv.pendingSlashEpoch = 0;
+        }
+    }
 
     /// @notice Confirms ONLY that the evidence package was received — explicitly NOT an
     ///         admission that the suspension's underlying accusation is true. Starts the
@@ -1002,6 +1021,10 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
+        // ✅ FIXED (N01): a case that already reached a final outcome (e.g. ExemptMassFailure) must
+        // never be reopened — resolveMassFailureCheck() leaves `delivery` at Pending even when it
+        // exempts the case, so without this check the dispute path could be opened on a closed case.
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
         require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
         require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
         require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
@@ -1060,6 +1083,14 @@ contract ValidatorsRegistry {
         disp.resolved = true;
         disp.deliveryConfirmed = confirmed;
         StatusDecision storage d = statusDecisions[decisionId];
+        // ✅ FIXED (N01, defense in depth — the review explicitly required the RESOLVER to keep
+        // the rule too, not only the function that opens a dispute): if the case already reached a
+        // final outcome by any other route, this dispute may only close its own record; it must
+        // never overwrite the outcome or touch the validator's lock.
+        if (d.slashOutcome != SlashOutcome.Undetermined) {
+            emit DeliveryDisputeResolved(decisionId, confirmed);
+            return;
+        }
         if (confirmed) {
             d.delivery = DeliveryStatus.Confirmed;
             d.deliveryProvenAt = block.timestamp;
@@ -1068,7 +1099,7 @@ contract ValidatorsRegistry {
             // the slash — it does NOT return the validator to consensus (that still requires the
             // normal, independent recovery path).
             d.slashOutcome = SlashOutcome.VoidedNoDelivery;
-            validators[d.validator].pendingSlashEpoch = 0;
+            _clearPendingSlashIfCurrent(d);
             emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
         }
         emit DeliveryDisputeResolved(decisionId, confirmed);
@@ -1130,7 +1161,7 @@ contract ValidatorsRegistry {
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
         require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
         d.slashOutcome = SlashOutcome.RejectedNoQuorum;
-        validators[d.validator].pendingSlashEpoch = 0;
+        _clearPendingSlashIfCurrent(d);
         emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
     }
 
@@ -1153,7 +1184,7 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         d.slashOutcome = outcome;
         ValidatorInfo storage v = validators[d.validator];
-        v.pendingSlashEpoch = 0;
+        _clearPendingSlashIfCurrent(d);
 
         uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
         v.lockedStake -= slashAmount;
@@ -1263,6 +1294,14 @@ contract ValidatorsRegistry {
     // Parameter governance — full active-validator majority vote
     // ------------------------------------------------------------------
     function proposeParameterChange(ParamKey key, uint256 newValue) external onlyActiveValidator returns (uint256 id) {
+        // ✅ N01 invariant, enforced in code rather than merely asserted in a comment: recoveryPeriod must stay strictly
+        // longer than MASS_DEMOTION_WINDOW. _clearPendingSlashIfCurrent() identifies a case by its demotion EPOCH, which is
+        // unambiguous only if one validator can never be suspended twice inside one epoch (suspend → recover → suspend).
+        // Validated at proposal time (so an invalid proposal cannot be created and cannot jam its own final vote) and again
+        // in _applyParam().
+        if (key == ParamKey.RecoveryPeriod) {
+            require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
+        }
         paramProposalCount++;
         id = paramProposalCount;
         paramProposals[id] = ParamProposal({
@@ -1308,6 +1347,7 @@ contract ValidatorsRegistry {
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
         } else if (key == ParamKey.RecoveryPeriod) {
+            require(value > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
             recoveryPeriod = value;
         } else if (key == ParamKey.SlashBps) {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");

@@ -43,9 +43,6 @@
     "maxEntriesPerWindow": 1,
     "entryWindowSeconds": 86400,
     "probationPeriod": 604800,
-    "requiredLivenessRatioBps": 9500,
-    "requiredRecoveryLivenessRatioBps": 9500,
-    "inactivityThreshold": 3600,
     "recoveryPeriod": 172800,
     "slashBps": 100,
     "exitCooldown": 604800
@@ -54,7 +51,8 @@
     "initialBoardMembers": ["0x....", "0x....", "0x....", "0x....", "0x...."]
   },
   "validatorsTreasury": {
-    "smallBudgetCap": "0"
+    "perPaymentCap": "0",   // 🔶 FILL_IN — تصمیم صریح: حدس نزن. مقدار 0 یعنی هیچ پرداختی ممکن نیست؛ ابزار باید با 0 عمداً متوقف/هشدار بدهد مگر پرچم صریح --allow-zero-caps
+    "periodCap": "0"        // 🔶 FILL_IN — تصمیم صریح؛ همان قاعده‌ی بالا
   },
   "foundationDAO": {
     "initialMembers": [
@@ -85,11 +83,11 @@
 این سه قرارداد فقط مقادیر مقیاسی ساده (address/uint256) دارند که مستقیم در بدنه‌شان مقداردهی شده‌اند (نه mapping/آرایه). برای این‌ها:
 
 1. یک نسخه‌ی موقت از سورس قرارداد بساز که در آن، هر مقدار `🔶 FILL_IN` با مقدار واقعی از فایل پیکربندی جایگزین شده باشد (مثلاً `address public identityOracle = address(0);` بشود `address public identityOracle = 0xABCD...;`).
-2. این سورس را با `solc` کامپایل کن و `evm.deployedBytecode.object` (بایت‌کد **اجرایی/deploy‌شده**، نه creation bytecode) را بگیر — این کار نیازی به هیچ زنجیره‌ی محلی یا اجرای واقعی ندارد، کاملاً استاتیک است.
+2. این سورس را با `solc` کامپایل کن. ⚠️ **تصحیح (N02):** برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. در این پروژه `BlockRewardDistributor.deployTime` یک `immutable` است (`SurenSale.saleStartTime` هم هست ولی genesis نیست). دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن. راه (الف) همان روشی است که آزمون واقعی Besu استفاده کرد.
 3. با `solc --storage-layout` (یا فیلد `storageLayout` در خروجی JSON استاندارد) شماره‌ی دقیق slot هر متغیر ساده را بگیر.
 4. مقدار واقعی هرکدام را مستقیم در همان slot در بخش `alloc.storage` genesis بنویس.
 
-⚠️ نکته‌ی فنی حیاتی: بایت‌کد deploy‌شده (runtime) هرگز شامل منطق «مقداردهی اولیه» نیست — آن منطق فقط بخشی از creation bytecode است که در یک دیپلوی واقعی یک‌بار اجرا و سپس دور انداخته می‌شود. برای همین، این روش نیازی به اجرای واقعی هیچ تراکنشی ندارد؛ کافی است bytecode و storage را جدا از هم مستقیم بسازی.
+⚠️ نکته‌ی فنی حیاتی: بایت‌کد deploy‌شده (runtime) هرگز شامل منطق «مقداردهی اولیه» نیست — آن منطق فقط بخشی از creation bytecode است. برای همین **هر** scalar غیرconstant با مقدار غیرپیش‌فرض (آدرس اوراکل‌ها، سقف‌ها، پارامترهای زمانی، `boardVersion` اگر بخواهیم ۱ باشد…) باید با overlay صریح slot نوشته شود — نوشتن نشدنش یعنی مقدار صفر. حذف constructor صریح از سورس به‌معنای بی‌نیازی از این مرحله نیست. و طبق تصحیح بالا، immutableها را جداگانه مدیریت کن.
 
 ### ۴.۲ روش شبیه‌سازی (نیازمند زنجیره‌ی محلی موقت) — برای `FoundationDAO`, `ValidatorsRegistry`, `ValidatorsBoard`
 
@@ -132,9 +130,6 @@
        - `maxEntriesPerWindow` (۱)
        - `entryWindowSeconds` (۸۶۴۰۰ — ۲۴ ساعت)
        - `probationPeriod` (۶۰۴۸۰۰ — ۱ هفته)
-       - `requiredLivenessRatioBps` (۹۵۰۰ — ✅ **جایگزین `minLivenessConfirmationsToActivate` قدیمی** — دیگر یه شمارش خام مثبت‌ها نیست، یه نسبت موفقیته؛ به تصمیم مربوطه در `sur-tokenomics.md` مراجعه کن)
-       - ✅ **`requiredRecoveryLivenessRatioBps` (۹۵۰۰ — پارامتر تازه، از یک بازبینی بعدی: قبلاً با بالا یه فیلد مشترک بود؛ حالا مستقل. ⚠️ اگر این جا بماند، مقدار پیش‌فرض Solidity (صفر) می‌ماند و شرط بازگشت بعد از دموت عملاً همیشه true می‌شود — چون قرارداد initializerهای اسکالر را از طریق تزریق runtime bytecode اجرا نمی‌کند.)**
-       - `inactivityThreshold` (۳۶۰۰ — ۱ ساعت)
        - `recoveryPeriod` (۱۷۲۸۰۰ — ۴۸ ساعت)
        - `slashBps` (۱۰۰ — ۱٪)
        - `exitCooldown` (۶۰۴۸۰۰ — ۱ هفته)
@@ -151,9 +146,10 @@
    ValidatorsRegistry.maxEntriesPerWindow() == (مقدار config)
    ValidatorsRegistry.entryWindowSeconds() == (مقدار config)
    ValidatorsRegistry.probationPeriod() == (مقدار config)
-   ValidatorsRegistry.requiredLivenessRatioBps() == (مقدار config)
-   ValidatorsRegistry.requiredRecoveryLivenessRatioBps() == (مقدار config)
-   ValidatorsRegistry.inactivityThreshold() == (مقدار config)
+   ValidatorsTreasury.perPaymentCap() == (مقدار config — اگر 0 است ابزار باید صریحاً اعلام کند «پرداخت هیأت ممکن نیست»)
+   ValidatorsTreasury.periodCap() == (مقدار config)
+   BlockRewardDistributor.deployTime() == network.genesisTimestamp   # immutable — باید از بلاک صفر درست باشد
+   ValidatorsBoard.boardVersion() == (مقدار overlay‌شده؛ ۱ اگر نوشته شود، ۰ اگر نه — هر دو کار می‌کنند، ولی assert کن که همان چیزی است که ابزار قصد کرده)
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)
    ValidatorsRegistry.exitCooldown() == (مقدار config)

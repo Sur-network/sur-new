@@ -946,7 +946,7 @@ contract ValidatorsRegistry {
 
         if (epoch.wasMassFailure) {
             d.slashOutcome = SlashOutcome.ExemptMassFailure;
-            validators[d.validator].pendingSlashEpoch = 0; // کاملاً بسته — دیگه هیچ‌وقت تحویل/اعتراض لازم نمی‌شه
+            _clearPendingSlashIfCurrent(d); // کاملاً بسته — دیگه هیچ‌وقت تحویل/اعتراض لازم نمی‌شه
             emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
         }
         // اگه رخداد جمعی نبود: d.delivery از قبل توسط _recordDecision بالا Pending‌شده —
@@ -958,6 +958,25 @@ contract ValidatorsRegistry {
     // تحویل بسته‌ی شواهد — تأیید on-chain خودِ ولیدیتور، شاهد اصلیه. به یادداشت معماری بالا
     // برای استدلال کامل مراجعه کن.
     // ------------------------------------------------------------------
+
+    /// @notice ✅ اصلاح‌شده (N01، پیداشده در بازبینی مستقل نهایی و روی شبیه‌سازی زنجیره‌ی واقعی
+    ///         بازتولیدشده): هر جایی که قفل جریمه‌ی معلق یک ولیدیتور را پاک می‌کرد، بی‌قید
+    ///         `pendingSlashEpoch = 0` می‌نوشت. ولی این فیلد روی **ولیدیتور** است، نه روی
+    ///         تصمیم — پس اگه یه تصمیم قدیمی (A) دیر حل می‌شد، بعد از این‌که همون ولیدیتور
+    ///         **دوباره** تعلیق شده بود (تصمیم B، که یه `pendingSlashEpoch` تازه ست کرده بود)،
+    ///         حل‌کردن A بی‌صدا قفل B را پاک می‌کرد و ولیدیتور می‌توانست درخواست خروج بدهد و
+    ///         کل وثیقه‌اش را وقتی B هنوز حل‌نشده بود برداشت کند. الان قفل، اپوک دموتی که بهش
+    ///         تعلق داره را نگه می‌داره، و یه تصمیم **فقط** وقتی می‌تواند آن را پاک کند که قفل
+    ///         هنوز به اپوک خودِ همان تصمیم اشاره کند. (یه ولیدیتور فقط بعد از بازگشت می‌تواند
+    ///         دوباره تعلیق شود و recoveryPeriod در کد (proposeParameterChange/_applyParam) اجباراً اکیداً از
+    ///         MASS_DEMOTION_WINDOW بلندتر نگه داشته می‌شود، پس دو تعلیق یک ولیدیتور هرگز نمی‌توانند
+    ///         اپوک دموت مشترک داشته باشند — تطابق اپوک، دقیقاً پرونده را مشخص می‌کند.)
+    function _clearPendingSlashIfCurrent(StatusDecision storage d) private {
+        ValidatorInfo storage vv = validators[d.validator];
+        if (vv.pendingSlashEpoch == d.demotionEpochId) {
+            vv.pendingSlashEpoch = 0;
+        }
+    }
 
     /// @notice فقط تأیید می‌کنه بسته‌ی شواهد دریافت شده — صریحاً به‌معنای پذیرفتن درستیِ خودِ
     ///         اتهام تعلیق **نیست**. پنجره‌ی ۷۲ساعته‌ی ثبت اعتراض رو شروع می‌کنه (که با دوره‌ی
@@ -1011,6 +1030,10 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         require(d.decisionType == DecisionType.Suspension, "ValidatorsRegistry: not a suspension decision");
         require(_massFailureResolved(decisionId), "ValidatorsRegistry: mass-failure window not resolved yet");
+        // ✅ اصلاح‌شده (N01): پرونده‌ای که از قبل به نتیجه‌ی نهایی رسیده (مثلاً ExemptMassFailure) هرگز
+        // نباید دوباره باز شود — resolveMassFailureCheck() حتی وقتی پرونده را معاف می‌کند `delivery` را
+        // روی Pending می‌گذارد، پس بدون این چک مسیر اختلاف روی یه پرونده‌ی بسته باز می‌شد.
+        require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: case already resolved");
         require(d.delivery == DeliveryStatus.Pending, "ValidatorsRegistry: delivery not pending");
         require(block.timestamp >= d.decidedAt + DELIVERY_DISPUTE_GRACE_PERIOD, "ValidatorsRegistry: grace period not elapsed");
         require(deliveryDisputes[decisionId].filedAt == 0, "ValidatorsRegistry: delivery dispute already filed");
@@ -1069,6 +1092,14 @@ contract ValidatorsRegistry {
         disp.resolved = true;
         disp.deliveryConfirmed = confirmed;
         StatusDecision storage d = statusDecisions[decisionId];
+        // ✅ اصلاح‌شده (N01، دفاع مضاعف — بازبینی صریحاً خواسته **حل‌کننده** هم قاعده را حفظ کند، نه
+        // فقط تابعی که اختلاف را باز می‌کند): اگه پرونده از هر مسیر دیگری از قبل به نتیجه‌ی نهایی
+        // رسیده، این اختلاف فقط می‌تواند رکورد خودش را ببندد؛ هرگز نباید نتیجه را بازنویسی کند یا به
+        // قفل ولیدیتور دست بزند.
+        if (d.slashOutcome != SlashOutcome.Undetermined) {
+            emit DeliveryDisputeResolved(decisionId, confirmed);
+            return;
+        }
         if (confirmed) {
             d.delivery = DeliveryStatus.Confirmed;
             d.deliveryProvenAt = block.timestamp;
@@ -1077,7 +1108,7 @@ contract ValidatorsRegistry {
             // می‌کنه — ولیدیتور رو به اجماع برنمی‌گردونه (اون همچنان نیازمند مسیر بازگشت
             // معمولی و مستقله).
             d.slashOutcome = SlashOutcome.VoidedNoDelivery;
-            validators[d.validator].pendingSlashEpoch = 0;
+            _clearPendingSlashIfCurrent(d);
             emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
         }
         emit DeliveryDisputeResolved(decisionId, confirmed);
@@ -1139,7 +1170,7 @@ contract ValidatorsRegistry {
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
         require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
         d.slashOutcome = SlashOutcome.RejectedNoQuorum;
-        validators[d.validator].pendingSlashEpoch = 0;
+        _clearPendingSlashIfCurrent(d);
         emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
     }
 
@@ -1162,7 +1193,7 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         d.slashOutcome = outcome;
         ValidatorInfo storage v = validators[d.validator];
-        v.pendingSlashEpoch = 0;
+        _clearPendingSlashIfCurrent(d);
 
         uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
         v.lockedStake -= slashAmount;
@@ -1270,6 +1301,13 @@ contract ValidatorsRegistry {
     // حکمرانی پارامتر — رأی اکثریت کامل ولیدیتورهای فعال
     // ------------------------------------------------------------------
     function proposeParameterChange(ParamKey key, uint256 newValue) external onlyActiveValidator returns (uint256 id) {
+        // ✅ ناوردای N01، در کد **اعمال** می‌شود نه فقط در کامنت ادعا: recoveryPeriod باید اکیداً از MASS_DEMOTION_WINDOW
+        // بلندتر بماند. _clearPendingSlashIfCurrent() یک پرونده را با اپوک دموتش شناسایی می‌کند، که فقط وقتی بی‌ابهام است که
+        // یک ولیدیتور هرگز نتواند داخل یک اپوک دو بار تعلیق شود (تعلیق ← بازگشت ← تعلیق). هم در زمان پیشنهاد چک می‌شود
+        // (تا پیشنهاد نامعتبر ساخته نشود و رأی نهایی‌اش قفل نکند) و هم دوباره در _applyParam().
+        if (key == ParamKey.RecoveryPeriod) {
+            require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
+        }
         paramProposalCount++;
         id = paramProposalCount;
         paramProposals[id] = ParamProposal({
@@ -1315,6 +1353,7 @@ contract ValidatorsRegistry {
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
         } else if (key == ParamKey.RecoveryPeriod) {
+            require(value > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
             recoveryPeriod = value;
         } else if (key == ParamKey.SlashBps) {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
