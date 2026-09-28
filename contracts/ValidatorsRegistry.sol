@@ -511,6 +511,24 @@ contract ValidatorsRegistry {
     ///         mapping instead of the epoch-level flag.
     mapping(uint256 => bool) private massFailureChecked;
 
+    // ------------------------------------------------------------------
+    // P04 (final decisions): exit handling + reserved amount + exact case binding
+    // ------------------------------------------------------------------
+    /// @notice The exact decision currently holding this validator's pending-slash lock (0 = none).
+    mapping(address => uint256) public pendingSlashDecisionId;
+    /// @notice Amount at stake for a case, FIXED when the case is recorded (stake × slashBps at that moment) —
+    ///         this is what withdrawStake() reserves and what _executeSlash() takes (capped by the remaining stake).
+    mapping(uint256 => uint256) public decisionSlashAmount;
+    /// @notice Start time of the alleged violation for pre-exit cases (0 for ordinary suspensions). The evidence
+    ///         package (hash on-chain) must show it; the assembly can review it through the normal appeal path.
+    mapping(uint256 => uint256) public decisionViolationAt;
+    /// @notice The validator's status at the moment it requested exit (only an Active validator can have
+    ///         validation-duty violations to answer for).
+    mapping(address => uint8) public statusBeforeExit;
+    /// @notice How long after an exit request the Verifier may still file a case about conduct BEFORE the request.
+    uint256 public constant PRE_EXIT_CLAIM_WINDOW = 72 hours;
+    event PreExitCaseRecorded(uint256 indexed decisionId, address indexed validator, uint256 violationAt, uint256 exitRequestedAt, bytes32 evidenceHash);
+
     mapping(uint256 => StatusDecision) public statusDecisions;
     uint256 public statusDecisionCount;
     mapping(uint256 => mapping(address => bool)) private hasVotedOnSlash;
@@ -853,13 +871,35 @@ contract ValidatorsRegistry {
 
         _removeFromActive(validator);
 
-        uint256 epochId = _recordDemotion(v); // slash decision deferred — see resolveMassFailureCheck()
+        uint256 epochId = _recordDemotion(v, true); // slash decision deferred — see resolveMassFailureCheck()
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // recovery period starts now
 
         decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
         emit ValidatorDemoted(validator, epochId);
+    }
+
+    // ------------------------------------------------------------------
+    // P04: a case about conduct BEFORE an exit request. An exit request ends validation duty at once and starts the
+    // 1-week withdrawal wait; for 72 hours the Verifier may still file a case about earlier conduct. Inactivity AFTER
+    // the request is never a violation. The Verifier's bare claim is not enough: the evidence hash, the violation
+    // time and the normal mass-failure exemption / delivery / appeal / assembly-vote machinery all apply.
+    // ------------------------------------------------------------------
+    function recordPreExitViolation(address validator, bytes32 evidenceHash, uint256 violationAt) external onlyVerifier nonReentrant returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Exiting, "ValidatorsRegistry: validator is not exiting");
+        require(statusBeforeExit[validator] == uint8(Status.Active), "ValidatorsRegistry: had no validation duty when exiting");
+        uint256 exitRequestedAt = v.periodStartedAt; // requestExit() stamps this
+        require(block.timestamp <= exitRequestedAt + PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: pre-exit claim window closed");
+        require(violationAt < exitRequestedAt, "ValidatorsRegistry: violation must precede the exit request");
+        require(violationAt > v.demotedAt, "ValidatorsRegistry: violation predates the last suspension");
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: a case is already pending");
+
+        uint256 epochId = _recordDemotion(v, false); // not removed from the active set just now (removed at exit request)
+        decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
+        decisionViolationAt[decisionId] = violationAt;
+        emit PreExitCaseRecorded(decisionId, validator, violationAt, exitRequestedAt, evidenceHash);
     }
 
     function _recordDecision(address validator, DecisionType dtype, bytes32 evidenceHash, uint256 demotionEpochId) private returns (uint256 id) {
@@ -880,6 +920,10 @@ contract ValidatorsRegistry {
             requiredConfirmVotes: 0,
             slashOutcome: SlashOutcome.Undetermined
         });
+        if (dtype == DecisionType.Suspension) {
+            pendingSlashDecisionId[validator] = id;
+            decisionSlashAmount[id] = (validators[validator].lockedStake * slashBps) / BPS_DENOMINATOR;
+        }
         emit StatusDecisionRecorded(id, validator, dtype, evidenceHash);
     }
 
@@ -890,12 +934,12 @@ contract ValidatorsRegistry {
     //         touches active-set membership (see DemotionEpoch's doc comment for why that
     //         separation is a hard requirement).
     // ------------------------------------------------------------------
-    function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
+    function _recordDemotion(ValidatorInfo storage v, bool validatorJustRemovedFromActive) private returns (uint256 epochId) {
         if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
             currentDemotionEpochId++;
             DemotionEpoch storage fresh = demotionEpochs[currentDemotionEpochId];
             fresh.startedAt = block.timestamp;
-            fresh.referenceCount = activeValidators.length + 1; // +1: this validator was already
+            fresh.referenceCount = activeValidators.length + (validatorJustRemovedFromActive ? 1 : 0); // +1: this validator was already
             // removed from activeValidators by the caller before this runs — snapshotted ONCE
             // here and never touched again, so later removals within the same epoch cannot shift
             // what this epoch's demotions are being measured against.
@@ -934,7 +978,7 @@ contract ValidatorsRegistry {
 
         if (epoch.wasMassFailure) {
             d.slashOutcome = SlashOutcome.ExemptMassFailure;
-            _clearPendingSlashIfCurrent(d); // fully closed — no delivery/appeal ever needed
+            _clearPendingSlashIfCurrent(decisionId); // fully closed — no delivery/appeal ever needed
             emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
         }
         // if not mass failure: d.delivery is already DeliveryStatus.Pending from _recordDecision
@@ -947,22 +991,15 @@ contract ValidatorsRegistry {
     // primary proof. See the architecture note above for the full rationale.
     // ------------------------------------------------------------------
 
-    /// @notice ✅ FIXED (N01, found in the final independent review and reproduced on a real
-    ///         chain simulation): every place that clears a validator's pending-slash lock used
-    ///         to write `pendingSlashEpoch = 0` unconditionally. But that field lives on the
-    ///         VALIDATOR, not on the decision — so if an OLD decision (A) was resolved late,
-    ///         after the same validator had been suspended AGAIN (decision B, which set a fresh
-    ///         `pendingSlashEpoch`), resolving A silently wiped B's lock, letting the validator
-    ///         request exit and withdraw its full collateral while B was still unresolved.
-    ///         The lock now stores the demotion epoch it belongs to, and a decision may clear it
-    ///         ONLY if the lock still points at that decision's own epoch. (A validator can only
-    ///         be suspended again after recovery, and recoveryPeriod is enforced in code (proposeParameterChange/_applyParam)
-    ///         to stay strictly longer than MASS_DEMOTION_WINDOW, so two suspensions of the same validator
-    ///         can never share a demotion epoch — an epoch match therefore identifies the exact case.)
-    function _clearPendingSlashIfCurrent(StatusDecision storage d) private {
-        ValidatorInfo storage vv = validators[d.validator];
-        if (vv.pendingSlashEpoch == d.demotionEpochId) {
-            vv.pendingSlashEpoch = 0;
+    /// @notice The pending-slash lock lives on the VALIDATOR, so it is bound to the exact DECISION that
+    ///         created it (`pendingSlashDecisionId`). A decision may clear the lock ONLY if it is still
+    ///         the one holding it — resolving an old case can never wipe the lock of a newer case (N01).
+    ///         `pendingSlashEpoch` is kept in step purely for the external getValidatorInfo() ABI.
+    function _clearPendingSlashIfCurrent(uint256 decisionId) private {
+        address who = statusDecisions[decisionId].validator;
+        if (pendingSlashDecisionId[who] == decisionId) {
+            pendingSlashDecisionId[who] = 0;
+            validators[who].pendingSlashEpoch = 0;
         }
     }
 
@@ -1099,7 +1136,7 @@ contract ValidatorsRegistry {
             // the slash — it does NOT return the validator to consensus (that still requires the
             // normal, independent recovery path).
             d.slashOutcome = SlashOutcome.VoidedNoDelivery;
-            _clearPendingSlashIfCurrent(d);
+            _clearPendingSlashIfCurrent(decisionId);
             emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
         }
         emit DeliveryDisputeResolved(decisionId, confirmed);
@@ -1161,7 +1198,7 @@ contract ValidatorsRegistry {
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
         require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
         d.slashOutcome = SlashOutcome.RejectedNoQuorum;
-        _clearPendingSlashIfCurrent(d);
+        _clearPendingSlashIfCurrent(decisionId);
         emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
     }
 
@@ -1184,9 +1221,10 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         d.slashOutcome = outcome;
         ValidatorInfo storage v = validators[d.validator];
-        _clearPendingSlashIfCurrent(d);
+        _clearPendingSlashIfCurrent(decisionId);
 
-        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        uint256 slashAmount = decisionSlashAmount[decisionId]; // fixed when the case was recorded (P04)
+        if (slashAmount > v.lockedStake) slashAmount = v.lockedStake;
         v.lockedStake -= slashAmount;
         if (slashAmount > 0) {
             (bool success, ) = TREASURY.call{value: slashAmount}("");
@@ -1228,28 +1266,10 @@ contract ValidatorsRegistry {
         );
 
         if (v.status == Status.Active) {
-            // ⚠️ CHANGED (explicit user decision — off-chain verification redesign) — ⚠️⚠️
-            // HONEST CORRECTION (found in independent review: an earlier version of this comment
-            // overstated this as an equivalent replacement for the old protection; it is not):
-            // the "flee before demotion" anti-loophole that used to live here checked this
-            // validator's on-chain liveness log at the exact moment of exit — a check the
-            // CONTRACT ITSELF performed, independent of any external actor's timing. That log no
-            // longer exists (liveness is checked off-chain now — see the architecture note above
-            // recordSuspension()), so this contract can no longer independently determine "was
-            // this validator already eligible for suspension right now." What replaces it is
-            // NOT equivalent: it depends entirely on the Verifier noticing the inactivity and
-            // getting its recordSuspension() transaction mined BEFORE this requestExit()
-            // transaction — a genuine race condition with no on-chain guarantee either way. If
-            // the Verifier's off-chain detection lags, or its transaction is simply slower to
-            // land (e.g., during network congestion, or if the Verifier's own service is briefly
-            // degraded — the very scenario this mechanism exists to catch), a validator that
-            // knows it has gone inactive can request exit first and keep its full collateral,
-            // something the old on-chain self-check would have caught regardless of timing. This
-            // gap is accepted as a known, real trade-off of moving verification off-chain — not
-            // a solved problem — and is worth revisiting if it proves exploitable in practice
-            // (e.g., by adding a short exit-request delay that gives the Verifier a guaranteed
-            // window to act first, which was not adopted here to avoid slowing down legitimate
-            // exits).
+            // P04 (final decision): an exit request ends validation duty IMMEDIATELY (removal from the active set — and from
+            // the QBFT validator set, and from board authority). It does not erase accountability: for PRE_EXIT_CLAIM_WINDOW
+            // (72 h) the Verifier can still file a case about conduct BEFORE this request (recordPreExitViolation), and the
+            // amount at stake stays reserved by withdrawStake() until any such case is settled.
             _removeFromActive(msg.sender);
         }
 
@@ -1261,26 +1281,32 @@ contract ValidatorsRegistry {
             paidValidatorCount--;
         }
 
+        statusBeforeExit[msg.sender] = uint8(v.status); // read BEFORE the status changes below
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }
 
+    /// @notice P04: withdrawal after exitCooldown. If no case is pending the whole stake is paid. If a case is pending, only
+    ///         the amount at stake (fixed when the case was recorded) stays reserved; the rest is paid now, and the reserved
+    ///         remainder can be withdrawn by calling again once the case is settled (after any slash).
     function withdrawStake() external nonReentrant {
         ValidatorInfo storage v = validators[msg.sender];
         require(v.status == Status.Exiting, "ValidatorsRegistry: not exiting");
         require(block.timestamp >= v.periodStartedAt + exitCooldown, "ValidatorsRegistry: exit cooldown not elapsed");
-        // ✅ NEW: closes a residual loophole — without this, a validator with a still-unresolved
-        // pending slash (see DemotionEpoch's doc comment) could withdraw their FULL collateral
-        // before resolvePendingSlash() ever gets a chance to run, permanently avoiding it.
-        // MASS_DEMOTION_WINDOW (1 hour) is always far shorter than exitCooldown (1 week), so this
-        // should essentially never actually block a legitimate withdrawal in practice — it exists
-        // purely as a safety net.
-        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
 
-        uint256 amount = v.lockedStake;
-        delete validators[msg.sender];
+        uint256 reserved = 0;
+        if (v.pendingSlashEpoch != 0) {
+            reserved = decisionSlashAmount[pendingSlashDecisionId[msg.sender]];
+            if (reserved > v.lockedStake) reserved = v.lockedStake;
+        }
+        uint256 amount = v.lockedStake - reserved;
+        v.lockedStake = reserved;
+        if (v.pendingSlashEpoch == 0) {
+            delete validators[msg.sender];
+            delete statusBeforeExit[msg.sender];
+        }
 
         if (amount > 0) {
             (bool success, ) = msg.sender.call{value: amount}("");
@@ -1301,6 +1327,8 @@ contract ValidatorsRegistry {
         // in _applyParam().
         if (key == ParamKey.RecoveryPeriod) {
             require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
+        } else if (key == ParamKey.ExitCooldown) {
+            require(newValue > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
         }
         paramProposalCount++;
         id = paramProposalCount;
@@ -1353,6 +1381,7 @@ contract ValidatorsRegistry {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
             slashBps = value;
         } else if (key == ParamKey.ExitCooldown) {
+            require(value > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
             exitCooldown = value;
         }
         emit ParameterChangeApplied(key, value);

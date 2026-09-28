@@ -1,3 +1,4 @@
+const __log = console.log; console.log = (...a) => { if (a.join(' ').includes('❌')) process.exitCode = 1; __log(...a); }; // ❌ => exit code 1
 const hre = require("hardhat");
 const fs = require("fs");
 

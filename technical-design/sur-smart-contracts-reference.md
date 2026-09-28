@@ -37,7 +37,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 **قاعده‌ی کلی حاکمیتی که در همه‌ی قراردادها تکرار می‌شود:**
 - «رأی کامل ولیدیتورها» یعنی هر آدرس فعلاً `Active` در `ValidatorsRegistry` می‌تواند رأی بدهد؛ نصاب = `floor(تعداد فعال / 2) + 1`.
 - «رأی داخلی هیأت» یعنی فقط اعضای فعلی `ValidatorsBoard`؛ نصاب = `floor(تعداد اعضای هیأت / 2) + 1`.
-- اکثر توابع «رأی‌گیری» یک تابع `propose...` دارند (که خودش اولین رأی را هم ثبت می‌کند) و یک تابع `vote...`/`voteAction`/`voteElection`/`voteExpenditure`/`voteParameterChange` برای رأی‌های بعدی؛ به‌محض رسیدن به نصاب، اجرا **در همان تراکنش** انجام می‌شود (بدون تأخیر یا timelock جداگانه).
+- اکثر توابع «رأی‌گیری» یک تابع `propose...` دارند (که خودش اولین رأی را هم ثبت می‌کند) و یک تابع `vote...`/`voteAction`/`voteElection`/`voteCapChange`/`voteParameterChange` برای رأی‌های بعدی؛ به‌محض رسیدن به نصاب، اجرا **در همان تراکنش** انجام می‌شود (بدون تأخیر یا timelock جداگانه).
 
 ---
 
@@ -51,7 +51,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 هیچ ادمین یا کلید مرکزی‌ای بعد از دیپلوی روی این قرارداد اختیار ندارد؛ همه‌چیز یا permissionless است، یا با رأی کامل ولیدیتورهای فعال، یا (فقط برای سه پارامتر اقتصادی ورود) با رأی داخلی هیأت‌مدیره‌ی ولیدیتورها — جدول پایین را ببین.
 
 ### وضعیت‌های یک ولیدیتور (enum `Status`)
-`None → Probation → Active → (Demoted ↔ Active) / Exiting`
+`None → Probation → Active → Demoted ↔ Active`؛ و `Exiting` (از `Active`، `Probation` یا `Demoted`). ✅ (P04) درخواست خروج فوراً وظیفه‌ی اعتبارسنجی را پایان می‌دهد.
 
 ### جدول فانکشن‌ها
 
@@ -63,13 +63,18 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `getActiveValidatorCount()` | هرکسی | — | `uint256` | تعداد ولیدیتورهای فعال |
 | `currentEntryThreshold()` | هرکسی | — | `uint256` | مقدار **وثیقه** (نه کل پرداخت)، به wei سورن، لازم برای عضویت *الان* — فرمول پیوسته‌ی نمایی: `entryThresholdBase × growthFactorPerValidator ^ activeCount` (fixed-point، exponentiation-by-squaring) |
 | `currentMembershipFee()` | هرکسی | — | `uint256` | مقدار **کارمزد عضویت** *الان* = `currentEntryThreshold() * membershipFeeBps / 10000` — جدا از وثیقه، غیرقابل‌استرداد |
-| `requestMembership()` | هر آدرسی که می‌خواهد وارد probation شود؛ **`payable`**، با `msg.value` دقیقاً برابر وثیقه+کارمزد (سورن native ارسال می‌شود، نه پارامتر ورودی) | — (پرداخت از طریق `msg.value`) | — | چک سقف نرخ ورود؛ وثیقه در موجودی خودِ این قرارداد می‌ماند (قفل، قابل‌استرداد)؛ کارمزد با `.call{value:...}` مستقیم به `TREASURY` می‌رود (غیرقابل‌استرداد)؛ وضعیت را `Probation` می‌کند |
-| `reportLiveness(address validator, bool isLive)` | **فقط `verifier`** (⚠️ اصلاحیه‌ی مهم: دیگر خوداظهاری نیست) | آدرس ولیدیتور، وضعیت زنده‌بودن | — | جایگزین کامل `heartbeat()` قدیمی. فقط در گزارش مثبت (`isLive=true`)، `lastLivenessConfirmation` و شمارنده‌ی دوره را به‌روز می‌کند؛ گزارش منفی فقط event می‌زند. روش تشخیص «زنده بودن» بیرون از قرارداد است: برای `Probation`/`Demoted`، چک sync-بودن نودِ خودِ کاندیدا؛ برای `Active`، چک واقعی تولید بلاک (فیلد `miner`/`coinbase`) در بازه‌ی اخیر |
-| `promoteAfterProbation(address candidate)` | **هرکسی** (permissionless) | آدرس کاندید | — | اگر probation تمام شده و گزارش‌های مثبت کافی و تازه بوده، `candidate` را `Active` می‌کند (وارد `getValidators()` می‌شود) |
-| `demoteForInactivity(address validator)` | **هرکسی** (permissionless) | آدرس ولیدیتور | — | اگر غیبت گزارش مثبت ≥ `inactivityThreshold`، از `getValidators()` حذف می‌کند، بخشی از استیک را طبق `slashBps` با `.call{value:...}` به Treasury می‌فرستد، وضعیت را `Demoted` می‌کند |
-| `promoteAfterRecovery(address validator)` | **هرکسی** (permissionless) | آدرس ولیدیتور | — | اگر دوره‌ی `recoveryPeriod` با گزارش‌های مثبت کافی و تازه سپری شده، دوباره `Active` می‌کند |
-| `requestExit()` | خودِ ولیدیتور | — | — | از لیست فعال (اگر بود) خارج می‌کند، وضعیت را `Exiting` و شمارش‌معکوس `exitCooldown` را شروع می‌کند |
-| `withdrawStake()` | خودِ ولیدیتور | — | — | بعد از سپری‌شدن `exitCooldown`، باقی‌مانده‌ی استیک را با `.call{value:...}` به فرستنده برمی‌گرداند و رکورد را پاک می‌کند |
+| `requestMembership()` | هر آدرسی که می‌خواهد وارد probation شود؛ **`payable`**، با `msg.value` دقیقاً برابر وثیقه+کارمزد (سورن native ارسال می‌شود، نه پارامتر ورودی) | — (پرداخت از طریق `msg.value`) | — | چک سقف نرخ ورود؛ وثیقه در موجودی خودِ این قرارداد می‌ماند (قفل، قابل‌استرداد)؛ کارمزد با `DISTRIBUTOR.receiveMembershipFee{value: fee}()` (نه به `TREASURY`) به `BlockRewardDistributor` فوروارد می‌شود (غیرقابل‌استرداد) و در epoch توزیع بعدی **۱۰۰٪ بین ولیدیتورها به‌نسبت بلاک، بدون سوزاندن** تقسیم می‌شود؛ وضعیت را `Probation` می‌کند |
+| `recordActivation(address candidate, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس کاندید + هش بسته‌ی شواهد آف‌چین | `decisionId` | پس از `probationPeriod` (۱ هفته) و نسبت موفقیت ≥۹۵٪ که **آف‌چین** محاسبه شده، کاندید را `Active` می‌کند (وارد `getValidators()` می‌شود) |
+| `recordSuspension(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس ولیدیتور + هش شواهد | `decisionId` | ولیدیتور `Active` را **فوراً و بی‌قید** از `getValidators()` حذف می‌کند (`Demoted`)؛ قفل جریمه‌ی معلق و **مبلغ درگیر** (`slashBps` از وثیقه در همان لحظه) ثبت می‌شود. جریمه خودبه‌خود اجرا نمی‌شود؛ باید از مسیر پایین بگذرد |
+| `recordPreExitViolation(address validator, bytes32 evidenceHash, uint256 violationAt)` | **فقط `verifier`** | ولیدیتور در وضعیت `Exiting` + هش شواهد + زمان وقوع تخلف | `decisionId` | ✅ **P04.** فقط تا `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) پس از درخواست خروج، فقط اگر پیش از خروج `Active` بوده، فقط اگر `violationAt` **قبل** از درخواست خروج و **بعد** از آخرین تعلیق باشد، و پرونده‌ی معلق دیگری نباشد. غیرفعالی پس از درخواست خروج هرگز تخلف نیست. همان مسیر معافیت جمعی/تحویل/اعتراض/رأی مجمع اجرا می‌شود |
+| `recordRecovery(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس ولیدیتور + هش شواهد | `decisionId` | بازگشت `Demoted` → `Active`؛ فقط وقتی `recoveryPeriod` گذشته و **هیچ پرونده‌ی جریمه‌ی معلقی** نمانده |
+| `resolveMassFailureCheck(uint256 decisionId)` | **هرکسی** | شناسه‌ی پرونده | — | پس از بسته‌شدن پنجره‌ی یک‌ساعته: اگر بیش از ۲۰٪ مجموعه در همان پنجره تعلیق/پرونده شده‌اند، **این پرونده** معاف می‌شود. باید به‌ازای **هر پرونده** جداگانه صدا زده شود؛ تا آن موقع تحویل/اعتراض/جریمه‌ی آن پرونده ممکن نیست |
+| `confirmDelivery(uint256 decisionId)` | فقط خودِ ولیدیتور موضوع | شناسه‌ی پرونده | — | فقط تأیید **دریافت** بسته‌ی شواهد (نه پذیرش اتهام)؛ مهلت ۷۲ ساعته‌ی ثبت اعتراض از همین لحظه شروع می‌شود |
+| `assertDeliveryDisputed(uint256 decisionId)` / `voteOnDelivery(id, bool)` / `resolveDeliveryDisputeIfExpired(id)` | هرکسی / ولیدیتور `Active` / هرکسی | شناسه‌ی پرونده | — | مسیر «ولیدیتور تحویل را تأیید نمی‌کند»: پس از `DELIVERY_DISPUTE_GRACE_PERIOD` مجمع درباره‌ی «آیا تحویل شده» رأی می‌دهد. روی **پرونده‌ی از قبل نهایی‌شده** (مثلاً معافیت جمعی) باز نمی‌شود |
+| `fileAppeal(uint256 decisionId)` / `confirmSlash(id)` / `resolveAppealIfExpired(id)` | فقط ولیدیتور موضوع / ولیدیتور `Active` (غیر از موضوع) / هرکسی | شناسه‌ی پرونده | — | اعتراض ظرف ۷۲ ساعت از تحویل؛ رأی مجمع (اکثریت ساده، مهلت ۷ روز)؛ **نبود نصاب = رد جریمه**، ولی تعلیق اجماعی دست‌نخورده می‌ماند |
+| `executeUncontestedSlash(uint256 decisionId)` | **هرکسی** | شناسه‌ی پرونده | — | اگر تحویل ثابت شده و ۷۲ ساعت بدون اعتراض گذشته، جریمه (مبلغ درگیرِ ثابت‌شده‌ی پرونده) را با `.call{value:...}` به Treasury می‌فرستد |
+| `requestExit()` | خودِ ولیدیتور | — | — | ✅ **P04.** اگر `Active` بود **فوراً** از `getValidators()` (و از اختیار هیأت‌مدیره) خارج می‌شود؛ وضعیت قبلی را ثبت می‌کند؛ `Exiting` و انتظار `exitCooldown` (۷ روز) شروع می‌شود |
+| `withdrawStake()` | خودِ ولیدیتور | — | — | ✅ **P04.** پس از `exitCooldown`: اگر پرونده‌ی حل‌نشده نیست، کل وثیقه را پس می‌دهد و رکورد را پاک می‌کند. اگر پرونده‌ی معلق هست، **فقط مبلغ درگیر محفوظ می‌ماند** و بقیه پرداخت می‌شود؛ مانده‌ی محفوظ پس از تعیین تکلیف (و کسر جریمه، اگر تأیید شد) با فراخوان دوباره قابل برداشت است |
 | `proposeParameterChange(ParamKey key, uint256 newValue)` | فقط ولیدیتور `Active` | کلید پارامتر (enum) + مقدار جدید | `id` پیشنهاد | پیشنهاد جدید می‌سازد و رأی پیشنهاددهنده را هم ثبت می‌کند |
 | `voteParameterChange(uint256 id)` | فقط ولیدیتور `Active` | شناسه‌ی پیشنهاد | — | رأی می‌دهد؛ با رسیدن به نصاب، پارامتر بلافاصله اعمال می‌شود |
 | `setEntryThresholdBase(uint256 newValue)` | **فقط قرارداد `ValidatorsBoard`** (نه هیچ عضو هیأت مستقیماً) | مقدار جدید | — | ✅ **تازه.** بعد از رأی داخلی اکثریت هیأت، `entryThresholdBase` را عوض می‌کند |
@@ -77,7 +82,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `setMembershipFeeBps(uint256 newValue)` | **فقط قرارداد `ValidatorsBoard`** | مقدار جدید (≤ ۱۰۰۰۰) | — | ✅ **تازه.** بعد از رأی داخلی اکثریت هیأت، `membershipFeeBps` را عوض می‌کند |
 | `getValidatorInfo(address who)` | هرکسی | آدرس | وضعیت کامل (status, stake, زمان‌ها, …) | خواندن اطلاعات یک ولیدیتور |
 | `requiredVotesNow()` | هرکسی | — | `uint256` | نصاب فعلی رأی (بر اساس تعداد ولیدیتور فعال الان) |
-| `setVerifier(address newVerifier)` | **فقط قرارداد `ValidatorsBoard`** | آدرس جدید | — | ⚠️ **اصلاحیه‌ی معنایی:** این `verifier` دیگر ربطی به هویت ندارد — فقط برای `reportLiveness` است (بخش لایوینس زیر را ببین). چرخش بعد از رأی داخلی اکثریت هیأت (`ValidatorsBoard.proposeRotateVerifier`) |
+| `setVerifier(address newVerifier)` | **فقط قرارداد `ValidatorsBoard`** | آدرس جدید | — | این `verifier` (کلید تصمیم‌های `record…`) با هویت ربطی ندارد. چرخش بعد از رأی داخلی هیأت (`ValidatorsBoard.proposeRotateVerifier`). یک Verifier کافی است (P03) |
 | `receive()` | هرکسی (ولی همیشه **revert** می‌کند) | — | — | عمداً هر واریز مستقیمی را رد می‌کند؛ تنها راه ورود پول همان `requestMembership()` است، تا موجودی قرارداد همیشه دقیقاً برابر جمع وثیقه‌های قفل‌شده بماند |
 
 ### پارامترهای اقتصادی ورود — هاردکد در کد، فقط با رأی هیأت‌مدیره‌ی ولیدیتورها تغییر می‌کنند ✅ (تصمیم تازه)
@@ -91,13 +96,13 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `membershipFeeBps` | `400` (۴٪) | عمداً پایین نگه داشته شده تا شبیه «خرید» عضویت به‌نظر نرسد (ریسک حقوقی instrument سرمایه‌گذاری) |
 
 ### پارامترهای قابل‌تغییر با رأی کامل ولیدیتورها (`ParamKey`)
-`MaxEntriesPerWindow`, `EntryWindowSeconds`, `ProbationPeriod`, `MinLivenessConfirmationsToActivate`, `InactivityThreshold`, `RecoveryPeriod`, `SlashBps`, `ExitCooldown` — این‌ها مستقیم در سورس `ValidatorsRegistry.sol` با علامت `🔶 FILL_IN` مقداردهی می‌شوند (نه constructor — این قرارداد اصلاً constructor ندارد) و فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند؛ **دیگر شامل سه پارامتر اقتصادی بالا نیستند.**
+`ParamKey` (به ترتیب enum): `MaxEntriesPerWindow`=۰، `EntryWindowSeconds`=۱، `ProbationPeriod`=۲، `RecoveryPeriod`=۳، `SlashBps`=۴ (≤۱۰۰۰۰)، `ExitCooldown`=۵. ✅ **قیدهای کد:** `RecoveryPeriod` باید اکیداً بلندتر از `MASS_DEMOTION_WINDOW` (۱ ساعت) باشد؛ `ExitCooldown` باید اکیداً بلندتر از `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) باشد (تا Verifier پیش از پایان انتظار فرصت ثبت پرونده داشته باشد). فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند. (`InactivityThreshold` و `MinLivenessConfirmations…` دیگر وجود ندارند — liveness آف‌چین است.)
 
 ### متغیرهای عمومی مهم (خواندنی خودکار)
-`TREASURY`, `BOARD` (آدرس‌های ثابت)، `verifier` (کلید عملیاتی لایوینس، چرخش با هیأت)، `validators(address)` (کل struct یک ولیدیتور)، `entryThresholdBase`، `growthFactorPerValidator`، `membershipFeeBps`، `windowStart`، `entriesInWindow`، `paramProposals(id)`.
+`TREASURY`, `BOARD` (آدرس‌های ثابت)، `verifier`، `validators(address)`، `entryThresholdBase`، `growthFactorPerValidator`، `membershipFeeBps`، `windowStart`، `entriesInWindow`، `paramProposals(id)`، و برای رسیدگی: `statusDecisions(id)`، `pendingSlashDecisionId(validator)`، `decisionSlashAmount(id)`، `decisionViolationAt(id)`، `statusBeforeExit(validator)`، `PRE_EXIT_CLAIM_WINDOW`.
 
 ### ⚠️ هویت — منتقل‌شده به یک قرارداد کاملاً مستقل (`IdentityRegistry`، بخش ۵ همین سند)
-نسخه‌های قبلی این بخش هویت (`registerIdentity`, `hasIdentity`, `setPhoneVerified`, `setTelegramVerified`) را داخل `ValidatorsRegistry` توضیح می‌دادند. این دیگر درست نیست — همه‌ی این‌ها به یک قرارداد جدا، `IdentityRegistry.sol` (ششمین قرارداد ساختاری، آدرس `0x6666...6666`)، منتقل شدند، چون جمعیت هدف هویت (کل کاربران شبکه) از جمعیت ولیدیتورها کاملاً جداست. `ValidatorsRegistry` دیگر هیچ کد هویتی ندارد؛ `verifier` که اینجا باقی مانده، فقط برای `reportLiveness` است. جزئیات کامل هویت در بخش ۵ همین سند و در `sur-identity-registry-spec.md`.
+نسخه‌های قبلی این بخش هویت (`registerIdentity`, `hasIdentity`, `setPhoneVerified`, `setTelegramVerified`) را داخل `ValidatorsRegistry` توضیح می‌دادند. این دیگر درست نیست — همه‌ی این‌ها به یک قرارداد جدا، `IdentityRegistry.sol` (ششمین قرارداد ساختاری، آدرس `0x6666...6666`)، منتقل شدند، چون جمعیت هدف هویت (کل کاربران شبکه) از جمعیت ولیدیتورها کاملاً جداست. `ValidatorsRegistry` دیگر هیچ کد هویتی ندارد؛ `verifier` که اینجا باقی مانده، فقط کلید تصمیم‌های `recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery` است. جزئیات کامل هویت در بخش ۵ همین سند و در `sur-identity-registry-spec.md`.
 
 ⚠️ **اصلاحیه‌ی مهم:** سورن ارز **بومی** زنجیره‌ی سور است (دقیقاً مثل ETH روی اتریوم)، **نه یک توکن ERC20**. در نسخه‌های قبلی این سند اشتباهاً `stakeToken` به‌عنوان یک قرارداد ERC20 با `transferFrom` توصیف شده بود — این غلط بود و اصلاح شد. هیچ قرارداد توکن جداگانه‌ای برای سورن لازم نیست و نباید نوشته شود؛ همه‌جا با `msg.value`/`.call{value:...}` کار می‌شود.
 
@@ -106,7 +111,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ## ۲. `ValidatorsBoard.sol` — آدرس `0x4444...4444`
 
 ### نقش
-هیأت‌مدیره‌ی ولیدیتورها با **۵ صندلی ثابت**. اعضا با رأی‌گیری تأییدی مستمر (approval voting، بدون دوره‌ی زمانی) انتخاب می‌شوند — نه انتخابات دوره‌ای، نه عزل جداگانه. **شش اختیار تفویضی محدود** دارد (چرخش اوراکل، تصویب بودجه‌ی کوچک، سه پارامتر اقتصادی `ValidatorsRegistry`، چرخش کلید `verifier`). همچنان هیچ پارامتر امنیتی با اعتماد بالا (سقف نرخ ورود، دوره‌ی probation، آستانه‌ی liveness/غیرفعالی، درصد اسلش، دوره‌ی cooldown) را نمی‌تواند تغییر دهد — آن‌ها همچنان فقط با رأی کامل ولیدیتورها در `ValidatorsRegistry` عوض می‌شوند.
+هیأت‌مدیره‌ی ولیدیتورها با **۵ صندلی**. ✅ **تصمیم‌های نهایی P01/P02:** رأی‌دادن و تغییر رأی همیشه آزاد است؛ ولی **ترکیب عادی هیأت فقط هر ۳۰ روز یک‌بار** (`refreshBoard`) عوض می‌شود. **اختیار عضو** به «درخواست‌نکردنِ خروج اختیاری» وابسته است و با ثبت درخواست خروج **فوراً قطع** می‌شود؛ جانشین بدون انتظار ماهانه جای او را می‌گیرد. **تعلیق به‌تنهایی** اختیار را در طول دوره قطع نمی‌کند، ولی در بازتعیین ماهانه عضو معلق واجد شرایط ماندن نیست. **مسیر عزل اضطراری وجود ندارد.** تغییر واقعی ترکیب، پیشنهادهای ناتمام را باطل می‌کند. اگر اعضای دارای اختیار کمتر از ۳ نفر شوند، پرداخت خزانه متوقف می‌شود. شش اختیار تفویضی محدود دارد (چرخش اوراکل، تصویب پرداخت خزانه در سقف‌های مجمع، سه پارامتر اقتصادی `ValidatorsRegistry`، چرخش کلید `verifier`).
 
 ⚠️ **اصلاحیه‌ی مهم نسبت به نسخه‌های قبلی این سند:** مکانیزم قبلی (پیشنهاد/رأی تک‌تک برای افزودن یا عزل، با نصاب اکثریتِ کل ولیدیتورهای فعال) کاملاً حذف و با مدل زیر جایگزین شد.
 
@@ -117,22 +122,25 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 | `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، constructor ندارد | لیست **دقیقاً ۵** عضو اولیه‌ی هیأت: از طریق قرارداد کمکی موقت `ValidatorsBoard_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | اعضای اولیه مستقیم توسط ابزار genesis ثبت می‌شوند (بدون رأی‌گیری اولیه) |
 | `voteFor(address candidate)` | هر ولیدیتور `Active` که هویتش را ثبت کرده (⚠️ اصلاحیه: `IdentityRegistry.hasIdentity`، نه دیگر `ValidatorsRegistry.hasIdentity`) | آدرس کاندید (باید خودش ولیدیتور فعال باشد؛ خودرأیی مجاز است) | — | یک رأی «موافق» به کاندیدا اضافه می‌کند؛ هر رأی‌دهنده حداکثر ۵ کاندیدای هم‌زمان می‌تواند داشته باشد؛ اثرش فقط با `refreshBoard()` بعدی اعمال می‌شود |
 | `unvoteFor(address candidate)` | خودِ رأی‌دهنده | آدرس کاندیدایی که قبلاً بهش رأی داده | — | رأی را پس می‌گیرد، هر لحظه، بدون محدودیت |
-| `refreshBoard()` | **هرکسی** (permissionless) | — | — | ۵ ولیدیتوری که *همین الان* بیشترین رأی معتبر را دارند محاسبه و به‌عنوان هیأت اعمال می‌کند؛ رأی‌های ولیدیتورهای غیرفعال (چه به‌عنوان رأی‌دهنده، چه به‌عنوان کاندیدا) خودکار نادیده گرفته می‌شوند |
+| `refreshBoard()` | **هرکسی** (permissionless) | — | — | ✅ **P01/P02.** بازتعیین **عادی**: ۵ ولیدیتوری که *همین الان* بیشترین رأی معتبر را دارند؛ **حداکثر هر ۳۰ روز یک‌بار** (هیأتِ کاملاً خالی هر زمان قابل‌پرشدن است). فقط رأی «ولیدیتور فعالِ فعلی → کاندیدای فعالِ فعلی» شمرده می‌شود، پس عضو معلق در این نقطه حذف می‌شود. `boardVersion` فقط با تغییر واقعی مجموعه‌ی اعضا (نه ترتیب) بالا می‌رود |
 | `clearStaleVotes(address validator)` | **هرکسی** (permissionless) | آدرس ولیدیتور | — | ✅ **تازه.** اگر ولیدیتور بیش از `recoveryPeriod + 30 روز` پیوسته `Demoted` مانده باشد، همه‌ی رأی‌هایی که او داده و همه‌ی رأی‌هایی که او گرفته را کامل پاک می‌کند (فقط برای آزادکردن جای رأی سایرین؛ خودِ نتیجه‌ی هیأت را عوض نمی‌کند چون رأی‌های او از قبل نادیده گرفته می‌شدند) |
-| `proposeRotateOracle(address newOracle)` | فقط عضو فعلی هیأت | آدرس اوراکل جدید | `id` اکشن | پیشنهاد داخلی هیأت برای چرخش کلید `distributionOracle` |
-| `proposeApproveBudget(address to, uint256 amount, string description)` | فقط عضو فعلی هیأت | مقصد، مبلغ، توضیح | `id` اکشن | پیشنهاد داخلی هیأت برای تصویب یک هزینه‌ی کوچک از خزانه |
-| `proposeSetEntryThresholdBase(uint256 newValue)` | فقط عضو فعلی هیأت | مقدار جدید | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `entryThresholdBase` در `ValidatorsRegistry` |
-| `proposeSetGrowthFactorPerValidator(uint256 newValue)` | فقط عضو فعلی هیأت | مقدار جدید، fixed-point (باید > `1e18`) | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `growthFactorPerValidator` (فرمول پیوسته‌ی هزینه‌ی ورود) |
-| `proposeSetMembershipFeeBps(uint256 newValue)` | فقط عضو فعلی هیأت | مقدار جدید (≤ ۱۰۰۰۰) | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `membershipFeeBps` |
-| `proposeRotateVerifier(address newVerifier)` | فقط عضو فعلی هیأت | آدرس verifier جدید | `id` اکشن | ✅ **تازه.** پیشنهاد داخلی هیأت برای چرخش کلید `verifier` (وریفای شماره‌موبایل/تلگرام) در `ValidatorsRegistry` |
-| `voteAction(uint256 id)` | فقط عضو فعلی هیأت | شناسه‌ی اکشن | — | رأی می‌دهد؛ نصاب = اکثریت اعضای هیأت؛ با رسیدن به نصاب، فراخوانی واقعی روی `BlockRewardDistributor.setDistributionOracle`، `ValidatorsTreasury.boardApproveExpenditure`، یا یکی از سه `set...` بالای `ValidatorsRegistry` انجام می‌شود |
-| `getBoardMembers()` | هرکسی | — | `address[]` | لیست فعلی اعضای هیأت (نتیجه‌ی آخرین `refreshBoard()`) |
+| `proposeRotateOracle(address newOracle)` | فقط عضو دارای اختیار هیأت | آدرس اوراکل جدید | `id` اکشن | پیشنهاد داخلی هیأت برای چرخش کلید `distributionOracle` |
+| `proposeApproveBudget(address to, uint256 amount, string description)` | فقط عضو دارای اختیار هیأت | مقصد، مبلغ، توضیح | `id` اکشن | پیشنهاد داخلی هیأت برای تصویب یک هزینه‌ی کوچک از خزانه |
+| `proposeSetEntryThresholdBase(uint256 newValue)` | فقط عضو دارای اختیار هیأت | مقدار جدید | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `entryThresholdBase` در `ValidatorsRegistry` |
+| `proposeSetGrowthFactorPerValidator(uint256 newValue)` | فقط عضو دارای اختیار هیأت | مقدار جدید، fixed-point (باید > `1e18`) | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `growthFactorPerValidator` (فرمول پیوسته‌ی هزینه‌ی ورود) |
+| `proposeSetMembershipFeeBps(uint256 newValue)` | فقط عضو دارای اختیار هیأت | مقدار جدید (≤ ۱۰۰۰۰) | `id` اکشن | پیشنهاد داخلی هیأت برای تغییر `membershipFeeBps` |
+| `proposeRotateVerifier(address newVerifier)` | فقط عضو دارای اختیار هیأت | آدرس verifier جدید | `id` اکشن | ✅ **تازه.** پیشنهاد داخلی هیأت برای چرخش کلید `verifier` (وریفای شماره‌موبایل/تلگرام) در `ValidatorsRegistry` |
+| `voteAction(uint256 id)` | فقط عضو دارای اختیار هیأت | شناسه‌ی اکشن | — | رأی می‌دهد؛ نصاب = اکثریت اعضای هیأت (برای `ApproveBudget`: حداقل **۳ رأی** ثابت). اگر اکشن با ترکیب قدیمی‌تر پیشنهاد شده، **باطل** است و تراکنش **revert می‌شود** (`board membership changed since this action was proposed - propose again`) — نه موفقیتِ بی‌اثر؛ باید با ترکیب معتبر دوباره پیشنهاد شود. اگر دارنده‌ی کرسی درخواست خروج داده و کرسی هنوز پاک‌سازی نشده، همه‌ی اقدامات هیأت با `a seat holder has requested exit - call syncBoard() first` revert می‌شوند تا کسی `syncBoard()` (تراکنش جدا، بدون مجوز) را بزند |
+| `getBoardMembers()` | هرکسی | — | `address[]` | لیست کرسی‌ها (نتیجه‌ی آخرین بازتعیین/همگام‌سازی؛ برای اختیار زنده `hasBoardAuthority` را بخوان) |
 | `getBoardSize()` | هرکسی | — | `uint256` | تعداد اعضای فعلی هیأت (معمولاً ۵؛ می‌تواند موقتاً کمتر باشد اگر هنوز ۵ کاندیدا رأی نگرفته باشند) |
+| `hasBoardAuthority(address who)` | هرکسی | آدرس | `bool` | ✅ **P02.** آیا `who` کرسی دارد **و** درخواست خروج نداده (و همچنان ولیدیتور ثبت‌شده است). تعلیق (`Demoted`) اختیار را قطع نمی‌کند |
+| `syncBoard()` | **هرکسی** | — | — | ✅ **P02.** کرسی‌هایی را که دارنده‌شان درخواست خروج داده رها می‌کند، `boardVersion` را بالا می‌برد (اقدامات ناتمام باطل)، و برای آن کرسی‌ها جانشینی را تلاش می‌کند. هر تابع هیأت هم آن را خودکار اجرا می‌کند |
+| `fillVacancies()` | **هرکسی** | — | — | ✅ **P02.** جانشینی: بالاترین‌رأی‌ترین کاندیدای **واجد شرایط** (فعلاً فعال، هنوز عضو نبوده) بر اساس شمارش زنده جای **کرسی‌های آزادشده‌ی ناشی از خروج** را می‌گیرد؛ هرگز یک تغییر عادی اضافه نیست. اگر کاندیدایی نباشد کرسی خالی می‌ماند |
 | `getVotesOf(address voter)` | هرکسی | آدرس رأی‌دهنده | `address[]` | لیست کاندیداهایی که این آدرس الان بهشون رأی داده |
 | `getVotersFor(address candidate)` | هرکسی | آدرس کاندیدا | `address[]` | لیست کسانی که الان به این کاندیدا رأی داده‌اند |
 
 ### متغیرهای عمومی مهم
-`DISTRIBUTOR`, `TREASURY`, `REGISTRY` (آدرس‌های ثابت)، `BOARD_SIZE=5`, `MAX_VOTES_PER_VOTER=5`, `STALE_VOTE_CLEAR_DELAY=30 days`، `isBoardMember(address)`، `hasVotedFor(voter, candidate)`، `actions(id)`.
+`DISTRIBUTOR`, `TREASURY`, `REGISTRY` (آدرس‌های ثابت)، `BOARD_SIZE=5`, `MAX_VOTES_PER_VOTER=5`, `STALE_VOTE_CLEAR_DELAY=30 days`, `BOARD_REFRESH_INTERVAL=30 days`، `lastBoardRefreshAt`، `pendingVacancies`، `boardVersion`، `isBoardMember(address)`، `hasVotedFor(voter, candidate)`، `actions(id)`.
 
 ### چرا این مدل — و چه Trade-offای دارد
 این طراحی بعد از رد دو مدل قبلی‌تر انتخاب شد:
@@ -141,7 +149,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 مدل نهایی (رأی تأییدی مستمر + بدون عزل جداگانه) هر دو مشکل رو حل می‌کنه چون اصلاً «نصاب» یا «عزل» به‌عنوان مفهوم جدا وجود نداره — فقط «چه کسی الان بیشترین حمایت رو داره» — و این محاسبه با فقط چند رأی معتبر هم قابل‌اجراست، نیازی به مشارکت گسترده نیست.
 
-**Trade-off صادقانه:** چون `refreshBoard()` باید کل `getValidators()` رو پیمایش کنه، برای شبکه‌های خیلی بزرگ (چند هزار ولیدیتور فعال) هزینه‌ی گس این تابع می‌تونه قابل‌توجه بشه. راه‌حل فعلی: تابع permissionless و بدون محدودیت فراخوانی است، پس هرکسی (یا یک سرویس آف‌چین ساده) می‌تونه دوره‌ای صداش بزنه؛ اگر در آینده تعداد ولیدیتورها به مقیاسی رسید که این هزینه مشکل‌ساز شد، باید یک نسخه‌ی صفحه‌بندی‌شده (paginated) طراحی بشه.
+**Trade-off صادقانه:** چون `refreshBoard()` باید کل `getValidators()` رو پیمایش کنه، برای شبکه‌های خیلی بزرگ (چند هزار ولیدیتور فعال) هزینه‌ی گس این تابع می‌تونه قابل‌توجه بشه. راه‌حل فعلی: تابع permissionless است (و ✅ حداکثر هر ۳۰ روز یک‌بار پذیرفته می‌شود، پس هزینه‌ی آن هم به همین دوره محدود است)، پس هرکسی (یا یک سرویس آف‌چین ساده) می‌تونه دوره‌ای صداش بزنه؛ اگر در آینده تعداد ولیدیتورها به مقیاسی رسید که این هزینه مشکل‌ساز شد، باید یک نسخه‌ی صفحه‌بندی‌شده (paginated) طراحی بشه.
 
 ### چیزی که عمداً اینجا نیست
 «هماهنگی واکنش اضطراری برای اقدامات فاجعه‌بار» — طبق سند طراحی، این باید نیازمند رأی بالاتر از خودِ ولیدیتورها باشد، نه اختیار هیأت؛ بنابراین تابعی برایش در این قرارداد نوشته نشده (اگر بعداً مکانیزم مشخصی برایش تعریف شد، جای طبیعی‌اش یا `ValidatorsRegistry` است یا یک قرارداد جدید).
@@ -151,31 +159,34 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ## ۳. `ValidatorsTreasury.sol` — آدرس `0x5555...5555`
 
 ### نقش
-خزانه‌ی ولیدیتورها. فقط **سورن** (ارز بومی زنجیره‌ی سور، دقیقاً مثل ETH روی اتریوم — نه یک توکن ERC20) نگه می‌دارد، از دو منبع:
-- از `BlockRewardDistributor` — سهم باقی‌مانده‌ی بلاک‌ریوارد پس از کسر ۱۵٪ ثابت بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (هرگز فی؛ ۷۰٪ فی معمولی مستقیم به ولیدیتورها می‌رود، ۳۰٪ سوزانده می‌شود — کارمزد عضویت از این سوزاندن معاف است).
-- از `ValidatorsRegistry` — کارمزد عضویت هر ولیدیتور جدید + بخش اسلش‌شده‌ی استیک ولیدیتورهای غیرفعال (مدل ترکیبی استیک).
+خزانه‌ی ولیدیتورها. فقط **سورن** (ارز بومی؛ نه ERC20) نگه می‌دارد، از دو منبع: (۱) `BlockRewardDistributor` — سهم باقی‌مانده‌ی بلاک‌ریوارد پس از ۱۵٪ ثابت بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (هرگز فی معمولی)؛ (۲) `ValidatorsRegistry` — فقط مبلغ جریمه‌شده‌ی وثیقه (✅ **کارمزد عضویت به خزانه نمی‌آید:** به `BlockRewardDistributor` می‌رود و ۱۰۰٪ بین ولیدیتورها تقسیم می‌شود؛ کد: `DISTRIBUTOR.receiveMembershipFee`).
 
-هر دو منبع با یک انتقال ساده‌ی native (`.call{value:...}`) وارد می‌شوند و در `receive()` قرارداد جمع می‌شوند — تفکیک نوع دارایی لازم نیست چون همه از یک جنس (سورن) هستند.
+### ✅ مدل خرج (تصمیم نهایی P06 — جایگزین مدل «رأی مجمع برای هر پرداخت»)
+**مجمع هیچ پرداخت موردی را تصویب نمی‌کند؛ فقط قواعد (سقف‌ها) را تعیین می‌کند.** تنها مسیر خرج، `boardApproveExpenditure` است که فقط قرارداد `ValidatorsBoard` (پس از رأی حداقل ۳ عضو دارای اختیار) می‌تواند صدا بزند، و محدود به دو سقف است:
+| سقف | مقدار اولیه‌ی منتخب | قاعده |
+|---|---|---|
+| `perPaymentCap` | **۵۰٬۰۰۰ سورن** | هر پرداخت باید **اکیداً کمتر** از این باشد |
+| `periodCap` | **۲۰۰٬۰۰۰ سورن** | مجموع همه‌ی پرداخت‌ها در پنجره‌ی حدود ۳۰روزه (سطل‌های روزانه؛ تقریب با دانه‌بندی روزانه، نه ثانیه‌ای) |
 
-دو مسیر خرج: رأی کامل (`proposeExpenditure`)، یا تفویض کوچک به هیأت (`boardApproveExpenditure`، زیر یک سقف مشخص).
+- این دو عدد مقادیر اولیه‌ی **منتخب** شما هستند (نه مثال). نسبت ۲۵٪ مبنای انتخاب بوده؛ **الزام خودکار و دائمی برای حفظ این نسبت وجود ندارد.**
+- تغییر هر سقف فقط با رأی مجمع ولیدیتورها (`proposeCapChange` / `voteCapChange`) و سپس **تأخیر ۷ روزه** (`CAP_CHANGE_TIMELOCK_DELAY`) و `applyPendingCapChange` — تا افزایش سقف و خرج زیر سقف تازه هرگز هم‌زمان نباشد. **این تأخیر فقط برای تغییر سقف‌هاست؛ پرداخت‌های عادی هیأت تأخیر ندارند.**
+- هر پرداخت، صرف‌نظر از مقصد یا توضیح، در همان شمارنده‌ی مشترک حساب می‌شود (خردکردن راه دورزدن نیست).
+- ⚠️ چون genesis فقط runtime code تزریق می‌کند، مقداردهی اولیه‌ی `50_000 ether`/`200_000 ether` روی زنجیره‌ی واقعی اجرا **نمی‌شود**؛ ابزار genesis باید این دو slot را overlay کند (`sur-genesis-builder-tool-spec.md`)؛ خزانه در genesis موجودی ندارد.
 
 ### جدول فانکشن‌ها
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، constructor ندارد | سقف اولیه‌ی بودجه (`smallBudgetCap`) | — | مستقیم در سورس `ValidatorsTreasury.sol` با علامت `🔶 FILL_IN` مقداردهی می‌شود (مقدار ساده، نیازی به قرارداد کمکی ندارد) |
-| `receive()` | خودکار، از `BlockRewardDistributor` (سهم ریوارد) و `ValidatorsRegistry` (کارمزد عضویت/استیک اسلش‌شده)؛ هرکس دیگری هم بفرستد قبول می‌شود | — (`msg.value`) | — | مبلغ را به `totalDistributedToTreasury` اضافه می‌کند و event می‌زند |
-| `proposeExpenditure(address to, uint256 amount, string description)` | **فقط ولیدیتور `Active`** (⚠️ اصلاحیه: بنیاد دیگر هیچ دسترسی ندارد — مسیر `FoundationDAO.proposeRequestTreasuryBudget` کلاً حذف شد) | مقصد، مبلغ، توضیح | `id` هزینه | پیشنهاد هزینه می‌سازد و رأی پیشنهاددهنده را هم ثبت می‌کند |
-| `voteExpenditure(uint256 id)` | فقط ولیدیتور `Active` | شناسه‌ی هزینه | — | رأی می‌دهد؛ با رسیدن به نصاب، انتقال واقعی همان تراکنش انجام می‌شود |
-| `boardApproveExpenditure(address to, uint256 amount, string description)` | **فقط قرارداد `ValidatorsBoard`** (نه هیچ عضو هیأت مستقیماً) | مقصد، مبلغ، توضیح | — | اگر `amount < smallBudgetCap`، انتقال را همان لحظه انجام می‌دهد |
-| `proposeSmallBudgetCap(uint256 newCap)` | فقط ولیدیتور `Active` | سقف جدید | `id` پیشنهاد | پیشنهاد تغییر سقف بودجه‌ی هیأت |
-| `voteParameterChange(uint256 id)` | فقط ولیدیتور `Active` | شناسه‌ی پیشنهاد | — | رأی می‌دهد؛ با نصاب، `smallBudgetCap` عوض می‌شود |
-| `getBalance()` | هرکسی | — | `uint256` | موجودی فعلی خزانه (سورن) |
-
-⚠️ **اصلاحیه:** نسخه‌ی قبلی این بخش اشتباهاً فرض کرده بود سورن یک توکن ERC20 است و برای خزانه یک مسیر جدا («دارایی ERC20»، `proposeExpenditure(address token, ...)`، `getTokenBalance`) طراحی کرده بود. این کل تفکیک حذف شد — سورن ارز بومی است، همه‌چیز از یک جنس در `receive()` جمع می‌شود، و امضای توابع به حالت ساده‌ی تک‌دارایی برگشت.
+| `(بدون constructor)` | در genesis تزریق می‌شود | `perPaymentCap`، `periodCap` | — | مقدار اولیه: ۵۰٬۰۰۰ / ۲۰۰٬۰۰۰ سورن (overlay در genesis) |
+| `receive()` | خودکار (`BlockRewardDistributor`، `ValidatorsRegistry`) یا هرکس | — (`msg.value`) | — | `totalDistributedToTreasury` را افزایش می‌دهد و event می‌زند |
+| `boardApproveExpenditure(address to, uint256 amount, string description)` | **فقط قرارداد `ValidatorsBoard`** | مقصد، مبلغ، توضیح | — | اگر `amount < perPaymentCap` و مجموع پنجره‌ی ۳۰روزه از `periodCap` رد نشود، بلافاصله منتقل می‌کند؛ وگرنه revert |
+| `proposeCapChange(CapKind kind, uint256 newValue)` | فقط ولیدیتور `Active` | نوع سقف (`PerPayment`=۰، `Period`=۱)، مقدار جدید | `id` | پیشنهاد تغییر سقف؛ رأی پیشنهاددهنده ثبت می‌شود |
+| `voteCapChange(uint256 id)` | فقط ولیدیتور `Active` | شناسه | — | با رسیدن به نصاب، تغییر در صف تأخیر ۷روزه قرار می‌گیرد (فوراً اعمال **نمی‌شود**) |
+| `applyPendingCapChange(CapKind kind)` | **هرکسی** | نوع سقف | — | پس از گذشت تأخیر ۷روزه سقف را اعمال می‌کند؛ قبل از آن revert (`timelock not elapsed`) |
+| `getBalance()` / `rollingWindowSpendNow()` | هرکسی | — | `uint256` | موجودی خزانه / مجموع خرج پنجره‌ی ۳۰روزه‌ی فعلی |
 
 ### متغیرهای عمومی مهم
-`BOARD`, `REGISTRY` (آدرس‌های ثابت)، `smallBudgetCap`، `expenditures(id)`، `totalDistributedToTreasury`، `totalSpent`.
+`BOARD`, `REGISTRY` (آدرس‌های ثابت)، `perPaymentCap`، `periodCap`، `CAP_CHANGE_TIMELOCK_DELAY=7 days`، `ROLLING_WINDOW_DAYS`، `dailySpend(day)`، `pendingCapChange(kind)`، `totalDistributedToTreasury`، `totalSpent`.
 
 ---
 
@@ -190,13 +201,14 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 |---|---|---|---|---|
 | `setDistributionOracle(address newOracle)` | **فقط قرارداد `ValidatorsBoard`** (بعد از رأی داخلی هیأت) | آدرس اوراکل جدید | — | کلید اوراکل توزیع را فوری عوض می‌کند |
 | `receive()` | هرکسی (در عمل استفاده نمی‌شود توسط پروتکل، فقط تست/واریز دستی) | — (`msg.value`) | — | فقط event می‌زند |
-| `distributeRewards(address[] validators, uint256[] blocksMined, uint256 totalRewards, uint256 totalFees)` | **فقط `distributionOracle`** (سرویس آف‌چین RewardRouter) | لیست ولیدیتورها، تعداد بلاک هرکدام، جمع ریوارد epoch، جمع فی epoch | — | ✅ **به‌روزشده:** از ریوارد، ۱۵٪ ثابت به بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (۴۰-۶۵٪) را کنار می‌گذارد، باقی‌مانده به خزانه می‌رود؛ از فی معمولی، ۳۰٪ می‌سوزاند و ۷۰٪ باقی‌مانده را (+ کارمزد عضویت معلق، که کاملاً از سوزاندن معاف است) به نسبت بلاک بین ولیدیتورها (با چک `isValidator` از رجیستری) تقسیم و پرداخت می‌کند؛ epoch را ثبت می‌کند |
+پس از کنترل بازه، همان تقسیم قبلی: ۱۵٪ ثابت ریوارد به بنیاد، سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (۴۰–۶۵٪)، باقی‌مانده به خزانه؛ از فی معمولی ۳۰٪ سوزانده و ۷۰٪ بین ولیدیتورها به نسبت بلاک تقسیم می‌شود |
 | `getEpoch(uint256 epochId)` | هرکسی | شناسه‌ی epoch | خلاصه‌ی کامل epoch | گزارش یک دوره‌ی توزیع |
 | `getValidatorEpochReward(uint256 epochId, address validator)` | هرکسی | شناسه‌ی epoch + آدرس | سهم ریوارد، سهم فی، تعداد بلاک | جزئیات یک ولیدیتور در یک epoch |
 | `getValidatorTotals(address validator)` | هرکسی | آدرس | مجموع ریوارد، مجموع فی، مجموع بلاک (کل عمر) | آمار کلی یک ولیدیتور |
 | `getContractBalance()` | هرکسی | — | `uint256` | موجودی فعلی قرارداد |
 | `getDistributionOracle()` | هرکسی | — | `address` | آدرس اوراکل فعلی |
 | `getLastEpochId()` | هرکسی | — | `uint256` | شماره‌ی آخرین epoch |
+| `lastSettledBlock()` / `epochBlockRanges(uint256 epochId)` | هرکسی | — / شناسه‌ی epoch | `uint256` / `(fromBlock, toBlock)` | ✅ **P05.** آخرین بلاک تسویه‌شده و بازه‌ی هر epoch |
 | `timeUntilNextDistribution()` | هرکسی | — | `uint256` | ثانیه‌های باقی‌مانده تا فراخوانی بعدی مجاز |
 
 ### ✅ بازنویسی داخلی برای سازگاری با وریفای (بدون تغییر رفتار)
@@ -207,10 +219,10 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 - از `totalFees`: ۱۰۰٪ به نسبت `blocksMined` بین ولیدیتورها.
 - هر ولیدیتور دقیقاً یک انتقال ترکیبی می‌گیرد؛ باقیمانده‌ی گرد‌کردن (dust) به Treasury می‌رود.
 - حداقل فاصله بین دو فراخوانی: `MIN_DISTRIBUTION_INTERVAL = 23 ساعت`.
-- چک سلامتی: تعداد بلاک گزارش‌شده نباید از حداکثر فیزیکی ممکن (`elapsed / 2s`) بیشتر باشد (فقط از epoch شماره‌ی ۲ به بعد فعال است — دلیلش در `sur-contracts-deploy-notes.md`).
+- چک سلامتی: تعداد بلاک گزارش‌شده نباید از حداکثر فیزیکی ممکن (`elapsed / MIN_BLOCK_PERIOD_SECONDS`، فعلاً ۳ ثانیه) بیشتر باشد (فقط از epoch دوم به بعد)؛ ✅ و طبق P05، از اندازه‌ی بازه‌ی اعلام‌شده هم بیشتر نباشد.
 
 ### متغیرهای عمومی مهم
-`FOUNDATION_SHARE_BPS=1500` (ثابت)، `validatorDirectShareBps` (متغیر حالت، شروع ۵۰۰۰)، `MIN_DISTRIBUTION_INTERVAL`, `MIN_BLOCK_PERIOD_SECONDS=3`, `TREASURY`, `BOARD`, `REGISTRY` (آدرس‌های ثابت)، `distributionOracle`، `deployTime`، `epochCount`.
+`FOUNDATION_SHARE_BPS=1500` (ثابت)، `validatorDirectShareBps` (متغیر حالت، شروع ۵۰۰۰)، `MIN_DISTRIBUTION_INTERVAL`, `MIN_BLOCK_PERIOD_SECONDS=3`, `TREASURY`, `BOARD`, `REGISTRY` (آدرس‌های ثابت)، `distributionOracle`، `deployTime`، `epochCount`، `lastSettledBlock`، `epochBlockRanges(epochId)`.
 
 ---
 
@@ -219,7 +231,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ### نقش
 حکمرانی داخلی بنیاد سور (۱۵ عضو، بدون تفکیک مجمع عمومی/هیأت‌مدیره — فقط یک نقش `member`). **هیچ اختیاری روی شبکه، ولیدیتورها، یا اوراکل‌های مرتبط با اجماع/ولیدیتور ندارد** (⚠️ استثنا: بنیاد کنترل `identityOracle` و `paymentOracle` — دو اوراکل مرتبط با عملیات خودش، بی‌ربط به اجماع/صلاحیت ولیدیتور — را دارد). ✅ **موجودی اولیه (تصمیم تازه):** در `alloc` بلاک genesis، **۲۰,۰۰۰,۰۰۰ سورن** (ارز بومی) مستقیماً به آدرس این قرارداد تخصیص داده می‌شود — همان توزیع اولیه‌ای که ماده ۳-۶ اساسنامه از بنیاد خواسته. ✅ **همچنین تأیید شد:** عضویت در بنیاد هیچ حق اجتماعی‌ای (از جمله ولیدیتوربودن یا عضویت در هیأت‌مدیره‌ی ولیدیتورها) را محدود نمی‌کند.
 
-⚠️ **اصلاحیه‌ی مهم:** `proposeRequestTreasuryBudget` **کاملاً حذف شد** — بنیاد دیگر هیچ مسیر رسمی on-chain برای درخواست بودجه‌ی **کمپین/موردی** از `ValidatorsTreasury` ندارد (نه پیشنهاد ساخت یک نقش جدای «هیأت‌مدیره‌ی بنیاد» برای این کار پذیرفته شد، نه مسیر قبلی نگه داشته شد). ✅ **اصلاحیه‌ی تازه‌تر:** برای هزینه‌ی جاری/حقوق بنیاد، اکنون یک کانال کاملاً متفاوت وجود دارد — ۱۵٪ ثابت از **کل** بلاک‌ریوارد (مستقل از سهم خزانه) که خودکار و بدون رأی‌گیری مستقیم از `BlockRewardDistributor` به `FoundationDAO` می‌رود (بخش پایین‌تر همین سند را ببین). اما برای هرچیز فراتر از این رقم ثابت (بودجه‌ی کمپین)، بنیاد باید کاملاً بیرون از قرارداد هماهنگ شود: یک ولیدیتور فعال یا عضو هیأت‌مدیره‌ی ولیدیتورها باید خودش (نه به نمایندگی از بنیاد) در `ValidatorsTreasury.proposeExpenditure`/`boardApproveExpenditure` پیشنهاد بدهد.
+⚠️ **اصلاحیه‌ی مهم:** `proposeRequestTreasuryBudget` **کاملاً حذف شد** — بنیاد دیگر هیچ مسیر رسمی on-chain برای درخواست بودجه‌ی **کمپین/موردی** از `ValidatorsTreasury` ندارد (نه پیشنهاد ساخت یک نقش جدای «هیأت‌مدیره‌ی بنیاد» برای این کار پذیرفته شد، نه مسیر قبلی نگه داشته شد). ✅ **اصلاحیه‌ی تازه‌تر:** برای هزینه‌ی جاری/حقوق بنیاد، اکنون یک کانال کاملاً متفاوت وجود دارد — ۱۵٪ ثابت از **کل** بلاک‌ریوارد (مستقل از سهم خزانه) که خودکار و بدون رأی‌گیری مستقیم از `BlockRewardDistributor` به `FoundationDAO` می‌رود (بخش پایین‌تر همین سند را ببین). اما برای هرچیز فراتر از این رقم ثابت (بودجه‌ی کمپین)، بنیاد باید کاملاً بیرون از قرارداد هماهنگ شود: هیأت‌مدیره‌ی ولیدیتورها می‌تواند (در چارچوب سقف‌های `perPaymentCap`/`periodCap` و حداقل ۳ رأی) از طریق `ValidatorsBoard.proposeApproveBudget` به هر گیرنده‌ای، از جمله آدرس بنیاد، پرداخت کند؛ مسیر ویژه‌ای برای بنیاد نیست و مجمع پرداخت موردی تصویب نمی‌کند.
 
 ### جدول فانکشن‌ها
 
@@ -282,7 +294,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ### تفاوت کلیدی با `verifier` در `ValidatorsRegistry`
 دو کلید کاملاً جدا، دو مسیر چرخش کاملاً جدا:
 - `IdentityRegistry.identityOracle` → چرخش با `FoundationDAO`.
-- `ValidatorsRegistry.verifier` → چرخش با `ValidatorsBoard`، فقط برای `reportLiveness` (لایوینس ولیدیتور)، هیچ ربطی به هویت ندارد.
+- `ValidatorsRegistry.verifier` → چرخش با `ValidatorsBoard`، کلید تصمیم‌های وضعیت ولیدیتور (`record…`)، هیچ ربطی به هویت ندارد.
 
 ### چرا کوئری «تطبیق» (matching) یک تابع on-chain نیست
 حتی اگر قرارداد پاسخ فاش نکند، خودِ پارامتر ورودی تراکنش (مقداری که قرار است باهاش تطبیق داده شود) در calldata عمومی زنجیره همیشه قابل‌مشاهده است. پس عملیات «آیا کد ملی این آدرس برابر X است؟» (که در استاندارد قدیمی SIP002 تعریف شده بود) همیشه یک فراخوانی API آف‌چین به سرویس Identity Service است، نه تراکنش — جزئیات کامل در `sur-identity-registry-spec.md` بخش ۳.۲.
@@ -323,7 +335,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 
 ✅ **تغییر تازه‌تر — نسبت سهم مستقیم/خزانه اکنون حکمرانی‌شونده است:** `TREASURY_SHARE_BPS` ثابت قبلی حذف و با `validatorDirectShareBps` (متغیر حالت، شروع ۵۰٪) جایگزین شد — قابل‌تغییر فقط از طریق رأی‌گیری دومجلسی (`proposeShareChange`/`boardVoteShareChange`/`validatorVoteShareChange` در `BlockRewardDistributor.sol`)، محدود به بازه‌ی [۴۰٪, ۶۵٪]، با فاصله‌ی حداقلی ۶ ماه بین تغییرات.
 
-✅ **تغییر تازه‌تر — سوزاندن ۳۰٪ فی (هر دو زبان کامل):** `FEE_BURN_BPS = 3000` (ثابت، غیرقابل‌حکمرانی) — از کل استخر فی هر epoch (فی معمولی + کارمزد عضویت تاشده)، ۳۰٪ به `BURN_ADDRESS = address(0)` فرستاده می‌شود؛ ۷۰٪ باقی‌مانده مثل قبل بین ولیدیتورها تقسیم می‌شود. رویداد `FeesBurned` و شمارنده‌ی تجمعی `totalFeesBurned` برای شفافیت اضافه شدند. جزئیات کامل در `sur-tokenomics.md` بخش ۷.
+✅ **تغییر تازه‌تر — سوزاندن ۳۰٪ فی (هر دو زبان کامل):** `FEE_BURN_BPS = 3000` (ثابت، غیرقابل‌حکمرانی) — از **فی معمولی تراکنش‌ها** (`totalFees`) هر epoch، ۳۰٪ به `BURN_ADDRESS = address(0)` فرستاده می‌شود؛ ۷۰٪ باقی‌مانده بین ولیدیتورها تقسیم می‌شود. ✅ **کارمزد عضویت مشمول سوزاندن نیست** و کامل (۱۰۰٪) به‌نسبت بلاک بین ولیدیتورها تقسیم می‌شود (کد: `prep.feeBurnAmount = totalFees × FEE_BURN_BPS`، نه `effectiveTotalFees`). رویداد `FeesBurned` و شمارنده‌ی تجمعی `totalFeesBurned` برای شفافیت اضافه شدند. جزئیات کامل در `sur-tokenomics.md` بخش ۷.
 
 ✅ **تغییر تازه‌تر — منحنی هزینه‌ی ورود:** `entryThresholdBase` از ۲ میلیون به ۵۰۰,۰۰۰ سورن، و دوره‌ی دوبرابرشدن از ۱۶ به ۴۰ ولیدیتور *پرداخت‌کننده* تغییر کرد؛ منحنی دیگر ۷ ولیدیتور مؤسس رایگان genesis-seeded را نمی‌شمرد (`isPaidEntrant`/`paidValidatorCount` تازه در `ValidatorsRegistry.sol`).
 

@@ -51,8 +51,8 @@
     "initialBoardMembers": ["0x....", "0x....", "0x....", "0x....", "0x...."]
   },
   "validatorsTreasury": {
-    "perPaymentCap": "0",   // 🔶 FILL_IN — تصمیم صریح: حدس نزن. مقدار 0 یعنی هیچ پرداختی ممکن نیست؛ ابزار باید با 0 عمداً متوقف/هشدار بدهد مگر پرچم صریح --allow-zero-caps
-    "periodCap": "0"        // 🔶 FILL_IN — تصمیم صریح؛ همان قاعده‌ی بالا
+    "perPaymentCap": "50000000000000000000000",   // ✅ تصمیم نهایی P06: ۵۰٬۰۰۰ سورن (wei). مقدار 0 یعنی هیچ پرداختی ممکن نیست؛ ابزار باید با 0 عمداً متوقف شود مگر پرچم صریح --allow-zero-caps
+    "periodCap": "200000000000000000000000"        // ✅ تصمیم نهایی P06: ۲۰۰٬۰۰۰ سورن (wei)؛ همان قاعده‌ی بالا
   },
   "foundationDAO": {
     "initialMembers": [
@@ -150,6 +150,9 @@
    ValidatorsTreasury.periodCap() == (مقدار config)
    BlockRewardDistributor.deployTime() == network.genesisTimestamp   # immutable — باید از بلاک صفر درست باشد
    ValidatorsBoard.boardVersion() == (مقدار overlay‌شده؛ ۱ اگر نوشته شود، ۰ اگر نه — هر دو کار می‌کنند، ولی assert کن که همان چیزی است که ابزار قصد کرده)
+   ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp   # ✅ P01: اگر هیأت seed می‌شود؛ وگرنه اولین بازتعیین فوراً مجاز است
+   ValidatorsTreasury.perPaymentCap() == 50000 ether ; periodCap() == 200000 ether   # ✅ P06 (overlay اجباری — مقداردهی‌ها هنگام تزریق اجرا نمی‌شوند)
+   BlockRewardDistributor.lastSettledBlock() == 0   # ✅ P05: اولین بازه باید از بلاک ۱ شروع شود
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)
    ValidatorsRegistry.exitCooldown() == (مقدار config)

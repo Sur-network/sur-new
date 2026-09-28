@@ -1,0 +1,5 @@
+recoveryPeriod=3600: ✅ درست رد شد | 
+recoveryPeriod=60: ✅ درست رد شد | 
+recoveryPeriod=3601: ✅ پذیرفته شد
+
+✅✅✅ حد پایین recoveryPeriod در زمان پیشنهاد اعمال می‌شود

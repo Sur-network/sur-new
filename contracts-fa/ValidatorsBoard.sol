@@ -231,6 +231,16 @@ contract ValidatorsBoard {
     ///         ثبت می‌کند و وقتی نسخه جلو برود باطل می‌شود — boardVersionAtCreation را ببینید.
     uint256 public boardVersion = 1;
 
+    /// @notice P01: تغییر **عادی** ترکیب هیأت (refreshBoard) حداکثر هر ۳۰ روز یک‌بار اعمال می‌شود.
+    uint256 public constant BOARD_REFRESH_INTERVAL = 30 days;
+    /// @notice زمان آخرین بازتعیین عادی. اگر هیأت در genesis seed شود، genesis باید این را با timestamp genesis overlay کند
+    ///         (وگرنه اولین refresh فوراً مجاز است).
+    uint256 public lastBoardRefreshAt;
+    /// @notice کرسی‌های آزادشده به‌علت قطع اختیار ناشی از خروج که هنوز با جانشینی پر نشده‌اند.
+    uint256 public pendingVacancies;
+    event BoardMemberAuthorityEnded(address indexed member);
+    event BoardSuccession(address indexed newMember);
+
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
@@ -257,8 +267,14 @@ contract ValidatorsBoard {
         _;
     }
 
+    /// @notice P02: اختیار هیأت = داشتن کرسی **و** درخواست‌نکردنِ خروج اختیاری. لحظه‌ی ثبت درخواست خروج قطع می‌شود (منتظر
+    ///         بازتعیین ماهانه نمی‌ماند). تعلیق (Demoted) به‌تنهایی اختیار را در طول دوره قطع **نمی‌کند**. اگر دارنده‌ی یک کرسی
+    ///         درخواست خروج داده و کرسی هنوز پاک‌سازی نشده، اقدامات هیأت با پیام روشن **revert** می‌شوند تا کسی
+    ///         `syncBoard()` (بدون نیاز به مجوز، تراکنش جدا — پس خودِ پاک‌سازی هرگز برگردانده نمی‌شود) را صدا بزند. یعنی رأی هرگز
+    ///         روی پیشنهاد باطل‌شده «بی‌صدا موفق» نمی‌شود: voteAction() را ببینید.
     modifier onlyBoardMember() {
-        require(isBoardMember[msg.sender], "ValidatorsBoard: caller is not a board member");
+        require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
+        require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
 
@@ -316,62 +332,16 @@ contract ValidatorsBoard {
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @notice بازمحاسبه‌ی هیأت به‌عنوان BOARD_SIZE ولیدیتوری که بیشترین رأی جاری را دارند.
-    ///         بدون نیاز به مجوز — توسط هرکسی، هر زمان قابل‌فراخوانی. فقط رأی‌هایی که توسط یک
-    ///         ولیدیتور فعلاً فعال، به یک ولیدیتور فعلاً فعال داده شده‌اند شمرده می‌شوند؛ هر دو
-    ///         طرف در هر فراخوانی مستقیم و زنده در برابر ValidatorsRegistry دوباره چک می‌شوند.
+    /// @notice P01/P02: بازتعیین عادی — BOARD_SIZE ولیدیتوری که بیشترین رأی جاری را دارند، حداکثر هر ۳۰ روز یک‌بار اعمال
+    ///         می‌شود (هیأتِ کاملاً خالی هر زمان قابل‌پرشدن است). ماندن در هیأت مشروط به **فعال‌بودنِ ولیدیتور در همین لحظه** است:
+    ///         فقط رأی‌های ولیدیتورهای فعال به کاندیداهای فعال شمرده می‌شود، پس عضو معلق نمی‌تواند از بازتعیین ماهانه عبور کند.
+    ///         رأی‌دادن و تغییر رأی همیشه آزاد است (voteFor / unvoteFor).
     function refreshBoard() external {
-        address[] memory active = REGISTRY.getValidators();
-
-        // شمارش گذرای مخصوص همین فراخوانی: کاندید -> تعداد رأی (قبل از بازگشت به صفر ریست می‌شود)
-        address[] memory seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
-        uint256 seenCount = 0;
-
-        for (uint256 i = 0; i < active.length; i++) {
-            address voter = active[i];
-            address[] storage cands = voterCandidates[voter];
-            uint256 n = cands.length;
-            for (uint256 j = 0; j < n; j++) {
-                address c = cands[j];
-                if (!REGISTRY.isValidator(c)) continue; // کاندید هم باید الان فعال باشد
-                if (_voteTally[c] == 0) {
-                    seenCandidates[seenCount] = c;
-                    seenCount++;
-                }
-                _voteTally[c]++;
-            }
-        }
-
-        // انتخاب BOARD_SIZE کاندیدای برتر بر اساس شمارش؛ در تساوی، هرکدام زودتر ثبت شده می‌ماند
-        address[] memory newBoard = new address[](BOARD_SIZE);
-        uint256[] memory newBoardVotes = new uint256[](BOARD_SIZE);
-        uint256 filled = 0;
-
-        for (uint256 i = 0; i < seenCount; i++) {
-            address c = seenCandidates[i];
-            uint256 v = _voteTally[c];
-
-            if (filled < BOARD_SIZE) {
-                newBoard[filled] = c;
-                newBoardVotes[filled] = v;
-                filled++;
-            } else {
-                uint256 minIdx = 0;
-                for (uint256 k = 1; k < BOARD_SIZE; k++) {
-                    if (newBoardVotes[k] < newBoardVotes[minIdx]) minIdx = k;
-                }
-                if (v > newBoardVotes[minIdx]) {
-                    newBoard[minIdx] = c;
-                    newBoardVotes[minIdx] = v;
-                }
-                // v == newBoardVotes[minIdx]: کاندید موجود (که زودتر ثبت شده) نگه داشته می‌شود
-            }
-        }
-
-        // ریست شمارش گذرا تا storage عدد کهنه به فراخوانی بعدی درز نکند
-        for (uint256 i = 0; i < seenCount; i++) {
-            _voteTally[seenCandidates[i]] = 0;
-        }
+        require(
+            boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
+            "ValidatorsBoard: ordinary board changes are applied once every 30 days"
+        );
+        (address[] memory newBoard, uint256[] memory newBoardVotes, uint256 filled) = _topCandidates(BOARD_SIZE, false);
 
         // ✅ اصلاح‌شده (باگ پیداشده در بازبینی مستقل — نسخه‌ی قبلی این اصلاح boardVersion رو
         // بی‌قید و شرط توی هر فراخوان موفق refreshBoard() بالا می‌برد، حتی وقتی عضویت نهایی
@@ -415,6 +385,10 @@ contract ValidatorsBoard {
             boardVersion++;
         }
 
+
+        lastBoardRefreshAt = block.timestamp;
+        pendingVacancies = 0; // بازتعیین عادی کل هیأت را از نو محاسبه می‌کند؛ جای خالی‌ها منتقل نمی‌شوند
+
         emit BoardRefreshed(finalBoard, finalVotes);
     }
 
@@ -422,6 +396,131 @@ contract ValidatorsBoard {
     ///      است — حلقه‌ی ریست refreshBoard() را ببین. به‌عنوان storage قرارداد (نه `memory`)
     ///      اعلان شده، فقط چون Solidity هیچ نوع mapping در memory ندارد.
     mapping(address => uint256) private _voteTally;
+
+    // ------------------------------------------------------------------
+    // Authority, monthly re-selection, and exit-driven succession (final decisions P01/P02)
+    // ------------------------------------------------------------------
+
+    /// @dev آزمون اختیار P02 (کامنت مودیفایر onlyBoardMember را ببینید).
+    function _hasAuthority(address who) private view returns (bool) {
+        if (!isBoardMember[who]) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
+        return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
+    }
+
+    function hasBoardAuthority(address who) external view returns (bool) {
+        return _hasAuthority(who);
+    }
+
+
+    /// @dev اگر دارنده‌ی یک کرسی اختیار را از دست داده (درخواست خروج داده / برداشت کرده) و syncBoard() هنوز اجرا نشده، true.
+    function _syncNeeded() private view returns (bool) {
+        for (uint256 i = 0; i < boardMembers.length; i++) {
+            if (!_hasAuthority(boardMembers[i])) return true;
+        }
+        return false;
+    }
+
+    /// @notice بدون نیاز به مجوز. کرسی‌هایی را که دارنده‌شان درخواست خروج داده رها می‌کند (قطع فوری اختیار) و برای آن کرسی‌ها جانشینی را تلاش می‌کند.
+    function syncBoard() external {
+        _syncBoard();
+    }
+
+    function _syncBoard() private {
+        uint256 removed = 0;
+        uint256 i = 0;
+        while (i < boardMembers.length) {
+            address m = boardMembers[i];
+            if (_hasAuthority(m)) {
+                i++;
+                continue;
+            }
+            isBoardMember[m] = false;
+            boardMembers[i] = boardMembers[boardMembers.length - 1];
+            boardMembers.pop();
+            removed++;
+            emit BoardMemberAuthorityEnded(m);
+        }
+        bool changed = removed > 0;
+        if (removed > 0) {
+            pendingVacancies += removed;
+            if (_fillVacancies()) changed = true;
+        }
+        if (changed) boardVersion++; // real composition change: open actions of the old composition become invalid
+    }
+
+    /// @notice جانشینیِ بدون نیاز به مجوز برای کرسی‌های آزادشده به‌علت خروج: بالاترین‌رأی‌ترین کاندیداهای **واجد شرایط** (فعلاً فعال،
+    ///         هنوز عضو نبوده) بر اساس شمارش زنده جای خالی‌های معلق را می‌گیرند. فقط کرسی‌های آزادشده به‌علت خروج را پر می‌کند —
+    ///         هرگز یک تغییر عادی اضافه نیست. اگر کاندیدای واجد شرایطی نباشد کرسی خالی می‌ماند (و با کمتر از ۳ عضو دارای اختیار،
+    ///         پرداخت خزانه متوقف است) تا کاندیدایی پیدا شود یا بازتعیین ماهانه برسد.
+    function fillVacancies() external {
+        if (_fillVacancies()) boardVersion++;
+    }
+
+    function _fillVacancies() private returns (bool filledAny) {
+        uint256 room = BOARD_SIZE - boardMembers.length;
+        uint256 want = pendingVacancies < room ? pendingVacancies : room;
+        if (want == 0) return false;
+        (address[] memory picks, , uint256 n) = _topCandidates(want, true);
+        for (uint256 i = 0; i < n; i++) {
+            boardMembers.push(picks[i]);
+            isBoardMember[picks[i]] = true;
+            emit BoardSuccession(picks[i]);
+        }
+        if (n > 0) {
+            pendingVacancies -= n;
+            return true;
+        }
+        return false;
+    }
+
+    /// @dev Live tally: votes cast BY currently active validators FOR currently active candidates (same rule as before).
+    function _tallyVotes() private returns (address[] memory seenCandidates, uint256 seenCount) {
+        address[] memory active = REGISTRY.getValidators();
+        seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
+        for (uint256 i = 0; i < active.length; i++) {
+            address[] storage cands = voterCandidates[active[i]];
+            uint256 n = cands.length;
+            for (uint256 j = 0; j < n; j++) {
+                address c = cands[j];
+                if (!REGISTRY.isValidator(c)) continue; // candidate must currently be active too
+                if (_voteTally[c] == 0) {
+                    seenCandidates[seenCount] = c;
+                    seenCount++;
+                }
+                _voteTally[c]++;
+            }
+        }
+    }
+
+    /// @dev Top-k candidates by live tally (ties keep the earlier-inserted one). Resets the ephemeral tally before returning.
+    function _topCandidates(uint256 k, bool excludeMembers) private returns (address[] memory picks, uint256[] memory pickVotes, uint256 filled) {
+        (address[] memory seen, uint256 seenCount) = _tallyVotes();
+        picks = new address[](k);
+        pickVotes = new uint256[](k);
+        for (uint256 i = 0; i < seenCount && k > 0; i++) {
+            address c = seen[i];
+            if (excludeMembers && isBoardMember[c]) continue;
+            uint256 v = _voteTally[c];
+            if (filled < k) {
+                picks[filled] = c;
+                pickVotes[filled] = v;
+                filled++;
+            } else {
+                uint256 minIdx = 0;
+                for (uint256 m = 1; m < k; m++) {
+                    if (pickVotes[m] < pickVotes[minIdx]) minIdx = m;
+                }
+                if (v > pickVotes[minIdx]) {
+                    picks[minIdx] = c;
+                    pickVotes[minIdx] = v;
+                }
+            }
+        }
+        for (uint256 i = 0; i < seenCount; i++) {
+            _voteTally[seen[i]] = 0; // reset the ephemeral tally
+        }
+    }
 
     /// @notice پاک‌کردن هر رأیی که یک ولیدیتور طولانی‌مدت‌غیرفعال داده (به‌عنوان رأی‌دهنده) و
     ///         هر رأیی که گرفته (به‌عنوان کاندید)، تا جای رأی بقیه‌ی ولیدیتورها آزاد شود. بدون
@@ -502,6 +601,9 @@ contract ValidatorsBoard {
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
+        // اقدامی که زیر ترکیب قدیمی‌تر پیشنهاد شده باطل است: _voteAction() **revert** می‌کند («board membership changed since this
+        // action was proposed - propose again»). تراکنش آشکارا شکست می‌خورد و به‌صورت no-op برنمی‌گردد، تا هیچ‌کس رسید موفق را
+        // با «رأی من ثبت شد» اشتباه نگیرد.
         _voteAction(id, msg.sender);
     }
 

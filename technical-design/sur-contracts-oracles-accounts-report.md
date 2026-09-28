@@ -81,20 +81,20 @@
 ### ۳.۲ ولیدیتورهای فعال (Active Validators)
 - **قرارداد میزبان اصلی:** ValidatorsRegistry.sol — چرخه‌ی وضعیت:
   `None → Probation (قفل سپرده، تأیید سینک نود) → Active (در getValidators، واجد پرداخت) → [غیرفعالی مداوم] → Demoted (سپرده تا حدی slash می‌شود) → [بازیابی] → Active`، یا در هر مرحله `→ Exiting (خروج داوطلبانه با cooldown)`.
-- **ورود:** `requestMembership` با پرداخت مجموع دو مبلغ — collateral (`currentEntryThreshold`، رشد پیوسته/ترکیبی با هر ولیدیتور جدید) که در همین قرارداد قفل و قابل استرداد می‌ماند، و membership fee (درصدی از collateral) که بلافاصله و غیرقابل‌بازگشت به ValidatorsTreasury می‌رود.
-- **اختیار حکمرانی امنیتی (Full Validator Vote):** `proposeParameterChange`/`voteParameterChange` در ValidatorsRegistry — پارامترهایی مثل نرخ محدودیت ورود، طول دوره probation، آستانه‌های liveness/غیرفعالی، دوره بازیابی، درصد slash، و cooldown خروج، فقط با اکثریت کامل ولیدیتورهای فعال قابل تغییرند (نه بنیاد، نه board).
-- **اختیار در ValidatorsTreasury:** `proposeExpenditure`/`voteExpenditure` (مسیر ۱ — رأی اکثریت کامل ولیدیتورهای فعال) و `proposeSmallBudgetCap` برای تغییر سقف بودجه‌ی قابل‌تصویب board.
+- **ورود:** `requestMembership` با پرداخت مجموع دو مبلغ — collateral (`currentEntryThreshold`، رشد پیوسته/ترکیبی با هر ولیدیتور جدید) که در همین قرارداد قفل و قابل استرداد می‌ماند، و membership fee (درصدی از collateral) که بلافاصله و غیرقابل‌بازگشت به `BlockRewardDistributor` (نه ValidatorsTreasury) فوروارد و در epoch بعدی ۱۰۰٪ بین ولیدیتورها (بدون سوزاندن) تقسیم می‌شود.
+- **اختیار حکمرانی امنیتی (Full Validator Vote):** `proposeParameterChange`/`voteParameterChange` در ValidatorsRegistry — پارامترهایی مثل نرخ محدودیت ورود، طول دوره probation، دوره بازیابی (باید بلندتر از پنجره‌ی رخداد جمعی بماند)، درصد slash، و cooldown خروج (باید بلندتر از پنجره‌ی ۷۲ساعته‌ی ثبت پرونده‌ی پیش‌ازخروج بماند)، (آستانه‌ی غیرفعالی ۴ساعته دیگر روی زنجیره نیست: پارامتر سرویس Verifier است) فقط با اکثریت کامل ولیدیتورهای فعال قابل تغییرند (نه بنیاد، نه board).
+- **اختیار در ValidatorsTreasury (✅ P06):** فقط `proposeCapChange`/`voteCapChange` برای تغییر دو سقف (`perPaymentCap`=۵۰٬۰۰۰، `periodCap`=۲۰۰٬۰۰۰ سورن) با رأی اکثریت مجمع و **تأخیر ۷ روزه** (`applyPendingCapChange`). مجمع هیچ پرداخت موردی را تصویب نمی‌کند (`proposeExpenditure`/`voteExpenditure`/`proposeSmallBudgetCap` حذف شده‌اند).
 - **اختیار در ValidatorsBoard:** `voteFor`/`unvoteFor` — رأی تأییدی برای عضویت در board (پیش‌نیاز: ثبت هویت خوداظهاری در IdentityRegistry از طریق `registerIdentity`).
 - **دریافت‌کننده‌ی پرداخت در BlockRewardDistributor:** بررسی واجدشرایطی مستقیماً با `REGISTRY.isValidator` انجام می‌شود.
 - ✅ **وضعیت فعلی (تکمیل این بخش):** فهرست ۷ ولیدیتور مؤسس از قبل در قرارداد کمکی `ValidatorsRegistry_GenesisSeed.sol` هاردکد شده (Alireza Zojaji، Citex Corp. ۱، Citex Corp. ۲، Mahkameh Sharifzad، Mostafa Naghipoorfar، Sepehr Mohammadi، Siavash Tafazzoli) — فقط آدرس‌ها و genesis timestamp هنوز placeholder‌اند.
 
 ### ۳.۳ اعضای ValidatorsBoard (۵ نفر، بدون فرآیند عزل مستقیم)
-- **قرارداد میزبان:** ValidatorsBoard.sol — عضویت با رأی تأییدی (approval voting) از سوی ولیدیتورهای فعال تعیین می‌شود؛ هر ولیدیتور فعال می‌تواند تا ۵ نامزد را رأی دهد و هر زمان پس بگیرد؛ بدون کوروم یا بازه‌ی زمانی.
-- **بازآوری (`refreshBoard`):** permissionless، هر کسی می‌تواند فراخوانی کند؛ ۵ نامزد با بیشترین رأیِ فعلاً معتبر (فقط رأی‌دهنده و نامزدِ هر دو فعال) جایگزین ترکیب فعلی می‌شوند — بدون مرحله‌ی جداگانه‌ی «عزل»؛ کافی است حمایت کافی از دست برود یا فرد دیگر فعال نباشد.
+- **قرارداد میزبان:** ValidatorsBoard.sol — عضویت با رأی تأییدی (approval voting) از سوی ولیدیتورهای فعال تعیین می‌شود؛ هر ولیدیتور فعال می‌تواند تا ۵ نامزد را رأی دهد و هر زمان پس بگیرد (رأی همیشه آزاد است)؛ ولی ✅ **ترکیب عادی فقط هر ۳۰ روز** اعمال می‌شود؛ درخواست خروج اختیار عضو را فوراً قطع می‌کند و جانشین بدون انتظار می‌آید (P01/P02).
+- **بازآوری (`refreshBoard`):** permissionless ولی ✅ حداکثر هر ۳۰ روز یک‌بار (هیأت خالی: هر زمان)؛ ۵ نامزد با بیشترین رأیِ فعلاً معتبر (فقط رأی‌دهنده و نامزدِ هر دو فعال) جایگزین ترکیب فعلی می‌شوند — بدون مسیر عزل اضطراری؛ عضو معلق در این نقطه واجد ماندن نیست. **جانشینی** (`syncBoard`/`fillVacancies`) فقط کرسی‌های آزادشده‌ی ناشی از خروج را پر می‌کند.
 - **پاک‌سازی رأی‌های راکد (`clearStaleVotes`):** permissionless، وقتی ولیدیتوری بیش از (دوره بازیابی + ۳۰ روز) پیوسته Demoted بماند، هر کسی می‌تواند رأی‌های داده‌شده و دریافتی او را حذف کند.
 - **اختیارات تفویضی board** (نیازمند رأی اکثریت داخلی اعضای board، نه یک نفر):
   1. `proposeRotateOracle` → چرخش `distributionOracle` در BlockRewardDistributor (برای موارد اضطراری/افشای کلید).
-  2. `proposeApproveBudget` → تصویب هزینه‌های کوچک روتین در ValidatorsTreasury (زیر سقف `smallBudgetCap`).
+  2. `proposeApproveBudget` → تصویب پرداخت خزانه (حداقل ۳ رأی هیأت) در سقف‌های `perPaymentCap` (هر پرداخت باید کمتر از آن باشد) و `periodCap` (مجموع حدود ۳۰ روز).
   3. `proposeSetEntryThresholdBase` / `proposeSetGrowthFactorPerValidator` / `proposeSetMembershipFeeBps` → تنظیم پارامترهای اقتصادی ورود در ValidatorsRegistry.
   4. `proposeRotateVerifier` → چرخش `verifier` در ValidatorsRegistry.
 - **محدودیت صریح:** board نمی‌تواند پارامترهای امنیتی سطح‌بالاتر (نرخ محدودیت ورود، probation، liveness، slashing، cooldown) یا سقف بودجه‌ی خودش را تغییر دهد؛ آن‌ها فقط با رأی کامل ولیدیتورها ممکن‌اند. board همچنین نمی‌تواند آدرس هیچ قرارداد ساختاری را تغییر دهد (این آدرس‌ها constant در زمان کامپایل‌اند).
@@ -132,7 +132,7 @@
 - از مجموع کارمزدها (Fees): ۱۰۰٪ متناسب با تعداد بلاک تولیدی بین ولیدیتورها — بدون هیچ سهمی برای خزانه.
 - در ValidatorsRegistry: ✅ **به‌روزشده:** کارمزد عضویت (membership fee) هر ولیدیتور جدید دیگر مستقیم به ValidatorsTreasury نمی‌رود — به `BlockRewardDistributor` فوروارد و در epoch فی بعدی، ۱۰۰٪-به‌نسبت-بلاک بین ولیدیتورهای فعال تقسیم می‌شود (بدون سوزاندن، برخلاف فی معمولی). فقط سپرده‌ی جریمه‌شده (slashed) در غیرفعالی مستقیماً به ValidatorsTreasury می‌رود.
 - در FoundationDAO: ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis، فقط از طریق `proposeSendETH` (نصاب اکثریت ساده) قابل خروج است — از جمله برای تأمین دوره‌ای SurenSale.
-- ValidatorsTreasury دو مسیر خرج دارد: ۱) رأی کامل ولیدیتورهای فعال (بدون سقف)، ۲) تصویب board برای مبالغ کوچک زیر `smallBudgetCap` (که خودش فقط با رأی کامل ولیدیتورها قابل تغییر است، نه توسط board).
+- ✅ **P06:** ValidatorsTreasury **یک** مسیر خرج دارد: تصویب board (حداقل ۳ رأی) در دو سقف؛ سقف‌ها فقط با رأی مجمع + تأخیر ۷ روزه تغییر می‌کنند. (مسیر «رأی کامل ولیدیتورها، بدون سقف» حذف شده است.)
 
 ---
 

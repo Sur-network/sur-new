@@ -67,9 +67,11 @@ contract ValidatorsTreasury {
     ///         first raise this cap via proposeCapChange() below, wait out
     ///         CAP_CHANGE_TIMELOCK_DELAY, and then spend under the new cap through the normal
     ///         path — never in the same transaction or vote as the cap change itself.
-    /// @dev 🔶 FILL_IN (explicit user instruction: do not guess this number — a real decision
-    ///      before genesis, in native Suren wei).
-    uint256 public perPaymentCap = 0;
+    /// @dev ✅ FINAL DECISION (P06): initial value 50,000 Suren (native, in wei). Chosen from the 25% ratio to periodCap;
+    ///      that ratio is NOT enforced by code (deliberately — no automatic, permanent link between the two caps).
+    ///      Because genesis injects runtime code, this initializer does NOT run on the real chain — the genesis tool must
+    ///      overlay this slot (see the genesis-builder spec).
+    uint256 public perPaymentCap = 50_000 ether;
 
     /// @notice Ceiling on the SUM of every board-approved payment within roughly the trailing 30
     ///         days — a day-bucketed approximation (see dailySpend below), not an exact
@@ -87,20 +89,14 @@ contract ValidatorsTreasury {
     ///         counts toward this same shared total regardless of its destination or description
     ///         — splitting one large payment into several smaller ones, or sending to different
     ///         recipients, does not create separate budgets.
-    /// @dev 🔶 FILL_IN (explicit user instruction: do not guess this number — a real decision
-    ///      before genesis, in native Suren wei).
-    uint256 public periodCap = 0;
+    /// @dev ✅ FINAL DECISION (P06): initial value 200,000 Suren (native, in wei) for the ~30-day window. Genesis must
+    ///      overlay this slot too (initializers do not run on injection).
+    uint256 public periodCap = 200_000 ether;
 
-    /// @notice How long an assembly-approved change to perPaymentCap or periodCap must wait
-    ///         before taking effect — deliberately separate from the vote itself, so a cap
-    ///         increase and a payment under the new, larger cap can never happen in the same
-    ///         moment (per the user's explicit instruction: "افزایش سقف و خرج‌کردن در همان لحظه
-    ///         ممکن نباشد"). 🔶 FILL_IN: this specific delay was not part of the two numbers the
-    ///         user explicitly said not to guess, but given how directly it affects how fast a
-    ///         cap increase could be exploited, it should still be confirmed rather than silently
-    ///         relied upon — 7 days is used here ONLY as a working placeholder (matching the
-    ///         voting-deadline scale used elsewhere in this project's newer governance
-    ///         mechanisms), not a decided value.
+    /// @notice How long an assembly-approved change to perPaymentCap or periodCap must wait before taking effect —
+    ///         deliberately separate from the vote itself, so a cap increase and a payment under the new, larger cap can
+    ///         never happen in the same moment. ✅ FINAL DECISION (P06): 7 days. This delay applies ONLY to changes of the
+    ///         caps — ordinary payments approved by the board are NOT delayed.
     uint256 public constant CAP_CHANGE_TIMELOCK_DELAY = 7 days;
 
     /// @notice Number of daily buckets summed for the rolling-window check — fixed at 30 to

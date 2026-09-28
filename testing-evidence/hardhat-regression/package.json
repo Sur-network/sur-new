@@ -1,0 +1,12 @@
+{
+  "name": "sur-hardhat-regression",
+  "private": true,
+  "description": "Local-EVM (Hardhat) regression tests for the Sur contracts. NOT a Besu/QBFT test.",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "6.1.2",
+    "ethers": "6.17.0",
+    "hardhat": "2.29.1",
+    "solc": "0.8.37",
+    "solc-0.8.24": "npm:solc@0.8.24"
+  }
+}

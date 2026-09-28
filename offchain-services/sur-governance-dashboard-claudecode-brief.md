@@ -1,5 +1,15 @@
 # راهنمای پیاده‌سازی برای Claude Code — داشبورد حکمرانی سور
 
+> ## ⚠️ ضمیمه‌ی مقدم — تصمیم‌های نهایی ۲۰۲۶-۰۹-۲۸ (اگر با متن پایین‌تر فرق دارد، این ضمیمه معتبر است)
+>
+> **هیأت‌مدیره (P01/P02):** رأی‌دادن/تغییر رأی همیشه آزاد (`voteFor`/`unvoteFor`)؛ ولی `refreshBoard()` فقط هر **۳۰ روز** یک‌بار پذیرفته می‌شود — شمارنده‌ی «بازتعیین بعدی: `lastBoardRefreshAt + BOARD_REFRESH_INTERVAL`» نشان بده (هیأتِ خالی: هر زمان). برای هر عضو **اختیار زنده** را با `hasBoardAuthority(addr)` نشان بده (نه فقط `isBoardMember`)؛ `pendingVacancies` و دکمه‌ی `fillVacancies()`/`syncBoard()` (بدون مجوز). رویدادها: `BoardMemberAuthorityEnded`، `BoardSuccession`. اقدام ناتمام با ترکیب قدیمی باطل است: `voteAction` روی آن **revert می‌شود** (`board membership changed since this action was proposed - propose again`) — UI باید همین پیام را به کاربر نشان دهد و دکمه‌ی «پیشنهاد دوباره» بدهد؛ هرگز «رأی ثبت شد» نشان نده. اگر دارنده‌ی کرسی درخواست خروج داده باشد، همه‌ی اقدامات هیأت با `call syncBoard() first` revert می‌شوند؛ UI باید دکمه‌ی `syncBoard()` (بدون مجوز) را جلوی چشم بگذارد. اگر اعضای دارای اختیار < ۳، «پرداخت خزانه متوقف است» نشان بده. **هیچ دکمه‌ی عزل اضطراری وجود ندارد.**
+> **خزانه (P06):** سقف هر پرداخت **۵۰٬۰۰۰ سورن** (پرداخت باید کمتر باشد)، سقف مجموع حدود ۳۰روزه **۲۰۰٬۰۰۰ سورن** (`rollingWindowSpendNow()`)؛ تغییر سقف فقط با رأی مجمع و **تأخیر ۷روزه** (`pendingCapChange`)؛ پرداخت‌های عادی تأخیر ندارند. مجمع پرداخت موردی تصویب نمی‌کند.
+> **توزیع پاداش (P05):** برای هر epoch بازه‌ی بلاک (`epochBlockRanges`) و `lastSettledBlock` نشان بده.
+> **پرونده‌ها (P04/C01):** پرونده‌ی پیش‌ازخروج (`PreExitCaseRecorded`) در همان فهرست پرونده‌ها با برچسب جدا؛ آستانه‌ی تعلیق ۴ ساعت و هشدارهای ۱۵ دقیقه/۱ ساعت (در اولین بررسی بعدی).
+> **`ParamKey` (کد واقعی):** `MaxEntriesPerWindow`=۰، `EntryWindowSeconds`=۱، `ProbationPeriod`=۲، `RecoveryPeriod`=۳ (باید > ۱ ساعت)، `SlashBps`=۴، `ExitCooldown`=۵ (باید > ۷۲ ساعت). (`InactivityThreshold` و `MinLivenessConfirmations…` وجود ندارند.)
+
+
+
 > **این سند برای چیست:** جایگزین و تکمیل‌شده‌ی `sur-governance-dashboard-spec.md` است — همان سه پنل قبلی (بنیاد/خزانه/هیأت) اینجا حفظ شده‌اند، به‌علاوه‌ی یک **پنل چهارم کاملاً تازه** که در سند قبلی جا افتاده بود: رأی‌گیری تمام‌ولیدیتوری روی پارامترهای امنیتی مستقیماً روی قرارداد `ValidatorsRegistry` (توابع `proposeParameterChange`/`voteParameterChange`) — این با پنل «هیأت‌مدیره‌ی ولیدیتورها» (که پارامترهای *اقتصادی* را از طریق `ValidatorsBoard` تغییر می‌دهد) کاملاً متفاوت و مکمل است، نه تکراری.
 
 ---
@@ -102,20 +112,23 @@
 
 ## ۶. پنل خزانه‌ی ولیدیتورها (`ValidatorsTreasury`)
 
-### فهرست پیشنهادهای خرج باز
-برای هر `Expenditure` با `executed == false`: گیرنده، مبلغ، توضیح، نصاب (`(activeValidatorCount/2)+1` — از `ValidatorsRegistry.requiredVotesNow()` خوانده شود)، دکمه‌ی رأی (`voteExpenditure(id)`) فقط اگر `ValidatorsRegistry.isValidator(msg.sender) === true`.
+### ✅ مدل نهایی خزانه (P06) — این بخش جایگزین مدل قدیمی «رأی مجمع برای هر پرداخت» است
+`proposeExpenditure`/`voteExpenditure`/`smallBudgetCap` **دیگر وجود ندارند**؛ UI برای آن‌ها نساز. مجمع فقط سقف‌ها را تعیین می‌کند؛ پرداخت‌ها را فقط هیأت (`boardApproveExpenditure`) انجام می‌دهد.
 
-### فرم پیشنهاد خرج تازه
-فقط ولیدیتورهای فعال: گیرنده، مبلغ، توضیح → `proposeExpenditure(to, amount, description)`.
+### نمایش
+موجودی (`getBalance()`)، `perPaymentCap()` (فعلاً ۵۰٬۰۰۰ سورن، پرداخت باید **کمتر** باشد)، `periodCap()` (۲۰۰٬۰۰۰)، `rollingWindowSpendNow()` (نوار مصرف پنجره‌ی ~۳۰روزه با یادداشت «تقریب با دانه‌بندی روزانه»)، `CAP_CHANGE_TIMELOCK_DELAY` (۷ روز).
 
-اطلاعات جانبی: موجودی خزانه (`getBalance()`)، `smallBudgetCap` فعلی (فقط نمایشی).
+### تغییر سقف‌ها (فقط ولیدیتور فعال)
+فرم `proposeCapChange(kind, newValue)` (`PerPayment`=۰، `Period`=۱)؛ فهرست پیشنهادهای باز (`capChangeProposals(id)`) با دکمه‌ی `voteCapChange(id)`؛ **صف تأخیر** (`pendingCapChange(kind)`: مقدار جدید، `effectiveAt`، شمارنده‌ی معکوس) و دکمه‌ی `applyPendingCapChange(kind)` (بدون مجوز) فقط پس از پایان تأخیر ۷روزه. بنویس: «تأخیر ۷روزه فقط برای تغییر سقف است، نه پرداخت‌های عادی».
+
+اطلاعات جانبی: `totalSpent()`، `totalDistributedToTreasury()`.
 
 ---
 
 ## ۷. پنل هیأت‌مدیره‌ی ولیدیتورها (`ValidatorsBoard`)
 
 ### رأی‌گیری تأییدی عضویت هیأت (همه‌ی ولیدیتورهای فعال)
-فهرست همه‌ی ولیدیتورهای فعال (`ValidatorsRegistry.getValidators()`) به‌عنوان کاندید، با تعداد رأی هرکدام (`getVotersFor(candidate).length`). دکمه‌ی «رأی موافق» (`voteFor`) یا «پس‌گرفتن رأی» (`unvoteFor`) بسته به `hasVotedFor[msg.sender][candidate]`؛ دکمه‌ی رأی غیرفعال اگر `getVotesOf(msg.sender).length >= 5`. نمایش برجسته‌ی ۵ عضو فعلی هیأت (`getBoardMembers()`). دکمه‌ی «به‌روزرسانی نتیجه» (`refreshBoard()` — permissionless).
+فهرست همه‌ی ولیدیتورهای فعال (`ValidatorsRegistry.getValidators()`) به‌عنوان کاندید، با تعداد رأی هرکدام (`getVotersFor(candidate).length`). دکمه‌ی «رأی موافق» (`voteFor`) یا «پس‌گرفتن رأی» (`unvoteFor`) بسته به `hasVotedFor[msg.sender][candidate]`؛ دکمه‌ی رأی غیرفعال اگر `getVotesOf(msg.sender).length >= 5`. نمایش برجسته‌ی ۵ عضو فعلی هیأت (`getBoardMembers()`). دکمه‌ی «به‌روزرسانی نتیجه» (`refreshBoard()` — permissionless، ولی ✅ فقط هر ۳۰ روز یک‌بار؛ شمارنده‌ی «بازتعیین بعدی» نشان بده).
 
 ### اقدامات داخلی هیأت (فقط اعضای هیأت — `isBoardMember`)
 فهرست اقدامات باز با نوع (`RotateOracle`/`ApproveBudget`/`SetEntryThresholdBase`/`SetGrowthFactorPerValidator`/`SetMembershipFeeBps`/`RotateVerifier`)، نصاب `(boardSize/2)+1`، دکمه‌ی رأی (`voteAction(id)`). فرم ساخت اقدام تازه، یک تب برای هرکدام از شش نوع، با پارامترهای تابع `propose*` متناظر.

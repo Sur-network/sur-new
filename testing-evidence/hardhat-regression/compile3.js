@@ -1,4 +1,4 @@
-const solc = require('solc');
+const solc = require(process.env.SOLC_PATH || 'solc');
 const fs = require('fs');
 
 function findImports(importPath) {

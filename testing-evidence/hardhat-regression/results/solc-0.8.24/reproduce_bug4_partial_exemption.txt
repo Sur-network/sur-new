@@ -1,0 +1,10 @@
+=== بازتولید باگ ۴: معافیت جمعی فقط برای یه decisionId، نه کل epoch ===
+
+✅ ۱۰ ولیدیتور فعال شدند
+
+✅ v2 و v3 توی همون پنجره‌ی ۱ساعته تعلیق شدند، decisionId: 11 12
+slashOutcome v2 (که resolveMassFailureCheck مستقیم روش صدا زده شد): 0 (باید 1=ExemptMassFailure باشه)
+slashOutcome v3 (که resolveMassFailureCheck هرگز مستقیم روش صدا زده نشده): 0 (هنوز باید 0=Undetermined باشه)
+
+🔍 تلاش برای confirmDelivery روی v3 (که هرگز resolveMassFailureCheck مخصوص خودش رو نگرفته)...
+✅ رد شد: undefined

@@ -1,0 +1,12 @@
+Mutation checks (run 2026-09-28, solc-js 0.8.37, Hardhat 2.29.1). A guard was deliberately removed from the contract source,
+the artifacts were rebuilt, and the relevant test was run. A useful test must FAIL (exit code 1).
+
+M1  removed the N01 guard `require(d.slashOutcome == Undetermined)` in assertDeliveryDisputed
+    -> scripts/reproduce_N01_stale_lock_wipe.js : exit 1  ("assertDeliveryDisputed succeeded on an already-closed case")
+M2  removed the 30-day rule in ValidatorsBoard.refreshBoard
+    -> scripts/test_P01_P02_board.js            : exit 1  (P01-b, P01-d, G-b failed)
+M3  removed the explicit revert for invalidated actions in ValidatorsBoard._voteAction
+    -> scripts/test_P01_P02_board.js            : exit 1  (P01-g, P02-g failed)
+Restored the original contracts and rebuilt -> scripts/test_P01_P02_board.js : exit 0
+
+Only these three mutations were tried. This is NOT a full mutation-testing campaign.

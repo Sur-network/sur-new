@@ -1,0 +1,1 @@
+solc 0.8.24+commit.e11b9ed9.Emscripten.clang

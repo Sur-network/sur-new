@@ -524,6 +524,23 @@ contract ValidatorsRegistry {
     ///         _massFailureResolved() این mapping سطح‌پرونده رو چک می‌کنه، نه پرچم سطح‌epoch رو.
     mapping(uint256 => bool) private massFailureChecked;
 
+    // ------------------------------------------------------------------
+    // P04 (تصمیم نهایی): رسیدگی پس از درخواست خروج + مبلغ محفوظ + اتصال دقیق به پرونده
+    // ------------------------------------------------------------------
+    /// @notice تصمیم دقیقی که الان قفل جریمه‌ی معلق این ولیدیتور را نگه داشته (۰ = هیچ).
+    mapping(address => uint256) public pendingSlashDecisionId;
+    /// @notice مبلغ درگیر یک پرونده که **در لحظه‌ی ثبت پرونده ثابت می‌شود** (وثیقه × slashBps همان لحظه) — همان چیزی که
+    ///         withdrawStake() محفوظ نگه می‌دارد و _executeSlash() برمی‌دارد (با سقف مانده‌ی وثیقه).
+    mapping(uint256 => uint256) public decisionSlashAmount;
+    /// @notice زمان شروع تخلف ادعاشده در پرونده‌های پیش‌ازخروج (۰ برای تعلیق عادی). بسته‌ی شواهد (هش روی زنجیره) باید آن را
+    ///         نشان دهد؛ مجمع از مسیر عادی اعتراض می‌تواند بررسی‌اش کند.
+    mapping(uint256 => uint256) public decisionViolationAt;
+    /// @notice وضعیت ولیدیتور در لحظه‌ی درخواست خروج (فقط ولیدیتور Active وظیفه‌ی اعتبارسنجی دارد که بشود دربارهٔ تخلفش پرونده باز کرد).
+    mapping(address => uint8) public statusBeforeExit;
+    /// @notice تا چه مدت بعد از درخواست خروج، Verifier هنوز می‌تواند دربارهٔ رفتار **قبل** از درخواست پرونده ثبت کند.
+    uint256 public constant PRE_EXIT_CLAIM_WINDOW = 72 hours;
+    event PreExitCaseRecorded(uint256 indexed decisionId, address indexed validator, uint256 violationAt, uint256 exitRequestedAt, bytes32 evidenceHash);
+
     mapping(uint256 => StatusDecision) public statusDecisions;
     uint256 public statusDecisionCount;
     mapping(uint256 => mapping(address => bool)) private hasVotedOnSlash;
@@ -866,13 +883,35 @@ contract ValidatorsRegistry {
 
         _removeFromActive(validator);
 
-        uint256 epochId = _recordDemotion(v); // تصمیم جریمه معلقه — به resolveMassFailureCheck() مراجعه کن
+        uint256 epochId = _recordDemotion(v, true); // تصمیم جریمه معلقه — به resolveMassFailureCheck() مراجعه کن
         v.status = Status.Demoted;
         v.demotedAt = block.timestamp;
         v.periodStartedAt = block.timestamp; // دوره‌ی بازگشت از همین الان شروع می‌شود
 
         decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
         emit ValidatorDemoted(validator, epochId);
+    }
+
+    // ------------------------------------------------------------------
+    // P04: پرونده درباره‌ی رفتار **قبل از** درخواست خروج. درخواست خروج وظیفه‌ی اعتبارسنجی را فوراً پایان می‌دهد و انتظار
+    // ۱ هفته‌ای برداشت را شروع می‌کند؛ تا ۷۲ ساعت Verifier هنوز می‌تواند درباره‌ی رفتار قبلی پرونده ثبت کند. غیرفعالیِ
+    // **بعد** از درخواست هرگز تخلف نیست. صرف ادعای Verifier کافی نیست: هش شواهد، زمان وقوع تخلف، و همان سازوکار معافیت
+    // جمعی / تحویل / اعتراض / رأی مجمع اینجا هم اعمال می‌شود.
+    // ------------------------------------------------------------------
+    function recordPreExitViolation(address validator, bytes32 evidenceHash, uint256 violationAt) external onlyVerifier nonReentrant returns (uint256 decisionId) {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Exiting, "ValidatorsRegistry: validator is not exiting");
+        require(statusBeforeExit[validator] == uint8(Status.Active), "ValidatorsRegistry: had no validation duty when exiting");
+        uint256 exitRequestedAt = v.periodStartedAt; // requestExit() این را ثبت می‌کند
+        require(block.timestamp <= exitRequestedAt + PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: pre-exit claim window closed");
+        require(violationAt < exitRequestedAt, "ValidatorsRegistry: violation must precede the exit request");
+        require(violationAt > v.demotedAt, "ValidatorsRegistry: violation predates the last suspension");
+        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: a case is already pending");
+
+        uint256 epochId = _recordDemotion(v, false); // همین الان از مجموعه‌ی فعال حذف نشده (در لحظه‌ی درخواست خروج حذف شده)
+        decisionId = _recordDecision(validator, DecisionType.Suspension, evidenceHash, epochId);
+        decisionViolationAt[decisionId] = violationAt;
+        emit PreExitCaseRecorded(decisionId, validator, violationAt, exitRequestedAt, evidenceHash);
     }
 
     function _recordDecision(address validator, DecisionType dtype, bytes32 evidenceHash, uint256 demotionEpochId) private returns (uint256 id) {
@@ -893,6 +932,10 @@ contract ValidatorsRegistry {
             requiredConfirmVotes: 0,
             slashOutcome: SlashOutcome.Undetermined
         });
+        if (dtype == DecisionType.Suspension) {
+            pendingSlashDecisionId[validator] = id;
+            decisionSlashAmount[id] = (validators[validator].lockedStake * slashBps) / BPS_DENOMINATOR;
+        }
         emit StatusDecisionRecorded(id, validator, dtype, evidenceHash);
     }
 
@@ -903,12 +946,12 @@ contract ValidatorsRegistry {
     //         عضویت لیست فعال دست نمی‌زنه (به کامنت DemotionEpoch برای این‌که چرا این تفکیک
     //         یه الزام سخته مراجعه کن).
     // ------------------------------------------------------------------
-    function _recordDemotion(ValidatorInfo storage v) private returns (uint256 epochId) {
+    function _recordDemotion(ValidatorInfo storage v, bool validatorJustRemovedFromActive) private returns (uint256 epochId) {
         if (currentDemotionEpochId == 0 || block.timestamp >= demotionEpochs[currentDemotionEpochId].startedAt + MASS_DEMOTION_WINDOW) {
             currentDemotionEpochId++;
             DemotionEpoch storage fresh = demotionEpochs[currentDemotionEpochId];
             fresh.startedAt = block.timestamp;
-            fresh.referenceCount = activeValidators.length + 1; // +1: این ولیدیتور قبلاً توسط
+            fresh.referenceCount = activeValidators.length + (validatorJustRemovedFromActive ? 1 : 0); // +1: این ولیدیتور قبلاً توسط
             // فراخوان‌کننده از activeValidators حذف شده — فقط یه‌بار اینجا snapshot می‌شه و
             // دیگه هرگز دست‌خورده نمی‌شه، پس حذف‌های بعدی توی همون epoch نمی‌تونن اون چیزی که
             // دموت‌های این epoch باهاش سنجیده می‌شن رو جابه‌جا کنن.
@@ -946,7 +989,7 @@ contract ValidatorsRegistry {
 
         if (epoch.wasMassFailure) {
             d.slashOutcome = SlashOutcome.ExemptMassFailure;
-            _clearPendingSlashIfCurrent(d); // کاملاً بسته — دیگه هیچ‌وقت تحویل/اعتراض لازم نمی‌شه
+            _clearPendingSlashIfCurrent(decisionId); // کاملاً بسته — دیگه هیچ‌وقت تحویل/اعتراض لازم نمی‌شه
             emit SlashResolved(decisionId, d.validator, SlashOutcome.ExemptMassFailure, 0);
         }
         // اگه رخداد جمعی نبود: d.delivery از قبل توسط _recordDecision بالا Pending‌شده —
@@ -959,22 +1002,15 @@ contract ValidatorsRegistry {
     // برای استدلال کامل مراجعه کن.
     // ------------------------------------------------------------------
 
-    /// @notice ✅ اصلاح‌شده (N01، پیداشده در بازبینی مستقل نهایی و روی شبیه‌سازی زنجیره‌ی واقعی
-    ///         بازتولیدشده): هر جایی که قفل جریمه‌ی معلق یک ولیدیتور را پاک می‌کرد، بی‌قید
-    ///         `pendingSlashEpoch = 0` می‌نوشت. ولی این فیلد روی **ولیدیتور** است، نه روی
-    ///         تصمیم — پس اگه یه تصمیم قدیمی (A) دیر حل می‌شد، بعد از این‌که همون ولیدیتور
-    ///         **دوباره** تعلیق شده بود (تصمیم B، که یه `pendingSlashEpoch` تازه ست کرده بود)،
-    ///         حل‌کردن A بی‌صدا قفل B را پاک می‌کرد و ولیدیتور می‌توانست درخواست خروج بدهد و
-    ///         کل وثیقه‌اش را وقتی B هنوز حل‌نشده بود برداشت کند. الان قفل، اپوک دموتی که بهش
-    ///         تعلق داره را نگه می‌داره، و یه تصمیم **فقط** وقتی می‌تواند آن را پاک کند که قفل
-    ///         هنوز به اپوک خودِ همان تصمیم اشاره کند. (یه ولیدیتور فقط بعد از بازگشت می‌تواند
-    ///         دوباره تعلیق شود و recoveryPeriod در کد (proposeParameterChange/_applyParam) اجباراً اکیداً از
-    ///         MASS_DEMOTION_WINDOW بلندتر نگه داشته می‌شود، پس دو تعلیق یک ولیدیتور هرگز نمی‌توانند
-    ///         اپوک دموت مشترک داشته باشند — تطابق اپوک، دقیقاً پرونده را مشخص می‌کند.)
-    function _clearPendingSlashIfCurrent(StatusDecision storage d) private {
-        ValidatorInfo storage vv = validators[d.validator];
-        if (vv.pendingSlashEpoch == d.demotionEpochId) {
-            vv.pendingSlashEpoch = 0;
+    /// @notice قفل جریمه‌ی معلق روی **ولیدیتور** است، پس به **تصمیم** دقیقی که آن را ساخته (`pendingSlashDecisionId`)
+    ///         بسته شده. یک تصمیم فقط وقتی می‌تواند قفل را پاک کند که هنوز خودش نگهدار آن باشد — حل‌کردنِ یک پرونده‌ی
+    ///         قدیمی هرگز قفل پرونده‌ی جدیدتر را پاک نمی‌کند (N01). `pendingSlashEpoch` فقط برای ABI بیرونی
+    ///         getValidatorInfo() هم‌گام نگه داشته می‌شود.
+    function _clearPendingSlashIfCurrent(uint256 decisionId) private {
+        address who = statusDecisions[decisionId].validator;
+        if (pendingSlashDecisionId[who] == decisionId) {
+            pendingSlashDecisionId[who] = 0;
+            validators[who].pendingSlashEpoch = 0;
         }
     }
 
@@ -1108,7 +1144,7 @@ contract ValidatorsRegistry {
             // می‌کنه — ولیدیتور رو به اجماع برنمی‌گردونه (اون همچنان نیازمند مسیر بازگشت
             // معمولی و مستقله).
             d.slashOutcome = SlashOutcome.VoidedNoDelivery;
-            _clearPendingSlashIfCurrent(d);
+            _clearPendingSlashIfCurrent(decisionId);
             emit SlashResolved(decisionId, d.validator, SlashOutcome.VoidedNoDelivery, 0);
         }
         emit DeliveryDisputeResolved(decisionId, confirmed);
@@ -1170,7 +1206,7 @@ contract ValidatorsRegistry {
         require(d.slashOutcome == SlashOutcome.Undetermined, "ValidatorsRegistry: already resolved");
         require(block.timestamp > d.appealVotingDeadline, "ValidatorsRegistry: voting period not yet over");
         d.slashOutcome = SlashOutcome.RejectedNoQuorum;
-        _clearPendingSlashIfCurrent(d);
+        _clearPendingSlashIfCurrent(decisionId);
         emit SlashResolved(decisionId, d.validator, SlashOutcome.RejectedNoQuorum, 0);
     }
 
@@ -1193,9 +1229,10 @@ contract ValidatorsRegistry {
         StatusDecision storage d = statusDecisions[decisionId];
         d.slashOutcome = outcome;
         ValidatorInfo storage v = validators[d.validator];
-        _clearPendingSlashIfCurrent(d);
+        _clearPendingSlashIfCurrent(decisionId);
 
-        uint256 slashAmount = (v.lockedStake * slashBps) / BPS_DENOMINATOR;
+        uint256 slashAmount = decisionSlashAmount[decisionId]; // در لحظه‌ی ثبت پرونده ثابت شده (P04)
+        if (slashAmount > v.lockedStake) slashAmount = v.lockedStake;
         v.lockedStake -= slashAmount;
         if (slashAmount > 0) {
             (bool success, ) = TREASURY.call{value: slashAmount}("");
@@ -1237,26 +1274,10 @@ contract ValidatorsRegistry {
         );
 
         if (v.status == Status.Active) {
-            // ⚠️ تغییرکرده (تصمیم صریح کاربر — بازطراحی راستی‌آزمایی آف‌چین) — ⚠️⚠️ تصحیح
-            // صادقانه (پیداشده در بازبینی مستقل: یه نسخه‌ی قبلی این کامنت این رو به‌عنوان یه
-            // جایگزین **هم‌ارز** با محافظ قدیمی معرفی کرده بود؛ نیست): راه‌فرار ضدِ«فرار قبل
-            // از دموت» که اینجا بود، لحظه‌ی خروج، لاگ liveness on-chain این ولیدیتور رو چک
-            // می‌کرد — یه چکی که خودِ **قرارداد** انجامش می‌داد، مستقل از زمان‌بندی هر عامل
-            // بیرونی. اون لاگ دیگه وجود نداره (liveness الان آف‌چین چک می‌شه — به یادداشت
-            // معماری بالای recordSuspension() مراجعه کن)، پس این قرارداد دیگه نمی‌تونه مستقل
-            // تشخیص بده «آیا این ولیدیتور همین الان واجد شرایط تعلیق بوده». چیزی که جایگزینش
-            // شده **هم‌ارز نیست**: کاملاً به این بستگی داره که Verifier غیرفعالی رو متوجه بشه
-            // و تراکنش recordSuspension()‌اش **قبل از** این تراکنش requestExit() ماین بشه —
-            // یه race condition واقعی، بدون هیچ تضمین on-chain‌ای به هیچ‌طرف. اگه تشخیص
-            // آف‌چین Verifier عقب بیفته، یا تراکنشش صرفاً کندتر برسه (مثلاً موقع ازدحام شبکه،
-            // یا اگه خودِ سرویس Verifier یه‌لحظه دچار افت بشه — دقیقاً همون سناریویی که این
-            // مکانیزم برای گرفتنش وجود داره)، یه ولیدیتوری که می‌دونه غیرفعال شده می‌تونه
-            // اول درخواست خروج بده و کل وثیقه‌ش رو نگه داره، چیزی که خودچک قدیمی on-chain
-            // صرف‌نظر از زمان‌بندی می‌گرفتش. این شکاف به‌عنوان یه مصالحه‌ی واقعی و شناخته‌شده‌ی
-            // انتقال به راستی‌آزمایی آف‌چین پذیرفته شده — نه یه مسئله‌ی حل‌شده — و اگه در عمل
-            // قابل‌سوءاستفاده ثابت بشه، ارزش بازنگری داره (مثلاً افزودن یه تأخیر کوتاه به
-            // درخواست خروج که به Verifier یه پنجره‌ی تضمین‌شده برای اقدام اول بده، که اینجا
-            // پذیرفته نشد تا خروج‌های مشروع کند نشن).
+            // P04 (تصمیم نهایی): درخواست خروج وظیفه‌ی اعتبارسنجی را **فوراً** پایان می‌دهد (حذف از مجموعه‌ی فعال — و از
+            // مجموعه‌ی ولیدیتور QBFT، و از اختیار هیأت‌مدیره). مسئولیت‌پذیری را پاک نمی‌کند: تا PRE_EXIT_CLAIM_WINDOW (۷۲ ساعت)
+            // Verifier هنوز می‌تواند درباره‌ی رفتار **قبل** از این درخواست پرونده ثبت کند (recordPreExitViolation)، و
+            // مبلغ درگیر تا تعیین تکلیف چنین پرونده‌ای توسط withdrawStake() محفوظ می‌ماند.
             _removeFromActive(msg.sender);
         }
 
@@ -1268,26 +1289,32 @@ contract ValidatorsRegistry {
             paidValidatorCount--;
         }
 
+        statusBeforeExit[msg.sender] = uint8(v.status); // قبل از تغییر وضعیت پایین خوانده می‌شود
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }
 
+    /// @notice P04: برداشت بعد از exitCooldown. اگر پرونده‌ی معلقی نباشد کل وثیقه پرداخت می‌شود. اگر پرونده‌ی معلق باشد فقط مبلغ
+    ///         درگیر (ثابت‌شده در لحظه‌ی ثبت پرونده) محفوظ می‌ماند؛ بقیه همین الان پرداخت می‌شود، و مانده‌ی محفوظ پس از
+    ///         تعیین تکلیف پرونده (بعد از هر جریمه) با فراخوان دوباره قابل برداشت است.
     function withdrawStake() external nonReentrant {
         ValidatorInfo storage v = validators[msg.sender];
         require(v.status == Status.Exiting, "ValidatorsRegistry: not exiting");
         require(block.timestamp >= v.periodStartedAt + exitCooldown, "ValidatorsRegistry: exit cooldown not elapsed");
-        // ✅ تازه: بستن یه راه فرار باقیمانده — بدون این، یه ولیدیتور با یه جریمه‌ی معلق
-        // حل‌نشده (به کامنت DemotionEpoch مراجعه کن) می‌تونست کل وثیقه‌ش رو، قبل از این‌که
-        // resolvePendingSlash() فرصت اجراشدن پیدا کنه، برداره — یعنی برای همیشه ازش فرار
-        // کنه. MASS_DEMOTION_WINDOW (۱ ساعت) همیشه خیلی کوتاه‌تر از exitCooldown (۱ هفته)
-        // است، پس این عملاً هیچ‌وقت نباید یه برداشت مشروع واقعی رو مسدود کنه — فقط یه توری
-        // ایمنیه.
-        require(v.pendingSlashEpoch == 0, "ValidatorsRegistry: resolve the pending slash first");
 
-        uint256 amount = v.lockedStake;
-        delete validators[msg.sender];
+        uint256 reserved = 0;
+        if (v.pendingSlashEpoch != 0) {
+            reserved = decisionSlashAmount[pendingSlashDecisionId[msg.sender]];
+            if (reserved > v.lockedStake) reserved = v.lockedStake;
+        }
+        uint256 amount = v.lockedStake - reserved;
+        v.lockedStake = reserved;
+        if (v.pendingSlashEpoch == 0) {
+            delete validators[msg.sender];
+            delete statusBeforeExit[msg.sender];
+        }
 
         if (amount > 0) {
             (bool success, ) = msg.sender.call{value: amount}("");
@@ -1307,6 +1334,8 @@ contract ValidatorsRegistry {
         // (تا پیشنهاد نامعتبر ساخته نشود و رأی نهایی‌اش قفل نکند) و هم دوباره در _applyParam().
         if (key == ParamKey.RecoveryPeriod) {
             require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
+        } else if (key == ParamKey.ExitCooldown) {
+            require(newValue > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
         }
         paramProposalCount++;
         id = paramProposalCount;
@@ -1359,6 +1388,7 @@ contract ValidatorsRegistry {
             require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
             slashBps = value;
         } else if (key == ParamKey.ExitCooldown) {
+            require(value > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
             exitCooldown = value;
         }
         emit ParameterChangeApplied(key, value);

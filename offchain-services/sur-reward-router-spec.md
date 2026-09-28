@@ -29,7 +29,10 @@
 ## ۳. خروجی — یک تراکنش در هر epoch
 
 ```solidity
+struct BlockRange { uint256 fromBlock; uint256 toBlock; }
+
 function distributeRewards(
+    BlockRange calldata range,        // ✅ تصمیم نهایی P05: بازه‌ی شامل (inclusive) بلاک‌هایی که این توزیع تسویه می‌کند
     address[] calldata validators,
     uint256[] calldata blocksMined,
     uint256 totalRewards,
@@ -37,12 +40,21 @@ function distributeRewards(
 ) external onlyDistributionOracle nonReentrant
 ```
 
+✅ **کنترل بازه‌ی بلاک (تصمیم نهایی P05):** هر توزیع ابتدا و انتهای بازه‌ی بلاک‌های خودش را اعلام می‌کند و قرارداد **آخرین بلاک تسویه‌شده** (`lastSettledBlock`) را نگه می‌دارد. شماره‌ی افزایشی epoch به‌تنهایی کافی نیست؛ کنترل به بازه‌ی واقعی بلاک‌ها متصل است:
+- `range.fromBlock == lastSettledBlock + 1` — بازه‌ی **تکراری** (شروع قبل از آن) و **هم‌پوشان** رد می‌شود؛ بازه‌ی دارای **فاصله‌ی توضیح‌نداده‌شده** (شروع بعد از آن، یعنی بلاکی جا افتاده) هم رد می‌شود. اولین بازه باید از بلاک ۱ شروع شود.
+- `range.toBlock >= range.fromBlock` و `range.toBlock < block.number` (فقط بلاک‌های تولیدشده).
+- مجموع `blocksMined` نمی‌تواند از اندازه‌ی بازه (`toBlock - fromBlock + 1`) بیشتر باشد. (کمتر مجاز است: بلاک‌هایی که تولیدکننده‌شان دیگر ولیدیتور معتبر نیست طبق گام ۳ فیلتر می‌شوند.)
+- پس از موفقیت: `lastSettledBlock = range.toBlock`، بازه در `epochBlockRanges[epochId]` ثبت و رویداد `EpochRangeSettled` منتشر می‌شود.
+- **قطعی سرویس** با پرش رد نمی‌شود: چرخه‌ی بعدی **همه‌ی** بلاک‌های جامانده را از `lastSettledBlock + 1` می‌پوشاند.
+- ⚠️ **حدّ صریح این کنترل:** قرارداد همچنان **صحت مبالغ** (`totalRewards`, `totalFees`) و **انتساب بلاک‌ها به ولیدیتورها** (`blocksMined`) را از `distributionOracle` می‌پذیرد و خودش با زنجیره تطبیق نمی‌دهد. کنترل بازه فقط از **تسویه‌ی تکراری، هم‌پوشان یا جاافتاده** جلوگیری می‌کند؛ اوراکل اشتباه یا مخرب می‌تواند در بازه‌ی معتبر عددهای غلط بدهد (محافظ‌ها: سقف فیزیکی بلاک، موجودی قرارداد، و چرخش کلید اوراکل توسط هیأت).
+
 - `validators` و `blocksMined` باید هم‌طول باشند؛ ترتیب اهمیتی ندارد.
 - `totalRewards`: مجموع بخش ریوارد همه‌ی بلاک‌های این epoch (قبل از کسر سهم‌های خزانه/بنیاد — خودِ قرارداد این کسر را انجام می‌دهد؛ ✅ **به‌روزشده:** ۱۵٪ ثابت از کل به بنیاد (مستقل، بدون‌ارتباط با هر چیز دیگر)، و باقی‌مانده‌ی ۸۵٪ بین سهم مستقیم ولیدیتورها (۴۰٪-۶۵٪ حکمرانی‌شونده، پیش‌فرض ۵۰٪) و خزانه تقسیم می‌شود — `sur-tokenomics.md` بخش ۶.۵/۶.۶).
 - `totalFees`: مجموع فی همه‌ی تراکنش‌های این epoch (✅ **به‌روزشده:** ۳۰٪ ثابت سوزانده می‌شود، ۷۰٪ باقی‌مانده مستقیم بین ولیدیتورها تقسیم می‌شود — هیچ سهمی به خزانه یا بنیاد نمی‌رود؛ `sur-tokenomics.md` بخش ۷).
 
 ⚠️ **این تراکنش‌ها checkهای خودشان را دارند و اگر رعایت نشوند revert می‌کنند** (نه فقط توصیه، بلکه `require` در خودِ قرارداد):
 - `block.timestamp >= lastDistributionTime + 23h` (به‌جز epoch اول).
+- کنترل بازه‌ی P05 (بالا): شروع دقیقاً بعد از `lastSettledBlock`، پایان قبل از بلاک جاری، و مجموع گزارش‌شده ≤ اندازه‌ی بازه.
 - `totalRewards + totalFees <= address(this).balance`.
 - `totalBlocks <= elapsed / MIN_BLOCK_PERIOD_SECONDS` (سقف فیزیکی — به‌جز epoch اول؛ `MIN_BLOCK_PERIOD_SECONDS` الان `3` است).
 
@@ -90,8 +102,8 @@ function distributeRewards(
 | ستون | نوع | توضیح |
 |---|---|---|
 | `epoch_id` | INTEGER PRIMARY KEY | برابر `epochCount` خودِ قرارداد بعد از موفقیت |
-| `start_block` | INTEGER | اولین بلاک اسکن‌شده در این epoch |
-| `end_block` | INTEGER | آخرین بلاک اسکن‌شده (همان `head` لحظه‌ی اسکن — بدون margin، چون QBFT نهایی‌شدن فوری دارد) |
+| `start_block` | INTEGER | اولین بلاک اسکن‌شده در این epoch = `range.fromBlock` ارسالی به قرارداد (✅ P05: باید دقیقاً `lastSettledBlock + 1` باشد) |
+| `end_block` | INTEGER | آخرین بلاک اسکن‌شده = `range.toBlock` ارسالی به قرارداد (سر زنجیره‌ی لحظه‌ی اسکن منهای ۱ تا `< block.number` تراکنش بماند — بدون margin، چون QBFT نهایی‌شدن فوری دارد) |
 | `total_rewards` | TEXT (wei) | مجموع ریوارد محاسبه‌شده |
 | `total_fees` | TEXT (wei) | مجموع فی محاسبه‌شده |
 | `total_blocks` | INTEGER | مجموع بلاک‌های معتبر شمرده‌شده |
@@ -119,7 +131,7 @@ function distributeRewards(
 ## ۶. جریان کاری — هر چرخه (هر ~۲۳ ساعت و ۱۰ دقیقه)
 
 1. **چک پیش‌شرط‌ها:** `getDistributionOracle()` را بخوان و مطمئن شو کلید همین سرویس هنوز `distributionOracle` است (اگر هیأت‌مدیره‌ی ولیدیتورها کلید را چرخانده و این سرویس خبردار نشده، ادامه نده و هشدار بده). `timeUntilNextDistribution()` را چک کن.
-2. **تعیین بازه‌ی اسکن:** از `last_scanned_block + 1` (یا `deployTime`/بلاک genesis، برای اولین اجرا) تا **همان بلاک فعلی سر زنجیره (`head`)**. ✅ **اصلاحیه‌ی مهم:** نسخه‌ی قبلی این سند یک margin امنیتی (`CONFIRMATIONS`) برای محافظت در برابر reorg پیشنهاد داده بود — این اشتباه بود. QBFT نهایی‌شدن فوری (instant finality) دارد: یک بلاک فقط وقتی وارد زنجیره می‌شود که از قبل امضای کافی (۲f+1) از ولیدیتورها را گرفته؛ برخلاف زنجیره‌های اثبات‌کار، هیچ reorg احتمالی روی بلاک‌های قبلاً تأییدشده وجود ندارد. پس نیازی به هیچ عقب‌ماندگی از `head` نیست.
+2. **تعیین بازه‌ی اسکن:** ✅ **(P05)** `fromBlock` باید **دقیقاً** `lastSettledBlock()` قرارداد + ۱ باشد (این مقدار را از قرارداد بخوان و با `last_scanned_block` محلی مقایسه کن؛ اگر متفاوت‌اند، **متوقف شو و هشدار بده** — دیتابیس محلی و زنجیره ناسازگارند)، و `toBlock` = بلاک سر زنجیره منهای ۱ (باید `< block.number` تراکنش باشد). از `last_scanned_block + 1` (یا `deployTime`/بلاک genesis، برای اولین اجرا) تا **همان بلاک فعلی سر زنجیره (`head`)**. ✅ **اصلاحیه‌ی مهم:** نسخه‌ی قبلی این سند یک margin امنیتی (`CONFIRMATIONS`) برای محافظت در برابر reorg پیشنهاد داده بود — این اشتباه بود. QBFT نهایی‌شدن فوری (instant finality) دارد: یک بلاک فقط وقتی وارد زنجیره می‌شود که از قبل امضای کافی (۲f+1) از ولیدیتورها را گرفته؛ برخلاف زنجیره‌های اثبات‌کار، هیچ reorg احتمالی روی بلاک‌های قبلاً تأییدشده وجود ندارد. پس نیازی به هیچ عقب‌ماندگی از `head` نیست.
 3. **برای هر بلاک در بازه:**
    - `eth_getBlockByNumber` → فیلد `miner` را بخوان.
    - `trace_block` → entry نوع `reward` را پیدا کن، مقدارش را به `miner` این بلاک نسبت بده.
@@ -127,8 +139,8 @@ function distributeRewards(
    - `ValidatorsRegistry.isValidator(miner)` را چک کن — ✅ **تصمیم قطعی:** فقط آدرس‌هایی که **الان** (لحظه‌ی ارسال تراکنش، نه لحظه‌ی تولید بلاک) هنوز `isValidator` هستند در لیست نهایی `distributeRewards` قرار می‌گیرند؛ چون خودِ قرارداد `distributeRewards` هیچ چک اعتباری روی آدرس‌های ورودی انجام نمی‌دهد (به RewardRouter اعتماد می‌کند)، اگر این چک اینجا انجام نشود، پول می‌تواند بدون مانع به یک آدرس دیگر ولیدیتور نبوده برسد. سهم آدرس‌های دموت‌شده صرفاً از لیست حذف می‌شود (نه به کس دیگری منتقل می‌شود، نه در `totalRewards`/`totalFees` نهایی لحاظ می‌شود).
 4. **Aggregate:** بر اساس `miner`، `blocksMined` (تعداد بلاک) و مجموع `rewardShare`/`feeShare` را جمع بزن.
 5. **محاسبه‌ی `totalRewards`/`totalFees` نهایی:** مجموع کل (نه فقط سهم هر ولیدیتور).
-6. **چک نهایی قبل از ارسال:** `totalRewards + totalFees <= getContractBalance()`؛ `totalBlocks <= (زمان سپری‌شده) / 3`.
-7. **ارسال تراکنش `distributeRewards(...)`** با کلید از Vault.
+6. **چک نهایی قبل از ارسال:** `totalRewards + totalFees <= getContractBalance()`؛ `totalBlocks <= (زمان سپری‌شده) / 3`؛ ✅ **(P05)** `sum(blocksMined) <= toBlock - fromBlock + 1`.
+7. **ارسال تراکنش `distributeRewards({fromBlock, toBlock}, ...)`** با کلید از Vault.
 8. **⚠️ Idempotency — فقط بعد از موفقیت واقعی state را commit کن:** رکورد `epochs` را با `status='pending'` قبل از ارسال بنویس؛ فقط بعد از دریافت **تأییدیه‌ی واقعی تراکنش** (نه فقط ارسال) به `'confirmed'` تغییرش بده و `last_scanned_block` را جلو ببر. اگر تراکنش fail یا timeout شد، `status='failed'` بماند و همان بازه در چرخه‌ی بعدی دوباره امتحان شود (نه از دست برود، نه دوبار پرداخت شود چون قرارداد خودش هم `lastDistributionTime` را چک می‌کند).
 
 ---

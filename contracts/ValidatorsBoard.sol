@@ -235,6 +235,16 @@ contract ValidatorsBoard {
     ///         becomes invalid once the version moves on — see boardVersionAtCreation.
     uint256 public boardVersion = 1;
 
+    /// @notice P01: an ORDINARY change of board composition (refreshBoard) is applied at most once every 30 days.
+    uint256 public constant BOARD_REFRESH_INTERVAL = 30 days;
+    /// @notice Time of the last ordinary refresh. Genesis must overlay this with the genesis timestamp when the board is
+    ///         seeded (otherwise the first refresh is allowed immediately).
+    uint256 public lastBoardRefreshAt;
+    /// @notice Seats freed by exit-driven loss of authority that have not yet been filled by succession.
+    uint256 public pendingVacancies;
+    event BoardMemberAuthorityEnded(address indexed member);
+    event BoardSuccession(address indexed newMember);
+
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
@@ -261,8 +271,14 @@ contract ValidatorsBoard {
         _;
     }
 
+    /// @notice P02: board authority = holding a seat AND not having requested voluntary exit. Loses effect the moment an exit is
+    ///         requested (no waiting for the monthly refresh). Suspension (Demoted) alone does NOT cut authority within the period.
+    ///         If any seat holder has requested exit and the seat has not been cleaned up yet, board actions REVERT with a clear
+    ///         message until someone calls the permissionless syncBoard() (a separate transaction, so the cleanup itself is never
+    ///         rolled back). This also means a vote can never silently "succeed" on an invalidated proposal: see voteAction().
     modifier onlyBoardMember() {
-        require(isBoardMember[msg.sender], "ValidatorsBoard: caller is not a board member");
+        require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
+        require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
 
@@ -320,62 +336,16 @@ contract ValidatorsBoard {
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @notice Recompute the board as the BOARD_SIZE validators with the most current votes.
-    ///         Permissionless — callable by anyone, any time. Only votes cast BY a currently
-    ///         active validator FOR a currently active validator are counted; both sides are
-    ///         re-checked live against ValidatorsRegistry on every call.
+    /// @notice P01/P02: ordinary re-selection — the BOARD_SIZE validators with the most current votes, applied at most once every 30
+    ///         days (a fully empty board may be filled at any time). Membership is conditional on being an ACTIVE validator at this
+    ///         moment: only votes cast BY active validators FOR active candidates count, so a suspended member cannot stay on the
+    ///         board past the monthly re-selection. Voting and changing votes stay free at all times (voteFor / unvoteFor).
     function refreshBoard() external {
-        address[] memory active = REGISTRY.getValidators();
-
-        // ephemeral per-call tally: candidate -> vote count (reset back to 0 before returning)
-        address[] memory seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
-        uint256 seenCount = 0;
-
-        for (uint256 i = 0; i < active.length; i++) {
-            address voter = active[i];
-            address[] storage cands = voterCandidates[voter];
-            uint256 n = cands.length;
-            for (uint256 j = 0; j < n; j++) {
-                address c = cands[j];
-                if (!REGISTRY.isValidator(c)) continue; // candidate must currently be active too
-                if (_voteTally[c] == 0) {
-                    seenCandidates[seenCount] = c;
-                    seenCount++;
-                }
-                _voteTally[c]++;
-            }
-        }
-
-        // select the top BOARD_SIZE candidates by tally; ties keep whichever was inserted first
-        address[] memory newBoard = new address[](BOARD_SIZE);
-        uint256[] memory newBoardVotes = new uint256[](BOARD_SIZE);
-        uint256 filled = 0;
-
-        for (uint256 i = 0; i < seenCount; i++) {
-            address c = seenCandidates[i];
-            uint256 v = _voteTally[c];
-
-            if (filled < BOARD_SIZE) {
-                newBoard[filled] = c;
-                newBoardVotes[filled] = v;
-                filled++;
-            } else {
-                uint256 minIdx = 0;
-                for (uint256 k = 1; k < BOARD_SIZE; k++) {
-                    if (newBoardVotes[k] < newBoardVotes[minIdx]) minIdx = k;
-                }
-                if (v > newBoardVotes[minIdx]) {
-                    newBoard[minIdx] = c;
-                    newBoardVotes[minIdx] = v;
-                }
-                // v == newBoardVotes[minIdx]: keep the existing (earlier-inserted) candidate
-            }
-        }
-
-        // reset the ephemeral tally so storage doesn't leak stale counts into the next call
-        for (uint256 i = 0; i < seenCount; i++) {
-            _voteTally[seenCandidates[i]] = 0;
-        }
+        require(
+            boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
+            "ValidatorsBoard: ordinary board changes are applied once every 30 days"
+        );
+        (address[] memory newBoard, uint256[] memory newBoardVotes, uint256 filled) = _topCandidates(BOARD_SIZE, false);
 
         // ✅ FIXED (bug found in independent review — the previous version of this fix bumped
         // boardVersion UNCONDITIONALLY on every successful refreshBoard() call, even when the
@@ -419,6 +389,10 @@ contract ValidatorsBoard {
             boardVersion++;
         }
 
+
+        lastBoardRefreshAt = block.timestamp;
+        pendingVacancies = 0; // the ordinary re-selection recomputes the whole board; vacancies are not carried over
+
         emit BoardRefreshed(finalBoard, finalVotes);
     }
 
@@ -426,6 +400,131 @@ contract ValidatorsBoard {
     ///      refreshBoard()'s reset loop. Declared as contract storage (not `memory`) only
     ///      because Solidity has no mapping type in memory.
     mapping(address => uint256) private _voteTally;
+
+    // ------------------------------------------------------------------
+    // Authority, monthly re-selection, and exit-driven succession (final decisions P01/P02)
+    // ------------------------------------------------------------------
+
+    /// @dev P02 authority test (see the onlyBoardMember doc comment).
+    function _hasAuthority(address who) private view returns (bool) {
+        if (!isBoardMember[who]) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
+        return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
+    }
+
+    function hasBoardAuthority(address who) external view returns (bool) {
+        return _hasAuthority(who);
+    }
+
+
+    /// @dev True if some seat holder has lost authority (requested exit / withdrew) and syncBoard() has not run yet.
+    function _syncNeeded() private view returns (bool) {
+        for (uint256 i = 0; i < boardMembers.length; i++) {
+            if (!_hasAuthority(boardMembers[i])) return true;
+        }
+        return false;
+    }
+
+    /// @notice Permissionless. Drops seats whose holder requested exit (immediate cut-off), then tries succession for those seats.
+    function syncBoard() external {
+        _syncBoard();
+    }
+
+    function _syncBoard() private {
+        uint256 removed = 0;
+        uint256 i = 0;
+        while (i < boardMembers.length) {
+            address m = boardMembers[i];
+            if (_hasAuthority(m)) {
+                i++;
+                continue;
+            }
+            isBoardMember[m] = false;
+            boardMembers[i] = boardMembers[boardMembers.length - 1];
+            boardMembers.pop();
+            removed++;
+            emit BoardMemberAuthorityEnded(m);
+        }
+        bool changed = removed > 0;
+        if (removed > 0) {
+            pendingVacancies += removed;
+            if (_fillVacancies()) changed = true;
+        }
+        if (changed) boardVersion++; // real composition change: open actions of the old composition become invalid
+    }
+
+    /// @notice Permissionless succession for seats freed by exit: the highest-voted ELIGIBLE (currently active, not already seated)
+    ///         candidates by the live tally take the pending vacancies. Fills only exit-freed seats — never an extra ordinary
+    ///         change. If no eligible candidate exists the seat stays vacant (and with fewer than 3 seated members, treasury
+    ///         payments are halted) until one appears or the next monthly refresh.
+    function fillVacancies() external {
+        if (_fillVacancies()) boardVersion++;
+    }
+
+    function _fillVacancies() private returns (bool filledAny) {
+        uint256 room = BOARD_SIZE - boardMembers.length;
+        uint256 want = pendingVacancies < room ? pendingVacancies : room;
+        if (want == 0) return false;
+        (address[] memory picks, , uint256 n) = _topCandidates(want, true);
+        for (uint256 i = 0; i < n; i++) {
+            boardMembers.push(picks[i]);
+            isBoardMember[picks[i]] = true;
+            emit BoardSuccession(picks[i]);
+        }
+        if (n > 0) {
+            pendingVacancies -= n;
+            return true;
+        }
+        return false;
+    }
+
+    /// @dev Live tally: votes cast BY currently active validators FOR currently active candidates (same rule as before).
+    function _tallyVotes() private returns (address[] memory seenCandidates, uint256 seenCount) {
+        address[] memory active = REGISTRY.getValidators();
+        seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
+        for (uint256 i = 0; i < active.length; i++) {
+            address[] storage cands = voterCandidates[active[i]];
+            uint256 n = cands.length;
+            for (uint256 j = 0; j < n; j++) {
+                address c = cands[j];
+                if (!REGISTRY.isValidator(c)) continue; // candidate must currently be active too
+                if (_voteTally[c] == 0) {
+                    seenCandidates[seenCount] = c;
+                    seenCount++;
+                }
+                _voteTally[c]++;
+            }
+        }
+    }
+
+    /// @dev Top-k candidates by live tally (ties keep the earlier-inserted one). Resets the ephemeral tally before returning.
+    function _topCandidates(uint256 k, bool excludeMembers) private returns (address[] memory picks, uint256[] memory pickVotes, uint256 filled) {
+        (address[] memory seen, uint256 seenCount) = _tallyVotes();
+        picks = new address[](k);
+        pickVotes = new uint256[](k);
+        for (uint256 i = 0; i < seenCount && k > 0; i++) {
+            address c = seen[i];
+            if (excludeMembers && isBoardMember[c]) continue;
+            uint256 v = _voteTally[c];
+            if (filled < k) {
+                picks[filled] = c;
+                pickVotes[filled] = v;
+                filled++;
+            } else {
+                uint256 minIdx = 0;
+                for (uint256 m = 1; m < k; m++) {
+                    if (pickVotes[m] < pickVotes[minIdx]) minIdx = m;
+                }
+                if (v > pickVotes[minIdx]) {
+                    picks[minIdx] = c;
+                    pickVotes[minIdx] = v;
+                }
+            }
+        }
+        for (uint256 i = 0; i < seenCount; i++) {
+            _voteTally[seen[i]] = 0; // reset the ephemeral tally
+        }
+    }
 
     /// @notice Purge every vote a long-inactive validator cast (as a voter) AND every vote they
     ///         received (as a candidate), freeing up the other validators' vote slots.
@@ -507,6 +606,9 @@ contract ValidatorsBoard {
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
+        // An action proposed under an older composition is invalid: _voteAction() REVERTS ("board membership changed since this
+        // action was proposed - propose again"). The transaction fails visibly instead of returning as a no-op, so nobody can
+        // mistake a successful receipt for "my vote was recorded".
         _voteAction(id, msg.sender);
     }
 

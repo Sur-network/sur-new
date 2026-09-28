@@ -24,6 +24,7 @@
 | ۸ | قرارداد `SurenSale` + سرویس PaymentReporter | 🔴 ضروری قبل از شروع فروش | ✅ سند کامل — `sur-suren-sale-spec.md` + `contracts/SurenSale.sol` |
 | ۹ | قرارداد `IdentityRegistry` + سرویس Identity Service | 🔴 ضروری برای راه‌اندازی (پیش‌نیاز رأی‌دادن ولیدیتورها) | ✅ سند کامل — `sur-identity-registry-spec.md` + `contracts/IdentityRegistry.sol` |
 | ۱۰ | اپلیکیشن احراز هویت عمومی (فرانت‌اند `IdentityRegistry`) | 🟡 مهم، نه فوری | ✅ سند کامل — `sur-identity-app-claudecode-brief.md` |
+| ۱۱ | ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) | 🟡 باید پیش از راه‌اندازی آماده باشد، ولی فقط در اضطرار اجرا می‌شود | 🔶 **مشخصات همین سند؛ برنامه هنوز نوشته نشده** — سیاست بازیابی: `governance/sur-emergency-consensus-recovery.md` |
 
 ---
 
@@ -45,7 +46,7 @@
 
 ## ۳. سرویس Verifier
 
-**چه‌کار می‌کند:** احراز موبایل/تلگرام ولیدیتورها، و گزارش دوره‌ای liveness به `ValidatorsRegistry.reportLiveness`.
+**چه‌کار می‌کند:** احراز موبایل/تلگرام ولیدیتورها؛ بررسی آف‌چین liveness هر یک ساعت (آستانه‌ی تعلیق ۴ ساعتِ تأییدشده، هشدارها) و ثبت **فقط تصمیم‌های تغییر وضعیت** روی زنجیره (`recordActivation` / `recordSuspension` / `recordRecovery` / `recordPreExitViolation`)؛ و کارهای دوره‌ای بدون‌مجوز: `resolveMassFailureCheck`، `syncBoard`، `fillVacancies`، `refreshBoard` (هر ۳۰ روز). یک Verifier کافی است (تصمیم نهایی).
 
 📄 جزئیات کامل: `sur-verifier-service-spec.md`.
 
@@ -118,6 +119,28 @@
 📄 جزئیات کامل و کافی برای پیاده‌سازی: `sur-identity-app-claudecode-brief.md`.
 
 🟡 **اولویت:** مهم، ولی نه فوری‌ترین.
+
+---
+
+## ۱۱. ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) — 🔶 برنامه‌ی آف‌چین؛ هنوز نوشته نشده
+
+**چه‌کار می‌کند:** فقط در اضطرار (توقف اجماع که با احیای نودهای موجود حل نشده) به شورای ۷نفره کمک می‌کند برنامه‌ی بازیابی را استاندارد کند، ۵ امضا را بررسی کند، و genesis جدید را بسازد. سیاست کامل: `governance/sur-emergency-consensus-recovery.md`. این برنامه **هیچ کلیدی نگه نمی‌دارد** (اعضای شورا روی دستگاه/کیف‌پول سخت‌افزاری خودشان امضا می‌کنند)، پس زیر سیاست Vault این فهرست نیست.
+
+**ورودی‌ها/فایل‌ها (فقط داده، نه برنامه):**
+- `council.json` — فهرست ۷ مسئول مستقل: `threshold` (=۵) و برای هر عضو `person`، `org`، `address`. این فایل **قبل از راه‌اندازی** تعیین و منتشر می‌شود و هشِ آن در مستندات genesis می‌آید. (توضیح کاربردی: این همان فهرستی است که برنامه با آن می‌فهمد یک امضا از «اعضای مجاز شورا» آمده یا نه.)
+- `plan.json` — برنامه‌ی بازیابی: `version`، `chainId`، `genesisHash`، `baseBlock {number, hash}` (آخرین بلاک نهایی‌شده‌ی مورد توافق)، `transitionBlock` (بلاک **آینده**)، `action = "override-validators"`، `validators` (مجموعه‌ی اضطراری)، `returnToContract {block, validatorContractAddress}` (اختیاری)، `evidenceRef`، `issuedAt`.
+- فایل امضاها — فهرست امضاهای شخصی (EIP-191) روی هش استاندارد `plan.json` با پیشوند ثابت.
+
+**قواعدی که برنامه باید اعمال کند (این‌ها «آزمون‌های پذیرش» آن‌اند):**
+۱. شورا: دقیقاً ۷ عضو، آستانه‌ی دقیقاً ۵، آدرس‌ها یکتا؛ هیچ شخص یا سازمانی **۴ کلید یا بیشتر** (اکثریت) نداشته باشد؛ ۳ کلید برای یک سازمان مجاز است ولی توصیه‌ی سیاست: یک کلید برای هر سازمان مستقل.
+۲. برنامه فقط همین فیلدها را دارد؛ **هر فیلد دیگر** (مثلاً `alloc`، انتقال دارایی، بخشش جریمه) رد می‌شود — اختیار شورا فقط بازیابی اجماع است.
+۳. `transitionBlock` اکیداً بعد از `baseBlock.number`؛ `returnToContract.block` بعد از `transitionBlock`؛ فهرست ولیدیتور غیرخالی، بدون تکرار و آدرس‌های معتبر؛ `evidenceRef` الزامی؛ `chainId` با genesis یکی باشد؛ آدرس بازگشت به قرارداد باید همان `validatorcontractaddress` genesis باشد (قرارداد دیگر = برنامه‌ی جدا و بازبینی‌شده).
+۴. هش برنامه قطعی است (ترتیب کلیدها اثری ندارد)؛ دست‌کاری برنامه پس از امضا امضاها را بی‌اعتبار می‌کند.
+۵. حداقل ۵ امضای **متمایز** از اعضای شورا لازم است؛ امضای تکراری یک نفر یک‌بار شمرده می‌شود؛ امضای غیرعضو شمرده نمی‌شود.
+۶. ساخت genesis جدید: فقط `config.transitions.qbft` اضافه می‌شود (`validatorselectionmode: "blockheader"` + `validators`، و در صورت وجود، گذار بازگشت `validatorselectionmode: "contract"` + `validatorcontractaddress`)؛ بلاک گذار باید بعد از گذارهای قبلیِ موجود باشد؛ برنامه باید **ثابت کند** هیچ چیز دیگری در genesis (به‌ویژه `alloc`، `extraData`، بقیه‌ی `config`) تغییر نکرده — اگر کوچک‌ترین تغییری بود، خطا بدهد.
+۷. خروجی: genesis جدید، هش برنامه، فهرست امضاکنندگان؛ همه‌ی این‌ها منتشر می‌شوند.
+
+**نکته‌ی اجرایی:** نام کلیدها و ساختار گذار از مستند رسمی Besu گرفته شده (`validatorselectionmode`، `validators`، `validatorcontractaddress` زیر `config.transitions.qbft`)؛ روش باید روی نسخه‌ی دقیق Besu شبکه عملاً آزموده شود (دستور آزمون: `sur-besu-test-status.md`، فاز ۱۲).
 
 ---
 

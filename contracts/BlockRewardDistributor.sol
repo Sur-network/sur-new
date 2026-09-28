@@ -192,6 +192,21 @@ contract BlockRewardDistributor {
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
+    // ------------------------------------------------------------------
+    // P05 (final decision): every distribution declares the REAL block range it settles; the contract keeps the last settled
+    // block and accepts only a range that starts exactly after it. An increasing epoch counter alone is not enough — the
+    // control is tied to the actual block numbers, so duplicate, overlapping and unexplained-gap ranges are rejected.
+    // ------------------------------------------------------------------
+    struct BlockRange {
+        uint256 fromBlock;
+        uint256 toBlock;
+    }
+    /// @notice Highest block number already settled by a distribution (0 = only genesis; the first range must start at block 1).
+    uint256 public lastSettledBlock;
+    /// @notice The block range each epoch settled.
+    mapping(uint256 => BlockRange) public epochBlockRanges;
+    event EpochRangeSettled(uint256 indexed epochId, uint256 fromBlock, uint256 toBlock);
+
     bool private locked; // simple reentrancy guard
 
     // ------------------------------------------------------------------
@@ -475,7 +490,12 @@ contract BlockRewardDistributor {
     /// @param blocksMined number of blocks each validator mined since the last call (same order as validators)
     /// @param totalRewards total reward amount (in wei) for this epoch — computed off-chain by the oracle, from trace_block "reward" entries
     /// @param totalFees total transaction fee amount (in wei) for this epoch — computed off-chain by the oracle, from eth_getTransactionReceipt.gasUsed * effectiveGasPrice per tx (never from trace_* output, which reports gasUsed=0 for simple transfers)
+    /// @notice P05: `range` is the inclusive block range this distribution settles. It must start exactly at
+    ///         lastSettledBlock + 1 (no duplicate, no overlap, no gap — an outage is covered by the NEXT, larger range, never
+    ///         skipped), must end before the current block, and the reported per-validator block counts (after the daemon's
+    ///         filtering of blocks whose producer is no longer valid) cannot exceed its size.
     function distributeRewards(
+        BlockRange calldata range,
         address[] calldata validators,
         uint256[] calldata blocksMined,
         uint256 totalRewards,
@@ -504,9 +524,12 @@ contract BlockRewardDistributor {
         // avoids viaIR) — same require()s, same order, same math, just computed inside a helper
         // instead of inline.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
+        _settleRange(range, prep.totalBlocks); // P05
 
         epochCount++;
         uint256 epochId = epochCount;
+        epochBlockRanges[epochId] = range;
+        emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
 
         // ✅ FIXED (same stack-too-deep fix as above): foundationAmount/treasuryAmount are
         // computed AFTER the _payValidators call now, not before — they don't feed into that
@@ -556,6 +579,16 @@ contract BlockRewardDistributor {
     /// @dev ✅ NEW (added purely to fix the "Stack too deep" error above distributeRewards —
     ///      bundles the pre-computation phase's 4 result scalars into one memory struct pointer
     ///      instead of 4 separate live stack locals).
+
+    /// @dev P05 range control (see the BlockRange comment). Kept in its own stack frame.
+    function _settleRange(BlockRange calldata range, uint256 totalBlocks) private {
+        require(range.fromBlock == lastSettledBlock + 1, "BlockRewardDistributor: range must start right after the last settled block");
+        require(range.toBlock >= range.fromBlock, "BlockRewardDistributor: empty or inverted block range");
+        require(range.toBlock < block.number, "BlockRewardDistributor: range includes blocks that are not yet produced");
+        require(totalBlocks <= range.toBlock - range.fromBlock + 1, "BlockRewardDistributor: reported blocks exceed the range size");
+        lastSettledBlock = range.toBlock;
+    }
+
     struct EpochPrep {
         uint256 effectiveTotalFees;
         uint256 feeBurnAmount;

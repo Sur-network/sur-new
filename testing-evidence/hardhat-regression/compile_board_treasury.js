@@ -1,6 +1,6 @@
 // Produces board_artifact.json and treasury_artifact.json (needed by reproduce_bug3/bug5). Run after copying the
 // current contracts as contracts_src_ValidatorsBoard.sol / contracts_src_ValidatorsTreasury.sol / contracts_src_SurAddresses.sol
-const solc = require('solc'); const fs = require('fs');
+const solc = require(process.env.SOLC_PATH || 'solc'); const fs = require('fs');
 function fi(p){ const m={'SurAddresses.sol':'contracts_src_SurAddresses.sol'}; const f=m[p.replace('./','')]; return f?{contents:fs.readFileSync(f,'utf8')}:{error:'nf'}; }
 for (const [file,name,out] of [['contracts_src_ValidatorsBoard.sol','ValidatorsBoard','board_artifact.json'],['contracts_src_ValidatorsTreasury.sol','ValidatorsTreasury','treasury_artifact.json']]) {
   const input={language:'Solidity',sources:{[name+'.sol']:{content:fs.readFileSync(file,'utf8')}},settings:{optimizer:{enabled:true,runs:200},outputSelection:{'*':{'*':['abi','evm.bytecode.object','storageLayout']}}}};

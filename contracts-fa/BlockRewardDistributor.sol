@@ -190,6 +190,21 @@ contract BlockRewardDistributor {
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
+    // ------------------------------------------------------------------
+    // P05 (تصمیم نهایی): هر توزیع، بازه‌ی **واقعی** بلاک‌هایی را که تسویه می‌کند اعلام می‌کند؛ قرارداد آخرین بلاک تسویه‌شده
+    // را نگه می‌دارد و فقط بازه‌ای را می‌پذیرد که دقیقاً بعد از آن شروع شود. شماره‌ی افزایشی دوره به‌تنهایی کافی نیست —
+    // کنترل به شماره‌ی واقعی بلاک‌ها متصل است، پس بازه‌ی تکراری، هم‌پوشان و دارای فاصله‌ی توضیح‌نداده‌شده رد می‌شود.
+    // ------------------------------------------------------------------
+    struct BlockRange {
+        uint256 fromBlock;
+        uint256 toBlock;
+    }
+    /// @notice بالاترین شماره‌ی بلاکی که قبلاً با یک توزیع تسویه شده (۰ = فقط genesis؛ اولین بازه باید از بلاک ۱ شروع شود).
+    uint256 public lastSettledBlock;
+    /// @notice بازه‌ی بلاکی که هر epoch تسویه کرده.
+    mapping(uint256 => BlockRange) public epochBlockRanges;
+    event EpochRangeSettled(uint256 indexed epochId, uint256 fromBlock, uint256 toBlock);
+
     bool private locked; // نگهبان ساده‌ی reentrancy
 
     // ------------------------------------------------------------------
@@ -466,7 +481,12 @@ contract BlockRewardDistributor {
     /// @param blocksMined تعداد بلاک تولیدشده توسط هر ولیدیتور از آخرین فراخوانی به بعد (همون ترتیب validators)
     /// @param totalRewards مجموع ریوارد این epoch (به wei) — آف‌چین توسط اوراکل، از ورودی‌های «reward» تابع trace_block محاسبه می‌شود
     /// @param totalFees مجموع فی تراکنش‌های این epoch (به wei) — آف‌چین توسط اوراکل، از eth_getTransactionReceipt.gasUsed ضرب‌در effectiveGasPrice برای هر تراکنش محاسبه می‌شود (هرگز از خروجی trace_*، که برای انتقال‌های ساده gasUsed=0 گزارش می‌کند)
+    /// @notice P05: `range` بازه‌ی شامل (inclusive) بلاک‌هایی است که این توزیع تسویه می‌کند. باید دقیقاً از lastSettledBlock + 1
+    ///         شروع شود (نه تکرار، نه هم‌پوشانی، نه فاصله — قطعی سرویس با بازه‌ی **بعدی‌ِ بزرگ‌تر** پوشش داده می‌شود، هرگز
+    ///         رد نمی‌شود)، باید قبل از بلاک جاری تمام شود، و تعداد بلاک‌های گزارش‌شده‌ی هر ولیدیتور (بعد از فیلتر سرویس روی
+    ///         بلاک‌هایی که تولیدکننده‌شان دیگر معتبر نیست) نمی‌تواند از اندازه‌ی آن بیشتر باشد.
     function distributeRewards(
+        BlockRange calldata range,
         address[] calldata validators,
         uint256[] calldata blocksMined,
         uint256 totalRewards,
@@ -494,9 +514,12 @@ contract BlockRewardDistributor {
         // نیست (این پروژه عمداً از viaIR دوری می‌کنه) — همون require ها، همون ترتیب، همون
         // ریاضی، فقط داخل یه تابع کمکی محاسبه می‌شه به‌جای inline.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
+        _settleRange(range, prep.totalBlocks); // P05
 
         epochCount++;
         uint256 epochId = epochCount;
+        epochBlockRanges[epochId] = range;
+        emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
 
         // ✅ اصلاح‌شده (همون اصلاح stack-too-deep بالا): foundationAmount/treasuryAmount الان
         // *بعد* از فراخوان _payValidators محاسبه می‌شن، نه قبلش — به اون فراخوان وابسته نیستن
@@ -544,6 +567,16 @@ contract BlockRewardDistributor {
     /// @dev ✅ تازه (فقط برای رفع خطای «Stack too deep» بالای distributeRewards اضافه شد —
     ///      ۴ مقدار نتیجه‌ی فاز پیش‌محاسبه رو توی یه اشاره‌گر struct حافظه جمع می‌کنه به‌جای
     ///      ۴ متغیر local جدا و هم‌زمان زنده).
+
+    /// @dev کنترل بازه‌ی P05 (کامنت BlockRange را ببینید). در stack frame جدای خودش نگه داشته شده.
+    function _settleRange(BlockRange calldata range, uint256 totalBlocks) private {
+        require(range.fromBlock == lastSettledBlock + 1, "BlockRewardDistributor: range must start right after the last settled block");
+        require(range.toBlock >= range.fromBlock, "BlockRewardDistributor: empty or inverted block range");
+        require(range.toBlock < block.number, "BlockRewardDistributor: range includes blocks that are not yet produced");
+        require(totalBlocks <= range.toBlock - range.fromBlock + 1, "BlockRewardDistributor: reported blocks exceed the range size");
+        lastSettledBlock = range.toBlock;
+    }
+
     struct EpochPrep {
         uint256 effectiveTotalFees;
         uint256 feeBurnAmount;

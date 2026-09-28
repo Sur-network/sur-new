@@ -1,0 +1,17 @@
+=== بازتولید باگ ۲: تعارض confirmDelivery بعد از assertDeliveryDisputed ===
+
+✅ v1 تعلیق شد، decisionId: 11
+✅ resolveMassFailureCheck اجرا شد (رخداد جمعی نبود)
+✅ اختلاف تحویل ثبت شد (رأی‌گیری باز است، هنوز حل نشده)
+
+🔍 تلاش برای confirmDelivery توسط v1، درحالی‌که رأی‌گیری اختلاف تحویل هنوز باز است...
+✅ confirmDelivery موفق شد (این خودش مشکلی نیست — v1 حق داره خودش تحویل رو تأیید کنه حتی بعد از باز شدن اختلاف)
+delivery status بعد از confirmDelivery: 2 (2=Confirmed)
+وضعیت DeliveryDispute بعد از confirmDelivery: resolved= true deliveryConfirmed= true
+
+✅✅✅ اصلاح تأیید شد: confirmDelivery حالا خودکار DeliveryDispute باز رو هم می‌بنده (resolved=true, deliveryConfirmed=true)
+
+🔍 تلاش برای resolveDeliveryDisputeIfExpired بعد از این‌که خودتأییدی اختلاف رو بسته...
+✅ درست رد شد (already resolved) — دیگه نمی‌تونه تصمیم قبلی رو بازنویسی کنه
+
+✅✅✅ نتیجه: باگ ۲ کاملاً اصلاح شد — دیگه هیچ مسیر متناقضی وجود نداره.

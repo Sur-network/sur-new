@@ -82,12 +82,15 @@ async function main() {
   const epochA = info[4];
   console.log("قفل v2 (متعلق به A):", epochA.toString());
 
-  // شبیه‌سازی «قفل جدیدتر متعلق به پرونده‌ی دیگر»: مستقیم روی storage مقدار 99 می‌نویسیم
+  // شبیه‌سازی «قفل جدیدتر متعلق به پرونده‌ی دیگر»: قفل حالا به شناسه‌ی تصمیم بسته است (pendingSlashDecisionId)؛
+  // پس شناسه‌ی تصمیم دیگری (999) و اپوک 99 را مستقیم روی storage می‌نویسیم.
   const structSlot = BigInt(hre.ethers.solidityPackedKeccak256(["uint256","uint256"], [v2.address, 0]));
   const lockSlot = "0x" + (structSlot + 3n).toString(16); // pendingSlashEpoch = چهارمین فیلد struct
   await hre.network.provider.send("hardhat_setStorageAt", [REGISTRY_ADDR, lockSlot, hre.ethers.zeroPadValue("0x63", 32)]);
+  const idSlot = hre.ethers.keccak256(hre.ethers.concat([hre.ethers.zeroPadValue(v2.address, 32), hre.ethers.zeroPadValue(hre.ethers.toBeHex(BigInt(art.layout.storage.find(s => s.label === 'pendingSlashDecisionId').slot)), 32)]));
+  await hre.network.provider.send("hardhat_setStorageAt", [REGISTRY_ADDR, idSlot, hre.ethers.zeroPadValue(hre.ethers.toBeHex(999), 32)]);
   info = await registry.getValidatorInfo(v2.address);
-  console.log("قفل v2 بعد از شبیه‌سازی قفل پرونده‌ی دیگر:", info[4].toString(), "(باید 99 باشد)");
+  console.log("قفل v2 بعد از شبیه‌سازی قفل پرونده‌ی دیگر: epoch =", info[4].toString(), "| decisionId =", (await registry.pendingSlashDecisionId(v2.address)).toString(), "(باید 99 و 999 باشد)");
 
   await hre.network.provider.send("evm_increaseTime", [604800 + 1]);
   await hre.network.provider.send("evm_mine");
@@ -95,8 +98,9 @@ async function main() {
   const decA = await registry.statusDecisions(dA);
   info = await registry.getValidatorInfo(v2.address);
   console.log("slashOutcome پرونده‌ی A:", decA.slashOutcome.toString(), "(باید 2=VoidedNoDelivery باشد)");
-  console.log("قفل v2 بعد از resolve پرونده‌ی A:", info[4].toString());
-  if (info[4].toString() === "99" && Number(decA.slashOutcome) === 2) {
+  const idAfter = (await registry.pendingSlashDecisionId(v2.address)).toString();
+  console.log("قفل v2 بعد از resolve پرونده‌ی A: epoch =", info[4].toString(), "| decisionId =", idAfter);
+  if (info[4].toString() === "99" && idAfter === "999" && Number(decA.slashOutcome) === 2) {
     console.log("\n✅✅✅ لایه‌ی دوم تأیید شد: resolver پرونده‌ی A فقط پرونده‌ی خودش را بست و قفل پرونده‌ی دیگر (99) را دست نزد.");
   } else {
     console.log("\n❌ لایه‌ی دوم شکست خورد.");
