@@ -44,7 +44,7 @@ SIP001 (بخش ۹) می‌گفت اطلاعات باید در یک «قرارد�
 | `getVerificationStatus(address)` | هرکسی (view) | سه فلگ بولی — امن برای افشای عمومی |
 | `setPhoneVerified/setTelegramVerified` | فقط `identityOracle` | بدون تغییر نسبت به طراحی قبلی |
 | `setKycVerified(address, bool, bytes32 commitment)` | فقط `identityOracle` | ✅ تازه — نتیجه‌ی eKYC کامل. `commitment` = هش نمکین کل داده‌ی تأییدشده؛ **فقط برای اثبات عدم‌دستکاری در دعاوی حقوقی آینده** (نه matching) — مثل یک پاکت مهروموم‌شده که فقط مهرش عمومی ثبت می‌شود، محتوایش بعداً در صورت نیاز حقوقی باز می‌شود |
-| `migrateIdentity(oldAddr, newAddr)` | فقط `identityOracle` | ✅ تازه — بازیابی هویت بعد از گم‌شدن کلید (بخش ۳.۴)؛ آدرس قدیم برای همیشه «سوخته» می‌شود |
+| `migrateIdentity(oldAddr, newAddr)` | فقط `identityOracle` | ✅ تازه — بازیابی هویت بعد از گم‌شدن کلید (بخش ۳.۴)؛ آدرس قدیم برای همیشه «سوخته» می‌شود. ⚠️ **پیامد تأییدشده در آزمون واقعی Besu (۲۰۲۶-۰۹-۲۹):** اگر آدرس قدیم متعلق به یک ولیدیتور فعال باشد، آن ولیدیتور برای همیشه صلاحیت `ValidatorsBoard.voteFor` (که `hasIdentity` می‌خواهد) را زیر همان آدرس از دست می‌دهد — `registerIdentity()` دوباره هم `migratedTo` را پاک نمی‌کند. 🔶 نیازمند تصمیم صاحب پروژه: آیا این تعامل قابل‌قبول است؟ |
 | `setIdentityOracle(address)` | فقط `FoundationDAO` | چرخش کلید |
 
 ---
