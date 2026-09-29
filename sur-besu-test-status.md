@@ -1,392 +1,223 @@
-# وضعیت کامل آزمون اجرایی روی Besu — سند جامع (انجام‌شده + باقیمانده)
+# دستور جامع آزمون اجرایی روی Besu — نسخه‌ی ۲ (۲۰۲۶-۰۹-۲۹)
 
-این سند جایگزین دو فایل جدا (`sur-besu-real-network-test-instructions.md` و `sur-besu-remaining-tests-instructions.md`) می‌شود و وضعیت کامل آزمون واقعی پروژه‌ی سور روی شبکه‌ی Besu/QBFT را یک‌جا نگه می‌دارد — هم آنچه واقعاً انجام و تأیید شده (فازهای ۱-۴)، هم آنچه هنوز باقی مانده (فازهای ۵-۱۱).
+> ## ⚠️ وضعیت: **هیچ‌چیز در این سند برای نسخه‌ی فعلی قراردادها آزموده نشده است.**
+>
+> یک آزمون واقعی روی Besu در ۲۷–۲۸ سپتامبر ۲۰۲۶ انجام شد، ولی روی نسخه‌ی **قدیمی‌تر** کد — پیش از این تصمیم‌ها: اصلاح باگ N01 (تداخل پرونده‌ی قدیمی/جدید)، تصمیم‌های نهایی P01 تا P06 (هیأت‌مدیره، Verifier، خروج، توزیع پاداش، سقف خزانه)، آستانه‌ی C01، سیاست بازیابی اضطراری N04، اصلاح باگ امنیتیِ «بازگشت اختیار هیأتِ کهنه»، بازطراحی کامل `refreshBoard()`، و تغییر مرز سقف پرداخت به `<=`. آن شبکه دیگر معتبر نیست و نباید ادامه داده شود — قراردادهای رویش genesis‌شده نسخه‌ی امروز کد را ندارند.
+>
+> **این سند یک آزمون کاملاً تازه است، از صفر.** هیچ فاز یا موردی «قبلاً انجام‌شده» نیست. جایی که از آزمون قبلی دانش عملیاتیِ ارزشمند درباره‌ی خودِ Besu (نه رفتار این قراردادها) باقی مانده، در پیوست ب آمده — با تأکید صریح که این‌ها فقط راهنمای فنی‌اند، نه نتیجه‌ی تست.
 
 ---
-
-> **نحوه‌ی خواندن این سند (N06):** بخش الف = **گزارش تاریخیِ کارِ انجام‌شده** (اجرای ۲۷–۲۸ سپتامبر ۲۰۲۶؛ خلاصه‌ی گزارش Claude Code). بخش ب = **برنامه‌ی آزمونِ هنوز اجرا‌نشده** (وضعیت جاری). خروجی خام آزمون قبلی در `testing-evidence/besu-run-2026-09-27/` نگه‌داری می‌شود (چهار گزارش)؛ اسکریپت‌ها، `genesis.json`، compiler input/output، receiptها و لاگ خام **هنوز در بسته نیستند** و باید از Claude Code خواسته شوند — بدون آن‌ها نتایج این سند مستقلاً بازتولید/تأیید نمی‌شود، و این نبودن به‌معنای انجام‌نشدن آزمون نیست.
 
 ## خلاصه‌ی اجرایی
 
 | | |
 |---|---|
-| اولین آزمون واقعی | سپتامبر ۲۰۲۶، ۴+۱ نود Besu ۲۶.۹.۰ QBFT، ساخته‌شده از صفر روی ویندوز |
-| نتیجه‌ی مهم‌ترین یافته | یه باگ واقعی «Stack too deep» در `BlockRewardDistributor.sol` که مستندات پروژه اشتباهاً «حل‌شده» اعلام کرده بود — پیدا و روی فایل production (هر دو زبان) اصلاح شد |
-| فازهای انجام‌شده | ۴ فاز (راه‌اندازی شبکه، عضویت/فعال‌سازی، تعلیق/تطبیق نصاب، جریمه‌ی بی‌اعتراض، هیأت‌مدیره/خزانه) |
-| فازهای باقیمانده | ۷ فاز (فهرست کامل پایین) — شامل مهم‌ترین شکاف: **`distributeRewards()` (موتور اصلی توزیع ریوارد) هنوز هرگز روی زنجیره‌ی واقعی اجرا نشده** |
-| قراردادهای کاملاً دست‌نخورده | `FoundationDAO.sol`, `ServiceStaking.sol` |
+| هدف این دور | ساخت یک شبکه‌ی Besu/QBFT تازه با **کد فعلی** هر ۶ قرارداد genesis‌شونده، و آزمون کامل هر ۷ قرارداد پروژه |
+| وضعیت قبل از این دور | صفر. هیچ قراردادی با نسخه‌ی فعلی روی Besu اجرا نشده |
+| بزرگ‌ترین ریسک اگر عجله شود | استفاده‌ی ناخواسته از یک genesis/شبکه‌ی قدیمی که کد کهنه دارد — نتیجه‌ی هر آزمونی روی آن **بی‌اعتبار** است |
+| قراردادهای genesis‌شونده | `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `BlockRewardDistributor`, `FoundationDAO`, `IdentityRegistry` |
+| قراردادهای دیگر (دیپلوی عادی، نه genesis) | `SurenSale`, `ServiceStaking` (کتابخانه‌ی `SurAddresses` هم genesis نمی‌شود، فقط لینک می‌شود) |
 
 ---
 
-# بخش الف — فازهای ۱ تا ۴: انجام‌شده و تأییدشده
+# پیوست ب — دانش عملیاتی از آزمون قبلی (فقط راهنمای فنی Besu؛ نه نتیجه‌ی تست این نسخه)
 
-## فاز ۱ — کامپایل و استخراج genesis
+این‌ها یافته‌های زیرساختیِ خودِ Besu بودند، مستقل از منطق قراردادها، و به‌احتمال زیاد هنوز صادق‌اند — ولی **حتماً خودت دوباره راستی‌آزمایی کن**، چون نسخه‌ی Besu یا محیط ممکن است فرق کرده باشد:
 
-- هر ۱۳ فایل Solidity هر زبان (۹ فایل ریشه: ۶ قرارداد ساختاریِ genesis + کتابخانه‌ی `SurAddresses` + `SurenSale` + `ServiceStaking`؛ ۳ helper `_GenesisSeed`؛ ۱ دپ مرجع `SurZether`) با `solc 0.8.24` کامپایل شدند. ⚠️ «۹ قرارداد» در گزارش‌های قبلی به شمار فایل‌های ریشه اشاره داشت، نه قراردادهای deploy‌شدنی؛ فقط ۶ قرارداد در genesis تزریق می‌شوند.
-- 🔴 **یافته‌ی مهم:** کامپایل بدون `viaIR` روی `BlockRewardDistributor.sol` با خطای واقعی «Stack too deep» شکست خورد — برخلاف ادعای قبلی `sur-contracts-deploy-notes.md`. جزئیات کامل ریشه‌یابی (خط دقیق، تابع دقیق، تعداد متغیر local) در گزارش اصلی مستند شد.
-- ✅ **اصلاح (بعداً روی فایل production نهایی، هر دو زبان، توسط من اعمال و با کامپایل مستقیم تأیید شد):** استخراج بلوک پیش‌محاسبه‌ی `distributeRewards` به یه تابع کمکی `_prepareEpoch()` که ۴ مقدار نتیجه را در یه `struct` حافظه (`EpochPrep`) برمی‌گرداند، به‌جای ۴ متغیر جدا. بدون تغییر رفتار، بدون `viaIR`.
-- روش استخراج `code`+`storage` برای genesis: دیپلوی واقعی هر قرارداد روی Hardhat (که constructor واقعی/implicit را اجرا می‌کند)، خواندن هر storage slot لمس‌شده، و برای `ValidatorsRegistry_GenesisSeed` محاسبه‌ی تحلیلی slotهای mapping/آرایه (فرمول استاندارد `keccak256`)، با round-trip verification قبل از لمس Besu واقعی.
+1. **`extraData` در حالت contract-validator:** طبق مستند رسمی Besu، در این حالت `extraData` باید شامل **۰ ولیدیتور** باشد (`RLP([vanity 32 بایت, 0 validators, no vote, round 0, 0 seals])`)؛ فهرست ولیدیتورها فقط در `alloc.storage` قرارداد می‌نشیند. `extraData` مبتنی‌بر فهرست را با `validatorcontractaddress` قاطی نکن.
+2. **Hard-forkها اجباری‌اند:** بدون `homesteadBlock` تا `londonBlock` (همه صفر) + `zeroBaseFee: true` در `config`، نود هنگام فراخوان `getValidators()` با `Invalid opcode: 0x1c` کرش می‌کند.
+3. **رفتار مشاهده‌شده (نه ادعای قطعی باگ Besu):** روی Besu ۲۶.۹.۰ نسخه‌ی ویندوز، `--bootnodes` (CLI و TOML) با enode URLهای دارای دونقطه خطای `Illegal char <:> at index 5` داد. راه‌حل: `static-nodes.json` به‌جای `--bootnodes`.
+4. **نود پنجم/اضافه واقعی لازم است:** صرفِ فعال‌کردن یک EOA در Registry نودِ پیشنهاددهنده نمی‌سازد. برای هر ولیدیتور تازه، یک نود Besu واقعی با **همان کلید خصوصی** آن آدرس لازم است؛ وگرنه شبکه هر نوبت را با round-change (~۱۳ ثانیه) رد می‌کند.
+5. **روش استخراج genesis:** دیپلوی واقعی هر قرارداد روی یک زنجیره‌ی موقت (که constructor واقعی/implicit را اجرا می‌کند)، خواندن `code` با `eth_getCode` و هر storage slot لمس‌شده، به‌علاوه‌ی محاسبه‌ی تحلیلی slotهای mapping/آرایه برای هر seedِ اولیه (فرمول استاندارد `keccak256`)، با round-trip verification قبل از تزریق واقعی.
+6. **متغیرهای `immutable` (مثل `BlockRewardDistributor.deployTime`):** solc محل این‌ها را در `deployedBytecode` خام خالی می‌گذارد. راه درست: زنجیره‌ی موقت را با `timestamp` بلاک برابر `genesisTimestamp` بساز و از **اجرای واقعی** آن `code` را بگیر (نه خواندن مستقیم `evm.deployedBytecode.object`).
+7. **round-robin پیشنهاددهی** بین ولیدیتورهای عضو `getValidators()` تمیز کار می‌کند وقتی `qbft.validatorcontractaddress` درست تنظیم شده باشد.
 
-## فاز ۲ — genesis.json و راه‌اندازی ۴ نود
-
-- ✅ **یافته:** genesis بدون بلاک‌های فعال‌سازی hard-fork (`homesteadBlock` تا `londonBlock`) باعث کرش نود ۱ با خطای `Invalid opcode: 0x1c` هنگام فراخوان `getValidators()` شد — Besu پیش‌فرض به قواعد پیش‌از-Constantinople افتاده بود. اصلاح: افزودن این بلوک‌ها (همه صفر) + `zeroBaseFee: true`.
-- 🔶 **رفتار مشاهده‌شده در محیط آزمون (نه ادعای باگ قطعی Besu):** روی Besu ۲۶.۹.۰ نسخه‌ی ویندوز، `--bootnodes` (هم CLI هم TOML) در این اجرا با enode URLهای امتحان‌شده — و با یک رشته‌ی ساختگیِ دارای دونقطه — خطای `Illegal char <:> at index 5` داد؛ علت ریشه‌ای اثبات نشده (فرمان دقیق، لاگ خام و بازتولید حداقلی در بسته نیست). راه‌حل استاندارد Besu (`static-nodes.json`) بدون مشکل کار کرد. تا بازتولید حداقلی با فرمان/نسخه/لاگ خام ثبت نشود، این را «باگ Besu» گزارش نکنید.
-- ✅ **تأیید شد:** هر ۴ نود از بلاک صفر، `code` یکسان (۳۷,۲۱۸ کاراکتر، sha256 یکسان) برای `ValidatorsRegistry` گزارش کردند — اولین تأیید واقعی این‌که تزریق `alloc` بدون constructor، یه قرارداد واقعاً کارکن می‌سازد.
-- ✅ **تأیید شد:** چرخش round-robin تمیز پیشنهاددهی بلاک دقیقاً بین ۴ ولیدیتور seed‌شده‌ی قرارداد — تأیید این‌که `qbft.validatorcontractaddress` واقعاً `getValidators()` را برای اجماع می‌خواند.
-
-## فاز ۳ (سناریو A) — عضویت، probation، فعال‌سازی، پیشنهاددهی واقعی
-
-- `requestMembership()` → صبر واقعی wall-clock (۳۰۰ ثانیه) → `recordActivation()` → `isValidator`/`getValidators` بلافاصله به‌روز شدند.
-- ✅ **یافته‌ی مهم (نه باگ، تأیید رفتار درست BFT):** ولیدیتور تازه‌فعال‌شده (که فقط EOA بود، نود واقعی پشتش نبود) هرگز به‌عنوان `miner` ظاهر نشد. ریشه‌یابی: هر ۵ اسلات، یه شکاف ۱۳ثانیه‌ای دقیق (۳ثانیه دوره‌ی بلاک + ۱۰ثانیه timeout تغییر دور) — یعنی شبکه صحیح و مقاوم، نوبت این ولیدیتور را رد می‌کرد چون نودی پشتش نبود.
-- ✅ **تأیید نهایی:** با ایستادن یه نود پنجم واقعی با کلید همین ولیدیتور، بلافاصله و بدون مشکل بلاک تولید کرد — تأیید کامل این‌که فعال‌سازی on-chain واقعاً یه پیشنهاددهنده‌ی QBFT واقعی می‌سازد.
-
-## فاز ۳ (سناریو B) — تعلیق و تطبیق نصاب
-
-- `recordSuspension` → `getValidators()` بلافاصله ولیدیتور را حذف کرد؛ ۱۵ بلاک بعدی بدون هیچ وقفه‌ای، با فاصله‌ی تمیز ۳ثانیه‌ای، تولید شدند.
-- 🔶 **محدودیت صریح این آزمون:** تعداد ولیدیتور هرگز به زیر نصاب BFT نرسید (۵→۴، بالای `⌊2n/3⌋+1`) — سؤال «آیا شبکه واقعاً متوقف می‌شود» پاسخ داده نشد (طبق فاز ۵.۹ زیر، هنوز باز است).
-
-## فاز ۳ (سناریو C) — جریمه‌ی بی‌اعتراض
-
-- ✅ **یافته‌ی جالب:** با ۱ تعلیق از ۵ ولیدیتور (دقیقاً ۲۰٪)، `resolveMassFailureCheck` **معاف نکرد** — تأیید عملی این‌که شرط قرارداد واقعاً «اکیداً بیشتر از ۲۰٪» است، نه «≥۲۰٪».
-- `confirmDelivery` → صبر واقعی (۱۳۰ ثانیه) از `APPEAL_FILING_WINDOW` بدون `fileAppeal` → `executeUncontestedSlash` موفق.
-- ⚠️ **محدودیت صادقانه‌ی خودِ آزمون:** ولیدیتور جریمه‌شده یه مؤسس genesis-seeded با `lockedStake=0` بود — مکانیزم (تغییر وضعیت، `SlashOutcome.ExecutedUncontested`، رویداد) کامل تأیید شد؛ اثر *مالی* واقعی نه.
-
-## فاز ۳ (سناریو D) — هیأت‌مدیره و خزانه‌ی واقعی
-
-- ۴ ولیدیتور فعال `registerIdentity` → `voteFor(self)` → `refreshBoard()` — هر ۴ عضو هیأت‌مدیره شدند.
-- ✅ **یافته:** رأی خودِ پیشنهاددهنده (`proposer`) در `proposeApproveBudget` خودکار شمرده می‌شود (`_createAction` داخلاً `_voteAction` می‌زند) — یه فرض اشتباه در اسکریپت آزمون (نه در قرارداد) همین را کشف کرد.
-- ✅ **تأیید نهایی:** پرداخت واقعی ۱۰۰ سورن از `ValidatorsTreasury` به گیرنده، سرتاسر از طریق حکمرانی واقعی روی شبکه‌ی واقعی.
-
-## انحرافات ثبت‌شده‌ی آزمون قبلی از دستورالعمل (برای ردیابی)
-
-۱. helperهای `_GenesisSeed` سه‌گانه **constructor بدون آرگومان** دارند و آدرس‌های placeholder داخلشان hardcode است — نه آرگومان constructor. نسخه‌ی test-fork دستی ویرایش شد. ۲. آرایه‌ی ولیدیتورهای genesis از ۷ به ۴ کاهش یافت تا دقیقاً با ۴ نود واقعی یکی باشد (در حالت contract-validator، `getValidators()` همان مجموعه‌ی اجماع است). ۳. `verifier` پیش‌فرض یک آدرس تولیدی است که کلیدش را نداریم؛ در test-fork به یک آدرس تازه تغییر یافت. ۴. `ValidatorsBoard` و `FoundationDAO` **با state خالی** genesis شدند (نه با helper): برای Board اثری روی سناریوها نداشت؛ **`FoundationDAO` در هیچ سناریو لمس نشد** (و مسئله‌ی bootstrap با صفر عضو در فاز ۹ هنوز باز است). ۵. کامپایل بدون `viaIR` روی `BlockRewardDistributor` شکست خورد (یافته‌ی اصلی؛ بعداً روی فایل production اصلاح شد). ۶. `sur-contracts-deploy-notes.md` نسبت به سورس منسوخ بود (بعداً اصلاح شد). ۷. `--bootnodes` (بالا). ۸. نود پنجم واقعی برای candidate5 بالا آورده شد (فراتر از دستورالعمل).
-
-## زمان کل صرف‌شده (فازهای ۱-۴)
-~۲ ساعت (تفکیک کامل در گزارش اصلی).
+هیچ‌کدام از این‌ها ادعا نمی‌کند رفتار **منطق تجاری** قراردادها (جریمه، حکمرانی، توزیع پاداش) درست است — آن فقط با آزمون‌های فازهای پایین اثبات می‌شود.
 
 ---
 
-# بخش ب — فازهای ۵ تا ۱۱: هنوز باقی مانده
+## پارامترهای آزمایشی — یک‌جا، بدون ابهام
 
-**شبکه‌ی فازهای ۱-۴ را از نو نساز.** ۵ نود هنوز روشن‌اند (`http://127.0.0.1:8541`-`8545`، طبق فاز ۲/۳ بالا). از همان شبکه (با همان genesis، همان پارامترهای آزمایشی کوچک‌شده — جدول کامل در گزارش اصلی فاز ۱) ادامه بده — فقط اگر واقعاً کرش کرده بود یا state ناسازگاری پیدا کردی، از صفر بساز و در گزارش بگو چرا.
+مقادیر واقعی (سمت راست) خیلی طولانی‌اند برای آزمون wall-clock؛ مقادیر آزمایشی (سمت چپ، فقط در test-fork کد) را استفاده کن و **هر عددی که خودت هم کوچک می‌کنی را در گزارش اضافه کن**.
 
-⚠️ **نکته‌ی مهم درباره‌ی `BlockRewardDistributor.sol`:** بعد از فازهای ۱-۴، این فایل روی نسخه‌ی production اصلاح شد (تابع `_prepareEpoch`/`EpochPrep` جایگزین نسخه‌ی قبلی شد). اگر شبکه‌ی فازهای ۱-۴ را ادامه می‌دهی و `BlockRewardDistributor` از قبل genesis-inject شده با نسخه‌ی قدیمی‌تر (قبل از این اصلاح)، فاز ۸ (که مستقیماً `distributeRewards()` را صدا می‌زند) باید این قرارداد را با کد **تازه** دوباره genesis کند — یعنی یا یک شبکه‌ی جدید فقط برای فاز ۸، یا یک شبکه‌ی کاملاً تازه برای کل بخش ب؛ تصمیمش با تو، فقط در گزارش بگو کدام را انتخاب کردی و چرا.
-
-## خط مبنای Hardhat برای تصمیم‌های نهایی (پیش از هر آزمون Besu)
-روی Hardhat محلی (نه Besu) این‌ها سبز است و **باید روی Besu همان‌ها تکرار شود**: P04 = ۲۹/۲۹، P01/P02 = ۳۲/۳۲، P05 = ۱۵/۱۵، P06 = ۱۲/۱۲ (`testing-evidence/hardhat-regression/`). اسکریپت‌ها با `evm_increaseTime` زمان را جلو می‌برند؛ روی Besu باید همان سناریوها با زمان واقعی و جدول پارامترهای پایین اجرا شوند. رفتار مستند ولی تصمیم‌نگرفته که روی Besu هم باید ثبت شود: (۱) `lastBoardRefreshAt=0` → اولین refresh فوراً مجاز؛ (۲) `refreshBoard` با صفر رأی → هیأت خالی.
-
-## پارامترهای آزمایشی یکپارچه (بخش ب) — یک‌جا، بدون ابهام
-
-| پارامتر | مقدار واقعی | مقدار آزمون |
+| پارامتر | مقدار واقعی | مقدار آزمون پیشنهادی |
 |---|---:|---:|
 | `probationPeriod` | ۱ هفته | ۳۰۰ ث |
 | `recoveryPeriod` | ۴۸ ساعت | ۱۲۰ ث |
-| `exitCooldown` | ۱ هفته | ۱۲۰ ث |
+| `exitCooldown` | ۱ هفته | ۱۲۰ ث (باید > `PRE_EXIT_CLAIM_WINDOW` آزمون بماند) |
 | `MASS_DEMOTION_WINDOW` | ۱ ساعت | ۶۰ ث |
 | `APPEAL_FILING_WINDOW` | ۷۲ ساعت | ۱۲۰ ث |
 | `APPEAL_VOTING_PERIOD` | ۷ روز | ۱۸۰ ث |
 | `DELIVERY_DISPUTE_GRACE_PERIOD` | ۷ روز | ۱۲۰ ث |
-| **`DELIVERY_DISPUTE_VOTING_PERIOD`** ⚠️ در جدول قبلی نبود؛ بدون کوچک‌کردن، فاز ۵.۵ هفت روز زمان می‌برد | ۷ روز | **۱۸۰ ث** |
-| `CAP_CHANGE_TIMELOCK_DELAY` (فاز ۷.۳) | ۷ روز | ۶۰ ث |
-| `STALE_VOTE_CLEAR_DELAY` (فاز ۶.۶) | ۳۰ روز | ۶۰ ث |
-| `ROLLING_WINDOW_DAYS`/`_currentDay()` (فاز ۷.۲) | ۳۰ × ۱ روز | ۳۰ × ۱ دقیقه (با تغییر `1 days`→`1 minutes` فقط در test-fork) |
-| `perPaymentCap` / `periodCap` | ✅ **تصمیم نهایی P06:** ۵۰٬۰۰۰ / ۲۰۰٬۰۰۰ سورن | همان مقدار واقعی (کوچک‌کردن لازم نیست؛ overlay اجباری در genesis) |
-| **`PRE_EXIT_CLAIM_WINDOW`** (تصمیم P04؛ ثابت) | ۷۲ ساعت | **۶۰ ث** — ⚠️ باید همیشه **کمتر** از `exitCooldown` آزمون (۱۲۰ ث) بماند (قرارداد این را اعمال می‌کند) |
-| **`BOARD_REFRESH_INTERVAL`** (تصمیم P01؛ ثابت) | ۳۰ روز | **۱۸۰ ث** (در test-fork) |
-| بررسی ساعتیِ Verifier و آستانه‌های C01 (۱۵ دقیقه / ۱ ساعت / ۴ ساعت) | ساعتی؛ ۱۵د/۱س/۴س | **پارامتر سرویس آف‌چین است، نه قرارداد** — روی شبکه‌ی Besu فقط وقتی قابل‌آزمون است که Verifier نوشته شود؛ در این سند آزموده نمی‌شود |
+| `DELIVERY_DISPUTE_VOTING_PERIOD` | ۷ روز | ۱۸۰ ث |
+| `PRE_EXIT_CLAIM_WINDOW` (ثابت، P04) | ۷۲ ساعت | ۶۰ ث (باید < `exitCooldown` آزمون بماند) |
+| `BOARD_REFRESH_INTERVAL` (ثابت، P01) | ۳۰ روز | ۱۸۰ ث |
+| `BOARD_ACTION_EXPIRY` (ثابت) | ۱۴ روز | خودت تصمیم بگیر و بنویس (باید > `BOARD_REFRESH_INTERVAL` آزمون بماند تا اکشن قبل از بازتعیین منقضی نشود) |
+| `STALE_VOTE_CLEAR_DELAY` | ۳۰ روز | ۶۰ ث |
+| `CAP_CHANGE_TIMELOCK_DELAY` (ثابت، P06) | ۷ روز | ۶۰ ث |
+| `ROLLING_WINDOW_DAYS`/سطل‌بندی روزانه‌ی `periodCap` | ۳۰ × ۱ روز | ۳۰ × ۱ دقیقه (`1 days`→`1 minutes` فقط در test-fork) |
+| `perPaymentCap` / `periodCap` (✅ تصمیم نهایی P06) | ۵۰٬۰۰۰ / ۲۰۰٬۰۰۰ سورن | همان مقدار واقعی — کوچک‌کردن لازم نیست؛ overlay اجباری در genesis |
+| بررسی ساعتیِ Verifier و آستانه‌های C01 | ساعتی؛ ۱۵د/۱س/۴س | **پارامتر سرویس آف‌چین است، نه قرارداد** — چون Verifier نوشته نشده، در این سند آزموده نمی‌شود |
 
-هر عدد کوچک‌شده را در گزارش تکرار کن تا نسخه‌ی دقیق قرارداد مشخص باشد.
+---
 
-## دستور ساخت شبکه‌ی قابل‌تکرار (اصلاح‌شده بر مبنای بازبینی نهایی N02/N03)
+## دستور ساخت شبکه‌ی تازه، از صفر، با کد فعلی
 
-۱. **شمار فایل‌ها:** ۱۳ فایل Solidity هر زبان؛ فقط ۶ قرارداد genesis-inject می‌شوند (Distributor، FoundationDAO، IdentityRegistry، Board، Registry، Treasury). `SurAddresses` کتابخانه است؛ `SurenSale`/`ServiceStaking` با تراکنش عادی دیپلوی می‌شوند؛ `SurZether` دپ مرجع است.
-۲. **helperها** constructor بدون آرگومان و آدرس‌های hardcode دارند: یک test-fork از helper بساز که فهرست‌های آزمون (ولیدیتورها = آدرس نودهای واقعی، اعضای هیأت/بنیاد) را بگیرد، یا ابزار genesis را با ورودی جدید بنویس. فهرست ولیدیتورهای Registry باید **دقیقاً** با نودهایی که واقعاً روشن‌اند یکی باشد.
-۳. **وضعیت اولیه** را از **اجرای واقعی creation code** روی زنجیره‌ی موقت استخراج کن (`eth_getCode` + هر slot لمس‌شده) — نه از `deployedBytecode.object` خام و نه با فرض اینکه «کامپایل خودش storage را می‌دهد». `BlockRewardDistributor.deployTime` یک `immutable` است: زنجیره‌ی موقت را با timestamp بلاک = `genesisTimestamp` بساز (یا محل immutable را با `immutableReferences` patch و آزمون کن). `windowStart` را برابر `genesisTimestamp` بگذار. **assertion از بلاک صفر** روی همه‌ی scalarهای غیرصفر، `deployTime`، اعضا و آدرس اوراکل‌ها اجباری است؛ برابری `eth_getCode` روی چند نود کافی نیست.
-۴. **`extraData` در حالت contract-validator:** طبق مستند رسمی Besu (QBFT)، در این حالت `extraData` شامل **۰ ولیدیتور** است (`RLP([vanity 32 بایت, 0 validators, no vote, round 0, 0 seals])`) و فهرست ولیدیتورها **فقط در `alloc.storage` قرارداد** می‌نشیند. `extraData` مبتنی‌بر فهرست header را همراه `validatorcontractaddress` نگذار (دو روش را قاطی نکن). برای ساخت، از ابزار خودِ Besu (زیرفرمان `rlp encode` با نوع `QBFT_EXTRA_DATA` و فهرست خالی — نام دقیق گزینه‌ها را با `besu rlp --help` روی نسخه‌ی خودت تأیید کن، من در این جلسه اجرایش نکرده‌ام) استفاده کن و خروجی را با مستند تطبیق بده؛ ادعای اینکه هر `extraData` غیرخالی حتماً نود را متوقف می‌کند نشده است.
-۵. **hard-forkها:** در `config` همه‌ی بلاک‌های `homesteadBlock` تا `londonBlock` = ۰ و `zeroBaseFee: true` (بدون این، نود با `Invalid opcode: 0x1c` کرش می‌کند — مشاهده‌ی آزمون قبلی). `min-gas-price` در `config.toml` هر نود.
-۶. **اتصال نودها:** در آزمون قبلی `static-nodes.json` استفاده شد (بالا).
-۷. **نود پنجم/اضافه:** فقط ساختن یک حساب EOA و فعال‌کردنش در Registry **نود پیشنهاددهنده نمی‌سازد.** برای هر ولیدیتور تازه باید یک نود Besu با **همان کلید خصوصی** آن آدرس (nodekey = آن کلید) راه‌اندازی و به شبکه وصل شود؛ وگرنه شبکه هر چرخه نوبتش را با round-change (~۱۳ ث) رد می‌کند (مشاهده‌ی قبلی).
-۸. **پیش‌نیازهای سناریوهای هیأت/خزانه:** هر رأی‌دهنده‌ی `voteFor` باید قبلاً `registerIdentity()` زده باشد (`hasIdentity`)؛ `ValidatorsTreasury` در genesis موجودی ندارد و باید قبل از پرداخت با انتقال ساده تأمین شود؛ `perPaymentCap`/`periodCap` غیرصفر باشد؛ حداقل ۳ عضو هیأت لازم است؛ رأی پیشنهاددهنده خودکار شمرده می‌شود.
+۱. **شمار و نقش فایل‌ها:** ۱۳ فایل Solidity هر زبان (`contracts/` و `contracts-fa/`). فقط ۶ قرارداد genesis می‌شوند (بالا). `SurAddresses` کتابخانه است (لینک، نه genesis مستقل). `SurenSale`/`ServiceStaking` بعد از راه‌اندازی شبکه با تراکنش عادی دیپلوی می‌شوند. `SurZether` یک دپ مرجع است، به این آزمون ربطی ندارد.
 
-## فهرست کامل — هرچیزی که باید در پایان این سند، یا ✅ تست‌شده یا ❌ با دلیل مشخص «غیرقابل‌تست در این محیط» علامت بخورد
+۲. **helperهای `_GenesisSeed`:** سه‌گانه (`ValidatorsRegistry_GenesisSeed`, `ValidatorsBoard_GenesisSeed`, `FoundationDAO_GenesisSeed`) constructor بدون آرگومان دارند و آدرس‌های placeholder داخلشان hardcode است. یا یک test-fork از هرکدام بساز که فهرست‌های آزمونت (ولیدیتورها = آدرس نودهای واقعی‌ات، اعضای هیأت، اعضای بنیاد) را بگیرد، یا یک ابزار genesis کوچک بنویس. **فهرست ولیدیتورهای Registry باید دقیقاً با نودهایی که واقعاً روشن می‌کنی یکی باشد.**
+
+۳. **استخراج وضعیت اولیه:** برای هر یک از ۶ قرارداد genesis‌شونده، `code` و تمام storage اولیه را از **اجرای واقعی creation code** روی یک زنجیره‌ی موقت بگیر (نه از خواندن مستقیم بایت‌کد کامپایل‌شده). برای `BlockRewardDistributor`، زنجیره‌ی موقت را با `timestamp` بلاک برابر `genesisTimestamp` نهایی بساز (به‌خاطر `deployTime immutable`). `windowStart` در `ValidatorsRegistry` و `lastBoardRefreshAt` در `ValidatorsBoard` (اگر هیأت را seed می‌کنی) را هم برابر `genesisTimestamp` بگذار — وگرنه اولین `refreshBoard()` فوراً مجاز می‌شود. **بعد از تزریق، از بلاک صفر assertion بزن** روی هر scalar غیرصفر، `deployTime`، اعضای هیأت/بنیاد، آدرس اوراکل‌ها، `perPaymentCap`، `periodCap`. برابری `eth_getCode` بین نودها کافی نیست؛ باید مقدار واقعی storage را بخوانی.
+
+۴. **`extraData` و `config`:** طبق پیوست ب، بندهای ۱ و ۲.
+
+۵. **اتصال نودها:** `static-nodes.json` (پیوست ب، بند ۳).
+
+۶. **هر ولیدیتور تازه = یک نود واقعی** (پیوست ب، بند ۴).
+
+۷. **پیش‌نیازهای سناریوهای هیأت/خزانه:**
+   - هر رأی‌دهنده‌ی `voteFor` باید قبلاً `IdentityRegistry.registerIdentity()` زده باشد.
+   - `ValidatorsTreasury` در genesis موجودی صفر دارد — قبل از هر پرداخت با یک انتقال ساده‌ی سورن تأمینش کن.
+   - `perPaymentCap`/`periodCap` باید غیرصفر باشند (طبق بند ۳، overlay شده‌اند).
+   - رأی پیشنهاددهنده‌ی یک اکشن هیأت خودکار شمرده می‌شود (`_createAction` داخلاً `_voteAction` می‌زند).
+   - `verifier` پیش‌فرض یک آدرس تولیدی بدون کلید در دسترس توست — آن را در test-fork به یک آدرس تازه که کلیدش را داری overlay کن.
+   - `distributionOracle` هم همین‌طور — برای فاز توزیع پاداش باید کلیدش را داشته باشی.
+
+---
+
+## چک‌لیست کامل — نقطه‌ی شروع (همه‌چیز ❌)
+
+هیچ ردیفی در این جدول از قبل ✅ نیست. در پایان کار، هر ردیف باید یکی از این سه علامت را بگیرد: ✅ تست‌شده (با ارجاع تراکنش) / ❌ رد شد با دلیل فنی مشخص / 🔶 جزئی (با توضیح دقیق چه‌بخشی).
 
 ### `ValidatorsRegistry.sol`
-| مورد | وضعیت قبل از این سند |
-|---|---|
-| `requestMembership` → `recordActivation` | ✅ تست‌شده (سناریو A) |
-| `recordSuspension` + تطبیق نصاب | ✅ تست‌شده (سناریو B) |
-| `resolveMassFailureCheck` — حالت **غیر**-رخداد-جمعی | ✅ تست‌شده (سناریو C، درست روی مرز ۲۰٪) |
-| `resolveMassFailureCheck` — حالت **واقعاً** رخداد جمعی (معافیت) | ❌ |
-| `recordRecovery` (چرخه‌ی کامل بازگشت) | ❌ |
-| `confirmDelivery` | ✅ (سناریو C) |
-| `assertDeliveryDisputed` + `voteOnDelivery` | ❌ |
-| `resolveDeliveryDisputeIfExpired` | ❌ |
-| `fileAppeal` + `confirmSlash` (رأی موفق مجمع) | ❌ |
-| `resolveAppealIfExpired` (بدون نصاب → رد جریمه) | ❌ |
-| `executeUncontestedSlash` | ✅ (سناریو C) — ولی فقط مکانیزم؛ اثر مالی نه |
-| **جریمه‌ی مالی واقعی روی یه عضو پرداخت‌کننده** | ❌ |
-| `requestExit` → `exitCooldown` → `withdrawStake` | ❌ |
-| `withdrawStake` مسدود‌شده توسط `pendingSlashEpoch` | ❌ |
-| سقوط شبکه زیر نصاب BFT | ❌ (محدودیت صریح گزارش قبلی) |
-| `proposeParameterChange`/`voteParameterChange` (هر ۶ `ParamKey`) | ❌ |
+`requestMembership`→`recordActivation` · `recordSuspension`+تطبیق نصاب · `resolveMassFailureCheck` (هر دو حالت: رخداد جمعی و غیر آن) · `recordRecovery` · `confirmDelivery` · `assertDeliveryDisputed`+`voteOnDelivery` · `resolveDeliveryDisputeIfExpired` · `fileAppeal`+`confirmSlash` (رأی موفق) · `resolveAppealIfExpired` (بدون نصاب) · `executeUncontestedSlash` · جریمه‌ی مالی واقعی روی عضو پرداخت‌کننده · `requestExit`→`withdrawStake` بدون پرونده · `recordPreExitViolation` (پنجره‌ی ۷۲ساعته، هر رد‌شدن) · `withdrawStake` با پرونده‌ی معلق (برداشت جزئی) · باگ N01 (پرونده‌ی بسته دوباره باز نمی‌شود؛ قفل پرونده‌ی جدید پاک نمی‌شود) · `proposeParameterChange`/`voteParameterChange` (هر ۶ `ParamKey`) · کف `RecoveryPeriod`/`ExitCooldown` · سقوط شبکه زیر نصاب BFT
 
 ### `ValidatorsBoard.sol`
-| مورد | وضعیت |
-|---|---|
-| `voteFor` + `refreshBoard` (تشکیل اولیه) | ✅ (سناریو D) |
-| `refreshBoard` با تغییر **واقعی** عضویت (افزایش `boardVersion`) | ❌ |
-| `refreshBoard` بدون تغییر عضویت (عدم‌افزایش `boardVersion`) | ❌ |
-| باطل‌شدن یه اکشن باز بعد از تغییر واقعی هیأت‌مدیره | ❌ |
-| `proposeApproveBudget` + حداقل ۳ رأی | ✅ (سناریو D) |
-| مسدودشدن خرج وقتی هیأت‌مدیره به زیر ۳ عضو برسه | ❌ |
-| `proposeRotateOracle` | ❌ |
-| `proposeSetEntryThresholdBase`/`proposeSetGrowthFactorPerValidator`/`proposeSetMembershipFeeBps` | ❌ |
-| `proposeRotateVerifier` | ❌ |
-| `clearStaleVotes` | ❌ |
+`voteFor`/`unvoteFor` (رأی آزاد) · `refreshBoard` تشکیل اولیه · `refreshBoard` با صفر رأی (هیأت خالی نمی‌شود) · `refreshBoard` با رأی ناکافی برای پرکردن همه‌ی کرسی‌ها · `refreshBoard` با نامزد قوی‌تر (جایگزینی ضعیف‌ترین عضو) · `refreshBoard` با تساوی رأی (عضو فعلی می‌ماند) · `refreshBoard` با عضو `Demoted` در موعد ماهانه · `refreshBoard` با/بدون تغییر واقعی (`boardVersion`) · ابطال اکشن باز با تغییر واقعی (`voteAction` باید revert شود) · **باگ اختیار هیأتِ کهنه — بازتولید و تأیید هر دو لایه‌ی اصلاح** · `proposeApproveBudget`+حداقل ۳ رأی · توقف خرج با <۳ عضو دارای اختیار · `proposeRotateOracle` · `proposeSetEntryThresholdBase`/`proposeSetGrowthFactorPerValidator`/`proposeSetMembershipFeeBps` · `proposeRotateVerifier` · `clearStaleVotes` · جانشینی فوری ناشی از خروج (`syncBoard`/`fillVacancies`، مسیر جدا از بازتعیین ماهانه) · نبود مسیر عزل اضطراری در ABI
 
 ### `ValidatorsTreasury.sol`
-| مورد | وضعیت |
-|---|---|
-| `boardApproveExpenditure` موفق | ✅ (سناریو D) |
-| رد پرداخت ≥ `perPaymentCap` | ❌ |
-| سقف ۳۰روزه (`periodCap`، پنجره‌ی چرخشی) | ❌ |
-| `proposeCapChange` + رأی + `CAP_CHANGE_TIMELOCK_DELAY` + `applyPendingCapChange` | ❌ |
-| جلوگیری از خرج زیر سقف تازه در همون لحظه‌ی تصویب | ❌ |
+`boardApproveExpenditure` موفق · مرز دقیق `perPaymentCap` (کمتر/دقیقاً‌برابر[باید مجاز]/بیشتر[باید رد]) · مرز دقیق `periodCap` (دقیقاً‌برابر مجاز/یک‌واحد‌بیشتر رد) · `proposeCapChange`+رأی+`CAP_CHANGE_TIMELOCK_DELAY`+`applyPendingCapChange` · بدون تأخیر برای پرداخت عادی
 
 ### `BlockRewardDistributor.sol`
-| مورد | وضعیت |
-|---|---|
-| **`distributeRewards()` — اصلاً هرگز صدا زده نشد** | ❌ (شکاف بزرگ) |
-| `qbft.miningbeneficiary` واقعاً بلاک‌ریوارد را به این قرارداد می‌رساند | ❌ |
-| `pendingMembershipFees` تاخوردن و توزیع در epoch بعدی | ❌ |
-| `MIN_DISTRIBUTION_INTERVAL` | ❌ |
-| چک حداکثر فیزیکی تعداد بلاک | ❌ |
+تأیید `qbft.miningbeneficiary` می‌رسد به این آدرس · **اولین اجرای واقعی `distributeRewards()`** (این همان تابعی است که باگ Stack-too-deep در آن پیدا و اصلاح شد — این اجرا تأیید نهایی همان اصلاح روی زنجیره‌ی واقعی هم هست) · کنترل بازه‌ی بلوک P05 (شروع دقیق، تکراری/هم‌پوشان/جاافتاده/وارونه/آینده رد شود) · کارمزد عضویت تاخورده و توزیع بدون سوزاندن · `MIN_DISTRIBUTION_INTERVAL`
 
 ### `FoundationDAO.sol`
-کاملاً دست‌نخورده (genesis با state خالی دیپلوی شد). | ❌ همه‌چیز
+مشکل bootstrap با صفر عضو (`proposeAddMember`/`vote` هر دو `onlyMember`) · `proposeAddMember`+دوسوم · `proposeRemoveMember`+دوسوم · `proposeSendETH`+اکثریت ساده · `proposeExecute` با `value!=0` باید رد شود · رد پیشنهاد منقضی‌شده
 
 ### `IdentityRegistry.sol`
-| مورد | وضعیت |
-|---|---|
-| `registerIdentity` | ✅ (ضمنی، سناریو D) |
-| `setPhoneVerified`/`setTelegramVerified`/`setKycVerified` | ❌ |
-| `migrateIdentity` | ❌ |
-| `setIdentityOracle` (چرخش دست `FoundationDAO`) | ❌ |
+`registerIdentity` · `setPhoneVerified`/`setTelegramVerified`/`setKycVerified` · `migrateIdentity` · `setIdentityOracle` (چرخش دست `FoundationDAO`)
 
 ### `ServiceStaking.sol`
-کاملاً دست‌نخورده. | ❌ همه‌چیز
+`stake` · `requestWithdrawal` · `withdraw` بعد از دوره‌ی انتظار · `withdraw` قبل از پایان دوره (رد)
+
+### بازیابی اضطراری (N04)
+مرحله‌ی ۱ (احیای نودها) · مرحله‌ی ۲ (`transitions.qbft` به `blockheader`) · بازگشت به `contract` بدون پرونده‌ی تنبیهی · اثبات محدودشدن گذار فقط به انتخاب ولیدیتور
 
 ---
 
-## فاز ۵ — تکمیل `ValidatorsRegistry`
+## فاز ۱ — کامپایل، genesis، راه‌اندازی شبکه
 
-### ۵.۱ معافیت رخداد جمعی واقعی
-با ولیدیتورهای فعلی شبکه (طبق گزارش قبلی، الان ۴ تا فعال مانده: validator1, candidate5, validator3, validator4)، **۲ ولیدیتور را در همان پنجره‌ی یک‌دقیقه‌ای** (`MASS_DEMOTION_WINDOW=60`) با `recordSuspension` تعلیق کن (۲ از ۴ = ۵۰٪ > ۲۰٪ → باید رخداد جمعی باشد). صبر کن پنجره ببندد، `resolveMassFailureCheck` را **برای هرکدام جداگانه** صدا بزن. **گزارش بده:** `slashOutcome` هر دو باید `ExemptMassFailure` (۱) باشد.
+از «دستور ساخت شبکه‌ی تازه» بالا پیروی کن. حداقل ۴ نود واقعی (برای امکان فاز‌های بعدی که ولیدیتور تازه اضافه می‌کنند، نود پنجم را هم از الان آماده نگه‌دار). **گزارش بده:** فهرست دقیق ولیدیتورهای genesis، `code` هر ۶ قرارداد از هر نود (باید یکسان باشند)، و نتیجه‌ی assertionهای بند ۳ بالا (مقدار واقعی هر scalar مهم، نه فقط «درست بود»).
 
-### ۵.۲ چرخه‌ی کامل بازگشت (`recordRecovery`)
-یکی از دو ولیدیتور معاف‌شده‌ی بالا را انتخاب کن (وضعیتش `Demoted` است). صبر کن `recoveryPeriod` (۱۲۰ ثانیه) بگذرد. با کلید verifier، `recordRecovery(validator, evidenceHash)` را صدا بزن. **گزارش بده:** `isValidator()` دوباره true می‌شود؟ آیا این ولیدیتور واقعاً به چرخش پیشنهاد بلاک QBFT برمی‌گردد (اگر نودش هنوز روشن است)؟
+## فاز ۲ — چرخه‌ی کامل عضویت و اعتبارسنجی (`ValidatorsRegistry`)
 
-### ۵.۳ اعتراض با رأی موفق مجمع
-یک ولیدیتور دیگر (که رخداد جمعی نبوده — یعنی باید یکی را جدا و تنها تعلیق کنی، نه در پنجره‌ی مشترک با ۵.۱) را تعلیق کن. `resolveMassFailureCheck` (نباید exempt شود چون تنها). `confirmDelivery`. `fileAppeal`. با اکثریت ولیدیتورهای فعال باقی‌مانده، `confirmSlash` را رأی بده تا به نصاب برسد. **گزارش بده:** تراکنش نهایی که نصاب را کامل کرد، `SlashResolved(..., Confirmed, ...)` را ثبت می‌کند؟ موجودی خزانه واقعاً افزایش می‌یابد (اگر این ولیدیتور `lockedStake` غیرصفر دارد — طبق §۵.۶ زیر باید یک عضو پرداخت‌کننده باشد، نه یه مؤسس genesis).
+با یک ولیدیتور تازه (نه از genesis): `requestMembership()` → صبر `probationPeriod` → `recordActivation()` (با کلید `verifier`) → تأیید کن `isValidator()`/`getValidators()` بلافاصله به‌روز شدند و اگر نود واقعی پشتش هست، وارد چرخش پیشنهاددهی QBFT شد.
 
-### ۵.۴ اعتراض بدون نصاب → رد جریمه
-یک ولیدیتور دیگر را تعلیق کن (تنها، بدون رخداد جمعی). `resolveMassFailureCheck` → `confirmDelivery` → `fileAppeal`. این‌بار **هیچ رأیی نده** — صبر کن `APPEAL_VOTING_PERIOD` (۱۸۰ ثانیه) کامل بگذرد. `resolveAppealIfExpired` را صدا بزن. **گزارش بده:** `slashOutcome` = `RejectedNoQuorum` (۵)؟ **مهم‌تر:** `isValidator()` این ولیدیتور همچنان `false` است (یعنی تعلیق اجماعی خودکار لغو نشد)؟
+## فاز ۳ — تعلیق، معافیت جمعی، اعتراض، تحویل، بازگشت، خروج
 
-### ۵.۵ اختلاف تحویل با رأی مجمع
-یک ولیدیتور دیگر را تعلیق کن. این‌بار **خودِ ولیدیتور `confirmDelivery` را صدا نزند.** صبر کن `DELIVERY_DISPUTE_GRACE_PERIOD` (۱۲۰ ثانیه) بگذرد. با یه حساب دیگر (نه خودِ ولیدیتور)، `assertDeliveryDisputed` را صدا بزن. با اکثریت ولیدیتورهای فعال، `voteOnDelivery(decisionId, true)` را رأی بده تا تحویل تأیید شود. **گزارش بده:** `deliveryDisputes[decisionId].resolved`=true و `deliveryConfirmed`=true؟ آیا از اینجا می‌توانی `fileAppeal` را هم ادامه بدهی (فقط برای تکمیل زنجیره، لازم نیست جریمه‌اش را نهایی کنی).
+هرکدام از این‌ها را **جدا** (نه لزوماً همان ولیدیتور) آزمون کن، با گزارش دقیق state قبل/بعد هر مرحله:
 
-### ۵.۶ جریمه‌ی مالی واقعی روی یه عضو پرداخت‌کننده
-یه ولیدیتور **تازه** (نه از genesis — با `requestMembership` واقعی مثل سناریو A، که `lockedStake` غیرصفر دارد) اضافه کن. بعد از فعال‌سازی‌اش، تعلیقش کن و بگذار جریمه (با هرکدام از مسیرهای بالا — بی‌اعتراض ساده‌ترین است) نهایی شود. **گزارش بده:** موجودی خزانه دقیقاً به‌اندازه‌ی `slashBps` (۱٪) از `lockedStake` این ولیدیتور افزایش یافته؟ عدد دقیق قبل/بعد را بیاور.
+1. **تعلیق تنها (بدون رخداد جمعی):** `recordSuspension` → `resolveMassFailureCheck` (نباید exempt شود) → `confirmDelivery` → بدون اعتراض تا پایان `APPEAL_FILING_WINDOW` → `executeUncontestedSlash`.
+2. **رخداد جمعی واقعی:** ۲+ ولیدیتور را در همان پنجره‌ی `MASS_DEMOTION_WINDOW` تعلیق کن (باید >۲۰٪ مجموعه‌ی فعال باشد) → `resolveMassFailureCheck` برای هرکدام جدا → باید `ExemptMassFailure` بدهد.
+3. **بازگشت کامل:** یک ولیدیتور معاف/جریمه‌شده صبر کند `recoveryPeriod`، `recordRecovery` بزن → `isValidator()` دوباره true.
+4. **اعتراض با رأی موفق:** تعلیق تنها → `confirmDelivery` → `fileAppeal` → با اکثریت `confirmSlash` رأی بده تا نصاب برسد → `SlashResolved(Confirmed)`.
+5. **اعتراض بدون نصاب:** مثل بالا ولی بدون رأی کافی، صبر کن `APPEAL_VOTING_PERIOD` تمام شود، `resolveAppealIfExpired` → `RejectedNoQuorum`؛ `isValidator()` باید همچنان `false` بماند (تعلیق لغو نمی‌شود، فقط جریمه رد می‌شود).
+6. **اختلاف تحویل:** تعلیق کن، ولیدیتور خودش `confirmDelivery` نزند → صبر `DELIVERY_DISPUTE_GRACE_PERIOD` → یک حساب دیگر `assertDeliveryDisputed` بزند → اکثریت `voteOnDelivery(true)` رأی بدهند → `deliveryConfirmed=true`.
+7. **جریمه‌ی مالی واقعی:** یک ولیدیتور **دارای وثیقه** (`requestMembership` واقعی، نه از genesis) را جریمه کن — موجودی خزانه‌ی قبل/بعد را با عدد دقیق مقایسه کن (باید دقیقاً `slashBps` از `lockedStake` باشد).
+8. **خروج بدون پرونده:** `requestExit` → صبر `exitCooldown` → `withdrawStake` → کل وثیقه برگردد، `status=None`.
+9. **پرونده‌ی پیش‌ازخروج (P04):** ولیدیتور `Active` خروج بدهد → Verifier ظرف `PRE_EXIT_CLAIM_WINDOW` `recordPreExitViolation` بزند (با `violationAt` قبل از زمان خروج) → `resolveMassFailureCheck` → `confirmDelivery` → بعد از `exitCooldown` و **قبل از** اجرای جریمه، `withdrawStake`: فقط مبلغ درگیر محفوظ بماند و بقیه پرداخت شود → `executeUncontestedSlash` → مبلغ محفوظ دقیقاً به خزانه برود → برداشت دوم صفر بدهد. همچنین رد‌شدن‌ها: `violationAt` بعد از خروج (رد)، بعد از پایان پنجره (رد)، خروج‌نکرده (رد)، Probation (رد)، پرونده‌ی دوم هم‌زمان (رد)، غیر Verifier (رد).
+10. **باگ N01 (رگرسیون امنیتی):** با یک عضو دارای وثیقه: رخداد جمعی → معافیت پرونده‌ی A → `recordRecovery` → بعد از `DELIVERY_DISPUTE_GRACE_PERIOD` تلاش `assertDeliveryDisputed(A)` — **باید revert شود** با `"case already resolved"` → همان ولیدیتور دوباره تنها تعلیق شود (پرونده‌ی B) → `pendingSlashEpoch` باید غیرصفر بماند → `requestExit`+`withdrawStake` پیش از حل B باید revert شود.
+11. **تغییر پارامتر:** `proposeParameterChange` برای هر ۶ `ParamKey` (`MaxEntriesPerWindow`=۰, `EntryWindowSeconds`=۱, `ProbationPeriod`=۲, `RecoveryPeriod`=۳, `SlashBps`=۴, `ExitCooldown`=۵) با اکثریت رأی بده. **گزارش بده:** کف `RecoveryPeriod` (باید > `MASS_DEMOTION_WINDOW`) و کف `ExitCooldown` (باید > `PRE_EXIT_CLAIM_WINDOW`) هم رد می‌شوند.
+12. **سقوط زیر نصاب BFT:** با `recordSuspension` پی‌درپی، مجموعه‌ی ثبت‌شده را کم‌کم کوچک کن و بعد از هر مرحله تولید بلاک را بسنج. حداقل اندازه‌ی مجموعه‌ای که هنوز بلاک می‌سازد چیست؟ جدا از این، چند نود را (بدون کم‌کردن مجموعه‌ی ثبت‌شده) خاموش کن تا بیش از یک‌سوم مشارکت‌کنندگان از دست برود — بلاک‌سازی متوقف می‌شود؟ این دو آزمون را با هم قاطی نکن (یکی «کوچک‌شدن مجموعه»، دیگری «آفلاین‌شدن نود در مجموعه‌ی ثابت»).
 
-### ۵.۷ خروج و برداشت کامل
-یک ولیدیتور فعال (بدون هیچ جریمه‌ی معلقی) `requestExit()` بزند. صبر کن `exitCooldown` (۱۲۰ ثانیه) بگذرد. `withdrawStake()` را صدا بزند. **گزارش بده:** موجودی این حساب واقعاً `lockedStake`ش را پس می‌گیرد؟
+## فاز ۴ — `ValidatorsBoard`
 
-### ۵.۸ خروج و پرونده‌ی پیش‌ازخروج (تصمیم نهایی P04) — روی Besu واقعی
+هیأت را با رأی‌گیری واقعی (بعد از `registerIdentity` برای هر رأی‌دهنده) تشکیل بده، سپس هرکدام از این‌ها را جدا آزمون کن:
 
-روی Hardhat محلی، ۲۸ بررسی این‌ها را ثابت کرده (`testing-evidence/hardhat-regression/scripts/test_P04_exit_cases.js`)؛ **روی Besu هنوز اجرا نشده.** با زمان واقعی wall-clock و پارامترهای جدول بالا، این‌ها را اجرا و گزارش کن:
+1. **صفر رأی معتبر:** همه‌ی رأی‌ها را `unvoteFor` کن، صبر `BOARD_REFRESH_INTERVAL`، `refreshBoard()` بزن. اعضای `Active` فعلی باید کرسی‌شان را حفظ کنند؛ `boardVersion` نباید تغییر کند.
+2. **رأی ناکافی برای پرکردن همه‌ی کرسی‌ها:** یک عضو خروج بدهد، فقط یک کاندیدای تازه رأی داشته باشد. فقط همان یک نفر وارد شود؛ کرسی‌های بدون کاندیدای واجد خالی بمانند.
+3. **نامزد قوی‌تر:** با هیأت پر، رأی یک عضو را صفر کن و به یک کاندیدای بیرونی حداقل ۱ رأی بده. نامزد تازه باید جای عضو ضعیف را بگیرد؛ `boardVersion` بالا برود.
+4. **تساوی رأی:** مثل بالا ولی کاندیدای بیرونی هم صفر رأی. عضو فعلی باید بماند؛ `boardVersion` بدون تغییر.
+5. **تعلیق در موعد ماهانه:** عضوی را `recordSuspension` کن. بلافاصله باید هنوز `hasBoardAuthority`=true باشد. بعد از `BOARD_REFRESH_INTERVAL` و `refreshBoard()`، دیگر عضو نباشد.
+6. **ابطال اکشن باز:** قبل از یکی از سناریوهای بالا که ترکیب را واقعاً عوض می‌کند، یک `proposeApproveBudget` باز با رأی ناقص بگذار. بعد از تغییر واقعی، رأی باقی‌مانده باید با `"board membership changed since this action was proposed"` **revert** شود (نه موفقیت بی‌اثر).
+7. **باگ اختیار هیأتِ کهنه (آزمون امنیتی):** یک عضو هیأت `requestExit` بزند → بعد از `exitCooldown`، `withdrawStake()` بزند → همان آدرس دوباره `requestMembership()` بزند — باید با `"this address has exited before and may not rejoin"` رد شود (لایه‌ی اول). اگر Besu اجازه‌ی دستکاری مستقیم storage (`debug_setStorageAt`) را روی یک شبکه‌ی آزمایشیِ **جدا** می‌دهد، لایه‌ی دوم را هم جدا آزمون کن: `permanentlyExited` را دستی `false` کن، `requestMembership` این‌بار موفق شود، ولی `hasBoardAuthority` همچنان `false` بماند (چون `membershipEpoch` عوض شده و با `seatMembershipEpoch` کرسی کهنه هم‌خوان نیست). اگر Besu این را اجازه نمی‌دهد، فقط لایه‌ی اول را با دلیل مشخص گزارش بده.
+8. **توقف خرج:** هیأت را به کمتر از ۳ عضو دارای اختیار برسان (بدون جانشین واجد). `proposeApproveBudget` باید با `"fewer than 3 board members - spending halted"` رد شود.
+9. **بقیه‌ی اکشن‌ها:** `proposeRotateOracle`، `proposeSetEntryThresholdBase`/`proposeSetGrowthFactorPerValidator`/`proposeSetMembershipFeeBps`، `proposeRotateVerifier` — هرکدام با نصاب معمولی رأی و نتیجه‌ی on-chain متناظرش تأیید شود.
+10. **`clearStaleVotes`:** یک ولیدیتورِ رأی‌داده را برای مدت طولانی `Demoted` نگه‌دار (`recoveryPeriod` + `STALE_VOTE_CLEAR_DELAY`، در test-fork کوچک‌شده)، سپس `clearStaleVotes` بزن.
+11. **جانشینی فوری (مسیر جدا از بازتعیین ماهانه):** عضوی خروج بدهد → اختیارش فوراً قطع شود → `syncBoard()` (تراکنش جدا) کرسی را آزاد و جانشین کند، بدون انتظار `BOARD_REFRESH_INTERVAL`.
+12. **بدون مسیر عزل اضطراری:** ABI روی زنجیره را بخوان — نباید تابعی با نام remove/emergency/kick/dismiss باشد.
 
-۱. **بدون پرونده:** ولیدیتور دارای وثیقه `requestExit` بزند → `recordSuspension` روی او revert (`not active`) → قبل از `exitCooldown` `withdrawStake` رد → بعد از آن کل وثیقه پرداخت و ساختار پاک (`status=None`).
-۲. **پرونده‌ی پیش‌ازخروج در پنجره:** ولیدیتور `Active` درخواست خروج بدهد (زمان `T`)؛ Verifier ظرف `PRE_EXIT_CLAIM_WINDOW` `recordPreExitViolation(v, hash, violationAt<T)` بزند → رویداد `PreExitCaseRecorded`؛ `decisionViolationAt`، `pendingSlashDecisionId`، `decisionSlashAmount` را بخوان. سپس `resolveMassFailureCheck` → `confirmDelivery` (توسط ولیدیتور در وضعیت Exiting) → بعد از `exitCooldown` و **قبل از** اجرای جریمه، `withdrawStake`: **فقط مبلغ درگیر محفوظ بماند و بقیه پرداخت شود** (مقادیر دقیق قبل/بعد) → `executeUncontestedSlash` → مبلغ محفوظ دقیقاً به خزانه برود → `withdrawStake` دوم صفر بدهد و ساختار پاک شود. مجموع دریافتی ولیدیتور = وثیقه − جریمه.
-۳. **رد شدن‌ها (هرکدام با پیام دقیق):** `violationAt ≥ T` (غیرفعالی پس از خروج تخلف نیست)؛ بعد از پایان `PRE_EXIT_CLAIM_WINDOW`؛ ولیدیتور خروج‌نکرده؛ خروج از وضعیت Probation؛ پرونده‌ی دوم وقتی پرونده‌ی معلق هست؛ تخلفِ قدیمی‌تر از آخرین تعلیق؛ غیر Verifier.
-۴. **معافیت جمعی در این مسیر:** بیش از ۲۰٪ مجموعه در یک پنجره‌ی `MASS_DEMOTION_WINDOW` پرونده‌ی پیش‌ازخروج بگیرند → همه `ExemptMassFailure`؛ برداشت مانعی ندارد.
-۵. **کف پارامتر:** `proposeParameterChange(ExitCooldown=5, ≤ PRE_EXIT_CLAIM_WINDOW)` رد شود؛ بزرگ‌تر پذیرفته شود.
-۶. **مسدودشدن برداشت با پرونده‌ی معلق (Demoted → requestExit):** با پرونده‌ی حل‌نشده، فقط مبلغ درگیر محفوظ ماند (نه کل برداشت مسدود).
+## فاز ۵ — `ValidatorsTreasury`
 
-### ۵.۹ توقف اجماع — دو آزمون **جدا** (N04)
+1. **مرز `perPaymentCap` (`<=`):** پرداخت ۴۹٬۹۹۹ (اجرا شود)، دقیقاً ۵۰٬۰۰۰ (**باید اجرا شود** — اگر رد شد یعنی کد قدیمی deploy شده، فوراً متوقف کن و گزارش بده)، ۵۰٬۰۰۰+۱wei (رد شود).
+2. **مرز `periodCap` (`<=`):** با چند پرداخت به دقیقاً ۲۰۰٬۰۰۰ برس (باید مجاز باشد)، سپس ۱ واحد بیشتر (باید رد شود با `"30-day period cap exceeded"`).
+3. **تغییر سقف با رأی + timelock:** `proposeCapChange` → رأی اکثریت → تلاش فوری `applyPendingCapChange` (رد شود) → صبر `CAP_CHANGE_TIMELOCK_DELAY` → دوباره (موفق شود). تأیید کن پرداخت عادی هیچ تأخیری ندارد.
 
-«کاهش مجموعه‌ی ثبت‌شده» با «آفلاین‌شدن نودها در مجموعه‌ی ثابت» دو پدیده‌ی متفاوت‌اند و نباید خلط شوند:
+## فاز ۶ — `BlockRewardDistributor`
 
-**(الف) کوچک‌شدن مجموعه در حالی که شبکه هنوز بلاک می‌سازد.** با `recordSuspension` پی‌درپی (همه‌ی نودهای باقی‌مانده روشن)، مجموعه‌ی ثبت‌شده را از ۵ به ۴ به ۳ … کاهش بده و **بعد از هر مرحله** تولید بلاک را بسنج. سؤال: آیا نصاب با اندازه‌ی جدیدِ مجموعه واقعاً تطبیق می‌یابد؟ حداقل اندازه‌ی مجموعه‌ای که هنوز بلاک می‌سازد چیست؟ (برای n کوچک، جزئیات نصاب را با نسخه‌ی دقیق Besu بیازمایید.)
+1. چک کن `qbft.miningbeneficiary` واقعاً به این آدرس بلاک‌ریوارد می‌رساند (موجودی قبل/بعد چند بلاک).
+2. **اولین اجرای واقعی `distributeRewards()`:** با کلید `distributionOracle` (overlay‌شده)، `{fromBlock, toBlock}` را از بلاک ۱ شروع کن، فهرست ولیدیتورها و تعداد بلاک واقعی‌شان (از چرخش round-robینی که دیدی) را بده. **گزارش بده:** موفقیت تراکنش، `gasUsed`، موجودی هر ولیدیتور/`FoundationDAO`/`ValidatorsTreasury` قبل و بعد، رویداد نهایی.
+3. **کنترل بازه‌ی P05:** بازه‌ی دوم را امتحان کن با شروع اشتباه (رد شود)، هم‌پوشان (رد شود)، جاافتاده (رد شود)، درست (قبول شود).
+4. کارمزد عضویت تاخورده (`pendingMembershipFees`) در epoch بعدی بدون سوزاندن توزیع شود.
+5. `MIN_DISTRIBUTION_INTERVAL` — فراخوان فوری دوم رد شود.
 
-**(ب) خاموشی نودها با مجموعه‌ی ثابت.** مجموعه‌ی ثبت‌شده را **دست نزن** (مثلاً n=5 یا n=7)؛ چند نود را خاموش/جدا کن تا بیش از یک‌سوم مشارکت‌کنندگان از دست برود. سؤال: بلاک‌سازی متوقف می‌شود؟ لاگ‌ها چه می‌گویند؟ **مهم:** در این حالت خودِ `recordSuspension` (یک تراکنش عادی) هم بدون تولید بلاک نهایی نمی‌شود — پس تعلیق روی زنجیره **راه بازیابی از توقف نیست.** با روشن‌کردن نودها آیا شبکه خودش برمی‌گردد؟ اگر نودها برای همیشه از دست رفته باشند چه؟ 🔶 **سؤال طراحی باز (نیازمند تصمیم شما):** روش اضطراری بازیابی (مثلاً genesis/transition جدید) و مرجع مجاز آن چیست؟ این آزمون فقط رفتار را مستند می‌کند؛ پاسخ طراحی را نمی‌دهد.
+## فاز ۷ — `FoundationDAO`
 
-### ۵.۱۰ تغییر پارامتر با رأی کامل مجمع
-`proposeParameterChange(ParamKey.SlashBps, 200)` (یا هر `ParamKey` دیگری — `MaxEntriesPerWindow`=۰, `EntryWindowSeconds`=۱, `ProbationPeriod`=۲, `RecoveryPeriod`=۳, `SlashBps`=۴, `ExitCooldown`=۵ به ترتیب enum) را با یه ولیدیتور فعال پیشنهاد بده، با اکثریت رأی بده تا اجرا شود. **گزارش بده:** `slashBps()` واقعاً به مقدار تازه تغییر کرد؟
+genesis این قرارداد را با چند عضو seed‌شده بساز (چون با صفر عضو، `proposeAddMember`/`vote` هر دو `onlyMember` قفل می‌شوند — اگر امتحان کردی و واقعاً قفل بود، همین را به‌عنوان یافته گزارش بده). با ۲-۳ عضو: `proposeAddMember`+دوسوم، `proposeRemoveMember`+دوسوم، `proposeSendETH`+اکثریت ساده، `proposeExecute` با `value!=0` (باید رد شود — این تأیید نهایی یک اصلاح قدیمی‌تر است)، رأی روی پیشنهاد منقضی (رد شود).
 
----
+## فاز ۸ — `IdentityRegistry`
 
-### ۵.۱۱ رگرسیون N01 روی شبکه‌ی واقعی — دو پرونده‌ی A/B، بازگشت واقعی، عضو دارای وثیقه
+`setPhoneVerified`/`setTelegramVerified`/`setKycVerified`، `migrateIdentity`، و چرخش `setIdentityOracle` از طریق `FoundationDAO` (اگر فاز ۷ را انجام دادی).
 
-(روی Hardhat محلی بازتولید و اصلاح شده؛ روی Besu واقعی هنوز نه.) **با یک عضو پرداخت‌کننده‌ی دارای وثیقه:** ۱) در یک رخداد جمعی (تعداد تعلیق > ۲۰٪ مجموعه) پرونده‌ی A معاف شود؛ ۲) با `recordRecovery` برگردد؛ ۳) پس از `DELIVERY_DISPUTE_GRACE_PERIOD` تلاش برای `assertDeliveryDisputed(A)` — **باید revert شود** با `"case already resolved"`؛ ۴) همان ولیدیتور دوباره (تنها) تعلیق شود = پرونده‌ی B؛ ۵) `pendingSlashEpoch` او را بخوان (باید غیرصفر بماند)؛ ۶) `requestExit` + `withdrawStake` پیش از حل B → باید revert شود. **گزارش بده:** هر مرحله، مقدار `pendingSlashEpoch`، و اینکه هیچ فراخوانی عمومی نتوانست قفل B را پاک کند.
+## فاز ۹ — `ServiceStaking`
 
----
+`stake`، `requestWithdrawal`، `withdraw` بعد/قبل از دوره‌ی انتظار (دوره را هم در test-fork کوچک کن و در گزارش بگو).
 
-## فاز ۶ — تکمیل `ValidatorsBoard`
+## فاز ۱۰ — بازیابی اضطراری اجماع (N04)
 
-### ۶.۱ تغییر واقعی عضویت هیأت‌مدیره
-⚠️ **P01:** `refreshBoard()` فقط هر `BOARD_REFRESH_INTERVAL` (در آزمون ۱۸۰ ث) پذیرفته می‌شود (هیأتِ خالی: هر زمان). ابتدا زودتر از موعد صدا بزن (باید revert با `once every 30 days`)، بعد پس از موعد. `voteFor` را طوری بزن که نتیجه‌ی `refreshBoard()` **واقعاً متفاوت** از ترکیب فعلی شود. **گزارش بده:** `boardVersion()` قبل/بعد — باید افزایش‌یافته باشد.
+سیاست کامل: `governance/sur-emergency-consensus-recovery.md`. ⚠️ **ابزار برنامه‌ی بازیابی (شورای ۵ از ۷) هنوز نوشته نشده** — این فاز فقط لایه‌ی فنی Besu را می‌آزماید، نه رویه‌ی امضا.
 
-### ۶.۲ عدم‌افزایش نسخه بدون تغییر واقعی
-بلافاصله بعد از ۶.۱، **بدون هیچ رأی تازه‌ای**، `refreshBoard()` را دوباره صدا بزن. **گزارش بده:** `boardVersion()` این‌بار **نباید** تغییر کند.
-
-### ۶.۳ باطل‌شدن یه اکشن باز
-قبل از ۶.۱، یک `proposeApproveBudget` باز بگذار (فقط ۱ رأی از ۳ لازم — یعنی ناقص). حالا ۶.۱ را اجرا کن (تغییر واقعی عضویت). سعی کن رأی دوم/سوم را روی همان `actionId` قدیمی بدهی. **گزارش بده:** ✅ **رفتار نهایی (P01/P02):** تراکنش باید **revert شود** با `board membership changed since this action was proposed` (نه موفقیتِ بی‌اثر)؛ `actions(id).votes` تغییر نمی‌کند. ⚠️ اقدام باید کمتر از `BOARD_ACTION_EXPIRY` (۱۴ روز) پیش از بازتعیین ساخته شود، وگرنه دلیل رد «expired» می‌شود.
-
-### ۶.۴ مسدودشدن خرج با هیأت‌مدیره‌ی کوچک‌شده
-با دستکاری رأی‌گیری (`voteFor`) طوری هیأت‌مدیره را از نو بساز که فقط ۲ عضو داشته باشد (کمتر از حداقل ۳ لازم برای خرج). `proposeApproveBudget` را امتحان کن. **گزارش بده:** با پیام `"fewer than 3 board members - spending halted"` رد می‌شود؟
-
-### ۶.۵ بقیه‌ی اکشن‌های هیأت‌مدیره
-هرکدام را با نصاب معمولی (نه حداقل‌سخت‌۳، فرمول اکثریت ساده‌ی هیأت‌مدیره‌ی فعلی) رأی و اجرا کن، و نتیجه‌ی on-chain متناظرش را تأیید کن:
-- `proposeRotateOracle(newAddr)` → `DISTRIBUTION_ORACLE` تغییر کرد؟ (این آدرس در `BlockRewardDistributor` است — چک کن)
-- `proposeSetEntryThresholdBase`/`proposeSetGrowthFactorPerValidator`/`proposeSetMembershipFeeBps` → مقدار متناظر در `ValidatorsRegistry` تغییر کرد؟
-- `proposeRotateVerifier(newAddr)` → `ValidatorsRegistry.verifier()` عوض شد؟ (⚠️ بعد از این، کلید verifier آزمونت هم باید عوض شود — با کلید تازه ادامه بده)
-
-### ۶.۶ `clearStaleVotes`
-یک ولیدیتور را تعلیق کن که قبلاً به یکی از پیشنهادهای هیأت‌مدیره رأی داده بود. صبر کن `recoveryPeriod + STALE_VOTE_CLEAR_DELAY` بگذرد (⚠️ `STALE_VOTE_CLEAR_DELAY`=۳۰ روز واقعی است و در جدول پارامترهای آزمایشی قبلی کوچک نشده بود — یا این عدد را هم در تست‌فورک کوچک کن (مثلاً ۶۰ ثانیه) و در گزارش صریح بگو، یا این مورد را با دلیل «به‌صرفه نبودن صبر ۳۰روزه‌ی واقعی» به‌عنوان تست‌نشده علامت بزن). `clearStaleVotes(validator)` را صدا بزن. **گزارش بده.**
-
-
-### ۶.۷ اختیار عضو و خروج، جانشینی (P02) — روی Hardhat ۲۵ بررسی ✅، روی Besu ❌
-یک عضو هیأت `requestExit` بزند → همان لحظه `hasBoardAuthority(member)=false` و `voteAction/propose*` از او revert (`no board authority`) → تا پاک‌سازی، اقدامات اعضای دیگر با `call syncBoard() first` revert می‌شود → یک عضو دیگر `syncBoard()` بزند (تراکنش جدا) → کرسی آزاد، بالاترین‌رأی‌ترین کاندیدای واجد شرایط جانشین شود (بدون انتظار `BOARD_REFRESH_INTERVAL`)، `boardVersion` بالا برود، پیشنهاد ناتمام باطل شود (`voteAction` روی آن revert). بدون کاندیدای واجد شرایط: `pendingVacancies=1` و کرسی خالی؛ با ظهور کاندیدا `fillVacancies()` (بدون مجوز) فقط همان کرسی را پر کند.
-### ۶.۸ تعلیق به‌تنهایی اختیار را قطع نمی‌کند، ولی در بازتعیین ماهانه عضو معلق نمی‌ماند (P02)
-عضو هیأت را با `recordSuspension` تعلیق کن → `hasBoardAuthority` هنوز `true` و پیشنهاد می‌تواند بدهد → پس از `BOARD_REFRESH_INTERVAL` و `refreshBoard()` او دیگر عضو نیست.
-### ۶.۹ کمتر از ۳ عضو دارای اختیار → توقف پرداخت (P02)
-۳ عضو از ۵ خارج شوند، کاندیدای جانشین نباشد → `proposeApproveBudget` revert (`spending halted`)؛ هیچ مسیری حداقل ۳ رأی را کم نمی‌کند.
-### ۶.۱۰ بدون مسیر عزل اضطراری (P01)
-ABI `ValidatorsBoard` روی زنجیره را بخوان: تابعی با نام‌هایی مانند remove/emergency/kick/dismiss وجود نداشته باشد.
+1. **احیای مجموعه‌ی موجود:** چند نود را خاموش کن تا بیش از یک‌سوم مشارکت‌کنندگان بروند → بلاک‌سازی متوقف شود → همه را دوباره روشن کن → آیا بدون تغییر دیگری برمی‌گردد؟
+2. **نودهای برگشت‌ناپذیر:** ۲ نود را برای همیشه از دست‌رفته فرض کن. به genesis نودهای زنده یک `transitions.qbft` با `validatorselectionmode: blockheader` در یک بلاک **آینده** اضافه کن. آیا زنجیره‌ی متوقف از آن بلاک بلاک می‌سازد؟
+3. **بازگشت به `contract`:** ⚠️ **هیچ `recordSuspension` برای هماهنگ‌کردن نزن** (قطعی عمومی تخلف فردی نیست). فقط وقتی نصاب مشارکت‌کنندگان `Registry` برقرار است (`d ≤ ⌊(n−1)/3⌋`) گذار بازگشت را اضافه کن. تأیید کن state قراردادها (وثیقه‌ها، رأی‌ها، پرونده‌ها، `boardVersion`) قبل/بعد دست‌نخورده است، و `alloc`/`extraData`/بقیه‌ی `config` genesis بایت‌به‌بایت یکسان مانده جز `transitions.qbft`.
 
 ---
 
-## فاز ۷ — تکمیل `ValidatorsTreasury`
+## بسته‌ی خروجی الزامی
 
-### ۷.۱ رد پرداخت بالای سقف
-`proposeApproveBudget` با مبلغی **≥ `perPaymentCap`** (✅ **۵۰٬۰۰۰ سورن** — مقدار نهایی P06) پیشنهاد بده و با ۳ رأی به لحظه‌ی اجرا برسان. **گزارش بده:** تراکنش نهایی با `"amount outside per-payment cap"` revert می‌شود؟ و ۴۹٬۹۹۹ اجرا می‌شود؟
+### ۱. فایل‌ها
+`REPORT.md` (به ترتیب فازهای ۱ تا ۱۰) + `logs/phase-N.md` جدا برای یافته‌های غنی‌تر + `genesis.json` نهایی + جدول «پارامترهای آزمایشیِ نهایی استفاده‌شده» (هر عددی که از جدول بالا فرق کرد یا اضافه شد).
 
-### ۷.۲ سقف ۳۰روزه
-سقف مجموع (✅ **۲۰۰٬۰۰۰ سورن**): ۴ پرداخت ۴۹٬۹۹۹ (مجموع ۱۹۹٬۹۹۶) مجاز؛ پرداخت پنجمِ ۵ سورن باید با `"30-day period cap exceeded"` رد شود. (پیر‌شدن پرداخت‌ها از پنجره‌ی ۳۰روزه با سطل‌های دقیقه‌ای در test-fork آزمود؛ ⚠️ این یک تقریب روزانه است، نه ثانیه‌ای.)
+### ۲. برای هر تراکنش (بدون استثنا)
+| فیلد | الزامی |
+|---|---|
+| هش تراکنش | بله |
+| `status` از `eth_getTransactionReceipt` | بله |
+| `gasUsed` | بله |
+| پیام revert کامل و کلمه‌به‌کلمه (اگر شکست خورد) | بله |
+| مقدار state قبل و بعد (نه فقط «موفق شد») | بله |
+| زمان دیوار لحظه‌ی ارسال | بله |
 
-### ۷.۳ تغییر سقف با رأی + timelock
-`proposeCapChange(CapKind.PerPayment, newValue)` (✅ `CAP_CHANGE_TIMELOCK_DELAY` = ۷ روز — تصمیم نهایی؛ در test-fork برای آزمون ۶۰ ثانیه) را با نصاب مجمع رأی بده. **بلافاصله** (قبل از گذشت تأخیر) سعی کن `applyPendingCapChange` را بزنی — باید رد شود. صبر کن تأخیر بگذرد، دوباره بزن — باید موفق شود. **گزارش بده هردو نتیجه.** ✅ نیز بررسی کن که **پرداخت عادی هیأت هیچ تأخیر ۷روزه‌ای ندارد** و تا اعمال تغییر، سقف قدیمی حاکم است.
+### ۳. جدول نهایی
+همان چک‌لیست بالا، هر ردیف با ✅ (+ارجاع تراکنش) / ❌ (+دلیل فنی مشخص) / 🔶 (+توضیح دقیق بخش انجام‌شده).
 
----
+### ۴. یافته‌های غیرمنتظره
+هر باگ یا رفتار غیرمنتظره، با خطای خام، بدون حدس‌زدن علت. اگر رفتار `refreshBoard`، مرز `perPaymentCap`، یا هر بخش دیگری از این سند با قرارداد deploy‌شده یکی نبود، این را **یافته‌ی بحرانی** گزارش بده (یعنی کد اشتباه genesis شده)، نه صرفاً «انحراف».
 
-## فاز ۸ — `BlockRewardDistributor` (بزرگ‌ترین شکاف باقیمانده)
+### ۵. زمان صرف‌شده برای هر فاز
 
-### ۸.۱ تأیید `qbft.miningbeneficiary`
-بعد از چند بلاک تولیدشده‌ی جدید، موجودی `BlockRewardDistributor` (`0x2222...2222`) را چک کن. **گزارش بده:** آیا واقعاً `blockreward` (۲ سورن) به‌ازای هر بلاک اینجا جمع شده؟ (این را می‌شود همین الان، بدون هیچ آماده‌سازی دیگری، صرفاً با نگاه‌کردن به موجودی این آدرس روی شبکه‌ی موجود چک کرد.)
+### ۶. انحرافات از این دستورالعمل
+اگر جایی این سند اشتباه یا غیرممکن بود، با استدلال کامل مستند کن — حدس نزن که نوشته‌ی من حتماً درست‌ترین راه است.
 
-### ۸.۲ اولین اجرای واقعی `distributeRewards()`
-با حساب `DISTRIBUTION_ORACLE` (که باید در تست‌فورک به یه کلید تستی که دردسترس داری تغییرش داده باشی — دقیقاً مثل کاری که آزمون قبلی با `verifier` کرد، چون آدرس تولیدی `DISTRIBUTION_ORACLE` را کلیدش را نداری)، یک آرایه از ولیدیتورهای فعال فعلی و تعداد بلاک واقعی‌ای که هرکدام (طبق چرخش round-robin که در فاز‌های قبلی دیدی) تولید کرده‌اند را بساز، و `distributeRewards({fromBlock, toBlock}, validators, blocksMined, totalRewards, totalFees)` (✅ **P05:** اولین بازه از بلاک ۱؛ `toBlock < block.number`) را صدا بزن — `totalRewards` را برابر موجودی جمع‌شده‌ی §۸.۱ بگذار (یا کمتر، تا `require(... <= address(this).balance)` رد نشود)، `totalFees` را `0` بگذار (ساده‌ترین حالت، مگر بخواهی فی واقعی تراکنش‌های آزمونت را هم جمع بزنی).
-
-**این دقیقاً همان تابعی است که به‌خاطرش کل باگ Stack-too-deep پیدا و اصلاح شد — پس این اجرا هم تأیید نهایی آن اصلاح روی زنجیره‌ی واقعی است، هم اولین اجرای واقعی خودِ منطق توزیع ریوارد.**
-
-**گزارش بده:**
-- تراکنش موفق شد؟ `gasUsed` چقدر بود؟
-- موجودی هرکدام از ولیدیتورها بعد از فراخوان، دقیقاً به‌نسبت `blocksMined`شان افزایش یافت؟
-- موجودی `FoundationDAO` (۱۵٪ کل ریوارد) و `ValidatorsTreasury` (باقیمانده) درست افزایش یافتند؟
-- رویداد نهایی (`_finalizeEpoch` می‌زند — اسمش را از کد چک کن) با مقادیر درست ثبت شد؟
-
-### ۸.۳ کارمزد عضویت
-بعد از این‌که چند ولیدیتور تازه در فازهای قبلی `requestMembership` زده‌اند (کارمزد عضویتشان باید در `pendingMembershipFees` جمع شده باشد)، در همین فراخوان §۸.۲ (یا یکی جدا)، **گزارش بده:** آیا این کارمزدها واقعاً به `effectiveTotalFees` این epoch اضافه شدند (مقدار قبل/بعد `pendingMembershipFees` را بیاور — باید بعد از این فراخوان صفر شده باشد)؟
-
-### ۸.۴ `MIN_DISTRIBUTION_INTERVAL`
-بلافاصله بعد از §۸.۲، دوباره `distributeRewards` را صدا بزن. **گزارش بده:** با `"too soon since last distribution"` رد می‌شود؟
-
-
-### ۸.۵ کنترل بازه‌ی بلاک (P05) — روی Hardhat ۱۵ بررسی ✅، روی Besu ❌
-روی شبکه‌ی واقعی: بازه‌ی اول باید از ۱ شروع شود (از ۲ رد)؛ بازه‌ی تکراری، هم‌پوشان، دارای فاصله (بلاک جاافتاده)، وارونه، شامل بلاک‌های تولیدنشده، و با مجموع بلاک‌های گزارش‌شده‌ی بیشتر از اندازه‌ی بازه رد شود؛ هیچ ردشدنی وضعیت را عوض نکند (`lastSettledBlock`، `epochCount`)؛ پس از قطعی سرویس، بازه‌ی بعدی همه‌ی بلاک‌های جاافتاده را از `lastSettledBlock + 1` بپوشاند. `epochBlockRanges(id)` و رویداد `EpochRangeSettled` را بخوان.
-
----
-
-## فاز ۹ — `FoundationDAO` (کاملاً تازه)
-
-نیاز به حداقل چند «عضو» تستی داری — چون genesis این قرارداد را خالی گذاشتی، باید یه راه برای اضافه‌کردن اولین عضو پیدا کنی. **مشکل واقعی احتمالی:** `proposeAddMember`/`vote` هر دو `onlyMember` هستند — با صفر عضو، **هیچ‌کس نمی‌تواند اولین عضو را اضافه کند** (یه bootstrap-problem کلاسیک). این را در گزارش صریح بیاور — اگر واقعاً قفل است، این خودش یه یافته‌ی مهم برای گزارش است (شاید یعنی genesis واقعی *باید* حداقل چند عضو seed شده داشته باشد، برخلاف تصمیم آزمون قبلی که عمداً خالی گذاشت). اگر قفل بود:
-- به‌جایش یه تست‌فورک جدا با ۲-۳ عضو واقعاً seed‌شده در genesis بساز (با همان روش `_GenesisSeed` که برای `ValidatorsRegistry` استفاده کردی) فقط برای همین فاز، و همین یافته‌ی «قفل bootstrap» را جدا در گزارش مستند کن.
-
-با ۲-۳ عضو seed‌شده:
-- `proposeAddMember` + رأی با نصاب دوسوم → عضو تازه اضافه شد؟
-- `proposeRemoveMember` + دوسوم → عضو حذف شد؟
-- `proposeSendETH` + اکثریت ساده (نه دوسوم — این همان تصحیحی است که این پروژه قبلاً روی آن کار کرد) → سورن واقعاً منتقل شد؟
-- `proposeExecute` با `value != 0` → باید رد شود (این همان باگ بحرانی قدیمی «دورزدن نصاب» بود که اصلاح شد — یه تأیید نهایی خوب است)
-- `vote` روی یه پیشنهاد منقضی‌شده → رد می‌شود؟
-
----
-
-## فاز ۱۰ — بقیه‌ی `IdentityRegistry`
-
-با کلید `identityOracle` (که باید در تست‌فورک به کلید تستی دردسترس تغییرش داده باشی):
-- `setPhoneVerified`/`setTelegramVerified`/`setKycVerified` روی یکی از حساب‌های تستی → `getVerificationStatus` نتیجه‌ی درست می‌دهد؟
-- `migrateIdentity(old, new)` → وضعیت هویت واقعاً منتقل شد؟
-- با کلید `FoundationDAO` (یا از طریق `proposeExecute` واقعی آن، اگر فاز ۹ را انجام دادی)، `setIdentityOracle` را عوض کن → چرخش موفق شد؟
-
----
-
-## فاز ۱۱ — `ServiceStaking` (کاملاً تازه)
-
-- `stake(ServiceId)` با مقدار سورن واقعی → موجودی قرارداد افزایش یافت، وضعیت stake این حساب/سرویس ثبت شد؟
-- `requestWithdrawal(ServiceId)` → دوره‌ی انتظار مربوطه شروع شد؟ (اگه این دوره هم روزه/هفته‌ای است، طبق همون روش قبلی در تست‌فورک کوچکش کن و در گزارش بگو)
-- `withdraw(ServiceId)` بعد از دوره‌ی انتظار → سورن واقعاً برگشت؟
-- `withdraw` قبل از پایان دوره → رد می‌شود؟
-
----
-
-## فاز ۱۲ — بازیابی اضطراری اجماع (تصمیم نهایی N04) — ❌ هنوز اجرا نشده
-
-**چرا این فاز مهم است:** تصمیم شما می‌گوید روش فنی باید «برای تنظیمات قراردادی سور روی Besu پیاده‌سازی و عملاً آزموده شود». من Besu را در محیط خودم ندارم (دامنه‌ی دانلود مجاز نیست)، پس این آزمون را **باید Claude Code روی شبکه‌ی واقعی** انجام دهد. سیاست: `governance/sur-emergency-consensus-recovery.md`. روش رسمی Besu: «Override smart contract validators» (گذار `transitions.qbft` به `blockheader` در بلاک آینده، سپس بازگشت به `contract`).
-
-⚠️ **محدودیت از قبل اعلام‌شده:** ابزار برنامه‌ی بازیابی (شورای ۵ از ۷، اعتبارسنجی برنامه، ساخت genesis) یک **برنامه‌ی آف‌چین است که هنوز نوشته نشده** (`sur-software-inventory.md` بخش ۱۱). پس این فاز فقط **لایه‌ی فنی Besu** را می‌آزماید؛ **رویه‌ی ۵ از ۷ امضا** تا نوشته‌شدن آن ابزار قابل‌آزمون نیست (می‌توان genesis را دستی ساخت).
-
-**پیش‌شرط:** شبکه‌ی Besu با حالت `contract` (`validatorcontractaddress = 0x3333…`)، ≥ ۵ نود واقعی، نسخه‌ی دقیق Besu ثبت شود.
-
-### ۱۲.۱ مرحله‌ی ۱ — احیای مجموعه‌ی موجود
-با `n=5`، نود ولیدیتور را خاموش کن تا بیش از یک‌سوم مشارکت‌کنندگان از دست برود (مثلاً ۲ نود) → تولید بلاک متوقف می‌شود (لاگ‌ها را ثبت کن). **همه‌ی ولیدیتورها را دوباره راه‌اندازی کن** → آیا شبکه بدون هیچ تغییر دیگری برمی‌گردد؟ ثبت کن: زمان بازگشت، و وضعیت `requesttimeoutseconds` (طبق مستند رسمی: راه‌اندازی مجدد همه‌ی ولیدیتورها آن را به مقدار genesis برمی‌گرداند).
-
-### ۱۲.۲ مرحله‌ی ۲ — نودهای برگشت‌ناپذیر: `transitions.qbft` روی زنجیره‌ی متوقف
-۲ نود را برای همیشه از دست‌رفته فرض کن (کلیدشان را حذف کن). مبنا: آخرین بلاکی که نودهای باقی‌مانده روی شماره و هش آن توافق دارند (`baseBlock`). به genesis همه‌ی نودهای باقی‌مانده اضافه کن (نام کلیدها طبق مستند رسمی؛ **روی نسخه‌ی خودت تأیید کن**):
-```json
-"transitions": { "qbft": [
-  { "block": <baseBlock+K>, "validatorselectionmode": "blockheader", "validators": ["0x…نودهای زنده…"] }
-] }
-```
-(`K ≥ 1`؛ **بلاک گذار نباید در گذشته باشد**.) همه‌ی نودهای باقی‌مانده را **پیش از رسیدن به بلاک گذار** با genesis به‌روز راه‌اندازی کن. **گزارش بده:** آیا زنجیره‌ی متوقف واقعاً از بلاک گذار بلاک می‌سازد؟ (این دقیقاً همان ادعایی است که سند طراحی قبلاً برعکسش را می‌گفت و مستند رسمی تأییدش می‌کند.) `qbft_getValidatorsByBlockNumber("latest")` قبل/بعد، لاگ نودها، هر خطا (به‌ویژه خطای «Bft requires a vote provider» مشابه گزارش قدیمی #2868 روی گذار contract→blockheader).
-
-### ۱۲.۳ بازگشت به `contract` — بدون پرونده‌ی تنبیهی برای قطعی (طرح اصلاح‌شده‌ی سند N04 بخش ۴)
-⚠️ روش قبلی این بخش (تعلیق دسته‌جمعی نودهای گمشده در یک پنجره) **لغو شد** — با تصمیم «قطعی عمومی تخلف فردی نیست» تناقض داشت. آزمون جدید:
-۱. در حالت موقت `blockheader`، **هیچ `recordSuspension`** برای نودهای گمشده نزن؛ ثابت کن هیچ پرونده‌ی جریمه‌ای (`statusDecisionCount`، `pendingSlashDecisionId`) به‌خاطر قطعی ساخته نشده است.
-۲. `n` = اندازه‌ی مجموعه‌ی Registry، `d` = تعداد اعضای غیرمشارکت‌کننده. سه حالت را جدا بیازما: (الف) `d = 0` (همه برگشته‌اند) → بازگشت با همان Registry `0x3333…`؛ (ب) `0 < d ≤ ⌊(n−1)/3⌋` → بازگشت؛ شبکه با وجود نودهای مرده پایدار می‌ماند (نوبت‌های آن‌ها با round-change ~۱۳ ثانیه رد می‌شود)؛ (پ) `d > ⌊(n−1)/3⌋` → **نباید بازگشت**: رفتار توقف دوباره را (روی شبکه‌ی آزمایشی جدا) نشان بده و نتیجه را ثبت کن.
-۳. گذار بازگشت:
-```json
-{ "block": <returnBlock>, "validatorselectionmode": "contract", "validatorcontractaddress": "0x3333333333333333333333333333333333333333" }
-```
-همه‌ی نودها پیش از آن بلاک به‌روز شوند. **گزارش بده:** پایداری پس از بازگشت؛ و **آیا state قراردادها دست‌نخورده است** (وثیقه‌ها، رأی‌ها، پرونده‌ها، موجودی‌ها، `boardVersion`) — قبل/بعد.
-۴. ⚠️ **شکاف شناخته‌شده (تصمیم لازم، در سند N04 بخش ۴ آمده):** حالت (پ) وقتی ولیدیتور گمشده هرگز برنگردد و خروج هم ندهد راه غیرتنبیهی ندارد؛ این آزمون فقط رفتار را مستند می‌کند. گزینه‌های A/B/C در سند N04.
-
-### ۱۲.۴ چه چیزی نباید ممکن باشد
-ثابت کن گذار **فقط** انتخاب ولیدیتور اجماع را عوض می‌کند: هیچ موجودی/state/پرونده‌ی جریمه‌ای تغییر نکرده و هیچ مسیر بخشیدن جریمه یا جابه‌جایی دارایی به‌وسیله‌ی این کار ایجاد نشده. `alloc` و `extraData` و بقیه‌ی `config` در genesis قبل/بعد **بایت‌به‌بایت یکسان** باشد جز `config.transitions.qbft`.
-
-### ۱۲.۵ گزارش
-نسخه‌ی Besu؛ `genesis.json` قبل/بعد؛ لاگ‌های خام هر نود حول لحظه‌ی توقف، گذار و بازگشت؛ خروجی `qbft_getValidatorsByBlockNumber` قبل/بعد؛ هر خطا **دقیقاً**؛ زمان کل هر مرحله. اگر نام کلیدهای JSON یا رفتار گذار با مستند فرق داشت، همان را بگو، حدس نزن.
-
----
-
-## چه‌چیزهایی برای من بیاور
-
-دقیقاً همان ساختار گزارش قبلی (`REPORT.md` + فایل‌های `logs/*.md` جدا برای یافته‌های غنی‌تر) را ادامه بده — یعنی:
-
-1. یک جدول «تغییرات پارامتر آزمون» تازه، شامل هر عدد جدیدی که کوچیک کردی (`STALE_VOTE_CLEAR_DELAY`, `CAP_CHANGE_TIMELOCK_DELAY`, `ROLLING_WINDOW_DAYS` اگر عوضش کردی, دوره‌ی `ServiceStaking`).
-2. برای هر فاز/مورد بالا: هش تراکنش، `status`/`gasUsed` از `eth_getTransactionReceipt`، و مقدار state قبل/بعد که ادعا می‌کنی عوض شده — نه فقط «موفق شد».
-3. **جدول نهایی کامل** — همان دو ستون فهرست بالا، ولی حالا هر ردیف باید ✅/❌ (با دلیل، اگر ❌) داشته باشد. اگر چیزی را عمداً رد کردی (مثل bootstrap-problem فاز ۹، یا تصمیم گرفتی سقوط زیر نصاب را امتحان نکنی)، همینجا با دلیل مشخص بگو.
-4. هر باگ/رفتار غیرمنتظره‌ای که دیدی — دقیقاً همان‌طور که در آزمون قبلی این کار را با کیفیت بالا انجام دادی (خطای خام، بدون حدس‌زدن علتش).
-5. اگر برای این فاز‌ها شبکه‌ی تازه ساختی (نه ادامه‌ی شبکه‌ی قبلی)، `genesis.json`ت را هم پیوست کن تا بتوانم دقیقاً ببینم چی genesis شده.
-6. زمان صرف‌شده برای هر فاز (مثل گزارش قبلی).
-
-**اگر جایی این سند اشتباه یا غیرممکن بود** (مثلاً یه تابع را اشتباه فرض کرده باشم، یا یه پیش‌نیاز را از قلم انداخته باشم) — دقیقاً همان‌طور که در گزارش قبلی «انحرافات از دستورالعمل» را با استدلال کامل مستند کردی، همین کار را اینجا هم بکن. حدس نزن که چیزی که نوشته‌ام حتماً درست‌ترین راه است.
+## چیزی که در این دور نباید تلاش شود
+پروتکل بررسی نود جدید (`SUR_NODE_CHECK_V1`، در `offchain-services/sur-node-check-protocol-spec.md`) هنوز پیاده‌سازی نشده — سرویس همراه نودی که به چالش پاسخ بدهد وجود ندارد. فاز ۲ (فعال‌سازی) با هر روشی که برایت عملی است (حتی صرفاً از طریق زمان و رأی Verifier شبیه‌سازی‌شده، بدون پروتکل چالش واقعی) پیش برو.
