@@ -65,7 +65,7 @@
 
 **نسخهٔ جدید اسکریپت‌های Besu:** رفع وابستگی به getter حذف‌شده (استخراج طبق T02)؛ کنارگذاشتن روش کوتاه‌کردن بازه — همیشه `fromBlock = lastSettledBlock()+1` و `toBlock = head−1` بدون سقف زمانی محلی. پذیرش: چند چرخهٔ پیوسته روی Besu بدون رد پرداخت صحیح و بدون رشد عقب‌ماندگی، با خروجی خام هر فاز.
 
-**recovery RewardRouter:** `settled` = `lastSettledBlock()` زنجیره (مرجع قطعی)؛ `committed` = آخرین epoch محلی confirmed؛ `scanned` = آخرین بلاک کش‌شده (می‌تواند جلوتر باشد). شروع بازه همیشه `settled+1`؛ اختلاف scanned/settled به‌تنهایی دلیل توقف نیست. reconcile: رسید موفق و `settled == pending.toBlock` → confirmed؛ رسید ناموفق/ناموجود و `settled == pending.fromBlock−1` → بازمحاسبه و ارسال همان بازه؛ غیر از این → توقف و هشدار. پذیرش: crash پس از اسکن/پیش از ارسال، پس از ارسال/پیش از رسید، پس از موفقیت/پیش از commit — هر سه بدون پرداخت دوباره و بدون توقف دائمی؛ تطبیق L06 پیش از هر ارسال.
+**recovery RewardRouter:** `settled` = `lastSettledBlock()` زنجیره (مرجع قطعی)؛ `committed` = آخرین epoch محلی confirmed؛ `scanned` = آخرین بلاک کش‌شده (می‌تواند جلوتر باشد). شروع بازه همیشه `settled+1`؛ اختلاف scanned/settled به‌تنهایی دلیل توقف نیست. reconcile: رسید موفق و `settled == pending.toBlock` → confirmed؛ رسید با `status = 0` (reverted) → بازمحاسبه از `settled + 1` و ارسال با nonce تازه؛ نبود رسید یا timeout → `unknown`، **نه شکست**: فقط انتظار یا جایگزینی با همان nonce و همان calldata، پس از تطبیق hash، receipt، nonce و `lastSettledBlock` (سیاست کامل: `sur-reward-router-spec.md` گام ۸)؛ غیر از این → توقف و هشدار. پذیرش: crash پس از اسکن/پیش از ارسال، پس از ارسال/پیش از رسید، پس از موفقیت/پیش از commit — هر سه بدون پرداخت دوباره و بدون توقف دائمی؛ تطبیق L06 پیش از هر ارسال.
 
 ## ۷. وضعیت شناسه‌ها
 | شناسه | وضعیت |

@@ -1,0 +1,7 @@
+source dir: /tmp/prefix-contracts  solc 0.8.37+commit.f401782d.Emscripten.clang
+✅ F0) helper patched with 15 distinct test-signer members
+✅ F1) getProposal() ABI unchanged (9 outputs, same order)
+❌ F2) getProposalMeta() exists: description, requiredVotes, createdAt, expiresAt → undefined
+✅ F3) proposals mapping is NOT publicly readable (no auto getter) — hence the new getter
+✅ F4) memberList seeded: 15 members
+خطا: dao(...).getProposalMeta is not a function

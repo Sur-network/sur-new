@@ -377,6 +377,20 @@ contract FoundationDAO {
         );
     }
 
+    /// @notice D05 (ممیزی ۲۰۲۶-۰۹-۳۰): مکمل فقط‌خواندنی getProposal()، که برای فراخوان‌های موجود بدون تغییر حفظ شده است.
+    ///         `proposals` خصوصی است و getProposal() این چهار فیلد را برنمی‌گرداند؛ پس بدون این getter رابط کاربری نمی‌توانست
+    ///         توضیح پیشنهاد، نصاب ثبت‌شده «هنگام ساخت» آن (requiredVotesNow() فقط نصاب یک پیشنهاد تازه است و با تغییر اعضا فرق
+    ///         می‌کند)، یا زمان انقضا را نشان دهد. برای شناسه‌ای که هرگز ساخته نشده، همهٔ فیلدها خالی/صفرند (همانند getProposal()).
+    function getProposalMeta(uint256 id) external view returns (
+        string memory description,
+        uint256 requiredVotes,
+        uint256 createdAt,
+        uint256 expiresAt
+    ) {
+        Proposal storage p = proposals[id];
+        return (p.description, p.requiredVotes, p.createdAt, p.expiresAt);
+    }
+
     function getEthBalance() external view returns (uint256) {
         return address(this).balance;
     }

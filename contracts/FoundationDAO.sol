@@ -387,6 +387,21 @@ contract FoundationDAO {
         );
     }
 
+    /// @notice D05 (audit 2026-09-30): read-only companion to getProposal(), which is kept unchanged for existing callers.
+    ///         `proposals` is private and getProposal() does not return these four fields, so without this getter a UI
+    ///         could not show a proposal's description, its quorum SNAPSHOTTED at creation (requiredVotesNow() is only the
+    ///         quorum a NEW proposal would get and differs once membership changes), or its expiry.
+    ///         For an id that was never created, every field is empty/zero (same behaviour as getProposal()).
+    function getProposalMeta(uint256 id) external view returns (
+        string memory description,
+        uint256 requiredVotes,
+        uint256 createdAt,
+        uint256 expiresAt
+    ) {
+        Proposal storage p = proposals[id];
+        return (p.description, p.requiredVotes, p.createdAt, p.expiresAt);
+    }
+
     function getEthBalance() external view returns (uint256) {
         return address(this).balance;
     }

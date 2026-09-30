@@ -1,0 +1,19 @@
+# Plan vs package: every file changed this round was re-read from Plan via the connector after its last edit
+40f0bf9ddf5ebd011aa491be428c53ecce920f1e787366b5d547d8beb80e3e0c  technical-design/sur-audit-2026-09-30-stage1-report.md
+40f0bf9ddf5ebd011aa491be428c53ecce920f1e787366b5d547d8beb80e3e0c  /mnt/user-data/uploads/sur-audit-2026-09-30-stage1-report.md
+ab66f72c4ba67efd57dfab21dc63f309930ae7576b14c051ef78f8b4f77c8428  offchain-services/sur-reward-router-spec.md
+ab66f72c4ba67efd57dfab21dc63f309930ae7576b14c051ef78f8b4f77c8428  /mnt/user-data/uploads/sur-reward-router-spec.md
+f9c53272a267072d0e7511bf45471c915b548cc8e5b739a282a2f9233d3e8df2  offchain-services/sur-governance-dashboard-claudecode-brief.md
+f9c53272a267072d0e7511bf45471c915b548cc8e5b739a282a2f9233d3e8df2  /mnt/user-data/uploads/sur-governance-dashboard-claudecode-brief.md
+42ecf05048e793f15ab3853f500bd5e839bcdeab0ee65d6bb6b7cc2e58d33893  offchain-services/sur-verifier-service-spec.md
+42ecf05048e793f15ab3853f500bd5e839bcdeab0ee65d6bb6b7cc2e58d33893  /mnt/user-data/uploads/sur-verifier-service-spec.md
+60c2b7d9f06b092586d2cc180653e47609885921e8d00deecd5e60c24e8d5ad7  offchain-services/sur-software-inventory.md
+60c2b7d9f06b092586d2cc180653e47609885921e8d00deecd5e60c24e8d5ad7  /mnt/user-data/uploads/sur-software-inventory.md
+112168a1bafa51d2d2ea56dd8f36bdf39462c216d95d03775611e56a9df38694  offchain-services/sur-suren-sale-portal-claudecode-brief.md
+112168a1bafa51d2d2ea56dd8f36bdf39462c216d95d03775611e56a9df38694  /mnt/user-data/uploads/sur-suren-sale-portal-claudecode-brief.md
+58a74e7c992e012b33b8813e75be8beca8435268729f30d62859cedb98097aab  offchain-services/sur-contracts-ui-review.md
+58a74e7c992e012b33b8813e75be8beca8435268729f30d62859cedb98097aab  /mnt/user-data/uploads/sur-contracts-ui-review.md
+483001079ed126a1a2559197255da5ac1a6ba67d28615b79267c8a1f104557d1  contracts/FoundationDAO.sol
+483001079ed126a1a2559197255da5ac1a6ba67d28615b79267c8a1f104557d1  /tmp/diskcheck/en_FoundationDAO.sol
+contracts-fa/FoundationDAO.sol: byte-compared with the Plan copy after writing (FA_IDENTICAL) — 468db7a7...
+468db7a736a31aa1fc26df596ee34ffd26b5990f54c35deaed927d335114710c  contracts-fa/FoundationDAO.sol

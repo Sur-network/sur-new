@@ -1,4 +1,4 @@
-# Incremental package — audit 2026-09-30: stage 1 (L01–L03) + stage-3 document updates
+# Incremental package — audit 2026-09-30: stage 1 (L01–L03), D05 contract change, stage-3 document updates
 
 **This ZIP is incremental.** It contains only the files added or changed in stage 1. It does NOT contain the compile
 scripts, the pre-existing regression scripts, `node_modules`, or any other dependency. Extract ALL of it at the root of the Plan
@@ -65,8 +65,18 @@ Static checks run from the Plan root, as in the base README (`NODE_PATH=testing-
   `runner-demo/` was produced with the fixed runner); `static-checks/`; `mutation-checks-L01-L03.txt`; EN/FA diffs.
 - `contracts-tested.sha256`, `contracts-fa.sha256` (new) and `*.baseline-pre-L01-L03.sha256` (base, kept).
 
+## D05 — `FoundationDAO.getProposalMeta` (`results/audit-2026-09-30-D05/`)
+`FoundationDAO.proposals` is private, so no auto-getter exists; `getProposal()` returns neither `description`,
+`requiredVotes` (quorum snapshotted at creation), `createdAt` nor `expiresAt`. A read-only `getProposalMeta(id)` was
+added in both languages; `getProposal()` is unchanged. `ValidatorsRegistry.paramProposals(id)` is public and already
+exposes `requiredVotes`/`createdAt`/`expiresAt` — no change there. Test `scripts/test_D05_proposal_read_paths.js` runs the
+REAL contracts on storage produced by the project's own genesis seed helpers (placeholder addresses substituted with test
+signers): `CONTRACTS_DIR=../../contracts npx hardhat run scripts/test_D05_proposal_read_paths.js` (and
+`../../contracts-fa`). Raw outputs: EN and FA on solc 0.8.37 and 0.8.24 (18/18 each); pre-change EN source fails at F2
+(getter missing). Static checks rerun over all 26 files. `contracts-*.pre-D05.sha256` keep the previous fingerprints.
+
 ## Stage-3 document updates (`testing-evidence/audit-2026-09-30-stage3-docs/`)
-Five Plan documents updated for the L01–L03 ABI change (removed `deployTime()` / `MIN_BLOCK_PERIOD_SECONDS()` getters,
+Plan documents updated (D04, D05, D06, D15, D16 and the L01–L03 ABI follow-up) for the L01–L03 ABI change (removed `deployTime()` / `MIN_BLOCK_PERIOD_SECONDS()` getters,
 removed time cap, `shareProposals(id)` now 10 outputs, L01/L02 rules) and the stage-1 report's L05 addition. The updated
 documents are included at their Plan paths; `diffs/` has a unified diff of each against its pre-stage-3 version, and
 `docs-baseline-pre-stage3.sha256` the pre-stage-3 hashes. Consumer search: no document or script decodes
