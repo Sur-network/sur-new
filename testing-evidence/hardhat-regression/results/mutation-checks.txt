@@ -27,3 +27,8 @@ M9  reverted the everActivated-based eligibility check in BlockRewardDistributor
        legitimately mining 10 of 100 blocks, reverted with "address is not an active validator" —
        exactly the bug this policy fixes)
 Restored the original contracts and rebuilt -> all tests : exit 0
+
+M10 removed `everActivated[v] = true;` from ValidatorsRegistry_GenesisSeed.sol's constructor
+    -> verify_everActivated_policy.js : exit 1 (5.1 and 5.4 failed — founders would fail the very
+       first real distributeRewards() call with "address was never a legitimate validator")
+Restored the original genesis helper -> all tests : exit 0

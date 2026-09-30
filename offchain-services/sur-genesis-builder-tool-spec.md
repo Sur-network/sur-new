@@ -160,6 +160,11 @@
    برای هر آدرس در initialValidators:
      ValidatorsRegistry.isValidator(address) == true
      validators(address).isPaidEntrant == false
+     ValidatorsRegistry.everActivated(address) == true   # ✅ اجباری (بازبینی مستقل، ۲۰۲۶-۰۹-۲۹): بدون این
+     # پرچم، اولین distributeRewards() به محض تلاش برای پرداخت به یک مؤسس با پیام
+     # "address was never a legitimate validator" کل تراکنش را revert می‌کند. این را constructor
+     # خودِ ValidatorsRegistry_GenesisSeed.sol می‌نویسد (اسلات ۲۰ در قرارداد فعلی)؛ ابزار genesis
+     # نیازی به overlay جداگانه ندارد، فقط باید از بلاک صفر assert کند که واقعاً true شده.
    ```
    این چک‌ها دقیقاً همان کلاس خطایی را می‌گیرند که یک storage layout به‌هم‌ریخته (مثلاً اگر آفست بین فایل کمکی و قرارداد اصلی جابه‌جا شده باشد) یا یک اسکالر جامانده در overlay تولید می‌کند — بدون این‌ها، چنین خطایی فقط زمانی کشف می‌شود که شبکه‌ی واقعی با یک genesis state خراب یا ناقص بالا بیاید.
 

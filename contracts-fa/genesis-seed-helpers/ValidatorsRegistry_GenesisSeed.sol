@@ -94,6 +94,22 @@ contract ValidatorsRegistry_GenesisSeed {
     address[] private activeValidators;
     mapping(address => uint256) private activeIndex;
 
+    // ✅ اصلاح‌شده (پیداشده در بازبینی مستقل — یک باگ واقعی، نه فقط مستندی): بین `activeIndex`
+    // و `everActivated`، در قرارداد واقعی ۱۴ پارامتر اقتصادی/زمانی (entryThresholdBase،
+    // growthFactorPerValidator، ...، paramProposalCount) و نگاشت `massFailureChecked` نشسته‌اند
+    // (اسلات‌های ۵ تا ۱۹) — این گپ دقیقاً همان بازه را رزرو می‌کند، فقط برای اشغال موقعیت درست
+    // اسلات، تا `everActivated` پایین روی اسلات ۲۰ (همان اسلات واقعی) بیفتد. مقدار واقعی‌شان با
+    // overlay genesis (مثل perPaymentCap) تنظیم می‌شود، نه با این constructor.
+    uint256[15] private __gap1;
+
+    // ✅ اصلاح‌شده (بازبینی مستقل): بدون این، مؤسسان در genesis به‌عنوان `Active` تزریق می‌شدند
+    // (constructor پایین را ببین) ولی با `everActivated == false` — دقیقاً همان وضعیتی که
+    // `BlockRewardDistributor` الان با پیام «هرگز ولیدیتور مشروع نبوده» رد می‌کند (کامنت خودِ
+    // قرارداد واقعی روی همین فیلد را ببین). constructor پایین، برخلاف placeholderهای بالا،
+    // واقعاً به این می‌نویسد — هر مؤسس باید اینجا `true` بگیرد، وگرنه اولین فراخوان واقعیِ
+    // `distributeRewards()` دقیقاً لحظه‌ای که بخواهد به یک مؤسس پرداخت کند revert می‌شود.
+    mapping(address => bool) public everActivated;
+
     // ------------------------------------------------------------------
     // constructor بدون ورودی — genesis timestamp و مجموعه‌ی ولیدیتورهای اولیه مستقیم
     // پایین هاردکد شده‌اند.
@@ -128,6 +144,7 @@ contract ValidatorsRegistry_GenesisSeed {
             });
             activeIndex[v] = activeValidators.length + 1;
             activeValidators.push(v);
+            everActivated[v] = true; // ✅ اصلاح‌شده — کامنت اعلانش بالا را ببین
         }
         // paidValidatorCount و verifier عمداً دست‌نخورده می‌مانند — کامنت اعلانشان بالا را ببین.
     }

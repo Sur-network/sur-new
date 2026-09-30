@@ -157,3 +157,33 @@ test-script fix, not a contract issue) — this was the only technical obstacle 
 Full design history: `technical-design/sur-reward-policy-decision-2026-09-29.md` (adopted) and
 `technical-design/sur-reward-claim-mechanism-design.md` (superseded `claimableRewards` proposal,
 kept for the decision trail).
+
+## Update 2026-09-29 (fifth pass — independent review found 3 real issues in the fourth pass)
+
+1. **Founders never got `everActivated`** — `ValidatorsRegistry_GenesisSeed.sol`'s constructor
+   injects founders as `Active` directly, bypassing `_activate()`, so `everActivated` stayed
+   `false` for all 7 founders. This would have broken the very first real `distributeRewards()`
+   call on any live network (revert the moment it tried to pay a founder). Fixed (both languages)
+   by adding `everActivated[v] = true;` to the constructor, with a `uint256[15] private __gap1;`
+   padding block to keep the mapping's storage slot aligned with the real contract's slot 20
+   (verified by direct solc storageLayout inspection, not assumed).
+2. **The fabricated-address test was meaningless** — it fired a second `distributeRewards()` call
+   immediately after the first, before `MIN_DISTRIBUTION_INTERVAL` (23h) had elapsed, so it always
+   failed on the "too early" check first, and the script treated any thrown error as success.
+   Fixed: now waits the real interval and asserts the exact expected revert message.
+3. **`everActivated` persistence after a real `withdrawStake()` was never tested** — only a
+   simplified mock (`activate`/`deactivate` toggle) had been used. Added a new scenario using the
+   **real** `ValidatorsRegistry` at its fixed address: `requestMembership` → `recordActivation` →
+   `requestExit` → real `withdrawStake` (which fully `delete`s `ValidatorInfo`) → confirms
+   `everActivated` is still `true` → a real `distributeRewards()` call successfully pays that same,
+   now-fully-deleted address.
+
+`verify_everActivated_policy.js` grew from 1 scenario to 5 (18 checks total). Mutation check M10
+(removing the genesis-helper fix) reproduces exactly the founders' payment bug.
+
+Also corrected in `sur-reward-router-spec.md` (documentation only, no code change): the historical
+eligibility check must read Registry state at block **N−1**, not N (reading N reflects state
+*after* that block's own transactions, which could wrongly show a validator as inactive if their
+own exit transaction was included in the very block they proposed); and event-based timeline
+reconstruction must also include `ExitRequested` (voluntary exit, a separate event from
+`StatusDecisionRecorded`) and must seed founders as Active from genesis, not from their first event.

@@ -98,6 +98,22 @@ contract ValidatorsRegistry_GenesisSeed {
     address[] private activeValidators;
     mapping(address => uint256) private activeIndex;
 
+    // ✅ FIXED (found in independent review — a real bug, not just documentation): 14 economic/
+    // timing parameters (entryThresholdBase, growthFactorPerValidator, ..., paramProposalCount)
+    // and the `massFailureChecked` mapping sit between `activeIndex` and `everActivated` in the
+    // real contract (slots 5–19) — this gap reserves that exact span, purely to occupy the
+    // correct slot position, so `everActivated` below lands at the real contract's slot 20. Their
+    // actual values are set by genesis overlay (perPaymentCap-style), not by this constructor.
+    uint256[15] private __gap1;
+
+    // ✅ FIXED (independent review): without this, founders would be genesis-injected as `Active`
+    // (see the constructor below) but with `everActivated == false` — the exact state
+    // `BlockRewardDistributor` now rejects with "address was never a legitimate validator" (see
+    // ValidatorsRegistry.sol's own doc comment on this field). The constructor below DOES write to
+    // this one, unlike the placeholders above — every founder must get `true` here, or the very
+    // first real `distributeRewards()` call reverts the moment it tries to pay a founder.
+    mapping(address => bool) public everActivated;
+
     // ------------------------------------------------------------------
     // No-argument constructor — the genesis timestamp and initial validator set are hardcoded
     // directly below.
@@ -133,6 +149,7 @@ contract ValidatorsRegistry_GenesisSeed {
             });
             activeIndex[v] = activeValidators.length + 1;
             activeValidators.push(v);
+            everActivated[v] = true; // ✅ FIXED — see the doc comment on this field's declaration above
         }
         // paidValidatorCount and verifier are deliberately left untouched — see the doc
         // comments on their declarations above.
