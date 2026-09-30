@@ -1,0 +1,7 @@
+# Plan vs package (files re-read from Plan via the connector after their last edit)
+5f0ea07c8620e3174726a45764f8cc8da88690a77c525b0c1a894464341085b2  technical-design/sur-audit-2026-09-30-stage1-report.md
+5f0ea07c8620e3174726a45764f8cc8da88690a77c525b0c1a894464341085b2  /mnt/user-data/uploads/sur-audit-2026-09-30-stage1-report.md
+0e435291eaa8d5c5fd7365f0138c30453ed93bfc6ebf25a46e52b658c07a230c  technical-design/sur-audit-2026-09-30-stage3-summary.md
+0e435291eaa8d5c5fd7365f0138c30453ed93bfc6ebf25a46e52b658c07a230c  /mnt/user-data/uploads/sur-audit-2026-09-30-stage3-summary.md
+c8d80549448c09c4e99e8d520f1439764a756af7382128340e1116dbce081575  offchain-services/sur-reward-router-spec.md
+c8d80549448c09c4e99e8d520f1439764a756af7382128340e1116dbce081575  /mnt/user-data/uploads/sur-reward-router-spec.md
