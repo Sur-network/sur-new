@@ -83,7 +83,7 @@
 این سه قرارداد فقط مقادیر مقیاسی ساده (address/uint256) دارند که مستقیم در بدنه‌شان مقداردهی شده‌اند (نه mapping/آرایه). برای این‌ها:
 
 1. یک نسخه‌ی موقت از سورس قرارداد بساز که در آن، هر مقدار `🔶 FILL_IN` با مقدار واقعی از فایل پیکربندی جایگزین شده باشد (مثلاً `address public identityOracle = address(0);` بشود `address public identityOracle = 0xABCD...;`).
-2. این سورس را با `solc` کامپایل کن. ⚠️ **تصحیح (N02):** برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. در این پروژه `BlockRewardDistributor.deployTime` یک `immutable` است (`SurenSale.saleStartTime` هم هست ولی genesis نیست). دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن. راه (الف) همان روشی است که آزمون واقعی Besu استفاده کرد.
+2. این سورس را با `solc` کامپایل کن. ⚠️ **تصحیح (N02):** برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. ✅ **به‌روز (L03، ممیزی ۲۰۲۶-۰۹-۳۰):** `BlockRewardDistributor` دیگر immutable ندارد (`deployTime` حذف شد)؛ ابزار باید خالی‌بودن `immutableReferences` آن را assert کند. تنها immutable پروژه `SurenSale.saleStartTime` است (که genesis نیست)؛ اگر روزی قرارداد genesis دارای immutable شود، دو راه زیر الزامی است. مشخصات کامل T02: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶. دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن. راه (الف) همان روشی است که آزمون واقعی Besu استفاده کرد.
 3. با `solc --storage-layout` (یا فیلد `storageLayout` در خروجی JSON استاندارد) شماره‌ی دقیق slot هر متغیر ساده را بگیر.
 4. مقدار واقعی هرکدام را مستقیم در همان slot در بخش `alloc.storage` genesis بنویس.
 
@@ -148,7 +148,8 @@
    ValidatorsRegistry.probationPeriod() == (مقدار config)
    ValidatorsTreasury.perPaymentCap() == (مقدار config — اگر 0 است ابزار باید صریحاً اعلام کند «پرداخت هیأت ممکن نیست»)
    ValidatorsTreasury.periodCap() == (مقدار config)
-   BlockRewardDistributor.deployTime() == network.genesisTimestamp   # immutable — باید از بلاک صفر درست باشد
+   BlockRewardDistributor: immutableReferences == {}   # ✅ L03: هیچ immutable؛ getterهای deployTime() و MIN_BLOCK_PERIOD_SECONDS() دیگر وجود ندارند و نباید صدا زده شوند
+   BlockRewardDistributor.validatorDirectShareBps() == (مقدار config، پیش‌فرض 5000)   # overlay، مقداردهی سورس هنگام تزریق اجرا نمی‌شود
    ValidatorsBoard.boardVersion() == (مقدار overlay‌شده؛ ۱ اگر نوشته شود، ۰ اگر نه — هر دو کار می‌کنند، ولی assert کن که همان چیزی است که ابزار قصد کرده)
    ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp   # ✅ P01: اگر هیأت seed می‌شود؛ وگرنه اولین بازتعیین فوراً مجاز است
    ValidatorsTreasury.perPaymentCap() == 50000 ether ; periodCap() == 200000 ether   # ✅ P06 (overlay اجباری — مقداردهی‌ها هنگام تزریق اجرا نمی‌شوند)

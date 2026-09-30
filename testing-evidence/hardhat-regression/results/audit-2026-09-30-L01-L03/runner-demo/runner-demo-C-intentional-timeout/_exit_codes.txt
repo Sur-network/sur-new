@@ -1,0 +1,3 @@
+test_L03_settlement_backlog exit=124 TIMEOUT(1s)
+test_P05_distributor_ranges exit=124 TIMEOUT(1s)
+runner-demo-C-intentional-timeout | SUMMARY: 2 failing/timed-out test(s)

@@ -1,0 +1,8 @@
+test_L01_L02_share_change exit=0 PASS
+test_L02_real_board_integration exit=0 PASS
+test_L03_settlement_backlog exit=0 PASS
+characterize_L07_duplicate_addresses exit=0 PASS
+test_P05_distributor_ranges exit=0 PASS
+verify_everActivated_policy exit=0 PASS
+test_P01_P02_board exit=0 PASS
+runner-demo-A-fixed-full | SUMMARY: 0 failing/timed-out test(s)

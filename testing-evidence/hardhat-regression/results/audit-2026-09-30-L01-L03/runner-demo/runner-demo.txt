@@ -1,0 +1,23 @@
+### ./run_L01_L03_suite.sh /home/claude/w/contracts/BlockRewardDistributor.sol runner-demo-A-fixed-full
+runner-demo-A-fixed-full | test_L01_L02_share_change | exit=0 | PASS | نتیجه: 15/15 گذر
+runner-demo-A-fixed-full | test_L02_real_board_integration | exit=0 | PASS | نتیجه: 13/13 گذر
+runner-demo-A-fixed-full | test_L03_settlement_backlog | exit=0 | PASS | نتیجه: 16/16 گذر
+runner-demo-A-fixed-full | characterize_L07_duplicate_addresses | exit=0 | PASS | نتیجه: 8/8 گذر (آزمون توصیفی؛ L07 باز است)
+runner-demo-A-fixed-full | test_P05_distributor_ranges | exit=0 | PASS | نتیجه: 15/15 گذر
+runner-demo-A-fixed-full | verify_everActivated_policy | exit=0 | PASS | نتیجه: 18/18 گذر
+runner-demo-A-fixed-full | test_P01_P02_board | exit=0 | PASS | نتیجه: 51/51 گذر
+runner-demo-A-fixed-full | SUMMARY: 0 failing/timed-out test(s)
+### runner exit code = 0
+
+### ./run_L01_L03_suite.sh /home/claude/w/BRD_en_prefix.sol runner-demo-B-intentional-failure-prefix
+runner-demo-B-intentional-failure-prefix | test_L01_L02_share_change | exit=1 | FAIL | نتیجه: 6/15 گذر
+runner-demo-B-intentional-failure-prefix | test_P05_distributor_ranges | exit=0 | PASS | نتیجه: 15/15 گذر
+runner-demo-B-intentional-failure-prefix | SUMMARY: 1 failing/timed-out test(s)
+### runner exit code = 1
+
+### ./run_L01_L03_suite.sh /home/claude/w/contracts/BlockRewardDistributor.sol runner-demo-C-intentional-timeout
+runner-demo-C-intentional-timeout | test_L03_settlement_backlog | exit=124 | TIMEOUT(1s) | 
+runner-demo-C-intentional-timeout | test_P05_distributor_ranges | exit=124 | TIMEOUT(1s) | 
+runner-demo-C-intentional-timeout | SUMMARY: 2 failing/timed-out test(s)
+### runner exit code = 1
+
