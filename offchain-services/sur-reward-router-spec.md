@@ -56,7 +56,7 @@ function distributeRewards(
 - `block.timestamp >= lastDistributionTime + 23h` (به‌جز epoch اول).
 - کنترل بازه‌ی P05 (بالا): شروع دقیقاً بعد از `lastSettledBlock`، پایان قبل از بلاک جاری، و مجموع گزارش‌شده ≤ اندازه‌ی بازه.
 - `totalRewards + totalFees <= address(this).balance`.
-- `totalBlocks <= elapsed / MIN_BLOCK_PERIOD_SECONDS` (سقف فیزیکی — به‌جز epoch اول؛ `MIN_BLOCK_PERIOD_SECONDS` الان `3` است).
+- `totalBlocks <= elapsed / MIN_BLOCK_PERIOD_SECONDS` (سقف فیزیکی — به‌جز epoch اول؛ `MIN_BLOCK_PERIOD_SECONDS` الان `3` است). ⚠️ **یافته‌ی عملیاتیِ آزمون واقعی Besu (۲۰۲۶-۰۹-۳۰، دور سوم):** سرعت واقعی تولید بلاک می‌تواند از `blockperiodseconds` اسمی کمی بیشتر باشد (مشاهده‌شده ~۲٫۹۵ ثانیه/بلاک به‌جای ۳ ثانیه) — اگر بین دو فراخوان `distributeRewards()` فاصله‌ی زمانیِ طولانی بیفتد (مثلاً به‌خاطر یک انتظار طولانیِ عملیاتی)، بازه‌ی واقعی می‌تواند به این سقف برخورد کند. RewardRouter باید بازه‌ی اعلامی‌اش را **محافظه‌کارانه** کوچک‌تر از `elapsed / MIN_BLOCK_PERIOD_SECONDS` نگه دارد (مثلاً با یک حاشیه‌ی چند-بلاکی)، نه دقیقاً روی مرز — تا این سد ایمنیِ عمدی (که باگ نیست) بی‌دلیل توزیع را رد نکند.
 
 ---
 
