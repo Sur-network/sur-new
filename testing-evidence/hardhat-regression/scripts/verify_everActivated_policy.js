@@ -134,7 +134,15 @@ async function part3and4() {
   ok("۴.۱) D — با ValidatorInfo کاملاً پاک‌شده در Registry واقعی — همچنان پرداخت واقعی گرفت (everActivated زنده مانده)", dPaid > 0n, `دریافت: ${hre.ethers.formatEther(dPaid)}`);
 
   console.log("\n=== بخش ۵ — تأیید مؤسسان genesis: constructor کمکی، everActivated را هم ست می‌کند (بازتولید یافته‌ی بازبینی + تأیید اصلاح) ===");
-  const genesisSrc = fs.readFileSync("/mnt/user-data/outputs/contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol", "utf8")
+  const path = require("path");
+  // ✅ اصلاح (بازبینی مستقل): مسیر مطلقِ مخصوص محیط Claude حذف شد. مثل بقیه‌ی contracts_src_*.sol این
+  // بسته، انتظار می‌رود این فایل هم طبق همان قرارداد README کنار اسکریپت‌های کامپایل کپی شده باشد —
+  // یعنی نسبت به خودِ این اسکریپت، نه به یک مسیر ثابتِ خاصِ یک محیط.
+  const genesisHelperPath = path.join(__dirname, "..", "contracts_src_ValidatorsRegistry_GenesisSeed.sol");
+  if (!fs.existsSync(genesisHelperPath)) {
+    throw new Error(`فایل helper پیدا نشد: ${genesisHelperPath} — طبق README این بسته، آن را از contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol کپی کن و به همین نام بگذار.`);
+  }
+  const genesisSrc = fs.readFileSync(genesisHelperPath, "utf8")
     .replace(/address\(0\), \/\/ Alireza Zojaji/, `${signers[9].address}, // test-founder-1`)
     .replace(/address\(0\), \/\/ Citex Corp\. 1/, `${signers[10].address}, // test-founder-2`)
     .replace(/address\(0\), \/\/ Citex Corp\. 2/, `${signers[11].address}, // test-founder-3`)

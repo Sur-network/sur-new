@@ -18,6 +18,8 @@ npm install                                   # installs the pinned versions (pa
 # copy the contracts next to the compile scripts under the names the scripts expect:
 for f in ValidatorsRegistry ValidatorsBoard ValidatorsTreasury BlockRewardDistributor SurAddresses; do
   cp ../../contracts/$f.sol contracts_src_$f.sol; done
+# verify_everActivated_policy.js also needs the genesis-seed helper, same convention:
+cp ../../contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol contracts_src_ValidatorsRegistry_GenesisSeed.sol
 # build artifacts (default solc 0.8.37; for 0.8.24: export SOLC_PATH=$PWD/node_modules/solc-0.8.24)
 node compile3.js && node compile_board_treasury.js && node compile_distributor.js
 # run one test (each prints ✅/❌ lines; exit code 1 if any ❌)
@@ -27,7 +29,7 @@ Static checks run from the **project root** (folder that contains `contracts/` a
 ```bash
 NODE_PATH=testing-evidence/hardhat-regression/node_modules node testing-evidence/hardhat-regression/static-checks/check_compile_all.js
 NODE_PATH=... node .../static-checks/check_optimizer_all_files.js     # 26 files, optimizer on, no viaIR
-NODE_PATH=... node .../static-checks/check_genesis_helper_layout.js   # helper vs real storage layout (shared variables)
+NODE_PATH=... node .../static-checks/check_genesis_helper_layout.js   # helper vs real storage layout (shared variables; __gap* padding names are recognized and skipped; exit 1 on any real mismatch)
 python3 testing-evidence/hardhat-regression/static-checks/check_en_fa_parity.py
 ```
 
@@ -187,3 +189,22 @@ eligibility check must read Registry state at block **N−1**, not N (reading N 
 own exit transaction was included in the very block they proposed); and event-based timeline
 reconstruction must also include `ExitRequested` (voluntary exit, a separate event from
 `StatusDecisionRecorded`) and must seed founders as Active from genesis, not from their first event.
+
+## Update 2026-09-29 (sixth pass — two test-bundle-only defects, found in independent review)
+
+1. `verify_everActivated_policy.js` used to read the genesis-seed helper from an absolute,
+   Claude-sandbox-specific path (`/mnt/user-data/outputs/...`), which would fail for anyone running
+   this bundle independently. Fixed: it now reads `contracts_src_ValidatorsRegistry_GenesisSeed.sol`
+   next to the compile scripts, following the exact same copy-in convention as every other
+   `contracts_src_*.sol` file in this bundle (see "How to run" above).
+2. `check_genesis_helper_layout.js` always reported the intentional `__gap1` padding placeholder
+   (see `ValidatorsRegistry_GenesisSeed.sol`'s own doc comment on it) as a "helper-only var"
+   mismatch, and never called `process.exit(1)` on a real mismatch — a genuinely broken layout
+   would print `❌` but still exit 0, indistinguishable from success to any caller checking the exit
+   code (as this bundle's own README does for every other check). Fixed: names matching `__gap\d*`
+   are now recognized and skipped; the script exits 1 if any other real mismatch is found. Verified
+   both ways: unmodified contracts → exit 0; a deliberately-mutated gap size (14 instead of 15,
+   shifting `everActivated` by one slot) → correctly reported `SLOT MISMATCH everActivated: real
+   20/0 vs helper 19/0` and exited 1.
+
+Neither defect was in `contracts/` or `contracts-fa/` themselves — both were bundle/tooling issues.
