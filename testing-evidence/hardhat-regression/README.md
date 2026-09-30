@@ -126,3 +126,34 @@ A new, separate, not-yet-implemented protocol (`SUR_NODE_CHECK_V1`, for checking
 during its probationary period) was specified in `offchain-services/sur-node-check-protocol-spec.md`
 — it touches the Verifier service and a new node-companion service, not the contracts, so it
 has no test evidence here.
+
+## Update 2026-09-29 (fourth pass — direct-payment reward policy, replaces claimableRewards)
+
+Per explicit owner decision, the reward-for-departed-validator question (see the third-pass update
+above) was resolved with a **simpler** policy than the `claimableRewards` design that had been
+fully drafted and numerically proven: pay the true block producer directly, unconditionally,
+regardless of current Registry status — no claim mapping.
+
+1. **`ValidatorsRegistry.everActivated`** — a permanent, append-only flag set in `_activate()`
+   (both `recordActivation` and `recordRecovery` go through it), never cleared, survives
+   `withdrawStake()`'s `delete validators[msg.sender]`.
+2. **`BlockRewardDistributor`**'s only change: the eligibility `require` in `_payValidators` now
+   checks `REGISTRY.everActivated(validator)` instead of `REGISTRY.isValidator(validator)`. The
+   payment path itself (`_payOneValidator`'s direct `.call{value: payout}("")`) was already
+   unconditional and needed no change.
+
+New test: `verify_everActivated_policy.js` — runs against the **real** `BlockRewardDistributor.sol`
+(not a mock), with a 100-block range (A=60 blocks, still Active; B=10 blocks, exited/suspended by
+distribution time; C=30 blocks, still Active), separately covering block reward, ordinary fee, and
+membership fee. Every payout matches the contract's own formula exactly (not an estimate); B
+receives exactly its 10-block share; A and C receive exactly their true 90-block share (no
+windfall from B's exclusion — the old bug); full balance check (inputs == foundation + treasury +
+all three payouts + burn) passes exactly; a fabricated address that was never activated is
+rejected. Mutation check M9 (reverting to `isValidator`) reproduces the exact bug this fixes.
+
+`test_P05_distributor_ranges.js`'s `AllValid` mock was updated with an `everActivated` stub (a
+test-script fix, not a contract issue) — this was the only technical obstacle encountered.
+
+Full design history: `technical-design/sur-reward-policy-decision-2026-09-29.md` (adopted) and
+`technical-design/sur-reward-claim-mechanism-design.md` (superseded `claimableRewards` proposal,
+kept for the decision trail).

@@ -511,6 +511,21 @@ contract ValidatorsRegistry {
     ///         mapping instead of the epoch-level flag.
     mapping(uint256 => bool) private massFailureChecked;
 
+    /// @notice ✅ FINAL DECISION (reward-policy simplification, replaces the earlier claimableRewards
+    ///         design that was drafted but never implemented): permanent, append-only record of "this
+    ///         address was legitimately brought into the active validator set at least once" — set in
+    ///         `_activate()` (both `recordActivation` and `recordRecovery` go through it), NEVER cleared,
+    ///         survives `delete validators[msg.sender]` in `withdrawStake()`. `BlockRewardDistributor`
+    ///         reads this — not `isValidator()` — to decide whether an address may still be paid for
+    ///         blocks it mined before exiting/being suspended (final decision: past legitimate work is
+    ///         always paid, regardless of current status). This flag proves ONLY "was once legitimately
+    ///         activated" — it does NOT and CANNOT prove "was Active specifically when block N was mined";
+    ///         that timing verification is entirely RewardRouter's responsibility (see
+    ///         sur-reward-router-spec.md and sur-tokenomics.md section 6.8 for the full trust-boundary
+    ///         explanation). This is a minimal sanity backstop against paying an address that was never a
+    ///         real validator at all, not a substitute for the oracle's own correctness.
+    mapping(address => bool) public everActivated;
+
     /// @notice ✅ FIXED (found in independent review): closes a class of bug where a resigned
     ///         validator's OLD board seat/authority could be resurrected. `requestExit()` sets
     ///         this to `true` forever (never cleared, survives `delete validators[msg.sender]`),
@@ -1256,6 +1271,7 @@ contract ValidatorsRegistry {
         v.status = Status.Active;
         activeIndex[who] = activeValidators.length + 1;
         activeValidators.push(who);
+        everActivated[who] = true; // ✅ permanent record — see the doc comment above its declaration
         emit ValidatorActivated(who);
     }
 

@@ -524,6 +524,20 @@ contract ValidatorsRegistry {
     ///         _massFailureResolved() این mapping سطح‌پرونده رو چک می‌کنه، نه پرچم سطح‌epoch رو.
     mapping(uint256 => bool) private massFailureChecked;
 
+    /// @notice ✅ تصمیم نهایی (ساده‌سازی سیاست پاداش، جایگزین طرح قبلیِ claimableRewards که طراحی شد ولی
+    ///         هرگز پیاده نشد): رکورد دائمی و فقط-اضافه‌شونده‌ی «این آدرس حداقل یک‌بار به‌طور مشروع وارد
+    ///         مجموعه‌ی فعال شده» — در `_activate()` ست می‌شود (هم `recordActivation` هم `recordRecovery`
+    ///         از همین مسیر عبور می‌کنند)، هرگز پاک نمی‌شود، از `delete validators[msg.sender]` در
+    ///         `withdrawStake()` هم جان سالم به‌در می‌برد. `BlockRewardDistributor` این را می‌خواند — نه
+    ///         `isValidator()` — تا تصمیم بگیرد آیا آدرسی هنوز می‌تواند بابت بلاک‌هایی که پیش از خروج/تعلیق
+    ///         تولید کرده پرداخت بگیرد (تصمیم نهایی: کار مشروع گذشته همیشه پرداخت می‌شود، صرف‌نظر از وضعیت
+    ///         فعلی). این پرچم فقط «حداقل یک‌بار به‌طور مشروع فعال شده» را ثابت می‌کند — نه و نمی‌تواند
+    ///         ثابت کند «دقیقاً هنگام تولید بلاک N فعال بوده»؛ آن راستی‌آزمایی زمانی کاملاً مسئولیت
+    ///         RewardRouter است (توضیح کامل مرز اعتماد: sur-reward-router-spec.md و sur-tokenomics.md بخش
+    ///         ۶.۸). این فقط یک سدِ حداقلیِ سلامت‌سنجی در برابر پرداخت به آدرسی است که هرگز واقعاً ولیدیتور
+    ///         نبوده، نه جایگزینی برای درستیِ خودِ اوراکل.
+    mapping(address => bool) public everActivated;
+
     /// @notice ✅ اصلاح‌شده (پیداشده در بازبینی مستقل): جلوی یک رده از باگ را می‌گیرد که در آن اختیار/کرسی
     ///         هیأتِ **قدیمیِ** یک ولیدیتور خروج‌کرده می‌توانست دوباره زنده شود. `requestExit()` این را
     ///         برای همیشه `true` می‌کند (هرگز پاک نمی‌شود، از `delete validators[msg.sender]` هم جان
@@ -1263,6 +1277,7 @@ contract ValidatorsRegistry {
         v.status = Status.Active;
         activeIndex[who] = activeValidators.length + 1;
         activeValidators.push(who);
+        everActivated[who] = true; // ✅ رکورد دائمی — کامنت بالای تعریفش را ببین
         emit ValidatorActivated(who);
     }
 

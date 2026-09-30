@@ -5,6 +5,7 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
+    function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
     function getActiveValidatorCount() external view returns (uint256); // ✅ NEW: needed for the 2/3-of-assembly threshold in the bicameral share-change vote below.
 }
 
@@ -684,7 +685,24 @@ contract BlockRewardDistributor {
 
             address validator = validators[i];
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            require(REGISTRY.isValidator(validator), "BlockRewardDistributor: address is not an active validator");
+            // ✅ FINAL DECISION (reward-policy simplification, 2026-09-29 — replaces the
+            // earlier claimableRewards design, which was fully drafted with a numeric proof but
+            // never implemented): past legitimate work is always paid, regardless of the
+            // validator's CURRENT status. `isValidator()` would incorrectly reject a validator
+            // that has since exited or been suspended, even for blocks it mined while genuinely
+            // Active — this is exactly the bug the policy fixes. `everActivated()` is a
+            // permanent, append-only Registry flag that survives `withdrawStake()`'s deletion; it
+            // proves only "was legitimately activated at least once," not "was Active when this
+            // specific block was mined" — that timing verification is NOT and CANNOT be done
+            // on-chain (Solidity has no access to historical Registry state beyond the current
+            // block) and remains entirely RewardRouter's responsibility: it must determine, from
+            // chain data, both the true miner of each block in the settled range (`eth_getBlockByNumber`)
+            // and that this miner was genuinely Active at that block's height (via a historical
+            // `eth_call` on an archive node, or by replaying `StatusDecisionRecorded` events) before
+            // including it here. This check is only a minimal backstop against an address that was
+            // never a real validator at all — it is not a substitute for that oracle-side proof, and
+            // does not make this contract's payout self-verifying.
+            require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
 
             uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
             uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;

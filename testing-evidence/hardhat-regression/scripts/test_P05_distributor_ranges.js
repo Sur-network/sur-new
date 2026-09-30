@@ -5,7 +5,7 @@ let results = [];
 function ok(n, c, x = "") { results.push(c === true); console.log((c === true ? "✅ " : "❌ ") + n + (c === true ? "" : " → " + c) + (x ? "  " + x : "")); }
 const inc = async (s) => { await hre.network.provider.send("evm_increaseTime", [s]); await hre.network.provider.send("evm_mine"); };
 async function reverts(fn, expected) { try { await (await fn()).wait(); return false; } catch (e) { return (e.message || "").includes(expected) ? true : "wrong reason: " + (e.message || "").slice(0, 220); } }
-const MOCK = `pragma solidity ^0.8.24; contract AllValid { function isValidator(address) external pure returns (bool) { return true; } } contract Sink { receive() external payable {} }`;
+const MOCK = `pragma solidity ^0.8.24; contract AllValid { function isValidator(address) external pure returns (bool) { return true; } function everActivated(address) external pure returns (bool) { return true; } } contract Sink { receive() external payable {} }`;
 (async () => {
   const [deployer, oracle, v1, v2] = await hre.ethers.getSigners();
   const out = JSON.parse(solc.compile(JSON.stringify({ language: "Solidity", sources: { "M.sol": { content: MOCK } }, settings: { outputSelection: { "*": { "*": ["abi", "evm.bytecode.object"] } } } })));

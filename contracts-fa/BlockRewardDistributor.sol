@@ -5,6 +5,7 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
+    function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
     function getActiveValidatorCount() external view returns (uint256); // ✅ تازه: برای آستانه‌ی ۲/۳ رأی‌گیری دومجلسی پایین لازم است.
 }
 
@@ -673,7 +674,23 @@ contract BlockRewardDistributor {
 
             address validator = validators[i];
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            require(REGISTRY.isValidator(validator), "BlockRewardDistributor: address is not an active validator");
+            // ✅ تصمیم نهایی (ساده‌سازی سیاست پاداش، ۲۰۲۶-۰۹-۲۹ — جایگزین طرح قبلیِ
+            // claimableRewards که کامل طراحی و با اثبات عددی مستند شد ولی هرگز پیاده نشد): کار
+            // مشروع گذشته همیشه پرداخت می‌شود، صرف‌نظر از وضعیت **فعلی** ولیدیتور. `isValidator()`
+            // به‌اشتباه ولیدیتوری را که از آن‌موقع خروج داده یا معلق شده رد می‌کرد، حتی برای
+            // بلاک‌هایی که واقعاً در دوره‌ی Active تولید کرده — دقیقاً همان باگی که این سیاست حل
+            // می‌کند. `everActivated()` یک پرچم دائمی و فقط-اضافه‌شونده‌ی Registry است که از
+            // پاک‌شدن در `withdrawStake()` جان سالم به‌در می‌برد؛ فقط «حداقل یک‌بار به‌طور مشروع
+            // فعال شده» را ثابت می‌کند، نه «دقیقاً هنگام تولید همین بلاک فعال بوده» — آن
+            // راستی‌آزمایی زمانی نه ممکن است و نه روی زنجیره انجام می‌شود (Solidity به تاریخچه‌ی
+            // state دسترسی ندارد) و کاملاً مسئولیت RewardRouter می‌ماند: باید از داده‌ی زنجیره
+            // هم تولیدکننده‌ی واقعی هر بلاک را در بازه‌ی تسویه (`eth_getBlockByNumber`) تعیین کند،
+            // هم اینکه آن تولیدکننده دقیقاً در همان ارتفاع بلاک واقعاً Active بوده (با `eth_call`ی
+            // تاریخی روی نود آرشیوی، یا بازپخش رویدادهای `StatusDecisionRecorded`) — پیش از
+            // این‌که اینجا بگنجاندش. این چک فقط یک سدِ حداقلی در برابر آدرسی است که هرگز واقعاً
+            // ولیدیتور نبوده؛ جایگزین آن اثبات سمت اوراکل نیست و این پرداخت را خودش-تأییدشونده
+            // نمی‌کند.
+            require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
 
             uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
             uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;

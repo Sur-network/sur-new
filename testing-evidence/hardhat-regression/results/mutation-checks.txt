@@ -21,3 +21,9 @@ M8  reverted the per-payment cap boundary from <= back to <
 Restored the original contracts and rebuilt -> all tests : exit 0
 
 Only these eight mutations were tried. This is NOT a full mutation-testing campaign.
+
+M9  reverted the everActivated-based eligibility check in BlockRewardDistributor back to isValidator
+    -> verify_everActivated_policy.js : exit 1 (paying validator B, who exited/was suspended after
+       legitimately mining 10 of 100 blocks, reverted with "address is not an active validator" —
+       exactly the bug this policy fixes)
+Restored the original contracts and rebuilt -> all tests : exit 0
