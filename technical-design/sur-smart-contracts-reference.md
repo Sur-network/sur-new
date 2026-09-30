@@ -10,9 +10,9 @@
 
 | آدرس | قرارداد | نقش یک‌خطی |
 |---|---|---|
-| `0x1111...1111` | **FoundationDAO** | حکمرانی داخلی بنیاد (۱۵ عضو)؛ هیچ کنترلی روی شبکه یا خزانه‌ی ولیدیتورها ندارد |
+| `0x1111...1111` | **FoundationDAO** | حکمرانی داخلی بنیاد (۱۵ عضو)؛ هیچ کنترلی روی اجماع، ولیدیتورها یا خزانه‌ی ولیدیتورها ندارد؛ فقط کلیدهای `identityOracle` (IdentityRegistry) و `paymentOracle` (SurenSale) را تعیین می‌کند |
 | `0x2222...2222` | **BlockRewardDistributor** | `miningbeneficiary` شبکه؛ گیرنده‌ی خودکار ریوارد+فی، توزیع‌کننده‌ی دوره‌ای |
-| `0x3333...3333` | **ValidatorsRegistry** | مرجع اجماع (`getValidators()`) و مرجع پرداخت (`isValidator()`)؛ همچنین `qbft.validatorcontractaddress` |
+| `0x3333...3333` | **ValidatorsRegistry** | مرجع اجماع (`getValidators()`)؛ مرجع صلاحیت پرداخت در قرارداد: `everActivated()`، و استحقاق هنگام تولید بلاک با کنترل تاریخی ارتفاع N−1 در RewardRouter؛ همچنین `qbft.validatorcontractaddress` |
 | `0x4444...4444` | **ValidatorsBoard** | هیأت ۵نفره‌ی ولیدیتورها؛ اختیارات تفویضی محدود |
 | `0x5555...5555` | **ValidatorsTreasury** | خزانه‌ی ولیدیتورها؛ گیرنده‌ی سهم باقی‌مانده‌ی ریوارد پس از کسر ۱۵٪ ثابت بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (۲۰٪-۴۵٪) |
 | `0x6666...6666` | **IdentityRegistry** | ✅ **تازه.** مرجع هویت خوداظهاری + وریفای موبایل/تلگرام/KYC برای **کل کاربران شبکه** (نه فقط ولیدیتورها)؛ کنترل کلید دست `FoundationDAO` |
@@ -46,7 +46,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ### نقش
 مرجع واحد حقیقت برای «چه کسی ولیدیتور است». دو مصرف‌کننده دارد:
 1. **خودِ Besu**: از طریق `getValidators()` (امضای این تابع در کد Besu هاردکد شده، تغییرش ممکن نیست) برای تعیین ولیدیتورهای QBFT.
-2. **`BlockRewardDistributor`**: از طریق `isValidator(address)` برای تأیید اینکه پیش از پرداخت، آدرس گیرنده واقعاً ولیدیتور فعال است.
+2. **`BlockRewardDistributor`**: پیش از پرداخت، از طریق `everActivated(address)` آدرسی را که هرگز ولیدیتور مشروع نبوده رد می‌کند؛ این‌که تولیدکننده در لحظهٔ تولید هر بلاک فعال بوده، با وضعیت ارتفاع N−1 در RewardRouter تعیین می‌شود و خروج/تعلیق بعدی دلیل حذف پرداخت نیست. `isValidator(address)` در این قرارداد فقط برای محدودکردن پیشنهاد و رأی تغییر سهم به ولیدیتورهای فعال به کار می‌رود.
 
 هیچ ادمین یا کلید مرکزی‌ای بعد از دیپلوی روی این قرارداد اختیار ندارد؛ همه‌چیز یا permissionless است، یا با رأی کامل ولیدیتورهای فعال، یا (فقط برای سه پارامتر اقتصادی ورود) با رأی داخلی هیأت‌مدیره‌ی ولیدیتورها — جدول پایین را ببین.
 
@@ -59,7 +59,7 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 |---|---|---|---|---|
 | `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود، پس هیچ `constructor`ی ندارد | ✅ پارامترهای امنیتی ساده (`slashBps=۱٪` و بقیه، همه نهایی) + `verifier` + `windowStart`: مستقیم در سورس اصلی نوشته می‌شوند. لیست ولیدیتورهای اولیه (فعلاً ۷ نفر): از طریق قرارداد کمکی موقت `ValidatorsRegistry_GenesisSeed.sol` (`genesis-seed-helpers/`) | — | ابزار genesis این مقادیر را قبل از تولید `genesis.json` پر می‌کند — جزئیات کامل در `sur-genesis-builder-tool-spec.md` |
 | `getValidators()` | هرکسی (در عمل: خودِ کلاینت Besu، هر بلاک) | — | `address[]` | لیست فعلی ولیدیتورهای `Active` |
-| `isValidator(address who)` | هرکسی (در عمل: `BlockRewardDistributor`) | آدرس | `bool` | آیا `who` الان `Active` است |
+| `isValidator(address who)` | هرکسی (در عمل: `ValidatorsBoard`، و `BlockRewardDistributor` برای پیشنهاد/رأی تغییر سهم) | آدرس | `bool` | آیا `who` الان `Active` است. مرجع استحقاق پرداخت نیست (آن `everActivated` + کنترل N−1 در RewardRouter است) |
 | `getActiveValidatorCount()` | هرکسی | — | `uint256` | تعداد ولیدیتورهای فعال |
 | `currentEntryThreshold()` | هرکسی | — | `uint256` | مقدار **وثیقه** (نه کل پرداخت)، به wei سورن، لازم برای عضویت *الان* — فرمول پیوسته‌ی نمایی: `entryThresholdBase × growthFactorPerValidator ^ activeCount` (fixed-point، exponentiation-by-squaring) |
 | `currentMembershipFee()` | هرکسی | — | `uint256` | مقدار **کارمزد عضویت** *الان* = `currentEntryThreshold() * membershipFeeBps / 10000` — جدا از وثیقه، غیرقابل‌استرداد |
@@ -267,9 +267,8 @@ IdentityRegistry      → می‌شناسد: FoundationDAO (فقط برای چر
 ### تفاوت مهم نسبت به `MemberDAO.sol` قدیمی
 - `register()` (ثبت‌نام تک‌نفره‌ی اولین فراخوان) حذف شد؛ این قرارداد اصلاً `constructor` هم ندارد (چون کل قرارداد در genesis تزریق می‌شود) — اعضای اولیه از طریق قرارداد کمکی موقت `FoundationDAO_GenesisSeed.sol` توسط ابزار genesis محاسبه می‌شوند.
 - `setDistributionOracle`/`setValidatorSyncOracle` و proposal typeهای متناظرشان کاملاً حذف شدند — بنیاد دیگر هیچ دسترسی به اوراکل‌های مرتبط با اجماع/ولیدیتور ندارد (⚠️ استثنا: کنترل `identityOracle`/`paymentOracle` را همچنان دارد — بی‌ربط به اجماع).
-- ✅ نصاب رأی از یکنواخت (همه‌جا اکثریت ساده) به دوگانه (دوسوم برای عضویت/خرج سورن، اکثریت ساده برای بقیه) تغییر کرد.
+- ✅ نصاب رأی از یکنواخت (همه‌جا اکثریت ساده) به دوگانه (دوسوم فقط برای افزودن/حذف عضو، اکثریت ساده برای بقیه از جمله خرج سورن با `SendETH` — مثلاً با ۱۵ عضو ۸ رأی) تغییر کرد.
 - ✅ `proposeRequestTreasuryBudget` و هرچیزی که این قرارداد را به `ValidatorsTreasury` وصل می‌کرد، کاملاً حذف شد — تصمیم آگاهانه، بدون جایگزین.
-- ✅ نصاب رأی از یکنواخت (همه‌جا اکثریت ساده) به دوگانه (دوسوم برای عضویت/خرج سورن، اکثریت ساده برای بقیه) تغییر کرد.
 
 ---
 

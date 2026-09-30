@@ -110,4 +110,4 @@ Besu/QBFT واقعی · ساخت genesis (ابزار نوشته نشده) · ه�
 
 **اسناد به‌روزشده:** `sur-tokenomics.md` (۶.۸.۱)، `sur-reward-router-spec.md`، `sur-master-open-items.md`. سند طراحی رد‌شده (`sur-reward-claim-mechanism-design.md`) با بنر منسوخ نگه داشته شد. جزئیات کامل: `technical-design/sur-reward-policy-decision-2026-09-29.md`.
 
-**هنوز آزموده نشده:** روی Besu واقعی (فقط Hardhat).
+**وضعیت آزمون (✅ اصلاح ممیزی ۲۰۲۶-۰۹-۳۰، D13):** این تصمیم روی Hardhat و سپس در اجرای Besu دور سوم (۲۰۲۶-۰۹-۳۰، Besu ۲۶.۹.۰) آزموده شد — گزارش تاریخی آن اجرا: `testing-evidence/besu-live-test-v3-2026-09-30/` و بخش ۶ `technical-design/sur-reward-policy-decision-2026-09-29.md`. آن اجرا روی کد پیش از اصلاحات L01–L03 این ممیزی بود؛ کد فعلی هنوز روی Besu آزموده نشده است.
