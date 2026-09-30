@@ -1,0 +1,18 @@
+8c8
+<   7 0 epochBlockRanges t_mapping(t_uint256,t_struct(BlockRange)135_storage)
+---
+>   7 0 epochBlockRanges t_mapping(t_uint256,t_struct(BlockRange)141_storage)
+10c10
+<   9 0 epochs t_mapping(t_uint256,t_struct(Epoch)167_storage)
+---
+>   9 0 epochs t_mapping(t_uint256,t_struct(Epoch)173_storage)
+21c21
+<  20 0 shareProposals t_mapping(t_uint256,t_struct(ShareProposal)231_storage)
+---
+>  20 0 shareProposals t_mapping(t_uint256,t_struct(ShareProposal)240_storage)
+25,26c25,26
+< ShareProposal members: newValidatorShareBps@0,createdAt@1,expiresAt@2,requiredValidatorApprovals@3,boardApprovals@4,validatorApprovals@5,boardPassed@6,validatorPassed@6,executed@6 bytes= 224
+< abi fns: BOARD BOARD_CONTRACT BOARD_SIZE BURN_ADDRESS FEE_BURN_BPS FOUNDATION FOUNDATION_SHARE_BPS MIN_BLOCK_PERIOD_SECONDS MIN_DISTRIBUTION_INTERVAL PROPOSAL_EXPIRY REGISTRY REGISTRY_ADDRESS SHARE_CHANGE_MIN_INTERVAL TREASURY VALIDATOR_SHARE_MAX_BPS VALIDATOR_SHARE_MIN_BPS boardVoteShareChange deployTime distributeRewards distributionOracle epochBlockRanges epochCount epochValidatorBlocks epochValidatorFeeShare epochValidatorRewardShare epochs getContractBalance getDistributionOracle getEpoch getLastEpochId getValidatorEpochReward getValidatorTotals lastDistributionTime lastSettledBlock lastShareChangeTime pendingMembershipFees proposeShareChange receiveMembershipFee setDistributionOracle shareProposalCount shareProposals timeUntilNextDistribution totalBlocksRecorded totalDistributedToFoundation totalDistributedToTreasury totalDistributedToValidators totalFeesBurned totalFeesPaid totalRewardsPaid validatorDirectShareBps validatorVoteShareChange
+---
+> ShareProposal members: newValidatorShareBps@0,createdAt@1,expiresAt@2,requiredValidatorApprovals@3,boardApprovals@4,validatorApprovals@5,boardPassed@6,validatorPassed@6,executed@6,boardVersionAtCreation@7 bytes= 256
+> abi fns: BOARD BOARD_CONTRACT BOARD_SIZE BURN_ADDRESS FEE_BURN_BPS FOUNDATION FOUNDATION_SHARE_BPS MIN_DISTRIBUTION_INTERVAL PROPOSAL_EXPIRY REGISTRY REGISTRY_ADDRESS SHARE_CHANGE_MIN_INTERVAL TREASURY VALIDATOR_SHARE_MAX_BPS VALIDATOR_SHARE_MIN_BPS boardVoteShareChange distributeRewards distributionOracle epochBlockRanges epochCount epochValidatorBlocks epochValidatorFeeShare epochValidatorRewardShare epochs getContractBalance getDistributionOracle getEpoch getLastEpochId getValidatorEpochReward getValidatorTotals lastDistributionTime lastSettledBlock lastShareChangeTime pendingMembershipFees proposeShareChange receiveMembershipFee setDistributionOracle shareProposalCount shareProposals timeUntilNextDistribution totalBlocksRecorded totalDistributedToFoundation totalDistributedToTreasury totalDistributedToValidators totalFeesBurned totalFeesPaid totalRewardsPaid validatorDirectShareBps validatorVoteShareChange

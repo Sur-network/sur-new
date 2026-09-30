@@ -1,0 +1,15 @@
+✅ R0) هیأت واقعی با A0..A4 تشکیل شد؛ boardVersion=2
+✅ R1a) پس از درخواست خروج و پیش از sync: isBoardMember(A0)=true ولی hasBoardAuthority(A0)=false (منطق خود Board)
+❌ R1b) Distributor رأی هیأت A0 را رد می‌کند → did NOT revert
+✅ R2a) syncBoard پس از خروج A4 ترکیب را واقعاً تغییر داد (A5 جانشین شد) و boardVersion افزایش یافت
+❌ R2b) رأی سوم (A5، ترکیب جدید) با دو رأی ترکیب قدیم جمع نمی‌شود → did NOT revert
+❌ R2c) عضو باقی‌مانده‌ی ترکیب قدیم (A2) هم دیگر روی این پیشنهاد رأی نمی‌دهد → did NOT revert
+✅ R3a) مجلس هیأت پاس شد (boardPassed=true) و ۶ از ۷ رأی ولیدیتورها ثبت شد
+❌ R3b) تغییر واقعی ترکیب پس از boardPassed و پیش از رأی آخر ولیدیتورها: اجرای نهایی رد می‌شود → did NOT revert
+❌ R3c) سهم تغییر نکرد → false
+✅ R4a) refresh ماهانه‌ی واقعی بدون تغییر ترکیب، boardVersion را تغییر نداد
+✅ R4b) پس از refresh بدون تغییر واقعی، همان پیشنهاد معتبر ماند و اجرا شد
+✅ R5a) عضو معلق (Demoted) طبق Board واقعی اختیار زنده دارد
+✅ R5b) و Distributor رأی هیأت او را می‌پذیرد (تفاوت تعلیق و خروج از Board ارث برده شد)
+
+نتیجه: 8/13 گذر

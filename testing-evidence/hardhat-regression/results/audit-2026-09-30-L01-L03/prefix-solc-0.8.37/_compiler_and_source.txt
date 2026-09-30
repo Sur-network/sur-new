@@ -1,0 +1,2 @@
+0.8.37+commit.f401782d.Emscripten.clang
+b0a5d9ccba5f63af56ed2273b998b3007c645f127f890c8fc9ee0c31f7a4b071  contracts_src_BlockRewardDistributor.sol

@@ -13,6 +13,13 @@ interface IValidatorsRegistry {
 ///         membership for the bicameral share-change vote below (see proposeShareChange).
 interface IValidatorsBoard {
     function isBoardMember(address who) external view returns (bool);
+    /// @dev L02 (audit 2026-09-30): LIVE authority — false immediately after requestExit(), even while the raw seat flag
+    ///      isBoardMember is still true until syncBoard(). A suspended (Demoted) member keeps authority until the monthly
+    ///      point (P02). The Distributor relies on this exact definition instead of re-implementing it.
+    function hasBoardAuthority(address who) external view returns (bool);
+    /// @dev L02: incremented by ValidatorsBoard ONLY on a real composition change (refresh/sync/succession), never by a
+    ///      refresh that leaves the composition unchanged.
+    function boardVersion() external view returns (uint256);
 }
 
 /// @title BlockRewardDistributor
@@ -132,9 +139,8 @@ contract BlockRewardDistributor {
     /// @notice Minimum allowed interval between two consecutive distribution calls.
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
 
-    /// @notice Minimum block production period on the network (from genesis: qbft.blockperiodseconds).
-    ///         Used to sanity-check the block count reported by the oracle.
-    uint256 public constant MIN_BLOCK_PERIOD_SECONDS = 3;
+    // L03 (audit 2026-09-30): MIN_BLOCK_PERIOD_SECONDS and the time-based "physical maximum" check were REMOVED — see
+    // the design note above _settleRange. The block count is bounded by the P05 range control, not by elapsed time.
 
     // ------------------------------------------------------------------
     // Fixed cross-contract addresses (see SurAddresses.sol)
@@ -185,11 +191,8 @@ contract BlockRewardDistributor {
     ///      source of truth for all four oracle addresses — see that file for rationale).
     address public distributionOracle = SurAddresses.DISTRIBUTION_ORACLE;
 
-    /// @dev 🔶 FILL_IN: the real genesis timestamp of the live network (NOT block.timestamp of
-    ///      whatever machine/moment runs the simulation — see sur-contracts-deploy-notes.md for
-    ///      why block.timestamp is unreliable here). Declared `immutable` so this value is baked
-    ///      directly into the deployed bytecode, exactly as it would be if set in a constructor.
-    uint256 public immutable deployTime = 0;
+    // L03 (audit 2026-09-30): the immutable `deployTime` was REMOVED together with the time-based cap — no code read it
+    // except that cap. This contract therefore has no immutable left for the genesis builder to patch.
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
@@ -278,6 +281,11 @@ contract BlockRewardDistributor {
         bool boardPassed;
         bool validatorPassed;
         bool executed;
+        /// @dev L02 (audit 2026-09-30): ValidatorsBoard.boardVersion() when the proposal was created. Board votes and the
+        ///      final execution are accepted only while the board composition is still this one — the same rule
+        ///      ValidatorsBoard applies to its own actions (boardVersionAtCreation). A real composition change voids the
+        ///      proposal; it must be proposed again. Appended as the LAST field: mapping-value layout, fresh genesis state.
+        uint256 boardVersionAtCreation;
     }
 
     /// @notice ✅ NEW: how long a proposal remains votable/executable after creation. Chosen to
@@ -412,7 +420,8 @@ contract BlockRewardDistributor {
             validatorApprovals: 0,
             boardPassed: false,
             validatorPassed: false,
-            executed: false
+            executed: false,
+            boardVersionAtCreation: BOARD_CONTRACT.boardVersion()
         });
         emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
     }
@@ -420,9 +429,15 @@ contract BlockRewardDistributor {
     /// @notice One of the two required votes — the ValidatorsBoard chamber. Simple majority of
     ///         the fixed BOARD_SIZE (5), i.e. 3 votes.
     function boardVoteShareChange(uint256 id) external {
-        require(BOARD_CONTRACT.isBoardMember(msg.sender), "BlockRewardDistributor: caller is not a board member");
+        // L02 (audit 2026-09-30): live authority, not the raw seat flag — a member who requested exit loses the right to
+        // vote immediately (P02), even before syncBoard() clears the seat.
+        require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
+        require(
+            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
+            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
+        );
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
@@ -467,6 +482,20 @@ contract BlockRewardDistributor {
     function _tryExecuteShareChange(uint256 id) private {
         ShareProposal storage p = shareProposals[id];
         if (p.boardPassed && p.validatorPassed && !p.executed) {
+            // L02: a board chamber that passed under an older composition cannot be completed later by the validator
+            // chamber — the composition is checked again at execution, not only at the board vote.
+            require(
+                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
+                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
+            );
+            // L01 (audit 2026-09-30): the minimum interval between SUCCESSFUL changes is enforced here, where the change is
+            // applied. Checking it only in proposeShareChange let two proposals built in the same open window both
+            // execute seconds apart. The vote that would complete a too-early proposal reverts; since PROPOSAL_EXPIRY
+            // (30 days) < SHARE_CHANGE_MIN_INTERVAL (180 days), such a proposal can never execute and simply expires.
+            require(
+                block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
+                "BlockRewardDistributor: too soon since the last successful share change"
+            );
             p.executed = true;
             validatorDirectShareBps = p.newValidatorShareBps;
             lastShareChangeTime = block.timestamp;
@@ -516,7 +545,7 @@ contract BlockRewardDistributor {
         // ✅ FIXED (real bug found during live Besu/QBFT execution testing — this contradicted an
         // earlier, incorrect claim that this file already compiled clean without viaIR): the
         // pre-computation block that used to sit directly here (membership-fee folding, fee-burn
-        // math, block-count sum/physical-maximum check) hit a genuine "Stack too deep" compiler
+        // math, block-count sum check; the time-based physical-maximum check was removed by L03) hit a genuine "Stack too deep" compiler
         // error at the _payValidators call further down, under the optimizer — too many
         // simultaneously-live local variables in this function's own stack frame. Extracted into
         // _prepareEpoch() below, which bundles the 4 result values into ONE memory struct
@@ -582,6 +611,30 @@ contract BlockRewardDistributor {
     ///      instead of 4 separate live stack locals).
 
     /// @dev P05 range control (see the BlockRange comment). Kept in its own stack frame.
+    ///
+    ///      L03 DESIGN NOTE (audit 2026-09-30) — why there is no time-based cap any more.
+    ///      The removed check required totalBlocks <= (block.timestamp - lastDistributionTime) / 3. Its two sides measure
+    ///      different things: the block count belongs to the range after lastSettledBlock, while lastDistributionTime is
+    ///      when the previous distribution TRANSACTION ran, which may have settled only up to an earlier block. Any
+    ///      settlement behind head (normal oracle lag) or any block cadence faster than 3 s made correct payments revert,
+    ///      and once one cycle reverted every later, longer range reverted too (reproduced: test_L03_settlement_backlog.js).
+    ///      What bounds the count instead, entirely on-chain and exactly:
+    ///        (1) continuity   fromBlock == lastSettledBlock + 1           -> no gap, no overlap, no duplicate range;
+    ///        (2) past only    toBlock < block.number                      -> never settles the current or a future block;
+    ///        (3) size         sum(blocksMined) <= toBlock - fromBlock + 1 -> never more blocks than really exist in it.
+    ///      (3) is an upper bound, not an equality. Per the current decision (sur-reward-router-spec.md section 3), the sum
+    ///      should NORMALLY equal the range length; a producer's later exit/suspension is never a reason to omit its blocks
+    ///      (everActivated policy). NOTE: payouts divide by sum(blocksMined), not by the range length, so whether the
+    ///      reward/fee of an omitted block stays in this contract or is redistributed to the listed producers depends only
+    ///      on the totalRewards/totalFees the oracle reports — the contract enforces neither. Once lastSettledBlock moves
+    ///      past an omitted block, there is no on-chain path to pay that block to its producer (open finding L08).
+    ///      TRUST BOUNDARY — these checks do NOT prove attribution. The contract cannot read historical block headers or
+    ///      historical Registry state, so the distribution oracle alone is trusted for: which address mined each block;
+    ///      that the miner was Active at height N-1; the per-validator split; the totalRewards/totalFees split (bounded
+    ///      here only by this contract's balance); and not listing an address twice. On-chain backstops are limited to:
+    ///      the oracle key, the 23 h interval, the three range rules above, everActivated for every paid address, and
+    ///      balance sufficiency. Misattribution among ever-activated addresses is detectable only off-chain, by replaying
+    ///      the settled range from chain data (EpochRangeSettled gives the exact range to replay).
     function _settleRange(BlockRange calldata range, uint256 totalBlocks) private {
         require(range.fromBlock == lastSettledBlock + 1, "BlockRewardDistributor: range must start right after the last settled block");
         require(range.toBlock >= range.fromBlock, "BlockRewardDistributor: empty or inverted block range");
@@ -629,7 +682,6 @@ contract BlockRewardDistributor {
 
         prep.totalBlocks = _sumBlocks(blocksMined);
         require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
-        _checkPhysicalMaximum(prep.totalBlocks);
     }
 
     /// @dev Sums the reported per-validator block counts. Split out of distributeRewards purely
@@ -638,24 +690,6 @@ contract BlockRewardDistributor {
     function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
         for (uint256 i = 0; i < blocksMined.length; i++) {
             totalBlocks += blocksMined[i];
-        }
-    }
-
-    /// @dev Sanity check: reported block count cannot exceed the physical maximum for this time
-    ///      window. Skipped for epoch 0 — see the original inline comment this was moved from,
-    ///      preserved in full below. Split out purely for stack-depth reasons.
-    ///
-    ///      Skipped for epoch 0: deployTime reflects the genesis timestamp, but there is no
-    ///      reliable way to bound "time since genesis" more tightly than "since deployTime", and
-    ///      a network's first distribution call may legitimately cover a long initial period
-    ///      (e.g. more than MIN_DISTRIBUTION_INTERVAL if the oracle was started late) — the
-    ///      bound is only meaningful once lastDistributionTime is a real, on-chain timestamp
-    ///      from a prior call.
-    function _checkPhysicalMaximum(uint256 totalBlocks) private view {
-        if (epochCount > 0) {
-            uint256 elapsed = block.timestamp - lastDistributionTime;
-            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
-            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
         }
     }
 

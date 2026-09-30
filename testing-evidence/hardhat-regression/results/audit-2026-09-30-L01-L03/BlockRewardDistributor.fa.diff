@@ -1,0 +1,175 @@
+--- BRD_fa_prefix.sol	2026-09-30 08:59:00.605819602 +0000
++++ contracts-fa/BlockRewardDistributor.sol	2026-09-30 08:59:00.622696332 +0000
+@@ -13,6 +13,13 @@
+ ///         رأی‌گیری دومجلسی پایین لازم است.
+ interface IValidatorsBoard {
+     function isBoardMember(address who) external view returns (bool);
++    /// @dev L02 (ممیزی ۲۰۲۶-۰۹-۳۰): اختیار «زنده» — بلافاصله پس از requestExit() نادرست می‌شود، حتی وقتی پرچم خام
++    ///      کرسی (isBoardMember) تا اجرای syncBoard() هنوز درست است. عضو معلق (Demoted) تا موعد ماهانه اختیارش را حفظ
++    ///      می‌کند (P02). Distributor دقیقاً به همین تعریف تکیه می‌کند و آن را دوباره پیاده نمی‌کند.
++    function hasBoardAuthority(address who) external view returns (bool);
++    /// @dev L02: ValidatorsBoard این عدد را فقط با تغییر واقعی ترکیب (refresh/sync/جانشینی) بالا می‌برد، نه با refreshی
++    ///      که ترکیب را تغییر نمی‌دهد.
++    function boardVersion() external view returns (uint256);
+ }
+ 
+ /// @title BlockRewardDistributor
+@@ -128,9 +135,8 @@
+     /// @notice حداقل فاصله‌ی مجاز بین دو فراخوانی متوالی توزیع.
+     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
+ 
+-    /// @notice حداقل دوره‌ی تولید بلاک در شبکه (از genesis: qbft.blockperiodseconds).
+-    ///         برای بررسی سلامتی تعداد بلاک گزارش‌شده توسط اوراکل استفاده می‌شود.
+-    uint256 public constant MIN_BLOCK_PERIOD_SECONDS = 3;
++    // L03 (ممیزی ۲۰۲۶-۰۹-۳۰): MIN_BLOCK_PERIOD_SECONDS و کنترل «حداکثر فیزیکی» زمان‌محور حذف شدند — یادداشت طراحی
++    // بالای _settleRange را ببینید. تعداد بلاک با کنترل بازه‌ی P05 محدود می‌شود، نه با زمان سپری‌شده.
+ 
+     // ------------------------------------------------------------------
+     // آدرس‌های ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
+@@ -182,12 +188,8 @@
+     ///      واحد صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین).
+     address public distributionOracle = SurAddresses.DISTRIBUTION_ORACLE;
+ 
+-    /// @dev 🔶 FILL_IN: genesis timestamp واقعی شبکه‌ی زنده (نه block.timestamp هر ماشین/لحظه‌ای
+-    ///      که شبیه‌سازی رویش اجرا می‌شود — به sur-contracts-deploy-notes.md مراجعه کن که چرا
+-    ///      block.timestamp اینجا غیرقابل‌اتکاست). به‌صورت `immutable` اعلان شده تا این مقدار
+-    ///      مستقیم در بایت‌کد دیپلوی‌شده جاسازی شود، دقیقاً مثل حالتی که در constructor
+-    ///      تنظیم می‌شد.
+-    uint256 public immutable deployTime = 0;
++    // L03 (ممیزی ۲۰۲۶-۰۹-۳۰): immutable `deployTime` همراه با سقف زمانی حذف شد — هیچ کدی جز همان سقف آن را نمی‌خواند.
++    // بنابراین این قرارداد دیگر هیچ immutableی ندارد که سازنده‌ی genesis لازم باشد patch کند.
+     uint256 public lastDistributionTime;
+     uint256 public epochCount;
+ 
+@@ -272,6 +274,11 @@
+         bool boardPassed;
+         bool validatorPassed;
+         bool executed;
++        /// @dev L02 (ممیزی ۲۰۲۶-۰۹-۳۰): مقدار ValidatorsBoard.boardVersion() هنگام ساخت پیشنهاد. رأی هیأت و اجرای نهایی
++        ///      فقط تا وقتی پذیرفته می‌شوند که ترکیب هیأت همان باشد — همان قاعده‌ای که ValidatorsBoard برای اقدام‌های خودش
++        ///      دارد (boardVersionAtCreation). تغییر واقعی ترکیب، پیشنهاد را باطل می‌کند و باید دوباره پیشنهاد شود. به‌عنوان
++        ///      آخرین فیلد اضافه شده: چیدمان مقدار mapping، state تازه‌ی genesis.
++        uint256 boardVersionAtCreation;
+     }
+ 
+     /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بعد از ثبت هنوز قابل‌رأی/اجراست. عمداً به‌وضوح
+@@ -405,7 +412,8 @@
+             validatorApprovals: 0,
+             boardPassed: false,
+             validatorPassed: false,
+-            executed: false
++            executed: false,
++            boardVersionAtCreation: BOARD_CONTRACT.boardVersion()
+         });
+         emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
+     }
+@@ -413,9 +421,15 @@
+     /// @notice یکی از دو رأی لازم — مجلس ValidatorsBoard. اکثریت ساده از BOARD_SIZE ثابت
+     ///         (۵)، یعنی ۳ رأی.
+     function boardVoteShareChange(uint256 id) external {
+-        require(BOARD_CONTRACT.isBoardMember(msg.sender), "BlockRewardDistributor: caller is not a board member");
++        // L02 (ممیزی ۲۰۲۶-۰۹-۳۰): اختیار زنده، نه پرچم خام کرسی — عضوی که درخواست خروج داده، حق رأی را فوراً از دست
++        // می‌دهد (P02)، حتی پیش از آن‌که syncBoard() کرسی را پاک کند.
++        require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
+         ShareProposal storage p = shareProposals[id];
+         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
++        require(
++            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++        );
+         require(!p.executed, "BlockRewardDistributor: already executed");
+         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
+         require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
+@@ -460,6 +474,20 @@
+     function _tryExecuteShareChange(uint256 id) private {
+         ShareProposal storage p = shareProposals[id];
+         if (p.boardPassed && p.validatorPassed && !p.executed) {
++            // L02: مجلس هیأتی که با ترکیب قدیمی پاس شده، بعداً با رأی مجلس ولیدیتورها کامل نمی‌شود — ترکیب هنگام اجرا هم
++            // دوباره بررسی می‌شود، نه فقط هنگام رأی هیأت.
++            require(
++                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++            );
++            // L01 (ممیزی ۲۰۲۶-۰۹-۳۰): حداقل فاصله‌ی بین تغییرهای موفق همین‌جا، در نقطه‌ی اعمال تغییر، اجرا می‌شود. کنترل آن
++            // فقط در proposeShareChange اجازه می‌داد دو پیشنهادِ ساخته‌شده در یک پنجره‌ی باز، با چند ثانیه فاصله هر دو اجرا
++            // شوند. رأیی که پیشنهاد زودهنگام را کامل کند revert می‌شود؛ چون PROPOSAL_EXPIRY (۳۰ روز) کوتاه‌تر از
++            // SHARE_CHANGE_MIN_INTERVAL (۱۸۰ روز) است، چنین پیشنهادی هرگز اجرا نمی‌شود و فقط منقضی می‌شود.
++            require(
++                block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
++                "BlockRewardDistributor: too soon since the last successful share change"
++            );
+             p.executed = true;
+             validatorDirectShareBps = p.newValidatorShareBps;
+             lastShareChangeTime = block.timestamp;
+@@ -507,7 +535,7 @@
+         // ✅ اصلاح‌شده (باگ واقعی پیداشده حین آزمون اجرایی زنده روی Besu/QBFT — این با یه ادعای
+         // قبلیِ نادرست که این فایل از قبل بدون viaIR تمیز کامپایل می‌شه در تناقض بود): بلوک
+         // پیش‌محاسبه‌ای که قبلاً مستقیم اینجا بود (تاخوردن کارمزد عضویت، محاسبه‌ی سوزاندن فی،
+-        // چک جمع/حداکثر فیزیکی تعداد بلاک) به یه خطای واقعی «Stack too deep» توی فراخوان
++        // چک جمع تعداد بلاک؛ چک زمان‌محور «حداکثر فیزیکی» با L03 حذف شد) به یه خطای واقعی «Stack too deep» توی فراخوان
+         // _payValidators پایین‌تر برخورد می‌کرد، زیر optimizer — تعداد زیاد متغیرهای local
+         // هم‌زمان زنده توی stack frame خودِ این تابع. استخراج شد به _prepareEpoch() پایین، که
+         // ۴ مقدار نتیجه رو توی یه struct حافظه (`prep`) جمع می‌کنه به‌جای ۴ متغیر local جدا —
+@@ -570,6 +598,29 @@
+     ///      ۴ متغیر local جدا و هم‌زمان زنده).
+ 
+     /// @dev کنترل بازه‌ی P05 (کامنت BlockRange را ببینید). در stack frame جدای خودش نگه داشته شده.
++    ///
++    ///      یادداشت طراحی L03 (ممیزی ۲۰۲۶-۰۹-۳۰) — چرا دیگر سقف زمان‌محور وجود ندارد.
++    ///      کنترل حذف‌شده totalBlocks <= (block.timestamp - lastDistributionTime) / 3 را الزام می‌کرد. دو طرف آن دو چیز متفاوت
++    ///      را می‌سنجند: تعداد بلاک مربوط به بازه‌ی بعد از lastSettledBlock است، ولی lastDistributionTime زمان اجرای «تراکنش»
++    ///      توزیع قبلی است که ممکن است فقط تا بلاکی عقب‌تر تسویه کرده باشد. هر تسویه‌ی عقب‌تر از head (تأخیر عادی اوراکل) یا
++    ///      هر آهنگ سریع‌تر از ۳ ثانیه، پرداخت درست را revert می‌کرد، و پس از رد یک چرخه، همه‌ی بازه‌های بعدیِ بلندتر هم رد
++    ///      می‌شدند (بازتولیدشده: test_L03_settlement_backlog.js).
++    ///      آنچه به‌جای آن تعداد را کاملاً on-chain و دقیق محدود می‌کند:
++    ///        (۱) پیوستگی   fromBlock == lastSettledBlock + 1           -> بدون فاصله، هم‌پوشانی یا بازه‌ی تکراری؛
++    ///        (۲) فقط گذشته  toBlock < block.number                      -> هرگز بلاک جاری یا آینده تسویه نمی‌شود؛
++    ///        (۳) اندازه    sum(blocksMined) <= toBlock - fromBlock + 1 -> هرگز بیش از بلاک‌های واقعی بازه.
++    ///      (۳) حد بالاست، نه تساوی. طبق تصمیم جاری (sur-reward-router-spec.md بخش ۳) این مجموع باید «معمولاً» برابر طول بازه
++    ///      باشد؛ خروج/تعلیقِ بعدیِ تولیدکننده هرگز دلیل حذف بلاک‌هایش نیست (سیاست everActivated). توجه: تقسیم بر
++    ///      sum(blocksMined) انجام می‌شود، نه طول بازه؛ پس این‌که پاداش/کارمزد بلاک حذف‌شده در این قرارداد بماند یا بین
++    ///      تولیدکنندگان فهرست‌شده بازتوزیع شود، فقط به totalRewards/totalFees گزارش‌شده‌ی اوراکل بستگی دارد — قرارداد هیچ‌کدام
++    ///      را الزام نمی‌کند. وقتی lastSettledBlock از بلاک حذف‌شده عبور کند، هیچ مسیر on-chainی برای پرداخت آن بلاک به
++    ///      تولیدکننده‌اش نمی‌ماند (یافته‌ی باز L08).
++    ///      مرز اعتماد — این کنترل‌ها انتساب را اثبات نمی‌کنند. قرارداد به هدر بلاک‌های تاریخی و state تاریخی Registry دسترسی
++    ///      ندارد؛ پس فقط اوراکل توزیع برای این موارد مورد اعتماد است: این‌که کدام آدرس هر بلاک را تولید کرده؛ فعال‌بودن
++    ///      تولیدکننده در ارتفاع N-1؛ تقسیم بین ولیدیتورها؛ تفکیک totalRewards/totalFees (که این‌جا فقط به موجودی همین قرارداد
++    ///      محدود است)؛ و تکرارنکردن آدرس در فهرست. پشتیبان‌های on-chain محدودند به: کلید اوراکل، فاصله‌ی ۲۳ ساعته، سه قاعده‌ی
++    ///      بازه‌ی بالا، everActivated برای هر آدرس پرداختی و کفایت موجودی. انتساب نادرست بین آدرس‌های everActivated فقط
++    ///      off-chain و با بازپخش بازه‌ی تسویه‌شده از داده‌ی زنجیره قابل کشف است (EpochRangeSettled بازه‌ی دقیق را می‌دهد).
+     function _settleRange(BlockRange calldata range, uint256 totalBlocks) private {
+         require(range.fromBlock == lastSettledBlock + 1, "BlockRewardDistributor: range must start right after the last settled block");
+         require(range.toBlock >= range.fromBlock, "BlockRewardDistributor: empty or inverted block range");
+@@ -618,7 +669,6 @@
+ 
+         prep.totalBlocks = _sumBlocks(blocksMined);
+         require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
+-        _checkPhysicalMaximum(prep.totalBlocks);
+     }
+ 
+     /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. فقط برای کوچک‌نگه‌داشتن stack frame خودِ
+@@ -630,24 +680,6 @@
+         }
+     }
+ 
+-    /// @dev بررسی سلامتی: تعداد بلاک گزارش‌شده نمی‌تواند از حداکثر فیزیکی این بازه‌ی زمانی
+-    ///      بیشتر باشد. برای epoch صفر رد می‌شود — کامنت اصلی که از آن منتقل شده، کامل پایین
+-    ///      حفظ شده. فقط به‌خاطر عمق استک از تابع اصلی جدا شده.
+-    ///
+-    ///      برای epoch صفر رد می‌شود: deployTime همان genesis timestamp است، ولی راه
+-    ///      قابل‌اتکایی برای محدودکردن دقیق‌تر «زمان از genesis» غیر از «از deployTime»
+-    ///      وجود ندارد، و اولین فراخوانی توزیع یک شبکه ممکن است به‌طور مشروع یک دوره‌ی
+-    ///      ابتدایی طولانی را پوشش دهد (مثلاً بیشتر از MIN_DISTRIBUTION_INTERVAL اگر اوراکل
+-    ///      دیر شروع شده باشد) — این محدودیت فقط وقتی معنا دارد که lastDistributionTime یک
+-    ///      timestamp واقعی و on-chain از یک فراخوانی قبلی باشد.
+-    function _checkPhysicalMaximum(uint256 totalBlocks) private view {
+-        if (epochCount > 0) {
+-            uint256 elapsed = block.timestamp - lastDistributionTime;
+-            uint256 maxPossibleBlocks = elapsed / MIN_BLOCK_PERIOD_SECONDS;
+-            require(totalBlocks <= maxPossibleBlocks, "BlockRewardDistributor: reported blocks exceed physical maximum");
+-        }
+-    }
+-
+     /// @dev بسته‌بندی چهار ورودی مقیاسی موردنیاز `_payValidators` در یک struct در memory —
+     ///      یک struct با یک اشاره‌گر (یک slot استک) پاس داده می‌شود، نه چهار slot جدا؛ همین
+     ///      چیزی است که اجازه داد stack frame خودِ این تابع زیر سقف ۱۶لایه جا بگیرد (یادداشت

@@ -1,0 +1,15 @@
+M11_no_interval_at_execution | test_L01_L02_share_change | نتیجه: 11/15 گذر | failed: L01.2 L01.3 L01.4 L01.5
+M11_no_interval_at_execution | test_L02_real_board_integration | نتیجه: 13/13 گذر | failed: -
+M11_no_interval_at_execution | test_L03_settlement_backlog | نتیجه: 16/16 گذر | failed: -
+M12_raw_seat_flag_instead_of_live_authority | test_L01_L02_share_change | نتیجه: 14/15 گذر | failed: L02.1
+M12_raw_seat_flag_instead_of_live_authority | test_L02_real_board_integration | نتیجه: 12/13 گذر | failed: R1b
+M12_raw_seat_flag_instead_of_live_authority | test_L03_settlement_backlog | نتیجه: 16/16 گذر | failed: -
+M13_no_version_check_at_board_vote | test_L01_L02_share_change | نتیجه: 13/15 گذر | failed: L02.2 L02.3
+M13_no_version_check_at_board_vote | test_L02_real_board_integration | نتیجه: 11/13 گذر | failed: R2b
+M13_no_version_check_at_board_vote | test_L03_settlement_backlog | نتیجه: 16/16 گذر | failed: -
+M14_no_version_check_at_execution | test_L01_L02_share_change | نتیجه: 13/15 گذر | failed: L02.4 L02.5
+M14_no_version_check_at_execution | test_L02_real_board_integration | نتیجه: 11/13 گذر | failed: R3b
+M14_no_version_check_at_execution | test_L03_settlement_backlog | نتیجه: 16/16 گذر | failed: -
+M15_time_cap_reinstated | test_L01_L02_share_change | نتیجه: 15/15 گذر | failed: -
+M15_time_cap_reinstated | test_L02_real_board_integration | نتیجه: 13/13 گذر | failed: -
+M15_time_cap_reinstated | test_L03_settlement_backlog | نتیجه: 9/16 گذر | failed: A.2 B.1 B.2 C.1 C.2 D.4 D.4b
