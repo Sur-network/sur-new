@@ -1,8 +1,9 @@
-# Stage-1 incremental package — audit 2026-09-30, findings L01–L03
+# Incremental package — audit 2026-09-30: stage 1 (L01–L03) + stage-3 document updates
 
 **This ZIP is incremental.** It contains only the files added or changed in stage 1. It does NOT contain the compile
-scripts, the pre-existing regression scripts, `node_modules`, or any other dependency. Extract it at the root of the Plan
-folder on top of the base package below; paths inside the ZIP are Plan-relative.
+scripts, the pre-existing regression scripts, `node_modules`, or any other dependency. Extract ALL of it at the root of the Plan
+folder on top of the base package below; paths inside the ZIP are Plan-relative. There are no files to skip: every
+document in the ZIP is the current Plan version (see `MANIFEST.sha256` at the ZIP root).
 
 ## Base package (what this applies on top of)
 The Plan-folder snapshot `sur-project-all-files(20260930-050101).zip`, identified by its contract fingerprints:
@@ -40,11 +41,16 @@ npm install                                              # base package.json pin
 TESTS="test_L01_L02_share_change test_L02_real_board_integration test_L03_settlement_backlog" \
   ./run_L01_L03_suite.sh /path/to/base/BlockRewardDistributor.sol my-run-prefix
 ```
-The runner copies every contract it needs from `../../contracts` (override with `CONTRACTS_DIR`), compiles, runs each
-test with a per-test timeout (`TEST_TIMEOUT`, default 900 s), writes each test's full output to
-`results/<run>/<test>.txt` and each exit code to `results/<run>/_exit_codes.txt`, and **exits non-zero if compilation
-fails (2) or any test fails or times out (1)**. `runner-demo/` shows this: A = all pass → exit 0; B = a failing test
-followed by a passing one → exit 1; C = forced 1-second timeout → `exit=124 TIMEOUT` → exit 1.
+The runner first deletes every previously staged `contracts_src_*.sol` and compiled artifact, then copies each
+contract it needs from `../../contracts` (override with `CONTRACTS_DIR`). If any input is missing or any copy fails it
+clears the staging area and **stops with exit 3 before compiling — no test is started**. It then compiles (exit 2 on
+failure), runs each test with a per-test timeout (`TEST_TIMEOUT`, default 900 s), writes each test's full output to
+`results/<run>/<test>.txt` and each exit code to `results/<run>/_exit_codes.txt`, and exits 1 if any test fails or
+times out, 0 only if all pass. `runner-demo/` shows every path with the final runner:
+`runner-demo.txt` — A all pass → 0; B a failing test followed by a passing one → 1; C forced 1-second timeout →
+`exit=124 TIMEOUT` → 1. `runner-demo-missing-input.txt` — with a stale pre-fix staged set and artifacts planted
+beforehand: D non-existent distributor path → 3; E non-existent `CONTRACTS_DIR` → 3; in both, no results directory,
+no test output, and no staged source or artifact left.
 
 Static checks run from the Plan root, as in the base README (`NODE_PATH=testing-evidence/hardhat-regression/node_modules`).
 
@@ -55,9 +61,16 @@ Static checks run from the Plan root, as in the base README (`NODE_PATH=testing-
 - `scripts/` — `test_L01_L02_share_change.js` (mocks), `test_L02_real_board_integration.js` (real ValidatorsBoard),
   `test_L03_settlement_backlog.js` (time model), `characterize_L07_duplicate_addresses.js` (characterization, L07 open).
 - `results/audit-2026-09-30-L01-L03/` — raw outputs `solc-0.8.37/`, `solc-0.8.24/`, `prefix-solc-0.8.37/` (produced
-  by the first runner version, which printed but did not propagate exit codes — the outputs themselves are complete;
+  by the first runner version, which printed but did not propagate exit codes and did not guard its inputs — the outputs themselves are complete;
   `runner-demo/` was produced with the fixed runner); `static-checks/`; `mutation-checks-L01-L03.txt`; EN/FA diffs.
 - `contracts-tested.sha256`, `contracts-fa.sha256` (new) and `*.baseline-pre-L01-L03.sha256` (base, kept).
+
+## Stage-3 document updates (`testing-evidence/audit-2026-09-30-stage3-docs/`)
+Five Plan documents updated for the L01–L03 ABI change (removed `deployTime()` / `MIN_BLOCK_PERIOD_SECONDS()` getters,
+removed time cap, `shareProposals(id)` now 10 outputs, L01/L02 rules) and the stage-1 report's L05 addition. The updated
+documents are included at their Plan paths; `diffs/` has a unified diff of each against its pre-stage-3 version, and
+`docs-baseline-pre-stage3.sha256` the pre-stage-3 hashes. Consumer search: no document or script decodes
+`shareProposals(id)` positionally (details in the stage-1 report, section 5).
 
 ## Limits
 All tests are Hardhat (in-process EVM). None is a Besu/QBFT run. "Both compilers" means two independent Hardhat runs.

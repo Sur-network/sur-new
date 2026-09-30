@@ -75,8 +75,10 @@
 
 این چهار تا **بدون نیاز به مجوز**ن (permissionless) — یعنی سرویس Verifier می‌تونه به‌عنوان یه راحتی عملیاتی صداشون بزنه (تا پرونده‌ها معطل نمونن)، ولی هرکس دیگه‌ای هم می‌تونه، پس سرویس نباید تنها مسیر پیش‌روندگی این پرونده‌ها فرض بشه.
 
-| `ValidatorsRegistry.setPhoneVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای پیامکی |
-| `ValidatorsRegistry.setTelegramVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای تلگرامی |
+| `IdentityRegistry.setPhoneVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای پیامکی |
+| `IdentityRegistry.setTelegramVerified(address, bool)` | بلافاصله بعد از موفقیت/شکست فرآیند وریفای تلگرامی |
+
+✅ **اصلاح (ممیزی ۲۰۲۶-۰۹-۳۰، D06):** این دو تابع در کد واقعی در `IdentityRegistry` هستند و با `onlyIdentityOracle` محافظت می‌شوند (کلید `identityOracle`)، نه در `ValidatorsRegistry` با کلید `verifier`. کلید `verifier` فقط برای توابع وریفای خود `ValidatorsRegistry` (تصمیم/تحویل/اعتراض) است. اگر سرویس Verifier این دو تابع را صدا می‌زند، باید کلید `identityOracle` را هم (جدا از `verifier`، با policy مستقل در Vault) داشته باشد؛ وگرنه این دو فراخوانی کار Identity Service است (`sur-identity-registry-spec.md`).
 
 ### ۳.۲ اعلان‌ها (به کاربر، از طریق همان اپ)
 - هشدار پیشگیرانه وقتی `nodeID` ثبت‌شده‌ی یک ولیدیتور دیگر در `admin_peers` دیده نمی‌شود (قبل از رسیدن به آستانه‌ی داخلی تشخیص غیرفعالی سرویس).

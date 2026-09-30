@@ -1,0 +1,18 @@
+## case D — BEFORE: stale staged set planted (distributor = PRE-FIX source)
+artifacts3.json board_artifact.json contracts_src_BlockRewardDistributor.sol contracts_src_SurAddresses.sol contracts_src_ValidatorsBoard.sol contracts_src_ValidatorsRegistry.sol contracts_src_ValidatorsRegistry_GenesisSeed.sol contracts_src_ValidatorsTreasury.sol distributor_artifact.json 
+b0a5d9ccba5f63af56ed2273b998b3007c645f127f890c8fc9ee0c31f7a4b071  contracts_src_BlockRewardDistributor.sol
+### CONTRACTS_DIR=/home/claude/w/contracts ./run_L01_L03_suite.sh /nonexistent/BlockRewardDistributor.sol runner-demo-D-missing-distributor-path
+runner-demo-D-missing-distributor-path | INPUT MISSING: /nonexistent/BlockRewardDistributor.sol — staging cleared, nothing compiled, no test started
+### runner exit code = 3
+AFTER: results dir created? NO; test output files: 0
+AFTER: staged contracts_src_*.sol left: 0; compiled artifacts left: 0
+
+## case E — BEFORE: stale staged set planted (distributor = PRE-FIX source)
+artifacts3.json board_artifact.json contracts_src_BlockRewardDistributor.sol contracts_src_SurAddresses.sol contracts_src_ValidatorsBoard.sol contracts_src_ValidatorsRegistry.sol contracts_src_ValidatorsRegistry_GenesisSeed.sol contracts_src_ValidatorsTreasury.sol distributor_artifact.json 
+b0a5d9ccba5f63af56ed2273b998b3007c645f127f890c8fc9ee0c31f7a4b071  contracts_src_BlockRewardDistributor.sol
+### CONTRACTS_DIR=/nonexistent-dir ./run_L01_L03_suite.sh /home/claude/w/contracts/BlockRewardDistributor.sol runner-demo-E-missing-contracts-dir
+runner-demo-E-missing-contracts-dir | INPUT MISSING: /nonexistent-dir/ValidatorsRegistry.sol — staging cleared, nothing compiled, no test started
+### runner exit code = 3
+AFTER: results dir created? NO; test output files: 0
+AFTER: staged contracts_src_*.sol left: 0; compiled artifacts left: 0
+

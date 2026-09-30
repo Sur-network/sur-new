@@ -10,7 +10,7 @@
 | ۲ | `BlockRewardDistributor.sol` | ❌ خیر (اختصاصی) | تنها تابع نوشتنی‌اش (`setDistributionOracle`) یک اقدام نادر حکمرانی است که از قبل از طریق اقدام `RotateOracle` در پنل هیأت‌مدیره‌ی داشبورد حکمرانی پوشش داده می‌شود؛ توزیع واقعی ریوارد کاملاً خودکار توسط سرویس `RewardRouter` انجام می‌شود، بدون دخالت کاربر. |
 | ۳ | `ValidatorsRegistry.sol` | ✅ بله | هم اقدامات فردی چرخه‌ی عمر (قفل‌کردن وثیقه، خروج، برداشت) و هم رأی‌گیری تمام‌ولیدیتوری روی پارامترهای امنیتی — هر دو نیازمند تراکنش امضاشده با کیف‌پول. |
 | ۴ | `ValidatorsBoard.sol` | ✅ بله | رأی‌گیری تأییدی عضویت هیأت و اقدامات داخلی هیأت. |
-| ۵ | `ValidatorsTreasury.sol` | ✅ بله | پیشنهاد و رأی‌گیری خرج خزانه. |
+| ۵ | `ValidatorsTreasury.sol` | ✅ بله | ✅ **اصلاح (ممیزی ۲۰۲۶-۰۹-۳۰، D05):** مدل P06 — مجمع فقط سقف‌ها را (با تأخیر ۷روزه) تعیین می‌کند؛ پرداخت موردی فقط از مسیر هیأت (`boardApproveExpenditure`). «پیشنهاد و رأی‌گیری خرج خزانه» توسط مجمع دیگر وجود ندارد. |
 | ۶ | `FoundationDAO.sol` | ✅ بله | پیشنهاد و رأی‌گیری اعضای بنیاد. |
 | ۷ | `IdentityRegistry.sol` | ✅ بله | ثبت‌نام خوداظهاری، وریفای موبایل/تلگرام، و مسیر eKYC برای عموم کاربران. |
 | ۸ | `SurenSale.sol` | ✅ بله | هم صفحه‌ی آماری عمومی و هم مسیر خرید (ورود آدرس دریافت‌کننده). |
@@ -22,7 +22,7 @@
 | اپلیکیشن ولیدیتور | `ValidatorsRegistry` (چرخه‌ی عمر فردی) | `sur-validator-app-claudecode-brief.md` |
 | داشبورد حکمرانی | `FoundationDAO`, `ValidatorsTreasury`, `ValidatorsBoard`, `ValidatorsRegistry` (پارامترهای امنیتی) | `sur-governance-dashboard-claudecode-brief.md` |
 | پرتال فروش سورن | `SurenSale` | `sur-suren-sale-portal-claudecode-brief.md` |
-| اپلیکیشن احراز هویت عمومی | `IdentityRegistry` | `sur-identity-app-claudecode-brief.md` |
+| اپلیکیشن احراز هویت عمومی | `IdentityRegistry` | ❌ `sur-identity-app-claudecode-brief.md` **موجود نیست** (D16)؛ مرجع موقت: `sur-identity-registry-spec.md` |
 
 ## یافته‌های تازه‌ی این بررسی (خلأهایی که قبلاً پوشش داده نشده بودند)
 
