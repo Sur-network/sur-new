@@ -1,0 +1,22 @@
+--- /home/claude/w/check_genesis_helper_layout.preL04.js	2026-10-01 10:10:18.540228708 +0000
++++ /home/claude/w/hh/static-checks/check_genesis_helper_layout.js	2026-10-01 10:10:18.558523467 +0000
+@@ -8,10 +8,15 @@
+   return out.contracts['x.sol'][name].storageLayout;
+ }
+ function describe(l){ // label -> {slot, offset, shape}
+-  const m={}; for(const s of l.storage){ const t=l.types[s.type]; let shape=t.label;
+-    if(t.encoding==='mapping'){const vt=l.types[t.value]; shape='mapping->'+(vt.members?vt.members.map(x=>x.label+':'+x.slot).join(','):vt.label);} 
+-    if(t.encoding==='dynamic_array' && t.base){ const bt=l.types[t.base]; if(bt.members) shape='array<struct>->'+bt.members.map(x=>x.label+':'+x.slot+'/'+x.offset+':'+l.types[x.type].label).join(','); }
+-    m[s.label]={slot:s.slot,offset:s.offset,shape}; } return m; }
++  // L04: structural, recursive shape description — contract-qualified type names (e.g. "struct X.Foo" vs "struct X_GenesisSeed.Foo")
++  // are stripped so identical layouts compare equal; nested mapping -> array<struct> is described by its members, not by its name.
++  const strip=lbl=>lbl.replace(/struct [A-Za-z0-9_]+\./g,'struct ').replace(/enum [A-Za-z0-9_]+\./g,'enum ');
++  const shapeOf=(tid,depth=0)=>{ const t=l.types[tid]; if(depth>6) return strip(t.label);
++    if(t.encoding==='mapping') return 'mapping('+strip(l.types[t.key].label)+')->'+shapeOf(t.value,depth+1);
++    if(t.members) return 'struct{'+t.members.map(x=>x.label+':'+x.slot+'/'+x.offset+':'+shapeOf(x.type,depth+1)).join(',')+'}';
++    if((t.encoding==='dynamic_array'||/\[\d*\]$/.test(t.label)) && t.base) return (t.encoding==='dynamic_array'?'array<':'fixedarray<')+shapeOf(t.base,depth+1)+'>';
++    return strip(t.label); };
++  const m={}; for(const s of l.storage){ m[s.label]={slot:s.slot,offset:s.offset,shape:shapeOf(s.type)}; } return m; }
+ // ✅ FIXED (independent review, 2026-09-29): two real defects fixed here.
+ // (1) A helper-only variable whose name matches this padding convention (e.g. `__gap1`) is a
+ //     DELIBERATE slot-reservation placeholder (see ValidatorsRegistry_GenesisSeed.sol's own doc

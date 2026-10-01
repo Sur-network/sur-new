@@ -6,6 +6,8 @@ import "./SurAddresses.sol";
 interface IValidatorsRegistry {
     function getValidators() external view returns (address[] memory);
     function isValidator(address who) external view returns (bool);
+    function statusNonce() external view returns (uint256); // L04
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
 }
 
 /// @title ValidatorsTreasury
@@ -119,6 +121,8 @@ contract ValidatorsTreasury {
         bool executed; // true می‌شه به‌محض این‌که **رأی مجمع** تصویب بشه — جدا از این‌که آیا
         // timelock گذشته و مقدار تازه واقعاً اجرا شده (pendingCapChange پایین و
         // applyPendingCapChange() را ببین).
+        // L04 (تصمیم مالک): مقدار statusNonce در ValidatorsRegistry هنگام ساخت؛ رأی‌دهنده باید دقیقاً در همان نقطه Active بوده باشد.
+        uint256 createdAtNonce;
     }
 
     uint256 public constant TREASURY_PROPOSAL_EXPIRY = 30 days;
@@ -250,7 +254,8 @@ contract ValidatorsTreasury {
             requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // الان منجمد شد
             createdAt: block.timestamp,
             expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
-            executed: false
+            executed: false,
+            createdAtNonce: REGISTRY.statusNonce()
         });
         emit CapChangeProposed(id, kind, newValue, msg.sender);
         _voteCapChange(id, msg.sender);
@@ -266,6 +271,9 @@ contract ValidatorsTreasury {
         require(!p.executed, "ValidatorsTreasury: already executed");
         require(block.timestamp <= p.expiresAt, "ValidatorsTreasury: proposal has expired");
         require(!capChangeHasVoted[id][voter], "ValidatorsTreasury: already voted");
+        // L04: رأی‌دهنده باید هنگام ساخت پیشنهاد Active بوده باشد (snapshot واجدان) و اکنون هم Active باشد (onlyActiveValidator).
+        // تعلیق موقت او را از مجموعه‌ی اولیه حذف نمی‌کند؛ فقط در دوره‌ی تعلیق مانع رأی است.
+        require(REGISTRY.wasActiveAt(voter, p.createdAtNonce), "ValidatorsTreasury: not eligible - not Active when this proposal was created");
 
         capChangeHasVoted[id][voter] = true;
         p.votes++;

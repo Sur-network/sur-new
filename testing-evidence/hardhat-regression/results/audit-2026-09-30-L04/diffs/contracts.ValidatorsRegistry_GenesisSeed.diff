@@ -1,0 +1,27 @@
+--- /home/claude/w/preL04/contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol	2026-10-01 09:58:00.622557838 +0000
++++ /home/claude/w/contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol	2026-10-01 10:10:24.804828719 +0000
+@@ -113,6 +113,16 @@
+     // this one, unlike the placeholders above — every founder must get `true` here, or the very
+     // first real `distributeRewards()` call reverts the moment it tries to pay a founder.
+     mapping(address => bool) public everActivated;
++    // L04: slots 21–35 of the real contract (fields declared after everActivated, up to paramProposalCount) — placeholder only.
++    // statusNonce (slot 36) stays 0 at genesis; every founder gets the checkpoint {nonce: 0, active: true} in activeCheckpoints
++    // (slot 37), so wasActiveAt(founder, n) is true for every proposal created before the founder's first status change.
++    uint256[15] private __gap2;
++    struct ActiveCheckpoint {
++        uint64 nonce;
++        bool active;
++    }
++    uint256 public statusNonce;
++    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
+ 
+     // ------------------------------------------------------------------
+     // No-argument constructor — the genesis timestamp and initial validator set are hardcoded
+@@ -150,6 +160,7 @@
+             activeIndex[v] = activeValidators.length + 1;
+             activeValidators.push(v);
+             everActivated[v] = true; // ✅ FIXED — see the doc comment on this field's declaration above
++            activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true})); // L04
+         }
+         // paidValidatorCount and verifier are deliberately left untouched — see the doc
+         // comments on their declarations above.

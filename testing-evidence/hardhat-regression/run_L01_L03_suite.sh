@@ -27,7 +27,7 @@ mkdir -p "$OUT"
 if ! { node compile3.js && node compile_board_treasury.js && node compile_distributor.js; } > "$OUT/_compile.txt" 2>&1; then
   echo "$RUN_NAME | COMPILE FAILED (see $OUT/_compile.txt)"; exit 2; fi
 : > "$OUT/_exit_codes.txt"; failed=0
-for t in ${TESTS:-test_L01_L02_share_change test_L02_real_board_integration test_L03_settlement_backlog characterize_L07_duplicate_addresses test_P05_distributor_ranges verify_everActivated_policy test_P01_P02_board}; do
+for t in ${TESTS:-test_L01_L02_share_change test_L02_real_board_integration test_L03_settlement_backlog test_L07_strict_ascending test_L04_electorate_snapshot test_L04_real_registry_integration test_D05_proposal_read_paths test_P05_distributor_ranges verify_everActivated_policy test_P01_P02_board}; do
   timeout "$TEST_TIMEOUT" npx hardhat run "scripts/$t.js" > "$OUT/$t.txt" 2>&1; ec=$?
   if [ $ec -eq 124 ]; then status="TIMEOUT(${TEST_TIMEOUT}s)"; elif [ $ec -eq 0 ]; then status=PASS; else status=FAIL; fi
   [ $ec -ne 0 ] && failed=$((failed+1))

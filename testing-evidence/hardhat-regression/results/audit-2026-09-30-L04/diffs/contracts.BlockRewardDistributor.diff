@@ -1,0 +1,40 @@
+--- /home/claude/w/preL04/contracts/BlockRewardDistributor.sol	2026-10-01 09:58:00.620743629 +0000
++++ /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 09:58:00.742036475 +0000
+@@ -5,6 +5,8 @@
+ 
+ interface IValidatorsRegistry {
+     function isValidator(address who) external view returns (bool);
++    function statusNonce() external view returns (uint256); // L04
++    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
+     function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
+     function getActiveValidatorCount() external view returns (uint256); // ✅ NEW: needed for the 2/3-of-assembly threshold in the bicameral share-change vote below.
+ }
+@@ -286,6 +288,8 @@
+         ///      ValidatorsBoard applies to its own actions (boardVersionAtCreation). A real composition change voids the
+         ///      proposal; it must be proposed again. Appended as the LAST field: mapping-value layout, fresh genesis state.
+         uint256 boardVersionAtCreation;
++        // L04 (owner decision): ValidatorsRegistry.statusNonce at creation; voters must have been Active at exactly that point.
++        uint256 validatorNonceAtCreation;
+     }
+ 
+     /// @notice ✅ NEW: how long a proposal remains votable/executable after creation. Chosen to
+@@ -421,7 +425,8 @@
+             boardPassed: false,
+             validatorPassed: false,
+             executed: false,
+-            boardVersionAtCreation: BOARD_CONTRACT.boardVersion()
++            boardVersionAtCreation: BOARD_CONTRACT.boardVersion(),
++            validatorNonceAtCreation: REGISTRY.statusNonce()
+         });
+         emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
+     }
+@@ -465,6 +470,9 @@
+         require(!p.executed, "BlockRewardDistributor: already executed");
+         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
+         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
++        // L04: the voter must have been Active when the proposal was created (electorate snapshot) AND be Active now (onlyActiveValidator).
++        // A temporary suspension does not remove the voter from the original electorate; it only blocks voting while suspended.
++        require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
+ 
+         shareValidatorVoted[id][msg.sender] = true;
+         p.validatorApprovals++;

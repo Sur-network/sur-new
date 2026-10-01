@@ -19,7 +19,10 @@ const DAY = 24 * 3600;
 const MOCK = `pragma solidity ^0.8.24;
 contract MockRegistry {
   mapping(address=>bool) public act; uint256 public activeCount;
-  function setActive(address a, bool v) external { act[a]=v; }
+  function setActive(address a, bool v) external { if (act[a]!=v) _cp(a,v); act[a]=v; }
+  uint256 public statusNonce; struct Cp { uint256 n; bool a; } mapping(address=>Cp[]) cps;
+  function _cp(address x, bool on) internal { statusNonce++; cps[x].push(Cp(statusNonce, on)); }
+  function wasActiveAt(address x, uint256 n) external view returns (bool) { Cp[] storage c=cps[x]; bool r=false; for (uint i=0;i<c.length;i++){ if (c[i].n<=n) r=c[i].a; else break; } return r; }
   function setActiveCount(uint256 n) external { activeCount=n; }
   function isValidator(address a) external view returns (bool) { return act[a]; }
   function everActivated(address a) external view returns (bool) { return act[a]; }

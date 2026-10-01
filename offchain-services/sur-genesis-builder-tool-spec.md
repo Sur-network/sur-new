@@ -166,6 +166,13 @@
      # "address was never a legitimate validator" کل تراکنش را revert می‌کند. این را constructor
      # خودِ ValidatorsRegistry_GenesisSeed.sol می‌نویسد (اسلات ۲۰ در قرارداد فعلی)؛ ابزار genesis
      # نیازی به overlay جداگانه ندارد، فقط باید از بلاک صفر assert کند که واقعاً true شده.
+      ValidatorsRegistry.wasActiveAt(address, 0) == true   # ✅ L04 (تصمیم مالک): checkpoint مؤسس {nonce: 0, active: true} در activeCheckpoints (اسلات ۳۷)؛
+      # helper ژنزیس آن را می‌نویسد. بدون آن، مؤسس روی هیچ پیشنهاد مجمع واجد رأی نیست. این آرایهٔ پویا در اسلات‌های keccak ذخیره می‌شود؛
+      # استخراج باید همهٔ اسلات‌های نوشته‌شده توسط constructor helper را بردارد (مثلاً از trace تراکنش دیپلوی)، نه فقط اسلات‌های اسکالر.
+   ValidatorsRegistry.statusNonce() == 0                 # ✅ L04 (اسلات ۳۶)
+   ValidatorsRegistry.wasActiveAt(<هر آدرس غیرمؤسس>, 0) == false
+   FoundationDAO.membershipNonce() == 0                  # ✅ L04 (اسلات ۵)
+   برای هر عضو ژنزیس: FoundationDAO.memberSinceNonce(member) == 0   # ✅ L04 (اسلات ۶؛ مقدار پیش‌فرض صفر — helper نمی‌نویسد)
    ```
    این چک‌ها دقیقاً همان کلاس خطایی را می‌گیرند که یک storage layout به‌هم‌ریخته (مثلاً اگر آفست بین فایل کمکی و قرارداد اصلی جابه‌جا شده باشد) یا یک اسکالر جامانده در overlay تولید می‌کند — بدون این‌ها، چنین خطایی فقط زمانی کشف می‌شود که شبکه‌ی واقعی با یک genesis state خراب یا ناقص بالا بیاید.
 

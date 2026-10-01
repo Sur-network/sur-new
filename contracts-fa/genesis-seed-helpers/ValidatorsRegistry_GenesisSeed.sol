@@ -109,6 +109,16 @@ contract ValidatorsRegistry_GenesisSeed {
     // واقعاً به این می‌نویسد — هر مؤسس باید اینجا `true` بگیرد، وگرنه اولین فراخوان واقعیِ
     // `distributeRewards()` دقیقاً لحظه‌ای که بخواهد به یک مؤسس پرداخت کند revert می‌شود.
     mapping(address => bool) public everActivated;
+    // L04: جای اسلات‌های ۲۱ تا ۳۵ قرارداد واقعی (فیلدهای پس از everActivated تا paramProposalCount) — فقط برای جانگه‌داری.
+    // statusNonce (اسلات ۳۶) در ژنزیس صفر می‌ماند؛ هر مؤسس در activeCheckpoints (اسلات ۳۷) checkpoint {nonce: 0, active: true}
+    // می‌گیرد تا wasActiveAt(founder, n) برای هر پیشنهادِ ساخته‌شده پیش از اولین تغییر وضعیت مؤسس true باشد.
+    uint256[15] private __gap2;
+    struct ActiveCheckpoint {
+        uint64 nonce;
+        bool active;
+    }
+    uint256 public statusNonce;
+    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
 
     // ------------------------------------------------------------------
     // constructor بدون ورودی — genesis timestamp و مجموعه‌ی ولیدیتورهای اولیه مستقیم
@@ -145,6 +155,7 @@ contract ValidatorsRegistry_GenesisSeed {
             activeIndex[v] = activeValidators.length + 1;
             activeValidators.push(v);
             everActivated[v] = true; // ✅ اصلاح‌شده — کامنت اعلانش بالا را ببین
+            activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true})); // L04
         }
         // paidValidatorCount و verifier عمداً دست‌نخورده می‌مانند — کامنت اعلانشان بالا را ببین.
     }

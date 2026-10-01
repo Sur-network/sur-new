@@ -1,0 +1,15 @@
+--- /home/claude/w/BRD_en_preL07.sol	2026-10-01 07:03:48.065016317 +0000
++++ /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 07:03:48.357541686 +0000
+@@ -715,6 +715,12 @@
+         EpochContext memory ctx
+     ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
+         for (uint256 i = 0; i < validators.length; i++) {
++            // L07 (audit 2026-09-30, owner decision): addresses must be STRICTLY ascending. This rejects duplicates
++            // (which previously overwrote the per-epoch records while paying every entry) and unsorted lists. The
++            // RewardRouter must aggregate blocks per miner and sort by address before submitting.
++            if (i > 0) {
++                require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
++            }
+             if (blocksMined[i] == 0) continue;
+ 
+             address validator = validators[i];

@@ -652,6 +652,8 @@ contract ValidatorsRegistry {
         uint256 createdAt;
         uint256 expiresAt; // ✅ تازه — بعد از این دیگه قابل‌رأی/اجرا نیست
         bool executed;
+        // L04 (تصمیم مالک): مقدار statusNonce در ValidatorsRegistry هنگام ساخت؛ رأی‌دهنده باید دقیقاً در همان نقطه Active بوده باشد.
+        uint256 createdAtNonce;
     }
 
     /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد تغییر پارامتر بعد از ثبت قابل‌رأی/اجراست.
@@ -660,6 +662,16 @@ contract ValidatorsRegistry {
     mapping(uint256 => ParamProposal) public paramProposals;
     mapping(uint256 => mapping(address => bool)) private paramHasVoted;
     uint256 public paramProposalCount;
+
+    // L04 (تصمیم مالک): تاریخچه‌ی ترتیبی وضعیت Active هر ولیدیتور، برای snapshot واجدان هر پیشنهاد مجمع (این‌جا، در
+    // ValidatorsTreasury و در BlockRewardDistributor) بدون باطل‌کردن آن با ورود/خروج بعدی. statusNonce با هر ورود به Active یا
+    // خروج از آن بالا می‌رود و در همان نقطه یک checkpoint {nonce, active} اضافه می‌شود. مؤسسان ژنزیس با checkpoint {0, true} از helper ژنزیس مقداردهی می‌شوند.
+    struct ActiveCheckpoint {
+        uint64 nonce;
+        bool active;
+    }
+    uint256 public statusNonce;
+    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
 
     // ------------------------------------------------------------------
     // Events
@@ -704,6 +716,25 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     function getValidators() external view returns (address[] memory) {
         return activeValidators;
+    }
+
+    /// @notice L04: آیا `who` در نقطه‌ی وضعیت `nonce` فعال بوده؟ اگر `who` تا `nonce` سابقه‌ای نداشته باشد، false.
+    ///         جست‌وجوی دودویی روی checkpointهای فقط‌افزودنی `who`.
+    function wasActiveAt(address who, uint256 nonce) public view returns (bool) {
+        ActiveCheckpoint[] storage cps = activeCheckpoints[who];
+        uint256 lo = 0;
+        uint256 hi = cps.length;
+        while (lo < hi) {
+            uint256 mid = (lo + hi) / 2;
+            if (cps[mid].nonce <= nonce) lo = mid + 1;
+            else hi = mid;
+        }
+        return lo == 0 ? false : cps[lo - 1].active;
+    }
+
+    function _recordActiveCheckpoint(address who, bool active) private {
+        statusNonce++;
+        activeCheckpoints[who].push(ActiveCheckpoint({nonce: uint64(statusNonce), active: active}));
     }
 
     /// @notice چک صلاحیت پرداخت که مستقیم توسط BlockRewardDistributor استفاده می‌شود.
@@ -913,6 +944,7 @@ contract ValidatorsRegistry {
         require(v.status == Status.Active, "ValidatorsRegistry: not active");
 
         _removeFromActive(validator);
+        _recordActiveCheckpoint(validator, false); // L04
 
         uint256 epochId = _recordDemotion(v, true); // تصمیم جریمه معلقه — به resolveMassFailureCheck() مراجعه کن
         v.status = Status.Demoted;
@@ -1278,6 +1310,7 @@ contract ValidatorsRegistry {
         activeIndex[who] = activeValidators.length + 1;
         activeValidators.push(who);
         everActivated[who] = true; // ✅ رکورد دائمی — کامنت بالای تعریفش را ببین
+        _recordActiveCheckpoint(who, true); // L04
         emit ValidatorActivated(who);
     }
 
@@ -1311,6 +1344,7 @@ contract ValidatorsRegistry {
             // Verifier هنوز می‌تواند درباره‌ی رفتار **قبل** از این درخواست پرونده ثبت کند (recordPreExitViolation)، و
             // مبلغ درگیر تا تعیین تکلیف چنین پرونده‌ای توسط withdrawStake() محفوظ می‌ماند.
             _removeFromActive(msg.sender);
+            _recordActiveCheckpoint(msg.sender, false); // L04
         }
 
         // ✅ تازه: خروج یک ولیدیتور پرداخت‌کرده، جایش را در منحنی رشد آزاد می‌کند — عضو
@@ -1383,7 +1417,8 @@ contract ValidatorsRegistry {
             requiredVotes: (getActiveValidatorCount() / 2) + 1, // همین لحظه ثابت‌شده
             createdAt: block.timestamp,
             expiresAt: block.timestamp + PARAM_PROPOSAL_EXPIRY,
-            executed: false
+            executed: false,
+            createdAtNonce: statusNonce
         });
         emit ParameterChangeProposed(id, key, newValue, msg.sender);
         _voteParam(id, msg.sender);
@@ -1399,6 +1434,9 @@ contract ValidatorsRegistry {
         require(!p.executed, "ValidatorsRegistry: already executed");
         require(block.timestamp <= p.expiresAt, "ValidatorsRegistry: proposal has expired");
         require(!paramHasVoted[id][voter], "ValidatorsRegistry: already voted");
+        // L04: رأی‌دهنده باید هنگام ساخت پیشنهاد Active بوده باشد (snapshot واجدان) و اکنون هم Active باشد (onlyActiveValidator).
+        // تعلیق موقت او را از مجموعه‌ی اولیه حذف نمی‌کند؛ فقط در دوره‌ی تعلیق مانع رأی است.
+        require(wasActiveAt(voter, p.createdAtNonce), "ValidatorsRegistry: not eligible - not Active when this proposal was created");
 
         paramHasVoted[id][voter] = true;
         p.votes++;

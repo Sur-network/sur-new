@@ -39,7 +39,9 @@ async function part1() {
   console.log("=== بخش ۱ — سناریوی اصلی: ۱۰۰ بلاک؛ A=۶۰(فعال)، B=۱۰(تولید حین فعال‌بودن، الان خارج/معلق)، C=۳۰(فعال) ===");
   await reg.deactivate(B.address);
   const before = { A: await hre.ethers.provider.getBalance(A.address), B: await hre.ethers.provider.getBalance(B.address), C: await hre.ethers.provider.getBalance(C.address), T: await hre.ethers.provider.getBalance(TRES), F: await hre.ethers.provider.getBalance(FOUND) };
-  const r = await d.distributeRewards({ fromBlock: 1, toBlock: 100 }, [A.address, B.address, C.address], [60, 10, 30], E(1000), E(200));
+  // L07 (owner decision 2026-09-30): the contract now requires strictly ascending addresses -> sort, keeping each count paired
+  const entries = [[A.address, 60], [B.address, 10], [C.address, 30]].sort((x, y) => (BigInt(x[0]) < BigInt(y[0]) ? -1 : 1));
+  const r = await d.distributeRewards({ fromBlock: 1, toBlock: 100 }, entries.map(e => e[0]), entries.map(e => e[1]), E(1000), E(200));
   const rc = await r.wait();
   const paidA = (await hre.ethers.provider.getBalance(A.address)) - before.A;
   const paidB = (await hre.ethers.provider.getBalance(B.address)) - before.B;

@@ -1,0 +1,10 @@
+# Plan vs package — every file below was re-read from Plan (connector) after its final edit
+4ff4ede4d73822512aa875f85054b7df7ea113dcf1ac113cb097716f3386ce12  technical-design/sur-smart-contracts-reference.md
+4ff4ede4d73822512aa875f85054b7df7ea113dcf1ac113cb097716f3386ce12  /mnt/user-data/uploads/sur-smart-contracts-reference.md
+e44b12648555519119c7670b820618c9c35e94a711e31b3bee6941da88ff7b83  technical-design/sur-audit-2026-09-30-final-status.md
+e44b12648555519119c7670b820618c9c35e94a711e31b3bee6941da88ff7b83  /mnt/user-data/uploads/sur-audit-2026-09-30-final-status.md
+2f20afd7ed1bc8c69198ddd8cfe8d7fbd0cf4e9aeeced4d88263d63ea1ac5a14  offchain-services/sur-governance-dashboard-claudecode-brief.md
+2f20afd7ed1bc8c69198ddd8cfe8d7fbd0cf4e9aeeced4d88263d63ea1ac5a14  /mnt/user-data/uploads/sur-governance-dashboard-claudecode-brief.md
+fc9a2398ba1dff0877ad8b752bdc6763888c207fe7326d0fee7056aeb5bae958  offchain-services/sur-genesis-builder-tool-spec.md
+fc9a2398ba1dff0877ad8b752bdc6763888c207fe7326d0fee7056aeb5bae958  /mnt/user-data/uploads/sur-genesis-builder-tool-spec.md
+# contracts: all 10 byte-compared with the Plan copies after writing (cmp IDENTICAL)

@@ -1,0 +1,2 @@
+test_L07_strict_ascending exit=1 FAIL
+l07-mutant-M16 | SUMMARY: 1 failing/timed-out test(s)

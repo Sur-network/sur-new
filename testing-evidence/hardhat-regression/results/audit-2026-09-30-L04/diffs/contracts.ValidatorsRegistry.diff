@@ -1,0 +1,99 @@
+--- /home/claude/w/preL04/contracts/ValidatorsRegistry.sol	2026-10-01 09:58:00.617642246 +0000
++++ /home/claude/w/contracts/ValidatorsRegistry.sol	2026-10-01 11:10:44.966590452 +0000
+@@ -642,6 +642,8 @@
+         uint256 createdAt;
+         uint256 expiresAt; // ✅ NEW — can no longer be voted on or executed after this
+         bool executed;
++        // L04 (owner decision): ValidatorsRegistry.statusNonce at creation; voters must have been Active at exactly that point.
++        uint256 createdAtNonce;
+     }
+ 
+     /// @notice ✅ NEW: how long a parameter-change proposal remains votable/executable. A
+@@ -653,6 +655,17 @@
+     mapping(uint256 => mapping(address => bool)) private paramHasVoted;
+     uint256 public paramProposalCount;
+ 
++    // L04 (owner decision): ordered history of each validator's Active status, used to snapshot the electorate of every assembly
++    // proposal (here, in ValidatorsTreasury and in BlockRewardDistributor) without invalidating it on later joins/exits.
++    // statusNonce increments on every transition into or out of Active; a checkpoint {nonce, active} is appended at that point.
++    // Genesis founders are seeded with the checkpoint {0, true} by the genesis seed helper.
++    struct ActiveCheckpoint {
++        uint64 nonce;
++        bool active;
++    }
++    uint256 public statusNonce;
++    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
++
+     // ------------------------------------------------------------------
+     // Events
+     // ------------------------------------------------------------------
+@@ -698,6 +711,25 @@
+         return activeValidators;
+     }
+ 
++    /// @notice L04: was `who` Active at the status point `nonce`? false if `who` has no history before or at `nonce`.
++    ///         Binary search over the append-only checkpoints of `who`.
++    function wasActiveAt(address who, uint256 nonce) public view returns (bool) {
++        ActiveCheckpoint[] storage cps = activeCheckpoints[who];
++        uint256 lo = 0;
++        uint256 hi = cps.length;
++        while (lo < hi) {
++            uint256 mid = (lo + hi) / 2;
++            if (cps[mid].nonce <= nonce) lo = mid + 1;
++            else hi = mid;
++        }
++        return lo == 0 ? false : cps[lo - 1].active;
++    }
++
++    function _recordActiveCheckpoint(address who, bool active) private {
++        statusNonce++;
++        activeCheckpoints[who].push(ActiveCheckpoint({nonce: uint64(statusNonce), active: active}));
++    }
++
+     /// @notice Payment-eligibility check used directly by BlockRewardDistributor.
+     function isValidator(address who) external view returns (bool) {
+         return validators[who].status == Status.Active;
+@@ -903,6 +935,7 @@
+         require(v.status == Status.Active, "ValidatorsRegistry: not active");
+ 
+         _removeFromActive(validator);
++        _recordActiveCheckpoint(validator, false); // L04
+ 
+         uint256 epochId = _recordDemotion(v, true); // slash decision deferred — see resolveMassFailureCheck()
+         v.status = Status.Demoted;
+@@ -1272,6 +1305,7 @@
+         activeIndex[who] = activeValidators.length + 1;
+         activeValidators.push(who);
+         everActivated[who] = true; // ✅ permanent record — see the doc comment above its declaration
++        _recordActiveCheckpoint(who, true); // L04
+         emit ValidatorActivated(who);
+     }
+ 
+@@ -1305,6 +1339,7 @@
+             // (72 h) the Verifier can still file a case about conduct BEFORE this request (recordPreExitViolation), and the
+             // amount at stake stays reserved by withdrawStake() until any such case is settled.
+             _removeFromActive(msg.sender);
++            _recordActiveCheckpoint(msg.sender, false); // L04
+         }
+ 
+         // ✅ NEW: a paid entrant leaving frees up their slot in the growth curve — the next
+@@ -1378,7 +1413,8 @@
+             requiredVotes: (getActiveValidatorCount() / 2) + 1, // frozen now, see struct doc comment
+             createdAt: block.timestamp,
+             expiresAt: block.timestamp + PARAM_PROPOSAL_EXPIRY,
+-            executed: false
++            executed: false,
++            createdAtNonce: statusNonce
+         });
+         emit ParameterChangeProposed(id, key, newValue, msg.sender);
+         _voteParam(id, msg.sender);
+@@ -1394,6 +1430,9 @@
+         require(!p.executed, "ValidatorsRegistry: already executed");
+         require(block.timestamp <= p.expiresAt, "ValidatorsRegistry: proposal has expired");
+         require(!paramHasVoted[id][voter], "ValidatorsRegistry: already voted");
++        // L04: the voter must have been Active when the proposal was created (electorate snapshot) AND be Active now (onlyActiveValidator).
++        // A temporary suspension does not remove the voter from the original electorate; it only blocks voting while suspended.
++        require(wasActiveAt(voter, p.createdAtNonce), "ValidatorsRegistry: not eligible - not Active when this proposal was created");
+ 
+         paramHasVoted[id][voter] = true;
+         p.votes++;

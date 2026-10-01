@@ -1,0 +1,2 @@
+test_L07_strict_ascending exit=1 FAIL
+l07-prechange-solc-0.8.37 | SUMMARY: 1 failing/timed-out test(s)

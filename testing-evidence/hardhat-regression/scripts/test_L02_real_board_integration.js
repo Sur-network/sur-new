@@ -16,7 +16,10 @@ const slot = (art, n) => hre.ethers.toBeHex(BigInt(art.layout.storage.find(s => 
 const setS = (addr, sl, v) => hre.network.provider.send("hardhat_setStorageAt", [addr, sl, hre.ethers.zeroPadValue(hre.ethers.toBeHex(v), 32)]);
 const MOCK = `pragma solidity ^0.8.24;
 contract MockRegistry { address[] public vals; mapping(address=>bool) public active; mapping(address=>uint8) public st; mapping(address=>bool) public ever;
- function setActive(address a, bool on) external { if (on && !active[a]) { active[a]=true; ever[a]=true; vals.push(a);} else if (!on && active[a]) { active[a]=false; for (uint i=0;i<vals.length;i++) if (vals[i]==a) { vals[i]=vals[vals.length-1]; vals.pop(); break; } } }
+ function setActive(address a, bool on) external { if (on && !active[a]) { active[a]=true; ever[a]=true; vals.push(a); _cp(a,true);} else if (!on && active[a]) { active[a]=false; _cp(a,false); for (uint i=0;i<vals.length;i++) if (vals[i]==a) { vals[i]=vals[vals.length-1]; vals.pop(); break; } } }
+  uint256 public statusNonce; struct Cp { uint256 n; bool a; } mapping(address=>Cp[]) cps;
+  function _cp(address x, bool on) internal { statusNonce++; cps[x].push(Cp(statusNonce, on)); }
+  function wasActiveAt(address x, uint256 n) external view returns (bool) { Cp[] storage c=cps[x]; bool r=false; for (uint i=0;i<c.length;i++){ if (c[i].n<=n) r=c[i].a; else break; } return r; }
  function setStatus(address a, uint8 s) external { st[a]=s; }
  function isValidator(address a) external view returns (bool) { return active[a]; }
  function everActivated(address a) external view returns (bool) { return ever[a]; }

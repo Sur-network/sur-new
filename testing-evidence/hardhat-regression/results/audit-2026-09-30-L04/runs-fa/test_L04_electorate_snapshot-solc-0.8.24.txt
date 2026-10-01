@@ -1,0 +1,50 @@
+source dir: /home/claude/w/contracts-fa  solc 0.8.24+commit.e11b9ed9.Emscripten.clang
+
+=== F — FoundationDAO ===
+✅ F0) 15 genesis members seeded; membershipNonce = 0
+✅ F1) genesis member can vote on P (memberSinceNonce 0 <= createdAtNonce 0)
+✅ F2) X added after P was created cannot vote on P
+✅ F3) X can vote on a proposal created after its admission
+✅ F4) removed member's earlier vote on P is still counted
+✅ F5) removed member cannot vote again (onlyMember)
+✅ F6) P still Pending and quorum unchanged after add+remove (not invalidated)
+✅ F7) re-added member cannot vote on Q (created before re-admission, never voted by it)
+✅ F8) re-added member can vote on a proposal created after re-admission
+✅ F9) double vote rejected
+✅ F10.create-then-add) same block: Y is member=true; Y may NOT vote on SB
+✅ F10.add-then-create) same block: Y is member=true; Y MAY vote on SB
+
+=== R — ValidatorsRegistry ===
+✅ R0) 7 founders seeded; statusNonce = 0; invariant isValidator ⇔ getValidators holds at genesis
+✅ R1) no history -> wasActiveAt(outsider, any) = false
+✅ R2) founder seeded checkpoint {0,true}: wasActiveAt(founder, 0) = true
+✅ R3) quorum frozen by the existing formula (active/2 + 1 = 4) and createdAtNonce recorded
+✅ R4) exact nonce boundary: wasActiveAt(V1, n-1 of its change) true, at its change false
+✅ R5) invariant holds after two suspensions
+✅ R6) suspended voter cannot vote while suspended
+✅ R7) invariant holds after recovery
+✅ R8) eligible-at-creation voter, suspended then recovered, may vote (P1)
+✅ R9) suspended AT creation (P2), recovered later -> not eligible
+✅ R10) voter who voted before suspension cannot vote again after recovery
+✅ R11) suspension did not delete the recorded vote (P1 votes = 3: V0, V1, V2)
+✅ R12) invariant holds after a new activation
+✅ R13) validator activated after P1 cannot vote on P1
+✅ R14) ...but can vote on a proposal created after its activation
+✅ R15) exited voter's vote stays counted
+✅ R16) exited validator cannot vote
+✅ R17) invariant holds after exit
+✅ R18) exited address cannot re-register  true
+✅ R19) consecutive transitions: V5 history is 1→0→1→0→1 across nonces (4 boundaries)  seq=1111111001001
+✅ R20.create-then-activate) same block: C may NOT vote
+✅ R20.activate-then-create) same block: C MAY vote
+
+=== T/D — ValidatorsTreasury and BlockRewardDistributor (validator chamber) ===
+✅ T1) Treasury: validator activated after creation cannot vote
+✅ D1) Distributor validator chamber: activated after creation cannot vote
+✅ T2) Treasury: suspended voter blocked while suspended
+✅ T3) Treasury: eligible-at-creation voter recovered -> may vote once
+✅ D2) Distributor: eligible-at-creation voter (suspended+recovered) may vote once
+✅ T4) Treasury quorum still the existing formula (6 active at creation -> 4)
+✅ D3) Distributor quorum still the existing formula (ceil(2/3·6) = 4)
+
+نتیجه: 41/41 گذر

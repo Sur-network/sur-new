@@ -1,0 +1,40 @@
+--- /home/claude/w/preL04/contracts/ValidatorsTreasury.sol	2026-10-01 09:58:00.619265214 +0000
++++ /home/claude/w/contracts/ValidatorsTreasury.sol	2026-10-01 09:58:00.740787822 +0000
+@@ -6,6 +6,8 @@
+ interface IValidatorsRegistry {
+     function getValidators() external view returns (address[] memory);
+     function isValidator(address who) external view returns (bool);
++    function statusNonce() external view returns (uint256); // L04
++    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
+ }
+ 
+ /// @title ValidatorsTreasury
+@@ -124,6 +126,8 @@
+         bool executed; // true once the ASSEMBLY VOTE passed — separate from whether the
+         // timelock has elapsed and the new value has actually taken effect (see
+         // pendingCapChange below and applyPendingCapChange()).
++        // L04 (owner decision): ValidatorsRegistry.statusNonce at creation; voters must have been Active at exactly that point.
++        uint256 createdAtNonce;
+     }
+ 
+     uint256 public constant TREASURY_PROPOSAL_EXPIRY = 30 days;
+@@ -255,7 +259,8 @@
+             requiredVotes: (REGISTRY.getValidators().length / 2) + 1, // frozen now
+             createdAt: block.timestamp,
+             expiresAt: block.timestamp + TREASURY_PROPOSAL_EXPIRY,
+-            executed: false
++            executed: false,
++            createdAtNonce: REGISTRY.statusNonce()
+         });
+         emit CapChangeProposed(id, kind, newValue, msg.sender);
+         _voteCapChange(id, msg.sender);
+@@ -271,6 +276,9 @@
+         require(!p.executed, "ValidatorsTreasury: already executed");
+         require(block.timestamp <= p.expiresAt, "ValidatorsTreasury: proposal has expired");
+         require(!capChangeHasVoted[id][voter], "ValidatorsTreasury: already voted");
++        // L04: the voter must have been Active when the proposal was created (electorate snapshot) AND be Active now (onlyActiveValidator).
++        // A temporary suspension does not remove the voter from the original electorate; it only blocks voting while suspended.
++        require(REGISTRY.wasActiveAt(voter, p.createdAtNonce), "ValidatorsTreasury: not eligible - not Active when this proposal was created");
+ 
+         capChangeHasVoted[id][voter] = true;
+         p.votes++;

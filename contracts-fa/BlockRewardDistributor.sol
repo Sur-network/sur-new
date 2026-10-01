@@ -5,6 +5,8 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
+    function statusNonce() external view returns (uint256); // L04
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
     function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
     function getActiveValidatorCount() external view returns (uint256); // ✅ تازه: برای آستانه‌ی ۲/۳ رأی‌گیری دومجلسی پایین لازم است.
 }
@@ -279,6 +281,8 @@ contract BlockRewardDistributor {
         ///      دارد (boardVersionAtCreation). تغییر واقعی ترکیب، پیشنهاد را باطل می‌کند و باید دوباره پیشنهاد شود. به‌عنوان
         ///      آخرین فیلد اضافه شده: چیدمان مقدار mapping، state تازه‌ی genesis.
         uint256 boardVersionAtCreation;
+        // L04 (تصمیم مالک): مقدار statusNonce در ValidatorsRegistry هنگام ساخت؛ رأی‌دهنده باید دقیقاً در همان نقطه Active بوده باشد.
+        uint256 validatorNonceAtCreation;
     }
 
     /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بعد از ثبت هنوز قابل‌رأی/اجراست. عمداً به‌وضوح
@@ -413,7 +417,8 @@ contract BlockRewardDistributor {
             boardPassed: false,
             validatorPassed: false,
             executed: false,
-            boardVersionAtCreation: BOARD_CONTRACT.boardVersion()
+            boardVersionAtCreation: BOARD_CONTRACT.boardVersion(),
+            validatorNonceAtCreation: REGISTRY.statusNonce()
         });
         emit ShareChangeProposed(id, newValidatorShareBps, msg.sender);
     }
@@ -457,6 +462,9 @@ contract BlockRewardDistributor {
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
+        // L04: رأی‌دهنده باید هنگام ساخت پیشنهاد Active بوده باشد (snapshot واجدان) و اکنون هم Active باشد (onlyActiveValidator).
+        // تعلیق موقت او را از مجموعه‌ی اولیه حذف نمی‌کند؛ فقط در دوره‌ی تعلیق مانع رأی است.
+        require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
 
         shareValidatorVoted[id][msg.sender] = true;
         p.validatorApprovals++;
@@ -702,6 +710,12 @@ contract BlockRewardDistributor {
         EpochContext memory ctx
     ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
         for (uint256 i = 0; i < validators.length; i++) {
+            // L07 (ممیزی ۲۰۲۶-۰۹-۳۰، تصمیم مالک): آدرس‌ها باید اکیداً صعودی باشند. این شرط آدرس تکراری (که پیش‌تر رکوردهای
+            // هر-epoch را بازنویسی می‌کرد در حالی که همه‌ی ورودی‌ها پرداخت می‌شدند) و فهرست نامرتب را رد می‌کند. RewardRouter
+            // باید بلاک‌ها را برای هر تولیدکننده تجمیع و پیش از ارسال بر اساس آدرس مرتب کند.
+            if (i > 0) {
+                require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
+            }
             if (blocksMined[i] == 0) continue;
 
             address validator = validators[i];

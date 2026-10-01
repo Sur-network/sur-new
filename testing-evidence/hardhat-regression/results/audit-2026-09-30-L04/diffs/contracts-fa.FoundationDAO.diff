@@ -1,0 +1,62 @@
+--- /home/claude/w/preL04/contracts-fa/FoundationDAO.sol	2026-10-01 09:58:00.627464116 +0000
++++ /home/claude/w/contracts-fa/FoundationDAO.sol	2026-10-01 14:51:56.522739319 +0000
+@@ -94,6 +94,8 @@
+         uint256 expiresAt; // ✅ تازه — بعد از این دیگه قابل‌رأی/اجرا نیست
+         ProposalStatus status;
+         mapping(address => bool) hasVoted;
++        // L04 (تصمیم مالک): مقدار membershipNonce هنگام ساخت پیشنهاد؛ فقط اعضایی که memberSinceNonce آن‌ها ≤ این مقدار است رأی می‌دهند.
++        uint256 createdAtNonce;
+     }
+ 
+     /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بنیاد بعد از ثبت هنوز قابل‌رأی/اجراست.
+@@ -123,6 +125,11 @@
+     uint256 public proposalCount;
+     mapping(uint256 => Proposal) private proposals;
+ 
++    // L04 (تصمیم مالک): snapshot واجدان با شمارنده‌ی ترتیبی، نه timestamp — حتی برای تغییرهای درون یک بلاک دقیق است.
++    // با هر افزودن/حذف یک واحد بالا می‌رود؛ memberSinceNonce مقدار شمارنده هنگام (دوباره) پیوستن عضو است (۰ = عضو ژنزیس).
++    uint256 public membershipNonce;
++    mapping(address => uint256) public memberSinceNonce;
++
+     // ------------------------------------------------------------------
+     // Events
+     // ------------------------------------------------------------------
+@@ -222,6 +229,7 @@
+         p.requiredVotes = _requiredVotes(pType); // ✅ همین لحظه ثابت‌شده
+         p.createdAt = block.timestamp;
+         p.expiresAt = block.timestamp + PROPOSAL_EXPIRY; // ✅ تازه
++        p.createdAtNonce = membershipNonce;
+         p.status = ProposalStatus.Pending;
+ 
+         emit ProposalCreated(id, pType, msg.sender);
+@@ -245,6 +253,12 @@
+         require(p.status == ProposalStatus.Pending, "FoundationDAO: proposal not pending");
+         require(block.timestamp <= p.expiresAt, "FoundationDAO: proposal has expired");
+         require(!p.hasVoted[voter], "FoundationDAO: already voted");
++        // L04: عضویت فعلی همین‌جا هم الزام می‌شود، نه فقط از طریق onlyMember — memberSinceNonce عضو حذف‌شده به ۰ برمی‌گردد،
++        // پس شرط snapshot به‌تنهایی او را کنار نمی‌گذارد.
++        require(isMember[voter], "FoundationDAO: not a member");
++        // L04: فقط کسانی که هنگام ساخت پیشنهاد عضو بوده‌اند رأی می‌دهند؛ عضوی که بعداً افزوده (یا دوباره افزوده) شده رأی نمی‌دهد.
++        // تغییر عضویت پیشنهاد را باطل نمی‌کند. عضو حذف‌شده از onlyMember رد می‌شود؛ رأی قبلی‌اش باقی می‌ماند.
++        require(memberSinceNonce[voter] <= p.createdAtNonce, "FoundationDAO: not eligible - not a member when this proposal was created");
+ 
+         p.hasVoted[voter] = true;
+         p.votes++;
+@@ -317,6 +331,8 @@
+         memberList.push(Member({name: name, account: account}));
+         memberIndex[account] = memberList.length; // اندیس یک‌مبنایی
+         isMember[account] = true;
++        membershipNonce++;
++        memberSinceNonce[account] = membershipNonce;
+     }
+ 
+     function _removeMember(address account) private {
+@@ -332,6 +348,8 @@
+ 
+         delete memberIndex[account];
+         isMember[account] = false;
++        membershipNonce++;
++        delete memberSinceNonce[account];
+     }
+ 
+     // ------------------------------------------------------------------

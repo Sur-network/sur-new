@@ -1,0 +1,42 @@
+source dir: /home/claude/w/contracts  solc 0.8.37+commit.f401782d.Emscripten.clang
+   helper wrote 43 non-zero storage slots; copied to 0x3333333333333333333333333333333333333333
+
+=== G — genesis assertions on the extracted Registry state ===
+✅ G1) 7 founders, all Active, getValidators() length 7
+✅ G2) statusNonce = 0 at genesis
+✅ G3) every founder has checkpoint {0, true}: wasActiveAt(founder, 0) = true
+✅ G4) everActivated true for every founder
+✅ G5) non-founder has no history: wasActiveAt(x, 0) = false
+
+=== Q — quorum formulas at boundary counts (unchanged formulas, frozen at creation) ===
+✅ Q.7) 7 active -> reg 4, treasury 4, distributor 5
+✅ Q.6) 6 active -> reg 4, treasury 4, distributor 4
+✅ Q.5) 5 active -> reg 3, treasury 3, distributor 4
+✅ Q.4) 4 active -> reg 3, treasury 3, distributor 3
+✅ Q.3) 3 active -> reg 2, treasury 2, distributor 2
+✅ Q.up) after an activation (4 active) formulas hold
+✅ Q.frozen) every earlier proposal keeps the quorum frozen at its own creation after all membership changes
+
+=== E — eligibility through the REAL Registry (Treasury + Distributor) ===
+✅ E1) Treasury: validator activated after creation cannot vote (real Registry checkpoint)
+✅ E2) Distributor: validator activated after creation cannot vote
+✅ E3) Treasury: eligible voter blocked while suspended (real isValidator)
+✅ E4) Treasury: eligible voter recovered -> may vote once
+✅ E5) Distributor: eligible voter recovered -> may vote once
+✅ E6) Treasury: suspended AT creation, recovered later -> not eligible
+✅ E7) Distributor: suspended AT creation, recovered later -> not eligible
+✅ E8) exited voter's Treasury vote stays counted; exited voter cannot vote elsewhere
+
+=== F — FoundationDAO: current membership + quorum boundaries ===
+✅ FQ.15) 15 members -> AddMember 10, SendETH 8
+✅ FQ.add->16) 16 members -> AddMember 11, SendETH 9
+✅ FQ.add->17) 17 members -> AddMember 12, SendETH 9
+✅ FQ.remove->16) 16 members -> AddMember 11, SendETH 9
+✅ FQ.remove->15) 15 members -> AddMember 10, SendETH 8
+✅ FQ.remove->14) 14 members -> AddMember 10, SendETH 8
+✅ FQ.frozen) every FoundationDAO proposal keeps its creation-time quorum after later membership changes
+✅ FM1) removed member cannot vote (current membership required)
+✅ FM2) re-added member trying to vote again on P (voted before removal) -> already voted
+✅ FM3) re-added member on an older proposal it never voted on -> not eligible
+
+نتیجه: 30/30 گذر

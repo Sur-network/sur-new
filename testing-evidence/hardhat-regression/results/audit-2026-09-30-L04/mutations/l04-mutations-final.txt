@@ -1,0 +1,14 @@
+M17_fdao_no_eligibility | test_L04_electorate_snapshot | exit=1 | نتیجه: 38/41 گذر | failed: F2 F7 F10.create-then-add
+M17_fdao_no_eligibility | test_L04_real_registry_integration | exit=1 | نتیجه: 29/30 گذر | failed: FM3
+M18_registry_no_eligibility | test_L04_electorate_snapshot | exit=1 | نتیجه: 37/41 گذر | failed: R9 R13 R20.create-then-activate R20.activate-then-create
+M18_registry_no_eligibility | test_L04_real_registry_integration | exit=0 | نتیجه: 30/30 گذر | failed: -
+M19_treasury_no_eligibility | test_L04_electorate_snapshot | exit=1 | نتیجه: 40/41 گذر | failed: T1
+M19_treasury_no_eligibility | test_L04_real_registry_integration | exit=1 | نتیجه: 28/30 گذر | failed: E1 E6
+M20_distributor_no_eligibility | test_L04_electorate_snapshot | exit=1 | نتیجه: 40/41 گذر | failed: D1
+M20_distributor_no_eligibility | test_L04_real_registry_integration | exit=1 | نتیجه: 28/30 گذر | failed: E2 E7
+M21_no_checkpoint_on_suspension | test_L04_electorate_snapshot | exit=1 | نتیجه: 38/41 گذر | failed: R4 R9 R19
+M21_no_checkpoint_on_suspension | test_L04_real_registry_integration | exit=1 | نتیجه: 28/30 گذر | failed: E6 E7
+NOTES:
+- Every mutant is detected by at least one test (exit=1). M18 passes test_L04_real_registry_integration by design: that test checks Treasury/Distributor/FoundationDAO through the Registry, not the Registry's own parameter-vote path; test_L04_electorate_snapshot detects M18.
+- M18 in test_L04_electorate_snapshot: R20.activate-then-create fails as a cascade (R13 wrongly lets a late validator vote, P1 executes and sets probationPeriod = 777 s, blocking C's activation).
+- The explicit isMember check inside FoundationDAO._vote is defense in depth: unreachable through public functions (vote() has onlyMember; the proposer is a member), so a mutant removing only that check is NOT detectable by tests.

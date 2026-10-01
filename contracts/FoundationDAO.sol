@@ -99,6 +99,8 @@ contract FoundationDAO {
         uint256 expiresAt; // ✅ NEW — proposal can no longer be voted on or executed after this
         ProposalStatus status;
         mapping(address => bool) hasVoted;
+        // L04 (owner decision): membershipNonce when the proposal was created; only members whose memberSinceNonce <= this may vote.
+        uint256 createdAtNonce;
     }
 
     /// @notice ✅ NEW: how long a Foundation proposal remains votable/executable after
@@ -131,6 +133,11 @@ contract FoundationDAO {
 
     uint256 public proposalCount;
     mapping(uint256 => Proposal) private proposals;
+
+    // L04 (owner decision): eligibility snapshot by an ordered counter, not a timestamp — exact even for changes in the same block.
+    // Incremented on every add/remove; memberSinceNonce is the counter value at which the member (re)joined (0 = genesis member).
+    uint256 public membershipNonce;
+    mapping(address => uint256) public memberSinceNonce;
 
     // ------------------------------------------------------------------
     // Events
@@ -231,6 +238,7 @@ contract FoundationDAO {
         p.requiredVotes = _requiredVotes(pType); // ✅ frozen now, at creation time
         p.createdAt = block.timestamp;
         p.expiresAt = block.timestamp + PROPOSAL_EXPIRY; // ✅ NEW
+        p.createdAtNonce = membershipNonce;
         p.status = ProposalStatus.Pending;
 
         emit ProposalCreated(id, pType, msg.sender);
@@ -254,6 +262,12 @@ contract FoundationDAO {
         require(p.status == ProposalStatus.Pending, "FoundationDAO: proposal not pending");
         require(block.timestamp <= p.expiresAt, "FoundationDAO: proposal has expired");
         require(!p.hasVoted[voter], "FoundationDAO: already voted");
+        // L04: current membership is required here too, not only via onlyMember — a removed member's memberSinceNonce is reset to 0,
+        // so the snapshot condition alone would not exclude it.
+        require(isMember[voter], "FoundationDAO: not a member");
+        // L04: only members that were already members when the proposal was created may vote; a member added (or re-added)
+        // later may not. Membership changes never invalidate the proposal. Removed members fail onlyMember; their earlier vote stays.
+        require(memberSinceNonce[voter] <= p.createdAtNonce, "FoundationDAO: not eligible - not a member when this proposal was created");
 
         p.hasVoted[voter] = true;
         p.votes++;
@@ -327,6 +341,8 @@ contract FoundationDAO {
         memberList.push(Member({name: name, account: account}));
         memberIndex[account] = memberList.length; // 1-based index
         isMember[account] = true;
+        membershipNonce++;
+        memberSinceNonce[account] = membershipNonce;
     }
 
     function _removeMember(address account) private {
@@ -342,6 +358,8 @@ contract FoundationDAO {
 
         delete memberIndex[account];
         isMember[account] = false;
+        membershipNonce++;
+        delete memberSinceNonce[account];
     }
 
     // ------------------------------------------------------------------

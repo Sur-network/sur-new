@@ -1,0 +1,20 @@
+# L04 storage / ABI effect (compiler output, optimizer 200, solc 0.8.37+commit.f401782d.Emscripten.clang)
+
+ValidatorsRegistry: existing variables moved: none | new: statusNonce@36, activeCheckpoints@37
+FoundationDAO: existing variables moved: none | new: membershipNonce@5, memberSinceNonce@6
+ValidatorsTreasury: existing variables moved: none | new: none
+BlockRewardDistributor: existing variables moved: none | new: none
+ValidatorsRegistry_GenesisSeed: existing variables moved: none | new: __gap2@21, statusNonce@36, activeCheckpoints@37
+
+# Getter outputs (ABI)
+ValidatorsRegistry.paramProposals: 7 -> 8 outputs (new: createdAtNonce)
+ValidatorsTreasury.capChangeProposals: 7 -> 8 outputs (new: createdAtNonce)
+BlockRewardDistributor.shareProposals: 10 -> 11 outputs (new: validatorNonceAtCreation)
+FoundationDAO.getProposal: 9 -> 9 outputs (unchanged)
+FoundationDAO.getProposalMeta: 4 -> 4 outputs (unchanged)
+
+# New public functions
+ValidatorsRegistry: statusNonce, wasActiveAt
+FoundationDAO: memberSinceNonce, membershipNonce
+ValidatorsTreasury: none
+BlockRewardDistributor: none
