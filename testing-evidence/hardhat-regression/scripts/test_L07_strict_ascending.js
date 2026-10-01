@@ -24,7 +24,7 @@ contract Sink { receive() external payable {} }`;
   await hre.network.provider.send("hardhat_mine", ["0x80"]);
   const d = new hre.ethers.Contract(DIST, art.abi, oracle);
   const [lo, mid, hi] = [s1.address, s2.address, s3.address].sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : 1));
-  const E = hre.ethers.parseEther; const TR = E("1000"), TF = E("200");
+  const E = hre.ethers.parseEther; const TR = E("200"), TF = E("200"); // L05: 200 SUR = approved maximum for 100 blocks at 2 SUR/block
   const R = { fromBlock: 1, toBlock: 100 };
   const ERR = "validators must be strictly ascending";
 

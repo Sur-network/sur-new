@@ -1,0 +1,2 @@
+test_L05_rate_governance exit=1 FAIL
+mut-M31_no_validator_snapshot | SUMMARY: 1 failing/timed-out test(s)

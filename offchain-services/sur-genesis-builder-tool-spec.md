@@ -154,6 +154,12 @@
    ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp   # ✅ P01: اگر هیأت seed می‌شود؛ وگرنه اولین بازتعیین فوراً مجاز است
    ValidatorsTreasury.perPaymentCap() == 50000 ether ; periodCap() == 200000 ether   # ✅ P06 (overlay اجباری — مقداردهی‌ها هنگام تزریق اجرا نمی‌شوند)
    BlockRewardDistributor.lastSettledBlock() == 0   # ✅ P05: اولین بازه باید از بلاک ۱ شروع شود
+   BlockRewardDistributor.rewardRateChangeCount() == 0   # ✅ L05: تاریخچهٔ نرخ مصوب خالی است؛ نرخ اولیه (۲ SUR) ثابت در کد است و در storage نیست
+   BlockRewardDistributor.rateProposalCount() == 0       # ✅ L05: بدون پیشنهاد نرخ
+   BlockRewardDistributor.INITIAL_REWARD_PER_BLOCK() == 2000000000000000000   # ✅ L05 (ثابت کد، wei)
+   BlockRewardDistributor.maxRewardsForRange(1, 1000) == 2000000000000000000000   # ✅ L05: ۲۰۰۰ SUR — بررسی دودویی تا اولین بازه
+   # ✅ L05: اسلات‌های ۲۴ تا ۲۸ قرارداد BlockRewardDistributor (rewardRateChanges، rateProposals، rateBoardVoted، rateValidatorVoted، rateProposalCount)
+   # همه صفرند؛ هیچ مقداردهی storage تازه‌ای برای L05 لازم نیست و هیچ overlay جدیدی اضافه نشد.
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)
    ValidatorsRegistry.exitCooldown() == (مقدار config)

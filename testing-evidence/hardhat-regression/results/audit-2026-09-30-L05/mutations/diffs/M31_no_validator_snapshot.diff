@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M31_no_validator_snapshot/BlockRewardDistributor.sol	2026-10-01 23:13:49.161675545 +0000
+@@ -718,7 +718,6 @@
+         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
+         _requireRateVotable(p);
+         require(!rateValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
+-        require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
+         rateValidatorVoted[id][msg.sender] = true;
+         p.validatorApprovals++;
+         emit RateChangeValidatorVoted(id, msg.sender, p.validatorApprovals, p.requiredValidatorApprovals);

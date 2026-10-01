@@ -1,0 +1,2 @@
+test_L07_strict_ascending exit=1 FAIL
+mut-M16b_no_ascending_validators | SUMMARY: 1 failing/timed-out test(s)

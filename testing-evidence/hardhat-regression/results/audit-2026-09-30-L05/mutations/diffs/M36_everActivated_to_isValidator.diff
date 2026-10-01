@@ -1,0 +1,11 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M36_everActivated_to_isValidator/BlockRewardDistributor.sol	2026-10-01 23:13:49.167084228 +0000
+@@ -963,7 +963,7 @@
+             // including it here. This check is only a minimal backstop against an address that was
+             // never a real validator at all — it is not a substitute for that oracle-side proof, and
+             // does not make this contract's payout self-verifying.
+-            require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
++            require(REGISTRY.isValidator(validator), "BlockRewardDistributor: address was never a legitimate validator");
+ 
+             uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
+             uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;

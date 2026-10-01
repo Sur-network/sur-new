@@ -41,7 +41,8 @@ async function part1() {
   const before = { A: await hre.ethers.provider.getBalance(A.address), B: await hre.ethers.provider.getBalance(B.address), C: await hre.ethers.provider.getBalance(C.address), T: await hre.ethers.provider.getBalance(TRES), F: await hre.ethers.provider.getBalance(FOUND) };
   // L07 (owner decision 2026-09-30): the contract now requires strictly ascending addresses -> sort, keeping each count paired
   const entries = [[A.address, 60], [B.address, 10], [C.address, 30]].sort((x, y) => (BigInt(x[0]) < BigInt(y[0]) ? -1 : 1));
-  const r = await d.distributeRewards({ fromBlock: 1, toBlock: 100 }, entries.map(e => e[0]), entries.map(e => e[1]), E(1000), E(200));
+  // L05 (2026-09-30): reward lowered from 1000 to 200 SUR = the approved maximum for 100 blocks at 2 SUR/block (fixture only)
+  const r = await d.distributeRewards({ fromBlock: 1, toBlock: 100 }, entries.map(e => e[0]), entries.map(e => e[1]), E(200), E(200));
   const rc = await r.wait();
   const paidA = (await hre.ethers.provider.getBalance(A.address)) - before.A;
   const paidB = (await hre.ethers.provider.getBalance(B.address)) - before.B;
@@ -49,8 +50,8 @@ async function part1() {
   const paidT = (await hre.ethers.provider.getBalance(TRES)) - before.T;
   const paidF = (await hre.ethers.provider.getBalance(FOUND)) - before.F;
 
-  const foundationExpected = E(1000) * 1500n / 10000n, validatorDirectExpected = E(1000) * 5000n / 10000n;
-  const treasuryExpected = E(1000) - foundationExpected - validatorDirectExpected;
+  const foundationExpected = E(200) * 1500n / 10000n, validatorDirectExpected = E(200) * 5000n / 10000n;
+  const treasuryExpected = E(200) - foundationExpected - validatorDirectExpected;
   const feeBurnExpected = E(200) * 3000n / 10000n, ordinaryFeesToDistribute = E(200) - feeBurnExpected, membershipPool = E(300), totalBlocks = 100n;
   const expected = (blocks) => (validatorDirectExpected * blocks / totalBlocks) + (ordinaryFeesToDistribute * blocks / totalBlocks) + (membershipPool * blocks / totalBlocks);
 
@@ -60,7 +61,7 @@ async function part1() {
   ok("۱.۴) خزانه دقیقاً طبق فرمول", paidT === treasuryExpected);
   ok("۱.۵) بنیاد دقیقاً طبق فرمول", paidF === foundationExpected);
   ok("۱.۶) بدون بادآورده: A+C فقط سهم واقعی ۹۰ بلاک خودشان", paidA + paidC === expected(60n) + expected(30n));
-  const totalIn = E(1000) + E(200) + E(300);
+  const totalIn = E(200) + E(200) + E(300);
   const totalOut = paidA + paidB + paidC + paidT + paidF + feeBurnExpected;
   ok("۱.۷) تراز کامل: ورودی == خروجی", totalIn === totalOut, `${hre.ethers.formatEther(totalIn)} == ${hre.ethers.formatEther(totalOut)}`);
 
@@ -131,7 +132,7 @@ async function part3and4() {
   const lastSettled = await dReal.lastSettledBlock(); // hardhat_setCode فقط کد را عوض می‌کند، storage قدیمیِ همین آدرس (از بخش ۱) باقی می‌ماند
   const fromB = lastSettled + 1n, toB = fromB + 9n;
   await hre.network.provider.send("hardhat_mine", ["0x" + (toB + 5n).toString(16)]);
-  await (await dReal.distributeRewards({ fromBlock: fromB, toBlock: toB }, [D.address], [10], E(100), E(0))).wait();
+  await (await dReal.distributeRewards({ fromBlock: fromB, toBlock: toB }, [D.address], [10], E(20), E(0))).wait(); // L05: 20 SUR = approved maximum for this 10-block range (fixture only)
   const dPaid = (await hre.ethers.provider.getBalance(D.address)) - dBalBefore;
   ok("۴.۱) D — با ValidatorInfo کاملاً پاک‌شده در Registry واقعی — همچنان پرداخت واقعی گرفت (everActivated زنده مانده)", dPaid > 0n, `دریافت: ${hre.ethers.formatEther(dPaid)}`);
 

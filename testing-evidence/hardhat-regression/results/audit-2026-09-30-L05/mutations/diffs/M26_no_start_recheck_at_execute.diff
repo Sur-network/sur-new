@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M26_no_start_recheck_at_execute/BlockRewardDistributor.sol	2026-10-01 23:13:49.156147608 +0000
+@@ -738,7 +738,6 @@
+             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
+             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
+         );
+-        _requireRateStartOk(p.startBlock);
+         p.executed = true;
+         rewardRateChanges.push(RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock}));
+         emit RateChangeExecuted(id, p.startBlock, p.ratePerBlock);

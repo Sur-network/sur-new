@@ -1,0 +1,2 @@
+test_L05_rate_governance exit=1 FAIL
+mut-M27_no_ascending_check | SUMMARY: 1 failing/timed-out test(s)

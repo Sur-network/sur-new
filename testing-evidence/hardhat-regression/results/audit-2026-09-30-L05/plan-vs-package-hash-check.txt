@@ -1,0 +1,16 @@
+# Plan vs package
+08b8e93d6bcf3ce0d0ce9691fb73a21a2944a900ea10d1fca0ffff68eabe99bd  technical-design/sur-smart-contracts-reference.md
+08b8e93d6bcf3ce0d0ce9691fb73a21a2944a900ea10d1fca0ffff68eabe99bd  /mnt/user-data/uploads/sur-smart-contracts-reference.md
+fdb3ad9038657e5b51694ba5d40eb14637377f835c99741ff9331f0e679d43ac  technical-design/sur-audit-2026-09-30-final-status.md
+fdb3ad9038657e5b51694ba5d40eb14637377f835c99741ff9331f0e679d43ac  /mnt/user-data/uploads/sur-audit-2026-09-30-final-status.md
+c5cbc8497a99c20b2d59b946d1feb0c86110b508b7334340d02be19396460d30  offchain-services/sur-reward-router-spec.md
+c5cbc8497a99c20b2d59b946d1feb0c86110b508b7334340d02be19396460d30  /mnt/user-data/uploads/sur-reward-router-spec.md
+e19c2600a61694e8cd6a7d06dd638eee01c5481add150862baa6da942eed4611  offchain-services/sur-genesis-builder-tool-spec.md
+e19c2600a61694e8cd6a7d06dd638eee01c5481add150862baa6da942eed4611  /mnt/user-data/uploads/sur-genesis-builder-tool-spec.md
+95db27f9caf1af364de7bfc80d7066d0eb1ddb8dab10d676c2a1535f94da7221  offchain-services/sur-governance-dashboard-claudecode-brief.md
+95db27f9caf1af364de7bfc80d7066d0eb1ddb8dab10d676c2a1535f94da7221  /mnt/user-data/uploads/sur-governance-dashboard-claudecode-brief.md
+# contracts (cmp IDENTICAL after writing to Plan):
+e59c0d5103a6584e63d994bceb44d9730099e29fc3c1f7b40339c8bdfe47b340  /home/claude/pkgL05/contracts/BlockRewardDistributor.sol
+e59c0d5103a6584e63d994bceb44d9730099e29fc3c1f7b40339c8bdfe47b340  /tmp/v5/en.sol
+4e8f60b39023b02984811697ec8c9fa0b7475a240e7a0fe4c3273c7c84d3edbf  /home/claude/pkgL05/contracts-fa/BlockRewardDistributor.sol
+4e8f60b39023b02984811697ec8c9fa0b7475a240e7a0fe4c3273c7c84d3edbf  /tmp/v5/fa.sol

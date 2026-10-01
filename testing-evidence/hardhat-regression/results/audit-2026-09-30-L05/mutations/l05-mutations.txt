@@ -1,0 +1,18 @@
+M22_no_reward_cap | test_L05_reward_cap | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: A3 A4 B4
+M35_search_off_by_one | test_L05_reward_cap | runner_exit=1 | نتیجه: 21/22 گذر | failed: B6
+M23_no_delay | test_L05_rate_governance | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: T2 T3
+M24_delay_from_creation | test_L05_rate_governance | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: T2 T3
+M25_no_board_guard_at_execute | test_L05_rate_governance | runner_exit=1 | نتیجه: 53/55 گذر | failed: E3 E4
+M26_no_start_recheck_at_execute | test_L05_rate_governance | runner_exit=1 | نتیجه: 47/55 گذر | failed: E6 E7 E9 E10 C1 C2 C1 C2
+M27_no_ascending_check | test_L05_rate_governance | runner_exit=1 | نتیجه: 51/55 گذر | failed: C1 C2 C1 C2
+M28_no_lead_distance | test_L05_rate_governance | runner_exit=1 | نتیجه: 51/55 گذر | failed: P2 E5 E6 E7
+M29_voting_expiry_blocks_execution | test_L05_rate_governance | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: -
+M30_board_uses_seat_flag | test_L05_rate_governance | runner_exit=1 | نتیجه: 54/55 گذر | failed: B4
+M31_no_validator_snapshot | test_L05_rate_governance | runner_exit=1 | نتیجه: 53/55 گذر | failed: V5 V6
+M32_board_quorum_2 | test_L05_rate_governance | runner_exit=1 | نتیجه: 54/55 گذر | failed: G1
+M33_no_future_check | test_L05_rate_governance | runner_exit=1 | نتیجه: 52/55 گذر | failed: P4 E8 E9
+M34_votes_after_approval | test_L05_rate_governance | runner_exit=1 | نتیجه: 54/55 گذر | failed: V4
+M16b_no_ascending_validators | test_L07_strict_ascending | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: 1 2 3 4 5
+M36_everActivated_to_isValidator | verify_everActivated_policy | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: -
+PRE_L05_M36 | verify_everActivated_policy_preL05fixture | runner_exit=1 | خطا: VM Exception while processing transaction: reverted with reason s | failed: -
+DONE

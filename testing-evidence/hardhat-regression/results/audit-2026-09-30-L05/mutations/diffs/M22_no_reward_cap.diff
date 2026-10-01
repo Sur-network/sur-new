@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M22_no_reward_cap/BlockRewardDistributor.sol	2026-10-01 23:13:49.151559858 +0000
+@@ -619,7 +619,6 @@
+         _settleRange(range, prep.totalBlocks); // P05
+         // L05: totalRewards may not exceed the approved reward of the blocks in this (already validated, contiguous) range.
+         // Fees and membership fees are outside this cap; split and burn rules are unchanged.
+-        require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
+ 
+         epochCount++;
+         uint256 epochId = epochCount;

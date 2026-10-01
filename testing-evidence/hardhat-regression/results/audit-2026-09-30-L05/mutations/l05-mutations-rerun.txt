@@ -1,0 +1,5 @@
+M23_no_delay | runner_exit=1 | failed checks: T2 T3 T4 | hard abort: no | نتیجه: 54/57 گذر
+M24_delay_from_creation | runner_exit=1 | failed checks: T2 T3 T4 | hard abort: no | نتیجه: 54/57 گذر
+M29_voting_expiry_blocks_execution | runner_exit=1 | failed checks: T7 | hard abort: no | نتیجه: 56/57 گذر
+M32_board_quorum_2 | runner_exit=1 | failed checks: G1 B5 | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+DONE

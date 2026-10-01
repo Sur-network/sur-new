@@ -1,0 +1,2 @@
+verify_everActivated_policy exit=1 FAIL
+mut-M36_everActivated_to_isValidator | SUMMARY: 1 failing/timed-out test(s)

@@ -1,0 +1,21 @@
+source dir: /home/claude/w/contracts  solc 0.8.24+commit.e11b9ed9.Emscripten.clang
+✅ F0) helper patched with 15 distinct test-signer members
+✅ F1) getProposal() ABI unchanged (9 outputs, same order)
+✅ F2) getProposalMeta() exists: description, requiredVotes, createdAt, expiresAt
+✅ F3) proposals mapping is NOT publicly readable (no auto getter) — hence the new getter
+✅ F4) memberList seeded: 15 members
+✅ F5) description returned exactly  fund workshop #1
+✅ F6) requiredVotes snapshot = requiredVotesNow at creation (15 members, simple majority)  8 vs 8
+✅ F7) createdAt = creation block timestamp; expiresAt = createdAt + PROPOSAL_EXPIRY
+✅ F8) AddMember executed: 16 members now
+✅ F9) after membership change, getProposalMeta still returns the ORIGINAL snapshot (not the live quorum)  stored=8, requiredVotesNow=9
+✅ F10) and requiredVotesNow() changed — using it for an existing proposal would be wrong  8 -> 9
+✅ F11) getProposal() still returns its original fields for the same proposal
+✅ F12) never-created id → empty/zero (same behaviour as getProposal)
+✅ R0) registry helper patched with 7 distinct test-signer validators
+✅ R1) paramProposals(id) is public and exposes requiredVotes, createdAt, expiresAt  key,newValue,votes,requiredVotes,createdAt,expiresAt,executed,createdAtNonce
+✅ R2) requiredVotes snapshot equals requiredVotesNow() at creation (7 active)  4
+✅ R3) createdAt = creation block timestamp and expiresAt > createdAt  1790897626 / 1793489626
+✅ R4) key and value decoded by field name from the real ABI (key=3 RecoveryPeriod, value=7200)
+
+نتیجه: 18/18 گذر

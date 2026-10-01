@@ -1,0 +1,3 @@
+test_L05_reward_cap exit=0 PASS
+test_L05_rate_governance exit=0 PASS
+l05f-fa-solc-0.8.37 | SUMMARY: 0 failing/timed-out test(s)

@@ -1,0 +1,10 @@
+# L05 (cap + governance) — storage / ABI / size effect, BlockRewardDistributor (compiler output, optimizer 200, solc 0.8.37+commit.f401782d.Emscripten.clang)
+
+existing variables moved: none
+new storage: rewardRateChanges@slot 24, rateProposals@slot 25, rateBoardVoted@slot 26, rateValidatorVoted@slot 27, rateProposalCount@slot 28
+new public functions: INITIAL_REWARD_PER_BLOCK, MIN_RATE_CHANGE_LEAD_BLOCKS, RATE_CHANGE_BOARD_APPROVALS, RATE_CHANGE_DELAY, RATE_VOTING_EXPIRY, boardVoteRateChange, executeRateChange, maxRewardsForRange, proposeRateChange, rateChangeStatus, rateProposalCount, rateProposals, rewardRateAt, rewardRateChange, rewardRateChangeCount, validatorVoteRateChange
+new events: RateChangeApproved, RateChangeBoardVoted, RateChangeExecuted, RateChangeProposed, RateChangeValidatorVoted
+distributeRewards signature unchanged: true
+shareProposals outputs: 11 -> 11
+rateProposals outputs (new getter): 11
+runtime bytecode bytes: 12197 -> 18009 (EIP-170 limit 24576)

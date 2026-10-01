@@ -1,0 +1,4 @@
+✅ کامپایل موفق
+ok board_artifact.json
+ok treasury_artifact.json
+ok distributor_artifact.json

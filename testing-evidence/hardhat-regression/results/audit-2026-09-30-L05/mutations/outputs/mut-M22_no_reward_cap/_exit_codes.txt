@@ -1,0 +1,2 @@
+test_L05_reward_cap exit=1 FAIL
+mut-M22_no_reward_cap | SUMMARY: 1 failing/timed-out test(s)

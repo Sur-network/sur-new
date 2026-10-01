@@ -1,0 +1,2 @@
+test_L05_rate_governance exit=1 FAIL
+mut-M33_no_future_check | SUMMARY: 1 failing/timed-out test(s)

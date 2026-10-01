@@ -1,0 +1,11 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M30_board_uses_seat_flag/BlockRewardDistributor.sol	2026-10-01 23:13:49.160565299 +0000
+@@ -696,7 +696,7 @@
+ 
+     /// @notice Board chamber: needs live board authority; the proposal must still belong to the current board composition.
+     function boardVoteRateChange(uint256 id) external {
+-        require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
++        require(BOARD_CONTRACT.isBoardMember(msg.sender), "BlockRewardDistributor: caller has no live board authority");
+         RateProposal storage p = rateProposals[id];
+         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
+         require(

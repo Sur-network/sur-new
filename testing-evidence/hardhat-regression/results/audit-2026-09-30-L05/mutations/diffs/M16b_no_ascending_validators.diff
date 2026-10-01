@@ -1,0 +1,12 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M16b_no_ascending_validators/BlockRewardDistributor.sol	2026-10-01 23:13:49.168201850 +0000
+@@ -939,9 +939,6 @@
+             // L07 (audit 2026-09-30, owner decision): addresses must be STRICTLY ascending. This rejects duplicates
+             // (which previously overwrote the per-epoch records while paying every entry) and unsorted lists. The
+             // RewardRouter must aggregate blocks per miner and sort by address before submitting.
+-            if (i > 0) {
+-                require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
+-            }
+             if (blocksMined[i] == 0) continue;
+ 
+             address validator = validators[i];

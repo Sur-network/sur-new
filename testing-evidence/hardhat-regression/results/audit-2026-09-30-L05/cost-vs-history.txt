@@ -1,0 +1,10 @@
+# Cost of maxRewardsForRange vs history length (gas, estimateGas, short range with NO rate change inside it)
+BEFORE (linear scan over all entries up to toBlock; measured on the cap-only sandbox build): 4 entries = 34784 | 40 entries = 129046 | 400 entries = 1072777
+AFTER  (binary search; raw lines from test_L05_reward_cap, solc 0.8.37, EN):
+✅ D1) same changes crossed: a 10,000,000-block range costs about the same as a 2,000-block range (≤ +2%)  2k=37333 10M=37345
+✅ D2) 40 changes cost more than 4 (cost scales with changes)  4 changes=37345 40 changes=140649
+✅ D3) history length 4 -> 400 entries: short range without a change inside costs < 2x (binary search; was 31x with a linear scan)  4=30089 40=37889 400=45689
+
+Governance operations vs history (test_L05_rate_governance, K1/K2):
+✅ K1) propose: gas with 400 old entries within +3% of gas with none  0=198556 400=200945
+✅ K2) execute: gas with 400 old entries within +3% of gas with none  0=104599 400=89888

@@ -1,0 +1,11 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M32_board_quorum_2/BlockRewardDistributor.sol	2026-10-01 23:13:49.162776070 +0000
+@@ -324,7 +324,7 @@
+     // L05 governance — approved reward-rate changes (owner decision, audit 2026-09-30)
+     // ------------------------------------------------------------------
+     /// @notice Board approvals needed: 3 of the 5-member board (== BOARD_SIZE / 2 + 1).
+-    uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 3;
++    uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 2;
+     /// @notice Voting phase only. An approved proposal waiting for its delay/execution is NOT removed by this expiry.
+     uint256 public constant RATE_VOTING_EXPIRY = 30 days;
+     /// @notice Starts when BOTH chambers have completed.

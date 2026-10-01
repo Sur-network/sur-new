@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 22:41:26.403725925 +0000
++++ /home/claude/w/mutG/M23_no_delay/BlockRewardDistributor.sol	2026-10-01 23:13:49.152779283 +0000
+@@ -733,7 +733,6 @@
+         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
+         require(!p.executed, "BlockRewardDistributor: already executed");
+         require(p.approvedAt != 0, "BlockRewardDistributor: not approved by both chambers");
+-        require(block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY, "BlockRewardDistributor: execution delay has not elapsed");
+         require(
+             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
+             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"

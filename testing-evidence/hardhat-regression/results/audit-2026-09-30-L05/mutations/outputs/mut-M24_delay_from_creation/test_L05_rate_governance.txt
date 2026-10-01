@@ -1,0 +1,37 @@
+✅ R0) real Board seated A0..A4; boardVersion = 2; 10 validators active
+
+=== G — constants and who can write the history ===
+✅ G1) constants: board 3 (= BOARD_SIZE/2+1 = 3 of 5), voting 30 d, delay 7 d, lead 201,600 blocks
+✅ G2) initial history empty, no proposals
+✅ G3) the only state-changing functions touching rate governance are propose/boardVote/validatorVote/execute (no oracle or owner setter)  boardVoteRateChange,executeRateChange,proposeRateChange,validatorVoteRateChange
+
+=== P — proposing ===
+✅ P1) a non-validator cannot propose
+✅ P2) start = executing block + 201,599 rejected
+✅ P3) start = executing block + 201,600 accepted (exact boundary)
+✅ P4) start not in the future (= current block) rejected with its own message
+✅ P5) rate above uint128 rejected
+✅ P6) required validator approvals = ceil(2/3 of the active set at creation): 10→7, 9→6, 8→6, 7→5, each frozen  true | true | true | true
+
+=== B — board chamber (3 of 5, live authority) ===
+✅ B1) a non-board validator cannot cast a board vote
+✅ B2) two board votes: nothing approved
+✅ B3) the same member cannot vote twice
+✅ B4) a member who requested exit has no live authority (before syncBoard) and cannot vote
+
+=== V — validator chamber (two thirds of the electorate at creation, L04) ===
+✅ V1) board chamber complete, validators not: still not approved
+✅ V2) 6 of the required 7: not approved
+✅ V3) the 7th vote completes both chambers: approvedAt = that block's timestamp; RateChangeApproved(executableAt = +7 d) emitted
+✅ V4) further votes after approval are refused (voting closed)
+✅ V5) a validator activated after creation cannot vote (L04)
+✅ V6) suspended AT creation, back later: not eligible
+✅ V7) eligible at creation but suspended now: cannot vote while suspended
+✅ V8) recovered: may vote once, and not again
+✅ V9) a voter who then exits keeps the recorded vote; no new vote possible
+
+=== T — time: delay from BOTH chambers, voting expiry, queue not removed ===
+✅ T1) approvedAt is when the SECOND chamber completed (10 days after the board), not when the first did
+❌ T2) executing at board-completion + 7 d is refused: the delay has not started counting from there → did NOT revert
+❌ T3) executing 1 second before approvedAt + 7 d is refused → wrong reason: BlockRewardDistributor: already executed
+خطا: VM Exception while processing transaction: reverted with reason string 'BlockRewardDistributor: already executed'
