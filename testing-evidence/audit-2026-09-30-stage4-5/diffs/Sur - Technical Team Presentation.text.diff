@@ -1,5 +1,5 @@
 --- /home/claude/w/ppt/tech.orig.md	2026-09-30 22:20:56.547718911 +0000
-+++ /home/claude/w/ppt/tech.new.md	2026-10-01 04:47:33.824291304 +0000
++++ /tmp/t.md	2026-10-01 05:26:21.948222101 +0000
 @@ -93,11 +93,11 @@
  | تابع | چه کسی / نصاب |
  | --- | --- |
@@ -51,7 +51,7 @@
  | receive() | هرکسی — تأمین مالی از FoundationDAO |
 -| currentPriceToman() / isSaleActive() | view — مستقل از هر گزارشی، از block.timestamp |
 -| reportPayment(buyer, tomanAmount, ref) | فقط paymentOracle — با چک processedPayments |
-+| currentPriceMilliToman() (تسویه) / currentPriceToman() (نمایش) / isSaleActive() | view — مستقل از هر گزارشی، از block.timestamp |
++| currentPriceMilliToman() [settlement] / currentPriceToman() [display] / isSaleActive() | view — مستقل از هر گزارشی، از block.timestamp |
 +| reportPayment(buyer, tomanAmount, ref) | فقط paymentOracle — تسویه با currentPriceMilliToman؛ چک processedPayments |
  | setPaymentOracle(addr) | فقط FoundationDAO (از طریق proposeExecute) |
  | sweepUnsold(to) | فقط FoundationDAO — فقط بعد از پایان دوره‌ی فروش |

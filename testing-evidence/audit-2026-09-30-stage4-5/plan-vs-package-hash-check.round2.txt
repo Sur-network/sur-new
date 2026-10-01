@@ -1,0 +1,5 @@
+# Plan vs package — files re-read from Plan after their final edit (this round)
+65f415f98a79758a58d0d198a44dc8db0bbb7f3b216c7a8264ec40956b82fa4c  technical-design/sur-audit-2026-09-30-final-status.md
+65f415f98a79758a58d0d198a44dc8db0bbb7f3b216c7a8264ec40956b82fa4c  /mnt/user-data/uploads/sur-audit-2026-09-30-final-status.md
+2838784eaaba9f8af62b2ac060c4073227ee6a555c688ca65e01b31d80756d5f  sur-master-open-items.md
+2838784eaaba9f8af62b2ac060c4073227ee6a555c688ca65e01b31d80756d5f  /mnt/user-data/uploads/sur-master-open-items.md
