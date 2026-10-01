@@ -1,0 +1,26 @@
+# Plan vs package — files re-read from Plan via the connector after their final edit (stages 4-5)
+3977084370f8d2bb2cc2b1d4d637ad0ff1042acfcf364e4f41bca2dd43d65dd3  technical-design/sur-smart-contracts-reference.md
+3977084370f8d2bb2cc2b1d4d637ad0ff1042acfcf364e4f41bca2dd43d65dd3  /mnt/user-data/uploads/sur-smart-contracts-reference.md
+169e7c1b185503d73dc998c5332a80e0a6b49b345297ada76f30c46abab54757  economics/sur-tokenomics.md
+169e7c1b185503d73dc998c5332a80e0a6b49b345297ada76f30c46abab54757  /mnt/user-data/uploads/sur-tokenomics.md
+ddea01cbbc0a88bfd7bea9641508cbe5affc977bed98ae1438898fa450bcb976  governance/sur-organizational-structure.md
+ddea01cbbc0a88bfd7bea9641508cbe5affc977bed98ae1438898fa450bcb976  /mnt/user-data/uploads/sur-organizational-structure.md
+740aef3ccbde803212a6dd434169e2effd153b7b1ddf5df5f8c13f48df2773ac  sur-comprehensive-project-document.md
+740aef3ccbde803212a6dd434169e2effd153b7b1ddf5df5f8c13f48df2773ac  /mnt/user-data/uploads/sur-comprehensive-project-document.md
+596e6cb1159b0b0c7c59250509d847944b4a6ae298c4b34a8150f91607a1bc58  business/sur-marketing-roadmap.md
+596e6cb1159b0b0c7c59250509d847944b4a6ae298c4b34a8150f91607a1bc58  /mnt/user-data/uploads/sur-marketing-roadmap.md
+3045b3111ba0c8fc8144567e06b1d39301858b83a05b89e18745a2e50e31a6a8  business/sur-whitepaper.md
+3045b3111ba0c8fc8144567e06b1d39301858b83a05b89e18745a2e50e31a6a8  /mnt/user-data/uploads/sur-whitepaper.md
+a8628a743e7171fcbadb3c18e7c47d10a952632413708ecfdbf53b0c1aa73f38  sur-final-decisions-2026-09-28.md
+a8628a743e7171fcbadb3c18e7c47d10a952632413708ecfdbf53b0c1aa73f38  /mnt/user-data/uploads/sur-final-decisions-2026-09-28.md
+fa0cc7a5ef2a9a3e0e18c0bc9652fadc97b31034d78766ba6cddcd6ae6b544b4  technical-design/sur-reward-policy-decision-2026-09-29.md
+fa0cc7a5ef2a9a3e0e18c0bc9652fadc97b31034d78766ba6cddcd6ae6b544b4  /mnt/user-data/uploads/sur-reward-policy-decision-2026-09-29.md
+60c54152a8f8b263ded4a5decffb57d862c9ec9964c2b448a920b2ac4b5a3742  sur-master-open-items.md
+60c54152a8f8b263ded4a5decffb57d862c9ec9964c2b448a920b2ac4b5a3742  /mnt/user-data/uploads/sur-master-open-items.md
+16c42e93bbd78c66d4c8cb35cd1c77495538e09507a6d04301f102e4d916d74e  offchain-services/sur-reward-router-spec.md
+16c42e93bbd78c66d4c8cb35cd1c77495538e09507a6d04301f102e4d916d74e  /mnt/user-data/uploads/sur-reward-router-spec.md
+09092866024fbb2928cf4852e5626b3981c85fd575285a4d9cc9c1d96ad9725b  technical-design/sur-audit-2026-09-30-final-status.md
+09092866024fbb2928cf4852e5626b3981c85fd575285a4d9cc9c1d96ad9725b  /mnt/user-data/uploads/sur-audit-2026-09-30-final-status.md
+# SVGs: byte-compared with Plan after writing (IDENTICAL)
+b14ba7a0180b4839e9c701c835738925c4c9b3c44c2ed4af4fc77409cd10d354  diagrams/sur_foundation_org_chart.svg
+8f5d1a080ba372594dcd7ce36801e632b86f74c8cece0d85187eacd6cda7e705  diagrams/sur_validators_assembly_org_chart.svg

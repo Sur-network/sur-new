@@ -1,4 +1,4 @@
-# Incremental package — audit 2026-09-30: stage 1 (L01–L03), D05 contract change, stage-3 document updates
+# Integrated package — audit 2026-09-30: stages 1–5 (contracts, documents, diagrams, presentations)
 
 **This ZIP is incremental.** It contains only the files added or changed in stage 1. It does NOT contain the compile
 scripts, the pre-existing regression scripts, `node_modules`, or any other dependency. Extract ALL of it at the root of the Plan
@@ -81,6 +81,16 @@ removed time cap, `shareProposals(id)` now 10 outputs, L01/L02 rules) and the st
 documents are included at their Plan paths; `diffs/` has a unified diff of each against its pre-stage-3 version, and
 `docs-baseline-pre-stage3.sha256` the pre-stage-3 hashes. Consumer search: no document or script decodes
 `shareProposals(id)` positionally (details in the stage-1 report, section 5).
+
+## Stages 4–5 (`testing-evidence/audit-2026-09-30-stage4-5/`)
+Documents (D02, D03, D10–D14 and related stale statements), both SVGs (D07, D08) and both presentations. Replacement
+paths: every file is at its Plan path inside this ZIP — including `presentations/Sur - Board Presentation.pptx` and
+`presentations/Sur - Technical Team Presentation.pptx`, which must be copied over the Plan copies by hand (binary files
+could not be written to Plan directly). `diffs/` holds unified diffs against the pre-audit versions (text diffs for the
+decks, extracted with markitdown); `slide-renders/` the inspected renders (changed slides at readable size, all slides as
+overview sheets, the SVG renders, the embedded-media contact sheet); `pptx-validate.txt` the validator output (both PASS);
+`*-baseline*.sha256` the pre-edit hashes. Full ID status table and slide decision-coverage matrix:
+`technical-design/sur-audit-2026-09-30-final-status.md`.
 
 ## Limits
 All tests are Hardhat (in-process EVM). None is a Besu/QBFT run. "Both compilers" means two independent Hardhat runs.

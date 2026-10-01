@@ -1,0 +1,106 @@
+--- /home/claude/w/ppt/tech.orig.md	2026-09-30 22:20:56.547718911 +0000
++++ /home/claude/w/ppt/tech.new.md	2026-10-01 04:47:33.824291304 +0000
+@@ -93,11 +93,11 @@
+ | تابع | چه کسی / نصاب |
+ | --- | --- |
+ | proposeAddMember / proposeRemoveMember | هر عضو — نصاب دوسوم (۱۰/۱۵) |
+-| proposeSendETH | هر عضو — نصاب دوسوم (۱۰/۱۵) |
++| proposeSendETH | هر عضو — نصاب اکثریت ساده (۸/۱۵) |
+ | proposeSendERC20 | هر عضو — نصاب اکثریت ساده (۸/۱۵) |
+ | proposeExecute | هر عضو — نصاب اکثریت ساده (۸/۱۵) — فراخوانی دلخواه |
+ | vote(proposalId) | هر عضو — رسیدن به نصاب = اجرای خودکار |
+-| getMemberCount / getAllMembers / getProposal | view — هرکسی |
++| getMemberCount / getAllMembers / getProposal / getProposalMeta | view — هرکسی |
+ 
+ ![/home/claude/deck2/assets/logo.png](Image0.jpg)
+ پیاده‌سازی فنی طرح جدید سور — تیم فنی بنیاد
+@@ -206,9 +206,9 @@
+ | voteFor(candidate) / unvoteFor(candidate) | هر ولیدیتور Active با هویت ثبت‌شده |
+ | refreshBoard() | permissionless — حداکثر هر ۳۰ روز (هیأت خالی: هر زمان) |
+ | clearStaleVotes(validator) | permissionless — بعد از recoveryPeriod+30 روز Demoted |
+-| proposeRotateOracle / proposeRotateVerifier | عضو هیأت — رأی داخلی اکثریت |
+-| proposeApproveBudget | عضو دارای اختیار — حداقل ۳ رأی، در سقف‌های خزانه |
+-| proposeSetEntryThresholdBase / GrowthFactor / MembershipFeeBps | عضو هیأت — رأی داخلی اکثریت |
++| proposeRotateOracle / proposeRotateVerifier | عضو دارای اختیار زنده — رأی داخلی اکثریت |
++| proposeApproveBudget | عضو دارای اختیار زنده — حداقل ۳ رأی، در سقف‌های خزانه (تنها مسیر خرج) |
++| proposeSetEntryThresholdBase / GrowthFactor / MembershipFeeBps | عضو دارای اختیار زنده — رأی داخلی اکثریت |
+ 
+ ![/home/claude/deck2/assets/logo.png](Image0.jpg)
+ پیاده‌سازی فنی طرح جدید سور — تیم فنی بنیاد
+@@ -220,7 +220,7 @@
+ ValidatorsBoard — حاکمیت
+ ۵ صندلی؛ رأی آزاد، ترکیب ماهانه
+ رأی آزاد و دائمی؛ ترکیب عادی هر ۳۰ روز
+-refreshBoard() حداکثر هر ۳۰ روز ترکیب را اعمال می‌کند؛ صفر رأی به‌تنهایی هیأت را خالی نمی‌کند — عضو فعلی کرسی‌اش را حفظ می‌کند؛ درخواست خروج اختیار عضو را فوراً قطع و جانشین را فعال می‌کند؛ کمتر از ۳ عضو دارای اختیار = توقف پرداخت
++refreshBoard() حداکثر هر ۳۰ روز ترکیب را اعمال می‌کند؛ عضو فعلی با صفر رأی هم کرسی‌اش را حفظ می‌کند (حداکثر یک چالشگر با رأی بیشتر جای کم‌رأی‌ترین را می‌گیرد)؛ درخواست خروج اختیار را فوراً قطع و جانشین را فعال می‌کند؛ تعلیق تا بازتعیین ماهانه اختیار را قطع نمی‌کند؛ کمتر از ۳ عضو دارای اختیار = توقف پرداخت
+ 
+ ![/home/claude/deck2/icons/sync.png](Image0.jpg)
+ 
+@@ -261,7 +261,7 @@
+ | جنبه | توضیح فنی |
+ | --- | --- |
+ | دریافت ریوارد/فی | اعتبار مستقیم state-trie (miningbeneficiary) — بدون فراخوانی، بدون event |
+-| distributeRewards(range{from,to}, validators[], blocksMined[], totalRewards, totalFees) | فقط distributionOracle، هر epoch (~۲۳ ساعت)؛ بازه باید دقیقاً بعد از lastSettledBlock شروع شود |
++| distributeRewards(range{from,to}, validators[], blocksMined[], totalRewards, totalFees) | فقط distributionOracle، هر epoch (~۲۳ ساعت)؛ بازه دقیقاً بعد از lastSettledBlock؛ هر گیرنده everActivated؛ استحقاق تاریخی (N−1) با اوراکل — مرز اعتماد |
+ | تقسیم | ۱۵٪ کل ریوارد → FoundationDAO (ثابت)؛ ۵۰٪ پیش‌فرض کل ریوارد (حکمرانی‌شونده ۴۰-۶۵٪) → مستقیم ولیدیتورها؛ باقی‌مانده → ValidatorsTreasury؛ از فی معمولی ۳۰٪ سوزانده، ۷۰٪+۱۰۰٪ کارمزد عضویت → ولیدیتورها به نسبت بلاک |
+ | setDistributionOracle | فقط ValidatorsBoard |
+ 
+@@ -319,8 +319,8 @@
+ | تابع | چه کسی |
+ | --- | --- |
+ | receive() | هرکسی — تأمین مالی از FoundationDAO |
+-| currentPriceToman() / isSaleActive() | view — مستقل از هر گزارشی، از block.timestamp |
+-| reportPayment(buyer, tomanAmount, ref) | فقط paymentOracle — با چک processedPayments |
++| currentPriceMilliToman() (تسویه) / currentPriceToman() (نمایش) / isSaleActive() | view — مستقل از هر گزارشی، از block.timestamp |
++| reportPayment(buyer, tomanAmount, ref) | فقط paymentOracle — تسویه با currentPriceMilliToman؛ چک processedPayments |
+ | setPaymentOracle(addr) | فقط FoundationDAO (از طریق proposeExecute) |
+ | sweepUnsold(to) | فقط FoundationDAO — فقط بعد از پایان دوره‌ی فروش |
+ 
+@@ -396,9 +396,9 @@
+ | سرویس | نقش | کلید |
+ | --- | --- | --- |
+ | RewardRouter | محاسبه و توزیع دوره‌ای ریوارد/فی | distributionOracle |
+-| Verifier | احراز موبایل/تلگرام + گزارش liveness | verifier |
++| Verifier | گزارش liveness و وضعیت ولیدیتور | verifier |
+ | PaymentReporter | گزارش پرداخت تأییدشده به SurenSale | paymentOracle |
+-| Identity Service | یکپارچه‌سازی eKYC + matching API برای دپ‌ها | identityOracle |
++| Identity Service | eKYC + احراز موبایل/تلگرام + matching API | identityOracle |
+ 
+ ![/home/claude/deck2/assets/logo.png](Image0.jpg)
+ پیاده‌سازی فنی طرح جدید سور — تیم فنی بنیاد
+@@ -423,13 +423,13 @@
+ ![/home/claude/deck2/icons/search.png](Image0.jpg)
+ 
+ distributeRewards()
+-Aggregate + چک isValidator
++Aggregate + استحقاق تاریخی
+ trace_block + receipt
+ اسکن بلاک‌ها
+ بازه‌ی دقیق و پیوسته؛ امضا با کلید Vault؛ state فقط بعد از تأیید واقعی commit می‌شود
+-فقط آدرس‌های هنوز معتبر لحظه‌ی ارسال
+-ریوارد از trace، فی از gasUsed×effectiveGasPrice
+-از lastSettledBlock+1 تا head−1 — بدون margin (QBFT نهایی‌شدن فوری دارد)
++فعال هنگام تولید (N−1)؛ قرارداد everActivated را چک می‌کند
++ریوارد از trace؛ فی = gasUsed×(effectiveGasPrice−baseFee)
++از lastSettledBlock+1 تا L (آخرین بلاک مهرشده) — بدون margin
+ 
+ ![/home/claude/deck2/assets/logo.png](Image4.jpg)
+ پیاده‌سازی فنی طرح جدید سور — تیم فنی بنیاد
+@@ -548,7 +548,7 @@
+ <!-- Slide number: 30 -->
+ ابزار genesis + بلاک اکسپلورر
+ زیرساخت راه‌اندازی و شفافیت
+-ابزار ساخت genesis.json — هنوز اجرا نشده، فقط طراحی شده
++ابزار production ساخت genesis.json — هنوز پیاده‌سازی نشده؛ آزمون‌های Besu با اسکریپت آزمایشی بودند
+ برای ۳ قرارداد (FoundationDAO, ValidatorsRegistry, ValidatorsBoard): دیپلوی روی زنجیره‌ی موقت (Anvil/Hardhat)، استخراج storage. برای ۳ قرارداد دیگر (BlockRewardDistributor, ValidatorsTreasury, IdentityRegistry): نوشتن مستقیم اسکالرها در alloc، بدون شبیه‌سازی.
+ 
+ ![/home/claude/deck2/icons/cubes.png](Image0.jpg)
+@@ -609,7 +609,7 @@
+ | نصاب دوسوم برای چرخش paymentOracle اگر مبالغ بزرگ‌تر شد | نیازمند تغییر کد FoundationDAO |
+ | عدد دقیق CONFIRMATIONS برای RewardRouter | حل شد — حذف کامل (QBFT نهایی‌شدن فوری) |
+ | یکسان‌سازی کتابخانه (viem/ethers.js) بین سرویس‌ها | حل شد — هر دو روی viem یکسان شدند |
+-| اجرای واقعی ابزار genesis.json | هنوز انجام نشده — طراحی کامل، پیاده‌سازی باقی |
++| اجرای واقعی ابزار genesis.json | هنوز انجام نشده (T02)؛ آزمون‌های Besu با اسکریپت آزمایشی؛ کد فعلی روی Besu آزموده نشده |
+ | انتخاب شرکت حسابرسی امنیتی | باز — sur-security-audit-plan.md |
+ 
+ ![/home/claude/deck2/assets/logo.png](Image0.jpg)
