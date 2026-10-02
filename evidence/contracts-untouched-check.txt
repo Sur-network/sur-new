@@ -1,0 +1,4 @@
+# Contracts are NOT part of this package and were not touched. Re-read from Plan at the end of this round and byte-compared (cmp) with the files tested in v2:
+850a13fdd11480bc7e554db3c0ecd42be378445a5b4326109c2f45f35046e21c  contracts/BlockRewardDistributor.sol (Plan)
+032de8ff29ac779caf31ea9c119a2253a6653d6fe95a69905d1b0b343fde1f88  contracts-fa/BlockRewardDistributor.sol (Plan)
+cmp with v2 tested EN/FA: IDENTICAL (see the v2 package fingerprints: 850a13fd… / 032de8ff…). No contract test was run in this round, by design.

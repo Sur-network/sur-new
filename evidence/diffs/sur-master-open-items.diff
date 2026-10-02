@@ -1,0 +1,26 @@
+--- /tmp/beforeT/sur-master-open-items.md	2026-10-02 00:09:36.204955183 +0000
++++ /mnt/user-data/uploads/sur-master-open-items.md	2026-10-02 00:19:00.072289000 +0000
+@@ -432,12 +432,12 @@
+ |---|---|---|
+ | **N01 (بحرانی)** پرونده‌ی معاف‌شده با `assertDeliveryDisputed` دوباره باز می‌شد و resolverش قفل پرونده‌ی جدید را پاک می‌کرد | **درست بود** — با اجرا بازتولید شد | اصلاح دو لایه: (۱) `assertDeliveryDisputed` و `_resolveDeliveryDispute` روی پرونده‌ی نهایی‌شده رد/بی‌اثر؛ (۲) پاک‌کردن قفل فقط اگر `pendingSlashEpoch == demotionEpochId` همان پرونده (`_clearPendingSlashIfCurrent`). هر دو لایه جدا آزموده شد؛ ۶ سناریوی اصلی و آزمون‌های قبلی بدون رگرسیون |
+ | ناوردای N01: `recoveryPeriod > MASS_DEMOTION_WINDOW` | کامنت خودم ادعا کرده بود «همیشه»؛ **در کد اعمال نمی‌شد** (`recoveryPeriod` بدون حد پایین قابل‌رأی است) | حالا در `proposeParameterChange` و `_applyParam` اعمال می‌شود؛ آزموده شد |
+-| **N02** «همان کامپایل storage اولیه‌ی درست می‌دهد» / `deployTime` immutable | **درست بود** (`deployTime` واقعاً `immutable` است؛ solc محل immutable را در runtime خالی می‌گذارد) | deploy-notes و genesis-builder-spec اصلاح شد؛ روش صحیح: اجرای creation code روی زنجیره‌ی موقت با timestamp genesis یا patch با `immutableReferences`؛ assertion از بلاک صفر |
++| **N02** «همان کامپایل storage اولیه‌ی درست می‌دهد» / `deployTime` immutable | **درست بود** (تاریخی — `deployTime` در آن زمان واقعاً `immutable` بود و در L03 حذف شد؛ solc محل immutable را در runtime خالی می‌گذارد) | deploy-notes و genesis-builder-spec اصلاح شد؛ روش صحیح: اجرای creation code روی زنجیره‌ی موقت با timestamp genesis یا patch با `immutableReferences`؛ assertion از بلاک صفر |
+ | **N03** دستور آزمون: helper بدون آرگومان، شمار «۹ قرارداد»، خلط `extraData` با contract-mode، نود پنجم، پیش‌نیازها | **درست بود** — مستند رسمی Besu تأیید کرد: در contract-mode، `extraData` شامل ۰ ولیدیتور است و فهرست در `alloc.storage` می‌نشیند | «دستور ساخت شبکه‌ی قابل‌تکرار» در `sur-besu-test-status.md`؛ شمار فایل‌ها = ۱۳/زبان (۶ genesis) |
+ | **N04** آزمون توقف اجماع: خلط «کاهش مجموعه» با «آفلاین‌شدن نودها» | **درست بود** | ۵.۹ به دو آزمون جدا تفکیک شد؛ سؤال بازیابی از توقف به‌عنوان تصمیم طراحی باز ثبت شد |
+ | **N05** deploy-notes: دستورهای جاریِ منسوخ (خطوط ۷۶/۹۲/۱۶۲/۱۹۵) | **درست بود** | بازنویسی + بنر وضعیت سند |
+ | **N06** ردیابی آزمون | **درست بود** | بخش الف/ب برچسب تاریخی/برنامه؛ چهار گزارش خام آزمون قبلی و اسکریپت‌های Hardhat در `testing-evidence/`؛ ادعای `--bootnodes` به «رفتار مشاهده‌شده» محدود شد؛ `DELIVERY_DISPUTE_VOTING_PERIOD` به جدول پارامترها اضافه شد |
+-| **A04** مشخصات ابزار genesis با فیلدهای حذف‌شده | **درست بود** | config/assertions به‌روز (حذف liveness؛ `perPaymentCap`/`periodCap`/`deployTime`) |
++| **A04** مشخصات ابزار genesis با فیلدهای حذف‌شده | **درست بود** | config/assertions به‌روز (حذف liveness؛ `perPaymentCap`/`periodCap`/`deployTime` — تاریخی: `deployTime` بعداً در L03 حذف شد) |
+ | **D02** کامنت `boardVersion` طراحی ردشده را توصیف می‌کرد | **درست بود** | کامنت هر دو زبان اصلاح شد |
+ | **B01** توکنومیکس: کارمزد عضویت مشمول burn | **درست بود** | متن اصلاح شد (طبق کد: فقط `totalFees` معمولی) |
+ | **B03** جدول عرضه‌ی سال ۱۵/۲۰ با پایه‌ی قدیمی | **درست بود** (بازمحاسبه: ۳۵۰٬۸۹۰٬۰۰۰ / ۴۵۶٬۰۱۰٬۰۰۰؛ ۵٫۹۹٪ / ۴٫۶۱٪) | ردیف‌ها به جدول برگشتند و اصلاح شدند؛ «عرضه‌ی ناخالص» تصریح شد |
+@@ -474,7 +474,7 @@
+ 
+ **کار اجرایی:**
+ 5. ✅ **هر دو دور آزمون Besu واقعی انجام شد.** دور دوم (۲۸-۲۹ سپتامبر، `testing-evidence/besu-live-test-v2-2026-09-28/`): بازطراحی `refreshBoard`، باگ اختیار هیأت، مرز `<=` سقف پرداخت، N04، و بقیه‌ی موارد. دور سوم (۳۰ سپتامبر، `testing-evidence/besu-live-test-v3-2026-09-30/`): سیاست تازه‌ی پرداخت پاداش (`everActivated`) — مؤسسان genesis از بلاک صفر پرچم را می‌گیرند، اولین توزیع واقعی موفق می‌شود، ولیدیتور خارج/معلق‌شده‌ی میان‌کار مستقیم و کامل پرداخت می‌گیرد، آدرس ساختگی رد می‌شود، پرچم پس از `withdrawStake` واقعی ماندگار می‌ماند. 🔶 سه مورد اختیاری این دور (خروج بدون پرونده، تساوی رأی هیأت، جداسازی P05) امتحان نشدند — کم‌ریسک، نه اجباری.
+-6. **برنامه‌های آف‌چین نوشته‌نشده (فهرست: `offchain-services/sur-software-inventory.md`):** Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، housekeeping `syncBoard`/`refreshBoard`)، RewardRouter (بازه‌ی P05)، ابزار genesis (overlay: `perPaymentCap`، `periodCap`، `lastBoardRefreshAt`، `deployTime`)، **ابزار برنامه‌ی بازیابی (بخش ۱۱)**، اپ ولیدیتور، داشبورد.
++6. **برنامه‌های آف‌چین نوشته‌نشده (فهرست: `offchain-services/sur-software-inventory.md`):** Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، housekeeping `syncBoard`/`refreshBoard`)، RewardRouter (بازه‌ی P05)، ابزار genesis (overlay: `perPaymentCap`، `periodCap`، `lastBoardRefreshAt`؛ ✅ L03: `deployTime` حذف شد و دیگر overlay ندارد)، **ابزار برنامه‌ی بازیابی (بخش ۱۱)**، اپ ولیدیتور، داشبورد.
+ 7. راستی‌آزمایی `expected_turns` (انتخاب پیشنهاددهنده) روی نسخه‌ی دقیق Besu.
+ 8. Hardhat پوشش نمی‌دهد: `FoundationDAO`، `IdentityRegistry`، `ServiceStaking`، `SurenSale`.
+ 9. اسناد `sur-contracts-ui-review.md` و `business/sur-dapp-business-ideas.md` برای این تصمیم‌ها بازبینی نشدند؛ سایر اسناد فقط در جاهایی که جست‌وجوی کلیدواژه پیدایشان کرد به‌روز شدند (احتمال ارجاع باقیمانده به مدل قدیمی هست).

@@ -1,0 +1,8 @@
+# Plan vs package: each file below was re-read from Plan after its final edit; the first hash is the package copy, the second the Plan re-read
+EQUAL  technical-design/sur-smart-contracts-reference.md  d7f1a57d2776dc2d20f0f3dac7cf8353824a8b87d2b278a00eb0643946c0cd22
+EQUAL  technical-design/sur-reward-policy-decision-2026-09-29.md  36c8766c7f77efdb149c98198184736d96ce9f6a642063186508b5083b061fc3
+EQUAL  technical-design/sur-contracts-deploy-notes.md  3061ce83b2062a6e7e5a69527184cfd6932b78f2426827db4cacbabfe75f771b
+EQUAL  technical-design/sur-audit-2026-09-30-final-status.md  e954b7bdeedbbadbfc3f0fd9ab186d73cdbb22456ab72eedc3fc50ec4f3583ad
+EQUAL  sur-besu-test-status.md  deabb9682b000ab198a12dfa2d7ab08fceff3bd51ef229c8dacde901cd45f3e8
+EQUAL  sur-master-open-items.md  09f8bc79ce4800905f965579ebe158dbbcc422a0bf3595685f27a136b91313b9
+EQUAL  README-PACKAGE.md  6d8d55805695ebcfd66a864cf14edd3b80a597c4cff716e441f9cad67b83f5c0

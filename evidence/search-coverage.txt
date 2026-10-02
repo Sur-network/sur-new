@@ -1,0 +1,22 @@
+Search coverage: 47 Markdown files of the current Plan (outside testing-evidence), latest copy fetched from Plan in this conversation.
+Pattern: _checkPhysicalMaximum | MIN_BLOCK_PERIOD_SECONDS | deployTime | حداکثر فیزیکی | سقف فیزیکی | سقف زمان‌محور | physical maximum
+
+offchain-services/sur-genesis-builder-tool-spec.md: 2 hit(s)
+offchain-services/sur-reward-router-spec.md: 3 hit(s)
+README-PACKAGE.md: 1 hit(s)
+sur-besu-test-status.md: 1 hit(s)
+sur-master-open-items.md: 3 hit(s)
+technical-design/sur-audit-2026-09-30-final-status.md: 1 hit(s)
+technical-design/sur-audit-2026-09-30-stage1-report.md: 3 hit(s)
+technical-design/sur-audit-2026-09-30-stage3-summary.md: 1 hit(s)
+technical-design/sur-blockchain-design-doc.md: 1 hit(s)
+technical-design/sur-contracts-deploy-notes.md: 5 hit(s)
+technical-design/sur-reward-policy-decision-2026-09-29.md: 2 hit(s)
+technical-design/sur-smart-contracts-reference.md: 4 hit(s)
+
+Total hits: 27 | with a removal/historical marker in the same or adjacent line: 27 | UNMARKED: 0
+
+
+Documents with zero hits: 35
+Two decks (slide + notes text): 0 hits. Contract sources (EN/FA): only explicit "REMOVED" comments (L03 design notes).
+Not modified on purpose: dated audit findings (stage1, stage3 reports) — they describe the finding itself.

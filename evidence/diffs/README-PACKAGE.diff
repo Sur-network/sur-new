@@ -1,0 +1,10 @@
+--- /tmp/beforeT/README-PACKAGE.md	2026-10-02 00:18:20.045517324 +0000
++++ /mnt/user-data/uploads/README-PACKAGE.md	2026-10-02 00:19:09.544616000 +0000
+@@ -46,5 +46,5 @@
+ 
+ ## Scope and status
+ Hardhat only. **Not** a Besu run; **not** production readiness. Besu independent test: **environment ready (Besu 26.9.0, OpenJDK 25); not run** — by owner instruction.
+-Open: repair path for "actual reward > cap" on a past range; effect of a rate-change transition on a real Besu (operational assumption, unverified); Router implementation and tests (L06, L08);
+-L08 proven-ineligible-producer exception (separate decision); a stale mention of the removed `_checkPhysicalMaximum` in the contracts reference (registered, not edited).
++Open (the four declared items remain open; no package closes any of them): (1) repair path for "actual reward > cap" on a past range; (2) operational gasLimit check (cap cost vs the production genesis gasLimit, which is not recorded in the documents); (3) RewardRouter implementation and tests (L06, L08); (4) rate-governance page in the dashboard. Still open from before: effect of a rate-change transition on a real Besu (operational assumption, unverified) and the Besu run itself; L08 proven-ineligible-producer exception (separate decision).
++Superseded note: the stale `_checkPhysicalMaximum` / `deployTime` text that v2 listed as "registered, not edited" was corrected afterwards by the text-only package v3 (`README-PACKAGE-v3-text-fix.md`); v2 itself is unchanged and valid for everything else.

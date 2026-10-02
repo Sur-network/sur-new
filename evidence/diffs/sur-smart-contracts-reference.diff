@@ -1,0 +1,15 @@
+--- /tmp/beforeT/sur-smart-contracts-reference.md	2026-10-02 00:09:36.198219016 +0000
++++ /mnt/user-data/uploads/sur-smart-contracts-reference.md	2026-10-02 00:18:39.429810000 +0000
+@@ -211,8 +211,10 @@
+ | `lastSettledBlock()` / `epochBlockRanges(uint256 epochId)` | هرکسی | — / شناسه‌ی epoch | `uint256` / `(fromBlock, toBlock)` | ✅ **P05.** آخرین بلاک تسویه‌شده و بازه‌ی هر epoch |
+ | `timeUntilNextDistribution()` | هرکسی | — | `uint256` | ثانیه‌های باقی‌مانده تا فراخوانی بعدی مجاز |
+ 
+-### ✅ بازنویسی داخلی برای سازگاری با وریفای (بدون تغییر رفتار)
+-`distributeRewards` در نسخه‌ی اولیه یک تابع بزرگ و یکپارچه بود که در کامپایل بدون `viaIR` به خطای «Stack too deep» می‌خورد — و چون بسیاری از سرویس‌های وریفای (از جمله Blockscout) اصلاً از `viaIR` پشتیبانی نمی‌کنند، این یک مشکل واقعی برای هدف وریفای‌شدن روی اکسپلورر بود. راه‌حل: منطق به سه تابع خصوصی جدا شد — `_sumBlocks`، `_checkPhysicalMaximum` (سلامتی)، `_payValidators` + `_payOneValidator` (پرداخت هر ولیدیتور، با پارامترهای بسته‌بندی‌شده در `struct EpochContext`)، و `_finalizeEpoch` (رند خرده‌ریز + ثبت epoch). هرکدام stack frame مستقل خودشان را دارند، پس دیگر نیازی به `viaIR` نیست. رفتار، ترتیب event، و هر شرط `require()` کاملاً بدون تغییر باقی مانده — این فقط یک بازآرایی ساختاری داخلی بود.
++### ✅ ساختار داخلی `distributeRewards` (سازگار با وریفای بدون `viaIR`)
++**ساختار فعلی (پس از L03 و L05، ممیزی ۲۰۲۶-۰۹-۳۰) — مرجع جاری:** `distributeRewards` به‌ترتیب این‌ها را صدا می‌زند: `_prepareEpoch` (پیش‌محاسبه؛ با `_sumBlocks` مجموع بلاک‌ها را می‌گیرد، کارمزد عضویت انباشته را به استخر کارمزد می‌افزاید، سوزاندن ۳۰٪ کارمزد عادی و کارمزد قابل‌توزیع را حساب می‌کند و نتیجه را در `struct EpochPrep` برمی‌گرداند)، `_settleRange` (کنترل بازهٔ P05 و پیشروی `lastSettledBlock`)، سپس شرط سقف پاداش L05 (`totalRewards ≤ maxRewardsForRange`)، `_payValidators` + `_payOneValidator` (پرداخت هر ولیدیتور؛ پارامترها در `struct EpochContext` بسته‌بندی شده‌اند و ترتیب اکیداً صعودی آدرس‌ها، L07، در `_payValidators` بررسی می‌شود) و `_finalizeEpoch` (رند خرده‌ریز + ثبت epoch). تابع `_checkPhysicalMaximum` **در این ساختار وجود ندارد** (در L03 حذف شد). هر تابع stack frame مستقل دارد و کامپایل بدون `viaIR` با `solc 0.8.24` و `0.8.37` بدون warning انجام می‌شود (بررسی همین دور).
++
++**توضیح تاریخی — نسخهٔ اولیهٔ این بازنویسی (پیش از ممیزی ۲۰۲۶-۰۹-۳۰؛ دیگر معتبر نیست):** در آن نسخه `distributeRewards` به چهار تابع خصوصی تقسیم شده بود — `_sumBlocks`، `_checkPhysicalMaximum` (سقف زمان‌محور تعداد بلاک)، `_payValidators` + `_payOneValidator` و `_finalizeEpoch`. این تقسیم به‌تنهایی «Stack too deep» را رفع نکرد (در آزمون واقعی Besu، سپتامبر ۲۰۲۶، خطا در فراخوان `_payValidators` ماند؛ `sur-contracts-deploy-notes.md` همین را «تصحیح صادقانه» ثبت کرده)؛ با افزودن `_prepareEpoch` و `struct EpochPrep` رفع شد. بعدها `_checkPhysicalMaximum` طبق L03 کاملاً حذف شد، چون مبنای زمانی‌اش با بازهٔ تسویه هم‌مبنا نبود.
+ 
+ ### قواعد تقسیم (داخل `distributeRewards`)
+ - از `totalRewards`: ۱۵٪ ثابت (`FOUNDATION_SHARE_BPS`) به `FoundationDAO`؛ `validatorDirectShareBps` (حکمرانی‌شونده، شروع ۵۰٪) به نسبت `blocksMined` مستقیم بین ولیدیتورها؛ باقی‌مانده به `TREASURY`.
