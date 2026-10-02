@@ -202,6 +202,49 @@ contract MockIdentity { function hasIdentity(address) external pure returns (boo
     const [s] = await d(deployer).rewardRateChange(0); ok("I5) a zero rate is a valid approved rate (zero-reward segment)", (await d(deployer).rewardRateAt(s)) === 0n); }
   await fresh();
 
+  console.log("\n=== S — completion re-check after a board change, and status of proposals that cannot continue ===");
+  const valVoteList = async (id, idxs) => { for (const i of idxs) await (await d(A[i]).validatorVoteRateChange(id)).wait(); };
+  const changeBoard = async () => { await exitOf(4); await (await board.syncBoard()).wait(); };
+  const approvedEvents = async id => (await d(deployer).queryFilter(d(deployer).filters.RateChangeApproved(id), 0, "latest")).length;
+  { // S1: board chamber complete -> real board change -> the LAST validator vote must not register approval
+    const id = await propose(A[0], (await blockNo()) + 300000, 3n * 10n ** 18n); await boardVotes(id);
+    await changeBoard(); const boardV = await board.boardVersion();
+    await valVoteList(id, [0, 1, 2, 3, 5, 6]);
+    ok("S1) after the board changed, six of the seven validator votes are still accepted (nothing is approved yet)", (await P(id)).validatorApprovals === 6n && (await P(id)).approvedAt === 0n);
+    ok("S2) the completing (7th) validator vote is refused: board membership changed", await reverts(() => d(A[7]).validatorVoteRateChange(id, { gasLimit: 500000 }), "board membership changed since this proposal was created"));
+    ok("S3) no approval was registered: approvedAt = 0, validator count still 6, no RateChangeApproved event", (await P(id)).approvedAt === 0n && (await P(id)).validatorApprovals === 6n && (await approvedEvents(id)) === 0);
+    ok("S4) status = 7 (cannot continue), problem 1 (board composition changed) — not 'voting'", JSON.stringify(await status(id)) === JSON.stringify([7, 1]), `boardVersion=${boardV}`);
+    ok("S5) execution refused: never approved", await reverts(() => d(deployer).executeRateChange(id, { gasLimit: 500000 }), "not approved by both chambers")); }
+  await fresh();
+  { // S6: validator chamber complete first -> board change -> a board vote is refused; status 7/1
+    const id = await propose(A[0], (await blockNo()) + 300000, 3n * 10n ** 18n); await valVotes(id, 7); await changeBoard();
+    ok("S6) validators complete first, then the board changes: a board vote is refused", await reverts(() => d(A[0]).boardVoteRateChange(id, { gasLimit: 500000 }), "board membership changed since this proposal was created"));
+    ok("S7) status = 7, problem 1; never approved", JSON.stringify(await status(id)) === JSON.stringify([7, 1]) && (await P(id)).approvedAt === 0n && (await approvedEvents(id)) === 0);
+    const id2 = await propose(A[0], (await blockNo()) + 300001, 3n * 10n ** 18n); await boardVotes(id2); await valVoteList(id2, [0, 1, 2, 3, 5, 6]);
+    ok("S8) a proposal created AFTER the board change completes normally (required 6 of 9 active): approved, status 4", Number((await P(id2)).requiredValidatorApprovals) === 6 && (await P(id2)).approvedAt !== 0n && JSON.stringify(await status(id2)) === JSON.stringify([4, 0])); }
+  await fresh();
+  { // S9: expiry takes precedence over 'cannot continue'; a healthy proposal still reads 'voting'
+    const idH = await propose(A[0], (await blockNo()) + 300000, 3n * 10n ** 18n); const idV = await propose(A[0], (await blockNo()) + 300001, 3n * 10n ** 18n);
+    ok("S9) a healthy proposal reads status 1 (voting), problem 0", JSON.stringify(await status(idH)) === JSON.stringify([1, 0]));
+    await changeBoard();
+    ok("S10) both proposals now read 7/1 (the board they belonged to is gone)", JSON.stringify(await status(idH)) === JSON.stringify([7, 1]) && JSON.stringify(await status(idV)) === JSON.stringify([7, 1]));
+    await hre.network.provider.send("evm_increaseTime", [31 * DAY]); await hre.network.provider.send("evm_mine");
+    ok("S11) after the 30-day voting period the same proposal reads 2 (expired) — expiry takes precedence", JSON.stringify(await status(idH)) === JSON.stringify([2, 0])); }
+  await fresh();
+  { // S12/S13: start-block problems of a proposal that is still being voted on are permanent too
+    const id = await propose(A[0], (await blockNo()) + LEAD + 9000, 3n * 10n ** 18n);
+    await hre.network.provider.send("hardhat_mine", ["0x" + (12000).toString(16)]);
+    ok("S12) blocks passed: remaining distance < 201,600 → status 7, problem 3 (a later approval could never execute it)", JSON.stringify(await status(id)) === JSON.stringify([7, 3]));
+    await hre.network.provider.send("hardhat_mine", ["0x" + (LEAD).toString(16)]);
+    ok("S13) start block now in the past → status 7, problem 2", JSON.stringify(await status(id)) === JSON.stringify([7, 2])); }
+  await fresh();
+  { // S14: another proposal executed first makes this one unable to continue (strictly ascending history)
+    const b0 = await blockNo(); const idA = await propose(A[0], b0 + 400000, 3n * 10n ** 18n); const idB = await propose(A[0], b0 + 350000, 4n * 10n ** 18n);
+    ok("S14) before A is executed, B (earlier start) is a normal voting proposal: 1/0", JSON.stringify(await status(idB)) === JSON.stringify([1, 0]));
+    const a = await approve(idA); await (await at(Number(a) + 7 * DAY, () => d(deployer).executeRateChange(idA))).wait();
+    ok("S15) after A (later start) is executed, B reads status 7, problem 4 and is left untouched", JSON.stringify(await status(idB)) === JSON.stringify([7, 4]) && (await P(idB)).startBlock === BigInt(b0 + 350000)); }
+  await fresh();
+
   console.log("\n=== K — cost: governance operations do not grow with the history ===");
   const RS = BigInt(dArt.layout.storage.find(x => x.label === "rewardRateChanges").slot); const baseS = BigInt(hre.ethers.keccak256(hre.ethers.zeroPadValue(hre.ethers.toBeHex(RS), 32)));
   const setSchedule = async n => { await setS(DIST, hre.ethers.toBeHex(RS), n); for (let i = 0; i < n; i++) await setS(DIST, hre.ethers.toBeHex(baseS + BigInt(i)), BigInt(100 + i * 10) + ((2n * 10n ** 18n) << 128n)); };

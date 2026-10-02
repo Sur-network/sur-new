@@ -1,0 +1,2 @@
+=== بخش ۱ — سناریوی اصلی: ۱۰۰ بلاک؛ A=۶۰(فعال)، B=۱۰(تولید حین فعال‌بودن، الان خارج/معلق)، C=۳۰(فعال) ===
+خطا: VM Exception while processing transaction: reverted with reason string 'BlockRewardDistributor: address was never a legitimate validator'

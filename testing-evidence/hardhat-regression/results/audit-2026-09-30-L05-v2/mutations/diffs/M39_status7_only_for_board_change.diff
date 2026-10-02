@@ -1,0 +1,11 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M39_status7_only_for_board_change/BlockRewardDistributor.sol	2026-10-01 23:43:36.927836762 +0000
+@@ -758,7 +758,7 @@
+         problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
+         if (p.approvedAt == 0) {
+             if (block.timestamp > p.votingExpiresAt) return (2, 0);
+-            if (problem != 0) return (7, problem);
++            if (problem == 1) return (7, problem);
+             return (1, 0);
+         }
+         if (problem != 0) return (6, problem);

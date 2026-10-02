@@ -1,0 +1,13 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M37_no_completion_recheck/BlockRewardDistributor.sol	2026-10-01 23:43:36.925625195 +0000
+@@ -776,10 +776,6 @@
+             // L05: both chambers count as complete only if the proposal still belongs to the CURRENT board composition. The board vote
+             // checks this itself; a completing validator vote must not register approval (nor emit RateChangeApproved) for a proposal
+             // whose board has since changed - execution would refuse it anyway. The vote is not recorded; the proposal can no longer succeed.
+-            require(
+-                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
+-                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
+-            );
+             p.approvedAt = block.timestamp;
+             emit RateChangeApproved(id, block.timestamp, block.timestamp + RATE_CHANGE_DELAY);
+         }

@@ -1,0 +1,2 @@
+test_L05_rate_governance exit=1 FAIL
+mutv2-M39_status7_only_for_board_change | SUMMARY: 1 failing/timed-out test(s)

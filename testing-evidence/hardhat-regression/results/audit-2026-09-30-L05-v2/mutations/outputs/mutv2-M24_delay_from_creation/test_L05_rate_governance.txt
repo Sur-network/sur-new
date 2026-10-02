@@ -1,0 +1,94 @@
+✅ R0) real Board seated A0..A4; boardVersion = 2; 10 validators active
+
+=== G — constants and who can write the history ===
+✅ G1) constants: board 3 (= BOARD_SIZE/2+1 = 3 of 5), voting 30 d, delay 7 d, lead 201,600 blocks
+✅ G2) initial history empty, no proposals
+✅ G3) the only state-changing functions touching rate governance are propose/boardVote/validatorVote/execute (no oracle or owner setter)  boardVoteRateChange,executeRateChange,proposeRateChange,validatorVoteRateChange
+
+=== P — proposing ===
+✅ P1) a non-validator cannot propose
+✅ P2) start = executing block + 201,599 rejected
+✅ P3) start = executing block + 201,600 accepted (exact boundary)
+✅ P4) start not in the future (= current block) rejected with its own message
+✅ P5) rate above uint128 rejected
+✅ P6) required validator approvals = ceil(2/3 of the active set at creation): 10→7, 9→6, 8→6, 7→5, each frozen  true | true | true | true
+
+=== B — board chamber (3 of 5, live authority) ===
+✅ B1) a non-board validator cannot cast a board vote
+✅ B2) two board votes: nothing approved
+✅ B3) the same member cannot vote twice
+✅ B4) a member who requested exit has no live authority (before syncBoard) and cannot vote
+✅ B5) 2 board votes + all 7 required validator votes: NOT approved (the board needs 3 of 5)
+✅ B6) the third board vote completes the approval
+
+=== V — validator chamber (two thirds of the electorate at creation, L04) ===
+✅ V1) board chamber complete, validators not: still not approved
+✅ V2) 6 of the required 7: not approved
+✅ V3) the 7th vote completes both chambers: approvedAt = that block's timestamp; RateChangeApproved(executableAt = +7 d) emitted
+✅ V4) further votes after approval are refused (voting closed)
+✅ V5) a validator activated after creation cannot vote (L04)
+✅ V6) suspended AT creation, back later: not eligible
+✅ V7) eligible at creation but suspended now: cannot vote while suspended
+✅ V8) recovered: may vote once, and not again
+✅ V9) a voter who then exits keeps the recorded vote; no new vote possible
+
+=== T — time: delay from BOTH chambers, voting expiry, queue not removed ===
+✅ T1) approvedAt is when the SECOND chamber completed (10 days after the board), not when the first did
+❌ T2) executing at board-completion + 7 d is refused: the delay has not started counting from there → did NOT revert
+❌ T3) executing 1 second before approvedAt + 7 d is refused → wrong reason: BlockRewardDistributor: already executed
+❌ T4) exactly at approvedAt + 7 d it executes → false  reverted: BlockRewardDistributor: already executed
+✅ T5) status = executed (3)
+✅ T6) voting at exactly votingExpiresAt is still accepted (inclusive)
+✅ T7) the proposal approved at day 30 is executable at day 37 — beyond the 30-day expiry — the queue is not removed  true
+✅ T8) one second after the voting period the second chamber can no longer complete
+✅ T9) never approved: status = voting expired (2); executing it is refused
+
+=== E — final execution re-checks (proposal left exactly as it is on failure) ===
+✅ E1) board composition changed after approval (real exit + syncBoard bumps boardVersion)
+✅ E2) status view reports approved-but-unexecutable, problem 1 (board changed)
+✅ E3) execution refused: board membership changed
+✅ E4) proposal unchanged, history unchanged
+✅ E5) blocks passed during the delay: remaining distance < 201,600 → status problem 3
+✅ E6) execution refused: closer than MIN_RATE_CHANGE_LEAD_BLOCKS (start still in the future)
+✅ E7) proposal unchanged — neither the start block nor the time was moved
+✅ E8) start block already in the past: status problem 2
+✅ E9) execution refused: start block is not in the future
+✅ E10) proposal unchanged, history unchanged
+
+=== C — concurrent proposals and unexecutable proposals ===
+✅ C1) order descending (largest start first): outcomes follow strict ascending history exactly  {"p2":"executed","p3":"refused(ascending)","p4":"refused(ascending)","p1":"refused(ascending)"}
+✅ C2) order descending (largest start first): history length = 1, strictly ascending
+✅ C3) order descending (largest start first): every refused proposal is left untouched, still approved, status (6, problem 4) — no time or height moved
+✅ C1) order ascending (smallest start first): outcomes follow strict ascending history exactly  {"p1":"executed","p4":"executed","p2":"executed","p3":"refused(ascending)"}
+✅ C2) order ascending (smallest start first): history length = 3, strictly ascending
+✅ C3) order ascending (smallest start first): every refused proposal is left untouched, still approved, status (6, problem 4) — no time or height moved
+
+=== I — interaction with the cap ===
+✅ I1) RateChangeExecuted carries the start block and rate; rewardRateChange(0) returns them
+✅ I2) rate 2 SUR until S−1, 3 SUR from S
+✅ I3) a range crossing S: 5 blocks at 2 SUR + 5 blocks at 3 SUR = 25 SUR
+✅ I4) executing does not touch validatorDirectShareBps (formula and governance of the share unchanged)
+✅ I5) a zero rate is a valid approved rate (zero-reward segment)
+
+=== S — completion re-check after a board change, and status of proposals that cannot continue ===
+✅ S1) after the board changed, six of the seven validator votes are still accepted (nothing is approved yet)
+✅ S2) the completing (7th) validator vote is refused: board membership changed
+✅ S3) no approval was registered: approvedAt = 0, validator count still 6, no RateChangeApproved event
+✅ S4) status = 7 (cannot continue), problem 1 (board composition changed) — not 'voting'  boardVersion=3
+✅ S5) execution refused: never approved
+✅ S6) validators complete first, then the board changes: a board vote is refused
+✅ S7) status = 7, problem 1; never approved
+✅ S8) a proposal created AFTER the board change completes normally (required 6 of 9 active): approved, status 4
+✅ S9) a healthy proposal reads status 1 (voting), problem 0
+✅ S10) both proposals now read 7/1 (the board they belonged to is gone)
+✅ S11) after the 30-day voting period the same proposal reads 2 (expired) — expiry takes precedence
+✅ S12) blocks passed: remaining distance < 201,600 → status 7, problem 3 (a later approval could never execute it)
+✅ S13) start block now in the past → status 7, problem 2
+✅ S14) before A is executed, B (earlier start) is a normal voting proposal: 1/0
+✅ S15) after A (later start) is executed, B reads status 7, problem 4 and is left untouched
+
+=== K — cost: governance operations do not grow with the history ===
+✅ K1) propose: gas with 400 old entries within +3% of gas with none  0=198556 400=200945
+✅ K2) execute: gas with 400 old entries within +3% of gas with none  0=104599 400=89888
+
+نتیجه: 69/72 گذر

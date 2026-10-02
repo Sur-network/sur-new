@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M34_votes_after_approval/BlockRewardDistributor.sol	2026-10-01 23:43:36.924552668 +0000
+@@ -767,7 +767,6 @@
+ 
+     function _requireRateVotable(RateProposal storage p) private view {
+         require(!p.executed, "BlockRewardDistributor: already executed");
+-        require(p.approvedAt == 0, "BlockRewardDistributor: voting closed - already approved by both chambers");
+         require(block.timestamp <= p.votingExpiresAt, "BlockRewardDistributor: voting period has expired");
+     }
+ 

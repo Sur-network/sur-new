@@ -1,0 +1,36 @@
+=== A — base rate 2 SUR, share from the existing variable ===
+✅ A0) INITIAL_REWARD_PER_BLOCK = 2 SUR (wei); empty history; rewardRateAt(1) = 2 SUR
+✅ A1) 1000-block range: maximum gross reward = 2000 SUR
+✅ A2) exact cap (2000 SUR) accepted; with share 50% the direct validator share is exactly 1000 SUR
+✅ A3) one wei above the cap is rejected
+✅ A4) the rejection left no state change and no payment
+✅ A5.4000) share 40% (existing variable): direct share of the capped reward = 800.0 SUR
+✅ A5.6500) share 65% (existing variable): direct share of the capped reward = 1300.0 SUR
+
+=== B — rate history: mid-range change, exact boundaries, several changes, historical settlement ===
+✅ B1) change at 501 to 3 SUR: [1,1000] = 500·2 + 500·3 = 2500 SUR
+✅ B2) boundaries: [500,500] = 2, [501,501] = 3, [500,501] = 5, [1,500] = 1000, [501,1000] = 1500
+✅ B3) mid-range change: exact cap accepted
+✅ B4) mid-range change: cap + 1 wei rejected
+✅ B5) four changes (incl. a 0-reward segment): contract equals per-block brute force on 40 ranges
+✅ B6) rewardRateAt at each boundary
+✅ B7) late settlement of [1,350] at head ≈5000 uses the historical rates of those blocks (exact cap accepted)  cap=550.0 SUR
+✅ B8) a change starting after toBlock does not affect the range ([1,1000] ignores the change at 1001)
+✅ B9) invalid range (from > to) rejected by the view
+
+=== C — fees and membership fees are outside the cap ===
+✅ C1) reward at the cap + 1000 SUR fees + 500 SUR membership fee: accepted (fees not counted in the cap)
+✅ C2) burn applies only to ordinary fees: totalFeesBurned = 30% of 1000 = 300 SUR
+✅ C3) validator received 50%·2000 + (1000 − 300 + 500) = 2200 SUR
+
+=== D — cost grows with the number of rate changes, not with blocks ===
+✅ D1) same changes crossed: a 10,000,000-block range costs about the same as a 2,000-block range (≤ +2%)  2k=37334 10M=37346
+✅ D2) 40 changes cost more than 4 (cost scales with changes)  4 changes=37346 40 changes=140650
+✅ D3) history length 4 -> 400 entries: short range without a change inside costs < 2x (binary search; was 31x with a linear scan)  4=30090 40=37890 400=45690
+
+=== E — cost is O(log n + k): k = rate changes INSIDE the range (not the range length, not the number of older changes) ===
+✅ E1) with a 400-entry history, ranges holding k = 0,1,5,20,40,100,399 changes equal the per-block brute force
+✅ E2) gas grows linearly with k: the marginal cost per change (k=20,40,100) stays within 15% of the 0→399 average  k=0:45690 k=1:49034 k=5:56174 k=20:96485 k=40:152498 k=100:326290 k=399:1160455 | marginal per change ≈ 2793
+✅ E3) same k = 39: a 40-entry vs a 400-entry history differ by ≤ 12% (only the log n search differs)  n=40:140295 n=400:150189
+
+نتیجه: 25/25 گذر

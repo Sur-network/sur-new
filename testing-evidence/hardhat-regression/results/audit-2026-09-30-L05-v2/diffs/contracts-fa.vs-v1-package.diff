@@ -1,0 +1,42 @@
+--- /home/claude/w/v1/fa.sol	2026-10-01 23:42:21.622538959 +0000
++++ /home/claude/w/contracts-fa/BlockRewardDistributor.sol	2026-10-01 23:42:21.695009060 +0000
+@@ -732,15 +732,21 @@
+     }
+ 
+     /// @notice وضعیت در آخرین بلاک. status: ۰ یافت نشد، ۱ در حال رأی‌گیری، ۲ رأی‌گیری منقضی (هرگز تصویب نشد)، ۳ اجراشده،
+-    ///         ۴ تصویب‌شده و منتظر تأخیر، ۵ اکنون قابل اجرا، ۶ تصویب‌شده ولی فعلاً غیرقابل‌اجرا. problem (برای status ۶): ۱ ترکیب هیأت
+-    ///         تغییر کرده، ۲ ارتفاع شروع در آینده نیست، ۳ نزدیک‌تر از MIN_RATE_CHANGE_LEAD_BLOCKS، ۴ پس از آخرین تغییر مصوب نیست.
+-    ///         اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
++    ///         ۴ تصویب‌شده و منتظر تأخیر، ۵ اکنون قابل اجرا، ۶ تصویب‌شده ولی فعلاً غیرقابل‌اجرا،
++    ///         ۷ هنوز تصویب‌نشده و غیرقابل‌ادامه (رأی‌گیری دیگر به تغییر قابل‌اجرا نمی‌رسد).
++    ///         problem (برای status ۶ یا ۷): ۱ ترکیب هیأت تغییر کرده، ۲ ارتفاع شروع در آینده نیست، ۳ نزدیک‌تر از MIN_RATE_CHANGE_LEAD_BLOCKS،
++    ///         ۴ پس از آخرین تغییر مصوب نیست. هر مشکل دائمی است (شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت برای
++    ///         یک پیشنهاد برگشت‌پذیر نیست)؛ پس status ۷ هرگز به ۱ برنمی‌گردد. اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
+     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
+         RateProposal storage p = rateProposals[id];
+         if (p.createdAt == 0) return (0, 0);
+         if (p.executed) return (3, 0);
+-        if (p.approvedAt == 0) return (block.timestamp > p.votingExpiresAt ? 2 : 1, 0);
+         problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
++        if (p.approvedAt == 0) {
++            if (block.timestamp > p.votingExpiresAt) return (2, 0);
++            if (problem != 0) return (7, problem);
++            return (1, 0);
++        }
+         if (problem != 0) return (6, problem);
+         return (block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY ? 5 : 4, 0);
+     }
+@@ -753,6 +759,13 @@
+ 
+     function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
+         if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
++            // L05: تکمیل هر دو مجلس فقط وقتی معتبر است که پیشنهاد هنوز متعلق به ترکیب «فعلی» هیأت باشد. رأی هیأت خودش این را بررسی
++            // می‌کند؛ رأی تکمیل‌کننده‌ی ولیدیتورها نباید برای پیشنهادی که هیأتش از آن پس تغییر کرده تصویب (و رویداد RateChangeApproved) ثبت
++            // کند — اجرا هم به هر حال آن را رد می‌کند. این رأی ثبت نمی‌شود؛ پیشنهاد دیگر نمی‌تواند موفق شود.
++            require(
++                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++            );
+             p.approvedAt = block.timestamp;
+             emit RateChangeApproved(id, block.timestamp, block.timestamp + RATE_CHANGE_DELAY);
+         }

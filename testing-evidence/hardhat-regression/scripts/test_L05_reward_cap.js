@@ -96,5 +96,16 @@ contract Sink { receive() external payable {} }`;
   await fresh(); const gH = {};
   for (const n of [4, 40, 400]) { const ent = []; for (let i = 0; i < n; i++) ent.push([BigInt(100 + i * 10), E("2")]); await setSchedule(ent); const last = 100 + n * 10; gH[n] = await d.maxRewardsForRange.estimateGas(last + 1000, last + 1999); }
   ok("D3) history length 4 -> 400 entries: short range without a change inside costs < 2x (binary search; was 31x with a linear scan)", gH[400] < gH[4] * 2n && gH[400] < 100000n, `4=${gH[4]} 40=${gH[40]} 400=${gH[400]}`);
+  console.log("\n=== E — cost is O(log n + k): k = rate changes INSIDE the range (not the range length, not the number of older changes) ===");
+  await fresh(); const NH = 400; const hist = []; for (let i = 0; i < NH; i++) hist.push([BigInt(100 + i * 10), E(String(1 + (i % 4)))]);
+  await setSchedule(hist); const lastStart = 100 + (NH - 1) * 10; const gk = {}; let eqAll = true; const KS = [0, 1, 5, 20, 40, 100, 399];
+  for (const k of KS) { const from = 100 + (NH - 1 - k) * 10, to = lastStart + 5; gk[k] = await d.maxRewardsForRange.estimateGas(from, to); const got = await d.maxRewardsForRange(from, to), exp = brute(hist, from, to); if (got !== exp) eqAll = `k=${k}: ${got} != ${exp}`; }
+  ok("E1) with a 400-entry history, ranges holding k = 0,1,5,20,40,100,399 changes equal the per-block brute force", eqAll);
+  const marginal = (gk[399] - gk[0]) / 399n;
+  const near = k => { const mk = (gk[k] - gk[0]) / BigInt(k); const diff = mk > marginal ? mk - marginal : marginal - mk; return diff * 100n <= marginal * 15n; };
+  ok("E2) gas grows linearly with k: the marginal cost per change (k=20,40,100) stays within 15% of the 0→399 average", near(20) && near(40) && near(100), `${KS.map(k => `k=${k}:${gk[k]}`).join(" ")} | marginal per change ≈ ${marginal}`);
+  { await setSchedule(hist.slice(0, 40)); const g40 = await d.maxRewardsForRange.estimateGas(100, 100 + 39 * 10 + 5);
+    await setSchedule(hist); const g400 = await d.maxRewardsForRange.estimateGas(100 + (NH - 1 - 39) * 10, lastStart + 5); const df = g400 > g40 ? g400 - g40 : g40 - g400;
+    ok("E3) same k = 39: a 40-entry vs a 400-entry history differ by ≤ 12% (only the log n search differs)", df * 100n <= g40 * 12n, `n=40:${g40} n=400:${g400}`); }
   const bad = results.filter(x => !x).length; console.log(`\nنتیجه: ${results.length - bad}/${results.length} گذر`); process.exit(bad ? 1 : 0);
 })().catch(e => { console.error("خطا:", e.message); process.exit(1); });

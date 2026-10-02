@@ -1,0 +1,17 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M40_linear_scan_correct_but_costly/BlockRewardDistributor.sol	2026-10-01 23:43:36.910850602 +0000
+@@ -802,12 +802,8 @@
+ 
+     /// @dev Binary search: number of history entries whose startBlock <= blockNumber (history is strictly ascending).
+     function _rateEntriesUpTo(uint256 blockNumber) private view returns (uint256 lo) {
+-        uint256 hi = rewardRateChanges.length;
+-        while (lo < hi) {
+-            uint256 mid = (lo + hi) / 2;
+-            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
+-            else hi = mid;
+-        }
++        uint256 n = rewardRateChanges.length;
++        while (lo < n && rewardRateChanges[lo].startBlock <= blockNumber) lo++;
+     }
+ 
+     /// @notice L05: approved gross block reward for blocks [fromBlock, toBlock], summed segment by segment over the rate history.

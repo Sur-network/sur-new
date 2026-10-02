@@ -1,0 +1,22 @@
+M22_no_reward_cap | test_L05_reward_cap | runner_exit=1 | failed checks: A3 A4 B4 | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+M35_search_off_by_one | test_L05_reward_cap | runner_exit=1 | failed checks: B6 | hard abort: no | نتیجه: 24/25 گذر
+M40_linear_scan_correct_but_costly | test_L05_reward_cap | runner_exit=1 | failed checks: D3 E3 | hard abort: no | نتیجه: 23/25 گذر
+M23_no_delay | test_L05_rate_governance | runner_exit=1 | failed checks: T2 T3 T4 | hard abort: no | نتیجه: 69/72 گذر
+M24_delay_from_creation | test_L05_rate_governance | runner_exit=1 | failed checks: T2 T3 T4 | hard abort: no | نتیجه: 69/72 گذر
+M25_no_board_guard_at_execute | test_L05_rate_governance | runner_exit=1 | failed checks: E3 E4 | hard abort: no | نتیجه: 70/72 گذر
+M26_no_start_recheck_at_execute | test_L05_rate_governance | runner_exit=1 | failed checks: E6 E7 E9 E10 C1 C2 C1 C2 | hard abort: no | نتیجه: 64/72 گذر
+M27_no_ascending_check | test_L05_rate_governance | runner_exit=1 | failed checks: C1 C2 C1 C2 S15 | hard abort: no | نتیجه: 67/72 گذر
+M28_no_lead_distance | test_L05_rate_governance | runner_exit=1 | failed checks: P2 E5 E6 E7 S12 | hard abort: no | نتیجه: 67/72 گذر
+M29_voting_expiry_blocks_execution | test_L05_rate_governance | runner_exit=1 | failed checks: T7 | hard abort: no | نتیجه: 71/72 گذر
+M30_board_uses_seat_flag | test_L05_rate_governance | runner_exit=1 | failed checks: B4 | hard abort: no | نتیجه: 71/72 گذر
+M31_no_validator_snapshot | test_L05_rate_governance | runner_exit=1 | failed checks: V5 V6 | hard abort: no | نتیجه: 70/72 گذر
+M32_board_quorum_2 | test_L05_rate_governance | runner_exit=1 | failed checks: G1 B5 | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+M33_no_future_check | test_L05_rate_governance | runner_exit=1 | failed checks: P4 E8 E9 S13 | hard abort: no | نتیجه: 68/72 گذر
+M34_votes_after_approval | test_L05_rate_governance | runner_exit=1 | failed checks: V4 | hard abort: no | نتیجه: 71/72 گذر
+M37_no_completion_recheck | test_L05_rate_governance | runner_exit=1 | failed checks: S2 S3 S4 S5 | hard abort: no | نتیجه: 68/72 گذر
+M38_status_ignores_problem_when_unapproved | test_L05_rate_governance | runner_exit=1 | failed checks: S4 S7 S10 S12 S13 S15 | hard abort: no | نتیجه: 66/72 گذر
+M39_status7_only_for_board_change | test_L05_rate_governance | runner_exit=1 | failed checks: S12 S13 S15 | hard abort: no | نتیجه: 69/72 گذر
+M16b_no_ascending_validators | test_L07_strict_ascending | runner_exit=1 | failed checks: 1 2 3 4 5 | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+M36_everActivated_to_isValidator | verify_everActivated_policy | runner_exit=1 | failed checks: - | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+PRE_L05_M36 | verify_everActivated_policy_preL05fixture | runner_exit=1 | failed checks: - | hard abort: YES | خطا: VM Exception while processing transaction: reverted wit
+DONE

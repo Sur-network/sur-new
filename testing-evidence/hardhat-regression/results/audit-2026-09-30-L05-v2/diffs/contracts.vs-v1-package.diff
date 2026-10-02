@@ -1,0 +1,43 @@
+--- /home/claude/w/v1/en.sol	2026-10-01 23:42:21.620449074 +0000
++++ /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
+@@ -745,15 +745,22 @@
+     }
+ 
+     /// @notice Status as of the latest block. status: 0 not found, 1 voting, 2 voting expired (never approved), 3 executed,
+-    ///         4 approved and waiting for the delay, 5 executable now, 6 approved but currently unexecutable.
+-    ///         problem (status 6): 1 board composition changed, 2 start block not in the future, 3 closer than
+-    ///         MIN_RATE_CHANGE_LEAD_BLOCKS, 4 not after the last approved change. Execution happens in a later block, so this is advisory.
++    ///         4 approved and waiting for the delay, 5 executable now, 6 approved but currently unexecutable,
++    ///         7 not yet approved and unable to continue (voting can no longer lead to an executable change).
++    ///         problem (status 6 or 7): 1 board composition changed, 2 start block not in the future, 3 closer than
++    ///         MIN_RATE_CHANGE_LEAD_BLOCKS, 4 not after the last approved change. Every problem is permanent (block numbers only grow, the
++    ///         history only grows, a board change cannot be undone for a proposal), so status 7 never goes back to 1.
++    ///         Execution happens in a later block, so this is advisory.
+     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
+         RateProposal storage p = rateProposals[id];
+         if (p.createdAt == 0) return (0, 0);
+         if (p.executed) return (3, 0);
+-        if (p.approvedAt == 0) return (block.timestamp > p.votingExpiresAt ? 2 : 1, 0);
+         problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
++        if (p.approvedAt == 0) {
++            if (block.timestamp > p.votingExpiresAt) return (2, 0);
++            if (problem != 0) return (7, problem);
++            return (1, 0);
++        }
+         if (problem != 0) return (6, problem);
+         return (block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY ? 5 : 4, 0);
+     }
+@@ -766,6 +773,13 @@
+ 
+     function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
+         if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
++            // L05: both chambers count as complete only if the proposal still belongs to the CURRENT board composition. The board vote
++            // checks this itself; a completing validator vote must not register approval (nor emit RateChangeApproved) for a proposal
++            // whose board has since changed - execution would refuse it anyway. The vote is not recorded; the proposal can no longer succeed.
++            require(
++                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++            );
+             p.approvedAt = block.timestamp;
+             emit RateChangeApproved(id, block.timestamp, block.timestamp + RATE_CHANGE_DELAY);
+         }

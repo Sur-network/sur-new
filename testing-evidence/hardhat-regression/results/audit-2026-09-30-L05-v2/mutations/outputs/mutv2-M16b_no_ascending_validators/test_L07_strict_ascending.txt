@@ -1,0 +1,7 @@
+=== L07-A — ترتیب صعودی اکید ===
+❌ 1) آدرس تکراری [lo, lo] رد می‌شود → did NOT revert
+❌ 2) تکرار غیرمجاور با تجمیع‌نشدن [lo, hi, lo] رد می‌شود → wrong reason: BlockRewardDistributor: too soon since last distribution
+❌ 3) ترتیب نزولی [hi, lo] رد می‌شود → wrong reason: BlockRewardDistributor: too soon since last distribution
+❌ 4) ورودی صفربلاکی نامرتب هم رد می‌شود [lo, hi, mid:0] (کنترل پیش از skip) → wrong reason: BlockRewardDistributor: too soon since last distribution
+❌ 5) هیچ‌کدام از ردها state را تغییر نداد (lastSettledBlock = 0، epochCount = 0) → false
+خطا: VM Exception while processing transaction: reverted with reason string 'BlockRewardDistributor: too soon since last distribution'

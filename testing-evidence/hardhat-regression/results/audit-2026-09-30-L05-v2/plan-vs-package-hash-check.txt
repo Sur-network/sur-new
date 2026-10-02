@@ -1,0 +1,18 @@
+# Plan vs package — every document below was re-read from Plan after its final edit; contracts byte-compared (cmp IDENTICAL) after writing
+a6d80a683f59c322c51809195aa74f7f32de7b0ec19145c2d541b5d2895dd18a  technical-design/sur-smart-contracts-reference.md
+a6d80a683f59c322c51809195aa74f7f32de7b0ec19145c2d541b5d2895dd18a  /mnt/user-data/uploads/sur-smart-contracts-reference.md
+0060ab606bde36f707c0b4bb847c06913cb31b529ec4dad9e7f025b0ae09c626  technical-design/sur-audit-2026-09-30-final-status.md
+0060ab606bde36f707c0b4bb847c06913cb31b529ec4dad9e7f025b0ae09c626  /mnt/user-data/uploads/sur-audit-2026-09-30-final-status.md
+55e34a75a9b7d30f27b5acb43bf3953bc33116f2fe58d5073bb760c2c6e87f4d  economics/sur-tokenomics.md
+55e34a75a9b7d30f27b5acb43bf3953bc33116f2fe58d5073bb760c2c6e87f4d  /mnt/user-data/uploads/sur-tokenomics.md
+ab39627feddf43bd321642223c443e6d94a4198b6eb493d4d91c4f118fe2adeb  business/sur-whitepaper.md
+ab39627feddf43bd321642223c443e6d94a4198b6eb493d4d91c4f118fe2adeb  /mnt/user-data/uploads/sur-whitepaper.md
+# unchanged this round, byte-equal to the v1 package copies (and to Plan):
+e19c2600a61694e8cd6a7d06dd638eee01c5481add150862baa6da942eed4611  offchain-services/sur-genesis-builder-tool-spec.md
+95db27f9caf1af364de7bfc80d7066d0eb1ddb8dab10d676c2a1535f94da7221  offchain-services/sur-governance-dashboard-claudecode-brief.md
+c5cbc8497a99c20b2d59b946d1feb0c86110b508b7334340d02be19396460d30  offchain-services/sur-reward-router-spec.md
+# contracts:
+850a13fdd11480bc7e554db3c0ecd42be378445a5b4326109c2f45f35046e21c  /home/claude/pkgL05v2/contracts/BlockRewardDistributor.sol
+850a13fdd11480bc7e554db3c0ecd42be378445a5b4326109c2f45f35046e21c  /tmp/v5/en2.sol
+032de8ff29ac779caf31ea9c119a2253a6653d6fe95a69905d1b0b343fde1f88  /home/claude/pkgL05v2/contracts-fa/BlockRewardDistributor.sol
+032de8ff29ac779caf31ea9c119a2253a6653d6fe95a69905d1b0b343fde1f88  /tmp/v5/fa2.sol

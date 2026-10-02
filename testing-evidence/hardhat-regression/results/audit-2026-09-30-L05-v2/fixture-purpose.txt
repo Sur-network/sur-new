@@ -1,0 +1,7 @@
+Fixture edits made in this round (only the reward amount was lowered to the approved maximum of the test's own block range):
+ - verify_everActivated_policy.js : rewards 1000 -> 200 SUR (range 1..100 at 2 SUR/block) and 100 -> 20 SUR (10-block range). All 19 assertions unchanged.
+ - test_L07_strict_ascending.js   : reward 1000 -> 200 SUR (range 1..100). All 12 checks unchanged.
+Purpose preserved (same mutant, old fixture on pre-L05 code vs new fixture on final code):
+ - everActivated policy: mutant "everActivated -> isValidator". NEW fixture + final code: see mutations/outputs/mut-M36_everActivated_to_isValidator ; OLD fixture + pre-L05 code: mutations/outputs/mut-PRE_L05_M36.
+   Both abort at the very first payment with the same message ("address was never a legitimate validator"), 0 checks passed in each -> identical detection.
+ - L07 ascending order: mutant M16b (no ascending check) fails checks 1 2 3 4 5, the same checks as the original M16 run (see mutations/outputs/mut-M16b_no_ascending_validators).

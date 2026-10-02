@@ -1,0 +1,10 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M27_no_ascending_check/BlockRewardDistributor.sol	2026-10-01 23:43:36.916924674 +0000
+@@ -789,7 +789,6 @@
+         if (startBlock <= block.number) return 2;
+         if (startBlock < block.number + MIN_RATE_CHANGE_LEAD_BLOCKS) return 3;
+         uint256 n = rewardRateChanges.length;
+-        if (n > 0 && startBlock <= rewardRateChanges[n - 1].startBlock) return 4;
+         return 0;
+     }
+ 

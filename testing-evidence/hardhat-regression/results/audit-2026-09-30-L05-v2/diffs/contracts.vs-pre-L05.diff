@@ -1,0 +1,250 @@
+--- /home/claude/w/preL05/contracts/BlockRewardDistributor.sol	2026-10-01 19:52:44.648161317 +0000
++++ /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
+@@ -303,6 +303,60 @@
+     mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
+     uint256 public shareProposalCount;
+ 
++    // L05 (owner decision, audit 2026-09-30): approved block-reward rate history, used to cap totalRewards per settled range.
++    // Initial rate INITIAL_REWARD_PER_BLOCK applies from block 1 until the first entry. Entries are append-only, with strictly
++    // ascending startBlock, and take effect only from a FUTURE height; past effective history is never rewritten.
++    // TRUST BOUNDARY: this contract does not read Besu's actual block reward. The approved rates must be kept in line with the
++    // network's genesis transitions operationally; the cap does not prove fee correctness, block attribution, or that the
++    // recorded rate equals Besu's. It only bounds the gross reward the oracle can report for a range.
++    // Governance (implemented below): proposals need 3 of the 5 board members (live authority + board-composition guard, as in L02)
++    // AND two thirds of the validators eligible when the proposal was created (L04 policy). The 30-day voting expiry applies to the
++    // voting phase only; once both chambers have completed, a 7-day delay starts, and execution re-checks everything (see
++    // executeRateChange). The distribution oracle has no power over this history.
++    uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
++    struct RewardRateChange {
++        uint128 startBlock; // first block at which ratePerBlock applies
++        uint128 ratePerBlock; // wei per block
++    }
++    RewardRateChange[] private rewardRateChanges;
++
++    // ------------------------------------------------------------------
++    // L05 governance — approved reward-rate changes (owner decision, audit 2026-09-30)
++    // ------------------------------------------------------------------
++    /// @notice Board approvals needed: 3 of the 5-member board (== BOARD_SIZE / 2 + 1).
++    uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 3;
++    /// @notice Voting phase only. An approved proposal waiting for its delay/execution is NOT removed by this expiry.
++    uint256 public constant RATE_VOTING_EXPIRY = 30 days;
++    /// @notice Starts when BOTH chambers have completed.
++    uint256 public constant RATE_CHANGE_DELAY = 7 days;
++    /// @notice Minimum distance, in BLOCKS, between the block that executes the change and its startBlock. Roughly 7 days only at the
++    ///         nominal 3 s cadence; it is a block count, not a time, and is independent of RATE_CHANGE_DELAY.
++    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 201_600;
++
++    struct RateProposal {
++        uint128 startBlock;
++        uint128 ratePerBlock;
++        uint256 createdAt;
++        uint256 votingExpiresAt;
++        uint256 requiredValidatorApprovals; // ceil(2/3) of the validators active at creation, frozen
++        uint256 boardApprovals;
++        uint256 validatorApprovals;
++        uint256 approvedAt; // 0 until both chambers have completed
++        bool executed;
++        uint256 boardVersionAtCreation; // L02 guard: a real change of board composition voids the proposal
++        uint256 validatorNonceAtCreation; // L04 snapshot of the validator electorate
++    }
++    mapping(uint256 => RateProposal) public rateProposals;
++    mapping(uint256 => mapping(address => bool)) private rateBoardVoted;
++    mapping(uint256 => mapping(address => bool)) private rateValidatorVoted;
++    uint256 public rateProposalCount;
++
++    event RateChangeProposed(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock, address indexed proposer);
++    event RateChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
++    event RateChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
++    event RateChangeApproved(uint256 indexed id, uint256 approvedAt, uint256 executableAt);
++    event RateChangeExecuted(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock);
++
+     // ------------------------------------------------------------------
+     // Events
+     // ------------------------------------------------------------------
+@@ -563,6 +617,9 @@
+         // instead of inline.
+         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
+         _settleRange(range, prep.totalBlocks); // P05
++        // L05: totalRewards may not exceed the approved reward of the blocks in this (already validated, contiguous) range.
++        // Fees and membership fees are outside this cap; split and burn rules are unchanged.
++        require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
+ 
+         epochCount++;
+         uint256 epochId = epochCount;
+@@ -618,6 +675,176 @@
+     ///      bundles the pre-computation phase's 4 result scalars into one memory struct pointer
+     ///      instead of 4 separate live stack locals).
+ 
++    /// @notice Propose an approved-rate change effective from `startBlock`. Only an active validator may propose.
++    ///         Early rejection only: every start-block condition is checked again at execution. Proposals are independent; several
++    ///         may be open at once, and whichever is executed first can make another one unexecutable (it is then left as it is).
++    function proposeRateChange(uint256 startBlock, uint256 ratePerBlock) external returns (uint256 id) {
++        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
++        require(startBlock <= type(uint128).max && ratePerBlock <= type(uint128).max, "BlockRewardDistributor: value does not fit uint128");
++        _requireRateStartOk(startBlock);
++        id = ++rateProposalCount;
++        RateProposal storage p = rateProposals[id];
++        p.startBlock = uint128(startBlock);
++        p.ratePerBlock = uint128(ratePerBlock);
++        p.createdAt = block.timestamp;
++        p.votingExpiresAt = block.timestamp + RATE_VOTING_EXPIRY;
++        p.requiredValidatorApprovals = (REGISTRY.getActiveValidatorCount() * 2 + 2) / 3; // ceil(2/3), frozen now
++        p.boardVersionAtCreation = BOARD_CONTRACT.boardVersion();
++        p.validatorNonceAtCreation = REGISTRY.statusNonce();
++        emit RateChangeProposed(id, startBlock, ratePerBlock, msg.sender);
++    }
++
++    /// @notice Board chamber: needs live board authority; the proposal must still belong to the current board composition.
++    function boardVoteRateChange(uint256 id) external {
++        require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        require(
++            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++        );
++        _requireRateVotable(p);
++        require(!rateBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
++        rateBoardVoted[id][msg.sender] = true;
++        p.boardApprovals++;
++        emit RateChangeBoardVoted(id, msg.sender, p.boardApprovals, RATE_CHANGE_BOARD_APPROVALS);
++        _markRateApprovedIfComplete(id, p);
++    }
++
++    /// @notice Validator chamber: eligible = Active when the proposal was created (L04) and Active now.
++    function validatorVoteRateChange(uint256 id) external {
++        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        _requireRateVotable(p);
++        require(!rateValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
++        require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
++        rateValidatorVoted[id][msg.sender] = true;
++        p.validatorApprovals++;
++        emit RateChangeValidatorVoted(id, msg.sender, p.validatorApprovals, p.requiredValidatorApprovals);
++        _markRateApprovedIfComplete(id, p);
++    }
++
++    /// @notice Anyone may execute once both chambers have completed and RATE_CHANGE_DELAY has passed since that moment.
++    ///         Re-checks: board composition, start block still in the future, MIN_RATE_CHANGE_LEAD_BLOCKS, and strictly ascending
++    ///         history. If any check fails the proposal stays exactly as it is: no time or height is ever moved automatically.
++    function executeRateChange(uint256 id) external {
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        require(!p.executed, "BlockRewardDistributor: already executed");
++        require(p.approvedAt != 0, "BlockRewardDistributor: not approved by both chambers");
++        require(block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY, "BlockRewardDistributor: execution delay has not elapsed");
++        require(
++            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++        );
++        _requireRateStartOk(p.startBlock);
++        p.executed = true;
++        rewardRateChanges.push(RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock}));
++        emit RateChangeExecuted(id, p.startBlock, p.ratePerBlock);
++    }
++
++    /// @notice Status as of the latest block. status: 0 not found, 1 voting, 2 voting expired (never approved), 3 executed,
++    ///         4 approved and waiting for the delay, 5 executable now, 6 approved but currently unexecutable,
++    ///         7 not yet approved and unable to continue (voting can no longer lead to an executable change).
++    ///         problem (status 6 or 7): 1 board composition changed, 2 start block not in the future, 3 closer than
++    ///         MIN_RATE_CHANGE_LEAD_BLOCKS, 4 not after the last approved change. Every problem is permanent (block numbers only grow, the
++    ///         history only grows, a board change cannot be undone for a proposal), so status 7 never goes back to 1.
++    ///         Execution happens in a later block, so this is advisory.
++    function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
++        RateProposal storage p = rateProposals[id];
++        if (p.createdAt == 0) return (0, 0);
++        if (p.executed) return (3, 0);
++        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
++        if (p.approvedAt == 0) {
++            if (block.timestamp > p.votingExpiresAt) return (2, 0);
++            if (problem != 0) return (7, problem);
++            return (1, 0);
++        }
++        if (problem != 0) return (6, problem);
++        return (block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY ? 5 : 4, 0);
++    }
++
++    function _requireRateVotable(RateProposal storage p) private view {
++        require(!p.executed, "BlockRewardDistributor: already executed");
++        require(p.approvedAt == 0, "BlockRewardDistributor: voting closed - already approved by both chambers");
++        require(block.timestamp <= p.votingExpiresAt, "BlockRewardDistributor: voting period has expired");
++    }
++
++    function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
++        if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
++            // L05: both chambers count as complete only if the proposal still belongs to the CURRENT board composition. The board vote
++            // checks this itself; a completing validator vote must not register approval (nor emit RateChangeApproved) for a proposal
++            // whose board has since changed - execution would refuse it anyway. The vote is not recorded; the proposal can no longer succeed.
++            require(
++                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++            );
++            p.approvedAt = block.timestamp;
++            emit RateChangeApproved(id, block.timestamp, block.timestamp + RATE_CHANGE_DELAY);
++        }
++    }
++
++    function _rateStartProblem(uint256 startBlock) private view returns (uint8) {
++        if (startBlock <= block.number) return 2;
++        if (startBlock < block.number + MIN_RATE_CHANGE_LEAD_BLOCKS) return 3;
++        uint256 n = rewardRateChanges.length;
++        if (n > 0 && startBlock <= rewardRateChanges[n - 1].startBlock) return 4;
++        return 0;
++    }
++
++    function _requireRateStartOk(uint256 startBlock) private view {
++        uint8 r = _rateStartProblem(startBlock);
++        require(r != 2, "BlockRewardDistributor: start block is not in the future");
++        require(r != 3, "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS");
++        require(r != 4, "BlockRewardDistributor: start block must be after the last approved rate change");
++    }
++
++    /// @dev Binary search: number of history entries whose startBlock <= blockNumber (history is strictly ascending).
++    function _rateEntriesUpTo(uint256 blockNumber) private view returns (uint256 lo) {
++        uint256 hi = rewardRateChanges.length;
++        while (lo < hi) {
++            uint256 mid = (lo + hi) / 2;
++            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
++            else hi = mid;
++        }
++    }
++
++    /// @notice L05: approved gross block reward for blocks [fromBlock, toBlock], summed segment by segment over the rate history.
++    ///         Cost = O(log n) to find the rate at fromBlock + one step per rate change INSIDE the range; it depends neither on the
++    ///         number of blocks nor on how many older changes the history holds.
++    function maxRewardsForRange(uint256 fromBlock, uint256 toBlock) public view returns (uint256 total) {
++        require(fromBlock <= toBlock, "BlockRewardDistributor: invalid range");
++        uint256 n = rewardRateChanges.length;
++        uint256 i = _rateEntriesUpTo(fromBlock);
++        uint256 rate = i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
++        uint256 cursor = fromBlock;
++        for (; i < n; i++) {
++            RewardRateChange memory c = rewardRateChanges[i];
++            if (c.startBlock > toBlock) break;
++            total += (c.startBlock - cursor) * rate; // blocks cursor .. startBlock-1
++            cursor = c.startBlock;
++            rate = c.ratePerBlock;
++        }
++        total += (toBlock - cursor + 1) * rate;
++    }
++
++    /// @notice L05: approved reward per block at `blockNumber`.
++    function rewardRateAt(uint256 blockNumber) external view returns (uint256) {
++        uint256 i = _rateEntriesUpTo(blockNumber);
++        return i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
++    }
++
++    /// @notice L05: number of approved rate changes and one entry, for dashboards and audits.
++    function rewardRateChangeCount() external view returns (uint256) {
++        return rewardRateChanges.length;
++    }
++
++    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock) {
++        RewardRateChange memory c = rewardRateChanges[index];
++        return (c.startBlock, c.ratePerBlock);
++    }
++
+     /// @dev P05 range control (see the BlockRange comment). Kept in its own stack frame.
+     ///
+     ///      L03 DESIGN NOTE (audit 2026-09-30) — why there is no time-based cap any more.

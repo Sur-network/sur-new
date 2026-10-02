@@ -1,0 +1,248 @@
+--- /home/claude/w/preL05/contracts-fa/BlockRewardDistributor.sol	2026-10-01 19:52:44.649701117 +0000
++++ /home/claude/w/contracts-fa/BlockRewardDistributor.sol	2026-10-01 23:42:21.695009060 +0000
+@@ -296,6 +296,60 @@
+     mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
+     uint256 public shareProposalCount;
+ 
++    // L05 (تصمیم مالک، ممیزی ۲۰۲۶-۰۹-۳۰): تاریخچه‌ی نرخ مصوب پاداش بلاک، برای سقف totalRewards هر بازه‌ی تسویه.
++    // نرخ اولیه‌ی INITIAL_REWARD_PER_BLOCK از بلاک ۱ تا اولین ورودی اعمال می‌شود. ورودی‌ها فقط‌افزودنی‌اند، با startBlock اکیداً
++    // صعودی، و فقط از ارتفاعی «آینده» اثر می‌گذارند؛ تاریخچه‌ی مؤثر گذشته هرگز بازنویسی نمی‌شود.
++    // مرز اعتماد: این قرارداد پاداش واقعی بلاک در Besu را نمی‌خواند. نرخ‌های مصوب باید از نظر عملیاتی با transitionهای genesis
++    // شبکه هماهنگ نگه داشته شوند؛ این سقف صحت کارمزد، انتساب بلاک یا برابری نرخ ثبت‌شده با Besu را اثبات نمی‌کند و فقط
++    // پاداش ناخالصی را که اوراکل می‌تواند برای یک بازه گزارش کند محدود می‌کند.
++    // حکمرانی (در ادامه پیاده شده): پیشنهاد به ۳ رأی از ۵ عضو هیأت (اختیار زنده + محافظ نسخه‌ی ترکیب هیأت مثل L02) و همچنین
++    // دوسوم ولیدیتورهای واجد هنگام ساخت پیشنهاد (سیاست L04) نیاز دارد. انقضای ۳۰روزه فقط برای مرحله‌ی رأی‌گیری است؛ پس از تکمیل
++    // هر دو مجلس تأخیر ۷روزه شروع می‌شود و اجرا همه‌چیز را دوباره بررسی می‌کند (executeRateChange را ببینید). اوراکل توزیع
++    // هیچ اختیاری روی این تاریخچه ندارد.
++    uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
++    struct RewardRateChange {
++        uint128 startBlock; // اولین بلاکی که ratePerBlock از آن اعمال می‌شود
++        uint128 ratePerBlock; // wei به‌ازای هر بلاک
++    }
++    RewardRateChange[] private rewardRateChanges;
++
++    // ------------------------------------------------------------------
++    // حکمرانی L05 — تغییر نرخ مصوب پاداش (تصمیم مالک، ممیزی ۲۰۲۶-۰۹-۳۰)
++    // ------------------------------------------------------------------
++    /// @notice تعداد تأیید لازم از هیأت: ۳ از ۵ عضو (برابر BOARD_SIZE / 2 + 1).
++    uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 3;
++    /// @notice فقط مرحله‌ی رأی‌گیری. پیشنهاد تصویب‌شده‌ای که منتظر تأخیر یا اجراست با این انقضا حذف نمی‌شود.
++    uint256 public constant RATE_VOTING_EXPIRY = 30 days;
++    /// @notice از لحظه‌ای شروع می‌شود که «هر دو» مجلس تکمیل شده باشند.
++    uint256 public constant RATE_CHANGE_DELAY = 7 days;
++    /// @notice حداقل فاصله، به «بلاک»، بین بلاکی که تغییر را اجرا می‌کند و startBlock آن. فقط در آهنگ اسمی ۳ ثانیه‌ای تقریباً ۷ روز
++    ///         است؛ یک شمار بلاک است نه زمان، و از RATE_CHANGE_DELAY جداست.
++    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 201_600;
++
++    struct RateProposal {
++        uint128 startBlock;
++        uint128 ratePerBlock;
++        uint256 createdAt;
++        uint256 votingExpiresAt;
++        uint256 requiredValidatorApprovals; // ceil(2/3) ولیدیتورهای فعال هنگام ساخت، ثابت‌شده
++        uint256 boardApprovals;
++        uint256 validatorApprovals;
++        uint256 approvedAt; // تا تکمیل هر دو مجلس صفر است
++        bool executed;
++        uint256 boardVersionAtCreation; // محافظ L02: تغییر واقعی ترکیب هیأت پیشنهاد را باطل می‌کند
++        uint256 validatorNonceAtCreation; // snapshot واجدان ولیدیتور (L04)
++    }
++    mapping(uint256 => RateProposal) public rateProposals;
++    mapping(uint256 => mapping(address => bool)) private rateBoardVoted;
++    mapping(uint256 => mapping(address => bool)) private rateValidatorVoted;
++    uint256 public rateProposalCount;
++
++    event RateChangeProposed(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock, address indexed proposer);
++    event RateChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
++    event RateChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
++    event RateChangeApproved(uint256 indexed id, uint256 approvedAt, uint256 executableAt);
++    event RateChangeExecuted(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock);
++
+     // ------------------------------------------------------------------
+     // Events
+     // ------------------------------------------------------------------
+@@ -552,6 +606,9 @@
+         // ریاضی، فقط داخل یه تابع کمکی محاسبه می‌شه به‌جای inline.
+         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
+         _settleRange(range, prep.totalBlocks); // P05
++        // L05: totalRewards نباید از پاداش مصوب بلاک‌های این بازه (که پیش‌تر پیوستگی‌اش تأیید شده) بیشتر باشد.
++        // کارمزد عادی و کارمزد عضویت خارج از این سقف‌اند؛ قواعد تقسیم و سوزاندن بدون تغییر است.
++        require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
+ 
+         epochCount++;
+         uint256 epochId = epochCount;
+@@ -605,6 +662,174 @@
+     ///      ۴ مقدار نتیجه‌ی فاز پیش‌محاسبه رو توی یه اشاره‌گر struct حافظه جمع می‌کنه به‌جای
+     ///      ۴ متغیر local جدا و هم‌زمان زنده).
+ 
++    /// @notice پیشنهاد تغییر نرخ مصوب از `startBlock`. فقط ولیدیتور فعال می‌تواند پیشنهاد دهد. این فقط ردِ زودهنگام است: همه‌ی
++    ///         شرط‌های ارتفاع شروع هنگام اجرا دوباره بررسی می‌شوند. پیشنهادها مستقل‌اند؛ چند پیشنهاد می‌توانند هم‌زمان باز باشند و
++    ///         هرکدام زودتر اجرا شود ممکن است دیگری را غیرقابل‌اجرا کند (آن‌گاه همان‌طور که هست می‌ماند).
++    function proposeRateChange(uint256 startBlock, uint256 ratePerBlock) external returns (uint256 id) {
++        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
++        require(startBlock <= type(uint128).max && ratePerBlock <= type(uint128).max, "BlockRewardDistributor: value does not fit uint128");
++        _requireRateStartOk(startBlock);
++        id = ++rateProposalCount;
++        RateProposal storage p = rateProposals[id];
++        p.startBlock = uint128(startBlock);
++        p.ratePerBlock = uint128(ratePerBlock);
++        p.createdAt = block.timestamp;
++        p.votingExpiresAt = block.timestamp + RATE_VOTING_EXPIRY;
++        p.requiredValidatorApprovals = (REGISTRY.getActiveValidatorCount() * 2 + 2) / 3; // ceil(2/3), frozen now
++        p.boardVersionAtCreation = BOARD_CONTRACT.boardVersion();
++        p.validatorNonceAtCreation = REGISTRY.statusNonce();
++        emit RateChangeProposed(id, startBlock, ratePerBlock, msg.sender);
++    }
++
++    /// @notice مجلس هیأت: اختیار زنده لازم است؛ پیشنهاد باید هنوز متعلق به ترکیب فعلی هیأت باشد.
++    function boardVoteRateChange(uint256 id) external {
++        require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        require(
++            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++        );
++        _requireRateVotable(p);
++        require(!rateBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
++        rateBoardVoted[id][msg.sender] = true;
++        p.boardApprovals++;
++        emit RateChangeBoardVoted(id, msg.sender, p.boardApprovals, RATE_CHANGE_BOARD_APPROVALS);
++        _markRateApprovedIfComplete(id, p);
++    }
++
++    /// @notice مجلس ولیدیتورها: واجد = هنگام ساخت پیشنهاد Active بوده (L04) و اکنون هم Active است.
++    function validatorVoteRateChange(uint256 id) external {
++        require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        _requireRateVotable(p);
++        require(!rateValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
++        require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
++        rateValidatorVoted[id][msg.sender] = true;
++        p.validatorApprovals++;
++        emit RateChangeValidatorVoted(id, msg.sender, p.validatorApprovals, p.requiredValidatorApprovals);
++        _markRateApprovedIfComplete(id, p);
++    }
++
++    /// @notice هرکس می‌تواند اجرا کند، پس از تکمیل هر دو مجلس و گذشتن RATE_CHANGE_DELAY از آن لحظه. دوباره بررسی می‌شود: ترکیب
++    ///         هیأت، آینده‌بودن ارتفاع شروع، MIN_RATE_CHANGE_LEAD_BLOCKS، و ترتیب اکیداً صعودی تاریخچه. اگر هر بررسی شکست بخورد پیشنهاد
++    ///         دقیقاً همان‌طور که هست می‌ماند: هیچ زمان یا ارتفاعی خودکار جابه‌جا نمی‌شود.
++    function executeRateChange(uint256 id) external {
++        RateProposal storage p = rateProposals[id];
++        require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
++        require(!p.executed, "BlockRewardDistributor: already executed");
++        require(p.approvedAt != 0, "BlockRewardDistributor: not approved by both chambers");
++        require(block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY, "BlockRewardDistributor: execution delay has not elapsed");
++        require(
++            p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++            "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++        );
++        _requireRateStartOk(p.startBlock);
++        p.executed = true;
++        rewardRateChanges.push(RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock}));
++        emit RateChangeExecuted(id, p.startBlock, p.ratePerBlock);
++    }
++
++    /// @notice وضعیت در آخرین بلاک. status: ۰ یافت نشد، ۱ در حال رأی‌گیری، ۲ رأی‌گیری منقضی (هرگز تصویب نشد)، ۳ اجراشده،
++    ///         ۴ تصویب‌شده و منتظر تأخیر، ۵ اکنون قابل اجرا، ۶ تصویب‌شده ولی فعلاً غیرقابل‌اجرا،
++    ///         ۷ هنوز تصویب‌نشده و غیرقابل‌ادامه (رأی‌گیری دیگر به تغییر قابل‌اجرا نمی‌رسد).
++    ///         problem (برای status ۶ یا ۷): ۱ ترکیب هیأت تغییر کرده، ۲ ارتفاع شروع در آینده نیست، ۳ نزدیک‌تر از MIN_RATE_CHANGE_LEAD_BLOCKS،
++    ///         ۴ پس از آخرین تغییر مصوب نیست. هر مشکل دائمی است (شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت برای
++    ///         یک پیشنهاد برگشت‌پذیر نیست)؛ پس status ۷ هرگز به ۱ برنمی‌گردد. اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
++    function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
++        RateProposal storage p = rateProposals[id];
++        if (p.createdAt == 0) return (0, 0);
++        if (p.executed) return (3, 0);
++        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
++        if (p.approvedAt == 0) {
++            if (block.timestamp > p.votingExpiresAt) return (2, 0);
++            if (problem != 0) return (7, problem);
++            return (1, 0);
++        }
++        if (problem != 0) return (6, problem);
++        return (block.timestamp >= p.approvedAt + RATE_CHANGE_DELAY ? 5 : 4, 0);
++    }
++
++    function _requireRateVotable(RateProposal storage p) private view {
++        require(!p.executed, "BlockRewardDistributor: already executed");
++        require(p.approvedAt == 0, "BlockRewardDistributor: voting closed - already approved by both chambers");
++        require(block.timestamp <= p.votingExpiresAt, "BlockRewardDistributor: voting period has expired");
++    }
++
++    function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
++        if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
++            // L05: تکمیل هر دو مجلس فقط وقتی معتبر است که پیشنهاد هنوز متعلق به ترکیب «فعلی» هیأت باشد. رأی هیأت خودش این را بررسی
++            // می‌کند؛ رأی تکمیل‌کننده‌ی ولیدیتورها نباید برای پیشنهادی که هیأتش از آن پس تغییر کرده تصویب (و رویداد RateChangeApproved) ثبت
++            // کند — اجرا هم به هر حال آن را رد می‌کند. این رأی ثبت نمی‌شود؛ پیشنهاد دیگر نمی‌تواند موفق شود.
++            require(
++                p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
++                "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
++            );
++            p.approvedAt = block.timestamp;
++            emit RateChangeApproved(id, block.timestamp, block.timestamp + RATE_CHANGE_DELAY);
++        }
++    }
++
++    function _rateStartProblem(uint256 startBlock) private view returns (uint8) {
++        if (startBlock <= block.number) return 2;
++        if (startBlock < block.number + MIN_RATE_CHANGE_LEAD_BLOCKS) return 3;
++        uint256 n = rewardRateChanges.length;
++        if (n > 0 && startBlock <= rewardRateChanges[n - 1].startBlock) return 4;
++        return 0;
++    }
++
++    function _requireRateStartOk(uint256 startBlock) private view {
++        uint8 r = _rateStartProblem(startBlock);
++        require(r != 2, "BlockRewardDistributor: start block is not in the future");
++        require(r != 3, "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS");
++        require(r != 4, "BlockRewardDistributor: start block must be after the last approved rate change");
++    }
++
++    /// @dev جست‌وجوی دودویی: تعداد ورودی‌های تاریخچه با startBlock <= blockNumber (تاریخچه اکیداً صعودی است).
++    function _rateEntriesUpTo(uint256 blockNumber) private view returns (uint256 lo) {
++        uint256 hi = rewardRateChanges.length;
++        while (lo < hi) {
++            uint256 mid = (lo + hi) / 2;
++            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
++            else hi = mid;
++        }
++    }
++
++    /// @notice L05: پاداش ناخالص مصوب برای بلاک‌های [fromBlock, toBlock]، جمع بخش‌به‌بخش روی تاریخچه‌ی نرخ. هزینه = O(log n) برای
++    ///         یافتن نرخ در fromBlock + یک گام برای هر تغییر نرخ «داخل» بازه؛ نه به تعداد بلاک‌ها بستگی دارد و نه به تعداد تغییرهای قدیمی‌تر.
++    function maxRewardsForRange(uint256 fromBlock, uint256 toBlock) public view returns (uint256 total) {
++        require(fromBlock <= toBlock, "BlockRewardDistributor: invalid range");
++        uint256 n = rewardRateChanges.length;
++        uint256 i = _rateEntriesUpTo(fromBlock);
++        uint256 rate = i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
++        uint256 cursor = fromBlock;
++        for (; i < n; i++) {
++            RewardRateChange memory c = rewardRateChanges[i];
++            if (c.startBlock > toBlock) break;
++            total += (c.startBlock - cursor) * rate; // blocks cursor .. startBlock-1
++            cursor = c.startBlock;
++            rate = c.ratePerBlock;
++        }
++        total += (toBlock - cursor + 1) * rate;
++    }
++
++    /// @notice L05: پاداش مصوب هر بلاک در ارتفاع `blockNumber`.
++    function rewardRateAt(uint256 blockNumber) external view returns (uint256) {
++        uint256 i = _rateEntriesUpTo(blockNumber);
++        return i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
++    }
++
++    /// @notice L05: تعداد تغییرهای نرخ مصوب و یک ورودی، برای داشبوردها و حسابرسی.
++    function rewardRateChangeCount() external view returns (uint256) {
++        return rewardRateChanges.length;
++    }
++
++    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock) {
++        RewardRateChange memory c = rewardRateChanges[index];
++        return (c.startBlock, c.ratePerBlock);
++    }
++
+     /// @dev کنترل بازه‌ی P05 (کامنت BlockRange را ببینید). در stack frame جدای خودش نگه داشته شده.
+     ///
+     ///      یادداشت طراحی L03 (ممیزی ۲۰۲۶-۰۹-۳۰) — چرا دیگر سقف زمان‌محور وجود ندارد.

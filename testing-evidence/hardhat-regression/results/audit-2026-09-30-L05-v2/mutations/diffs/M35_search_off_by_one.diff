@@ -1,0 +1,11 @@
+--- /home/claude/w/contracts/BlockRewardDistributor.sol	2026-10-01 23:42:21.672316859 +0000
++++ /home/claude/w/mutG2/M35_search_off_by_one/BlockRewardDistributor.sol	2026-10-01 23:43:36.909668531 +0000
+@@ -805,7 +805,7 @@
+         uint256 hi = rewardRateChanges.length;
+         while (lo < hi) {
+             uint256 mid = (lo + hi) / 2;
+-            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
++            if (rewardRateChanges[mid].startBlock < blockNumber) lo = mid + 1;
+             else hi = mid;
+         }
+     }

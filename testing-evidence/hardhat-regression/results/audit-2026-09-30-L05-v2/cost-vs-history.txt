@@ -1,0 +1,22 @@
+# Cost of maxRewardsForRange — O(log n + k), k = rate changes INSIDE the range (gas, estimateGas). Raw lines from the packaged run (solc 0.8.37, EN).
+BEFORE the binary-search rewrite (linear scan over all entries up to toBlock; measured on the cap-only sandbox build), short range with NO change inside: 4 entries = 34784 | 40 = 129046 | 400 = 1072777
+
+(1) k = 0, history length 4 / 40 / 400:
+✅ D3) history length 4 -> 400 entries: short range without a change inside costs < 2x (binary search; was 31x with a linear scan)  4=30089 40=37889 400=45689
+
+(2) history 400 entries, k = 0,1,5,20,40,100,399 inside the range (E1 = equals per-block brute force, E2 = linear in k):
+✅ E1) with a 400-entry history, ranges holding k = 0,1,5,20,40,100,399 changes equal the per-block brute force
+✅ E2) gas grows linearly with k: the marginal cost per change (k=20,40,100) stays within 15% of the 0→399 average  k=0:45689 k=1:49033 k=5:56173 k=20:96484 k=40:152497 k=100:326289 k=399:1160454 | marginal per change ≈ 2793
+
+(3) same k = 39, history 40 vs 400 (E3):
+✅ E3) same k = 39: a 40-entry vs a 400-entry history differ by ≤ 12% (only the log n search differs)  n=40:140294 n=400:150188
+
+(4) crossing the same changes: 2,000-block range vs 10,000,000-block range (D1) and 4 vs 40 changes (D2):
+✅ D1) same changes crossed: a 10,000,000-block range costs about the same as a 2,000-block range (≤ +2%)  2k=37333 10M=37345
+✅ D2) 40 changes cost more than 4 (cost scales with changes)  4 changes=37345 40 changes=140649
+
+Governance operations vs history (K1/K2):
+✅ K1) propose: gas with 400 old entries within +3% of gas with none  0=198556 400=200945
+✅ K2) execute: gas with 400 old entries within +3% of gas with none  0=104599 400=89888
+
+NOT generalised: the k = 0 result says nothing about ranges with many changes; the contract does not bound k per range. The production gasLimit is a genesis parameter not fixed in the documents (the test genesis used an effectively unbounded value).
