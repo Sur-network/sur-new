@@ -1,0 +1,4 @@
+# Search for remaining 'not run / not tested' statements about Besu in the ten edited documents (2026-10-03T20:06Z)
+# Remaining hits are (a) historical sections of dated documents, (b) the intended 'not executed' statements for the real-time path L, (c) unrelated topics.
+./PLAN-path-L-real-time.md:40:- **بیمه (هر دو گزینه تأییدنشده؛ بخش ۸ باید بسنجد):** (الف) `--bonsai-historical-block-limit=<N>` (پیش‌فرض ۵۱۲؛ طبق 
+./REPORT.md:241:> انجام نشده است. در دور تکمیلی سوم (۲۰۲۶-۱۰-۰۳/۰۴) C-L04-6 روی شبکهٔ تازه با seed ۱۵ عضوی FoundationDAO اجرا و پاس شد

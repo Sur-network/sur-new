@@ -1,0 +1,398 @@
+{
+  "generatedAt": "2026-10-03T20:00:13.162Z",
+  "networks": [
+    {
+      "network": "Net-A14",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791025128",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-B",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904587",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-BR",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791056279",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "1791056279",
+      "equalsGenesisTimestamp": true,
+      "status": "OK (fixed)"
+    },
+    {
+      "network": "Net-BR0",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791056929",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "NEGATIVE CONTROL (value 0 on purpose, built with BUILDER_BOARD_REFRESH_ZERO=1)"
+    },
+    {
+      "network": "Net-D",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904655",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-D3",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018083",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-E15",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791021014",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-E30",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791021021",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-E60",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791021024",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F1",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018049",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F2",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018069",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F3",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018071",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F4",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018074",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F5",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018076",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F5b",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791025125",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F6",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791025542",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-F6-attempt1",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791025123",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-Fork",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904664",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L01",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904646",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L02",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904648",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L04",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904650",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L04f",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050554",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L04g",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791056923",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "1791056923",
+      "equalsGenesisTimestamp": true,
+      "status": "OK (fixed)"
+    },
+    {
+      "network": "Net-L05",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1790904653",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L05a",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018079",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-L05b",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791018081",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-D3",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050950",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-E15",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050953",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-E30",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050956",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-E60",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791052998",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-F1",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050146",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-F2",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050160",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-F3",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050163",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-F4",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050546",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-F6",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050549",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    },
+    {
+      "network": "Net-T-L05",
+      "source": "evidence/02-genesis",
+      "genesisTimestamp": "1791050551",
+      "boardSeededMembers": 5,
+      "boardVersion": 1,
+      "lastBoardRefreshAt": "0",
+      "equalsGenesisTimestamp": false,
+      "status": "AFFECTED (value 0, board seeded)"
+    }
+  ],
+  "counts": {
+    "total": 36,
+    "negativeControl": 1,
+    "affected": 33,
+    "fixed": 2,
+    "notSeeded": 0,
+    "unexpected": 0
+  },
+  "contractReadersOfLastBoardRefreshAt": [
+    {
+      "line": 244,
+      "text": "uint256 public lastBoardRefreshAt;"
+    },
+    {
+      "line": 449,
+      "text": "boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,"
+    },
+    {
+      "line": 508,
+      "text": "lastBoardRefreshAt = block.timestamp;"
+    }
+  ],
+  "scriptsMentioningRefreshBoard": [
+    {
+      "file": "hardhat/scripts/testonly-build-one-v5.js",
+      "refreshBoardMentions": 1
+    },
+    {
+      "file": "hardhat/scripts/testonly-build-one.js",
+      "refreshBoardMentions": 1
+    }
+  ],
+  "rawResultsMentioningRefreshBoard": []
+}

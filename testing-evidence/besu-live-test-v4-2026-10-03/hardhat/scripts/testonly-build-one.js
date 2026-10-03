@@ -8,7 +8,7 @@
 //   BUILDER_CANDIDATE    "1" to also fund+prepare C6 (not genesis-active) or "0"
 //   BUILDER_CHAINID      numeric
 //   BUILDER_GASLIMIT     numeric (wei-free, plain block gas limit)
-//   BUILDER_SEED_BOARD   "1" or "0"
+//   BUILDER_SEED_BOARD   "1" or "0"  (when seeded, lastBoardRefreshAt = genesis timestamp; BUILDER_BOARD_REFRESH_ZERO=1 = old behaviour, negative control only)
 //   BUILDER_SEED_FOUNDATION "1" or "0"
 //   BUILDER_PROJECT_ROOT absolute path to this hardhat project's parent test dir (besu-test-v4)
 //   BUILDER_IS_FORK      "1" if this is the hardhat-fork project (affects which contract names apply, none differ actually)
@@ -215,6 +215,13 @@ async function main() {
       boardStorage[mappingSlot(addr, 1)] = toHex32(1);
     }
     console.log(`[board] seeded ${boardMembers.length} members`);
+    // A09 fix (2026-10-04): genesis-builder spec 4.2.1 / P01 — when the board is seeded, lastBoardRefreshAt must equal the genesis timestamp
+    // (otherwise refreshBoard() is allowed immediately instead of after BOARD_REFRESH_INTERVAL = 30 days). BUILDER_BOARD_REFRESH_ZERO=1 reproduces the
+    // pre-fix behaviour (value 0) and exists ONLY to build a negative-control network.
+    if (process.env.BUILDER_BOARD_REFRESH_ZERO !== "1") {
+      boardStorage[toHex32(slotOf(layouts.ValidatorsBoard, "lastBoardRefreshAt"))] = toHex32(genesisTimestamp);
+      console.log(`[board] lastBoardRefreshAt = genesisTimestamp = ${genesisTimestamp}`);
+    } else console.log("[board] NEGATIVE CONTROL build: lastBoardRefreshAt left at 0 (pre-fix behaviour)");
   }
 
   // --- FoundationDAO (optional) ---

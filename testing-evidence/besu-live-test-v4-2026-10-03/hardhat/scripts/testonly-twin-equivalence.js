@@ -4,6 +4,8 @@ const { ethers, ROOT, fs, saveEvidence } = require("./v5-lib");
 const PAIRS = {
   "Net-T-F1": ["Net-F1"], "Net-T-F2": ["Net-F2", "Net-F5", "Net-F5b"], "Net-T-F3": ["Net-F3"], "Net-T-F4": ["Net-F4"], "Net-T-F6": ["Net-F6"],
   "Net-T-L05": ["Net-L05a", "Net-L05b"], "Net-T-D3": ["Net-D3", "Net-A14"], "Net-T-E15": ["Net-E15"], "Net-T-E30": ["Net-E30"], "Net-T-E60": ["Net-E60"], "Net-L04f": ["Net-L05a"],
+  // A09 fix (2026-10-04): the fixed builder vs the pre-fix network of the same recipe; the negative-control network must be IDENTICAL to the pre-fix one
+  "Net-BR": ["Net-L04f"], "Net-L04g": ["Net-L04f"], "Net-BR0": ["Net-L04f"],
 };
 const only = process.env.TWINS ? process.env.TWINS.split(",") : Object.keys(PAIRS);
 const norm = (h) => (h.startsWith("0x") ? h : "0x" + h).toLowerCase();
@@ -43,4 +45,4 @@ for (const twin of only) {
     console.log(`${twin} ~ ${orig}: ${diffs.length === 0 ? "EQUIVALENT" : "DIFFERENT (" + diffs.length + ")"}  (${nAcc} accounts, ${nSlots} slots, ${tsSlots} timestamp-valued)`);
   }
 }
-saveEvidence("A-twin-equivalence.json", { rule: "alloc, config (without chainId), gasLimit, difficulty and extraData must be identical; storage values equal to the genesis timestamp are compared symbolically", results: res });
+saveEvidence(process.env.OUT || "A-twin-equivalence.json", { rule: "alloc, config (without chainId), gasLimit, difficulty and extraData must be identical; storage values equal to the genesis timestamp are compared symbolically", results: res });

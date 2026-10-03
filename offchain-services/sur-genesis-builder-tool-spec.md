@@ -152,7 +152,7 @@
    BlockRewardDistributor.validatorDirectShareBps() == (مقدار config، پیش‌فرض 5000)   # overlay، مقداردهی سورس هنگام تزریق اجرا نمی‌شود
    ValidatorsBoard.boardVersion() == (مقدار overlay‌شده؛ ۱ اگر نوشته شود، ۰ اگر نه — هر دو کار می‌کنند، ولی assert کن که همان چیزی است که ابزار قصد کرده)
    ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp   # ✅ P01: اگر هیأت seed می‌شود؛ وگرنه اولین بازتعیین فوراً مجاز است
-   # ⚠️ دور سوم آزمون Besu v4: ابزار آزمایشی ساخت این مقدار را ننوشت (۰ روی همهٔ شبکه‌های ساخته‌شده؛ A09-spec شکست). ابزار production باید آن را بنویسد و assert کند، یا این بند تغییر کند — تصمیم باز؛ FINDINGS بستهٔ v4 مورد ۱۹.
+   # ⚠️ دور سوم آزمون Besu v4: ابزار آزمایشی ساخت این مقدار را ننوشت (۰ روی ۳۳ شبکه؛ A09-spec شکست). **دور چهارم: ابزار آزمایشی اصلاح و تأیید شد** (getter = timestamp genesis؛ `refreshBoard()` پیش از ۳۰ روز با «ordinary board changes are applied once every 30 days» رد می‌شود؛ FINDINGS بستهٔ v4 مورد ۲۲). ابزار production باید همین را بنویسد و assert کند، یا این بند تغییر کند — تصمیم باز.
    ValidatorsTreasury.perPaymentCap() == 50000 ether ; periodCap() == 200000 ether   # ✅ P06 (overlay اجباری — مقداردهی‌ها هنگام تزریق اجرا نمی‌شوند)
    BlockRewardDistributor.lastSettledBlock() == 0   # ✅ P05: اولین بازه باید از بلاک ۱ شروع شود
    BlockRewardDistributor.rewardRateChangeCount() == 0   # ✅ L05: تاریخچهٔ نرخ مصوب خالی است؛ نرخ اولیه (۲ SUR) ثابت در کد است و در storage نیست

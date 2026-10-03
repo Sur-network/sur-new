@@ -1,0 +1,11 @@
+# Plan state at the start of this round (before this pass's document edits)
+git HEAD: d6f5469 Tests changes
+git status --short at BUILD time (the pass-4 document edits are uncommitted; the Plan HEAD above is the v5 package as committed):
+ M offchain-services/sur-genesis-builder-tool-spec.md
+ M sur-besu-live-test-brief-v4.md
+ M sur-besu-test-status.md
+ M sur-master-open-items.md
+ M sur-project-handoff-summary.md
+ M technical-design/sur-audit-2026-09-30-final-status.md
+ M technical-design/sur-contracts-deploy-notes.md
+(end)

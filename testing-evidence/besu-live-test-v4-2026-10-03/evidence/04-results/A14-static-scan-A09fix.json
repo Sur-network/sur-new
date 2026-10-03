@@ -1,0 +1,385 @@
+{
+  "generatedAt": "2026-10-03T19:59:32.024Z",
+  "method": "independent derivation of expected alloc (clean-constructor slots of a fresh deploy + analytically computed seed list from storageLayout) vs genesis.json alloc; semantic round-trip; MPT state root",
+  "assumption": "constructors write only plain (sequential-slot) state variables; hashed-location slots (mappings/arrays) can only come from the seed list",
+  "layoutSummary": {
+    "FoundationDAO": [
+      "0:memberList",
+      "1:memberIndex",
+      "2:isMember",
+      "3:proposalCount",
+      "4:proposals",
+      "5:membershipNonce"
+    ],
+    "BlockRewardDistributor": [
+      "0:validatorDirectShareBps",
+      "1:totalFeesBurned",
+      "2:lastShareChangeTime",
+      "3:distributionOracle",
+      "4:lastDistributionTime",
+      "5:epochCount"
+    ],
+    "ValidatorsRegistry": [
+      "0:validators",
+      "1:paidValidatorCount",
+      "2:verifier",
+      "3:activeValidators",
+      "4:activeIndex",
+      "5:lastEconomicParamChangeTime"
+    ],
+    "ValidatorsBoard": [
+      "0:boardMembers",
+      "1:isBoardMember",
+      "2:voterCandidates",
+      "3:hasVotedFor",
+      "4:candidateVoters",
+      "5:voterIndexInCandidateVoters"
+    ],
+    "ValidatorsTreasury": [
+      "0:locked",
+      "1:totalDistributedToTreasury",
+      "2:totalSpent",
+      "3:perPaymentCap",
+      "4:periodCap",
+      "5:dailySpend"
+    ],
+    "IdentityRegistry": [
+      "0:identities",
+      "1:identityOracle"
+    ]
+  },
+  "fdLabels": {
+    "FoundationDAO": [
+      "0:memberList",
+      "1:memberIndex",
+      "2:isMember",
+      "3:proposalCount",
+      "4:proposals",
+      "5:membershipNonce",
+      "6:memberSinceNonce"
+    ]
+  },
+  "results": {
+    "Net-BR": {
+      "meta": {
+        "foundationSeeded": true,
+        "FOUNDERS": "G5",
+        "INCLUDE_C6": false,
+        "rateHistoryEntries": 0,
+        "payees": 0,
+        "genesisTimestamp": "1791056279"
+      },
+      "accounts": {
+        "missing": [],
+        "extra": [],
+        "balanceMismatch": [],
+        "codeOrStorageOnEOA": [],
+        "fixedWithBalance": []
+      },
+      "contracts": {
+        "FoundationDAO": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 61,
+          "actualSlots": 61,
+          "valueChecked": 46,
+          "keyOnlyChecked": 15,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "BlockRewardDistributor": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 47,
+          "actualSlots": 47,
+          "valueChecked": 42,
+          "keyOnlyChecked": 5,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsBoard": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 13,
+          "actualSlots": 13,
+          "valueChecked": 13,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsTreasury": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "IdentityRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 1,
+          "actualSlots": 1,
+          "valueChecked": 1,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        }
+      },
+      "roundTrip": {
+        "registryGetValidators": true,
+        "registryFoundersActiveAndEver": true,
+        "registryPayeesEverNotValidators": "n/a",
+        "registryStatusNonce": "0",
+        "boardMembers": true,
+        "foundation15": true,
+        "distributorOracle": true,
+        "distributorHistoryCount": "0",
+        "distributorHistoryExpected": "0",
+        "distributorHistoryEntriesMatch": true
+      },
+      "genesisAllocStateRoot": "0x3015723d07651cbc7f6c08f836da73a465b1f308c54832e96fde29bd16bd7114",
+      "deviations": 0,
+      "roundTripOk": true,
+      "verdict": "PASS"
+    },
+    "Net-L04g": {
+      "meta": {
+        "foundationSeeded": true,
+        "FOUNDERS": "G5",
+        "INCLUDE_C6": false,
+        "rateHistoryEntries": 0,
+        "payees": 0,
+        "genesisTimestamp": "1791056923"
+      },
+      "accounts": {
+        "missing": [],
+        "extra": [],
+        "balanceMismatch": [],
+        "codeOrStorageOnEOA": [],
+        "fixedWithBalance": []
+      },
+      "contracts": {
+        "FoundationDAO": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 61,
+          "actualSlots": 61,
+          "valueChecked": 46,
+          "keyOnlyChecked": 15,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "BlockRewardDistributor": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 47,
+          "actualSlots": 47,
+          "valueChecked": 42,
+          "keyOnlyChecked": 5,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsBoard": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 13,
+          "actualSlots": 13,
+          "valueChecked": 13,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsTreasury": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "IdentityRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 1,
+          "actualSlots": 1,
+          "valueChecked": 1,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        }
+      },
+      "roundTrip": {
+        "registryGetValidators": true,
+        "registryFoundersActiveAndEver": true,
+        "registryPayeesEverNotValidators": "n/a",
+        "registryStatusNonce": "0",
+        "boardMembers": true,
+        "foundation15": true,
+        "distributorOracle": true,
+        "distributorHistoryCount": "0",
+        "distributorHistoryExpected": "0",
+        "distributorHistoryEntriesMatch": true
+      },
+      "genesisAllocStateRoot": "0x6c50fb568cabcf5a81fd9fe069dfdcd728e2c30a7106262ee3cdc2ea77907636",
+      "deviations": 0,
+      "roundTripOk": true,
+      "verdict": "PASS"
+    },
+    "Net-BR0": {
+      "meta": {
+        "foundationSeeded": true,
+        "FOUNDERS": "G5",
+        "INCLUDE_C6": false,
+        "rateHistoryEntries": 0,
+        "payees": 0,
+        "genesisTimestamp": "1791056929"
+      },
+      "accounts": {
+        "missing": [],
+        "extra": [],
+        "balanceMismatch": [],
+        "codeOrStorageOnEOA": [],
+        "fixedWithBalance": []
+      },
+      "contracts": {
+        "FoundationDAO": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 61,
+          "actualSlots": 61,
+          "valueChecked": 46,
+          "keyOnlyChecked": 15,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "BlockRewardDistributor": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 47,
+          "actualSlots": 47,
+          "valueChecked": 42,
+          "keyOnlyChecked": 5,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsBoard": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 12,
+          "actualSlots": 12,
+          "valueChecked": 12,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsTreasury": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "IdentityRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 1,
+          "actualSlots": 1,
+          "valueChecked": 1,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        }
+      },
+      "roundTrip": {
+        "registryGetValidators": true,
+        "registryFoundersActiveAndEver": true,
+        "registryPayeesEverNotValidators": "n/a",
+        "registryStatusNonce": "0",
+        "boardMembers": true,
+        "foundation15": true,
+        "distributorOracle": true,
+        "distributorHistoryCount": "0",
+        "distributorHistoryExpected": "0",
+        "distributorHistoryEntriesMatch": true
+      },
+      "genesisAllocStateRoot": "0xac4f84a17e3715ef0eeb481442a7126970ca23adda1f46e59903d963a034b43b",
+      "deviations": 0,
+      "roundTripOk": true,
+      "verdict": "PASS"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-10-03T19:59:39.335Z",
+  "method": "block-0 stateRoot reported by a live Besu 26.9.0 node vs MPT root of the genesis.json alloc",
+  "results": {
+    "Net-BR": {
+      "computedRootOfGenesisAlloc": "0x3015723d07651cbc7f6c08f836da73a465b1f308c54832e96fde29bd16bd7114",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0xff7618ce7510bd698f4e65967283462c093697184b45268c4a987905a5c06442",
+        "stateRoot": "0x3015723d07651cbc7f6c08f836da73a465b1f308c54832e96fde29bd16bd7114"
+      },
+      "match": true
+    },
+    "Net-L04g": {
+      "computedRootOfGenesisAlloc": "0x6c50fb568cabcf5a81fd9fe069dfdcd728e2c30a7106262ee3cdc2ea77907636",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0x1103d055bb1a77cecdfbc740c1ff83db2074ee84a6b8b4221e001b64f3c2fc5e",
+        "stateRoot": "0x6c50fb568cabcf5a81fd9fe069dfdcd728e2c30a7106262ee3cdc2ea77907636"
+      },
+      "match": true
+    },
+    "Net-BR0": {
+      "computedRootOfGenesisAlloc": "0xac4f84a17e3715ef0eeb481442a7126970ca23adda1f46e59903d963a034b43b",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0x47bbe24071af8cbacda754277b3fc9ec2be4293bcb10fb561061628acadee790",
+        "stateRoot": "0xac4f84a17e3715ef0eeb481442a7126970ca23adda1f46e59903d963a034b43b"
+      },
+      "match": true
+    }
+  },
+  "allMatch": true
+}

@@ -33,7 +33,7 @@ async function main() {
     console.log(net, r.match ? "MATCH" : "DIFFERENT", computed.slice(0, 14) + "…", r.startedForThisCheck ? "(node started+stopped)" : "(already running)");
   }
   out.allMatch = Object.values(out.results).every((x) => x.match);
-  saveEvidence("A14-live-stateroot.json", out);
+  saveEvidence(process.env.OUT || "A14-live-stateroot.json", out);
   console.log("ALL MATCH:", out.allMatch);
 }
 main().catch((e) => { console.error(e); process.exitCode = 1; });

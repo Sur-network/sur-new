@@ -20,6 +20,9 @@ const META = {
   "Net-T-E30": { port: 9481, founders: "G5", cand: false, gas: 30000000, chain: 424509, transitions: null, history: E399, payees: 150, originals: ["Net-E30"] },
   "Net-T-E60": { port: 9491, founders: "G5", cand: false, gas: 60000000, chain: 424510, transitions: null, history: E399, payees: 150, originals: ["Net-E60"] },
   "Net-L04f": { port: 9501, founders: "G5", cand: false, gas: 30000000, chain: 424511, transitions: null, history: [], payees: 0, originals: [] },
+  "Net-BR": { port: 9601, founders: "G5", cand: false, gas: 30000000, chain: 424601, transitions: null, history: [], payees: 0, originals: [] },
+  "Net-BR0": { port: 9611, founders: "G5", cand: false, gas: 30000000, chain: 424602, transitions: null, history: [], payees: 0, originals: [] },
+  "Net-L04g": { port: 9621, founders: "G5", cand: false, gas: 30000000, chain: 424603, transitions: null, history: [], payees: 0, originals: [] },
 };
 const out = { checks: [] };
 let provider, call;

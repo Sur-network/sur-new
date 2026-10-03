@@ -40,9 +40,9 @@ a24db4f12394e455f351da66990c6bc9880999a091f0ff6d4ce945650b655375 *evidence/04-re
 7548012a39848530d02c2fe22cbe6bd09e54624152ea17d73c9430d7e3243305 *evidence/06-coverage/A-coverage-followup-networks.json
 af63454729a236a4c1721440949b26939d1560dbdc2ffe8be6f7aba9f9fa9cce *evidence/06-coverage/A-coverage-followup-networks.md
 c9c129166dbad551cfb6101bf37da3228ee1e0885ea5a0b6ec663b72aa74e994 *hardhat/scripts/make-a-coverage.js
-3b8d5ae6f6eabf26f44eab0af21c83e3868e02ca13ea309ad296966e42c7a22a *hardhat/scripts/testonly-a-live.js
+# superseded in the fourth pass (the script was extended; its new hash is in new-results-sha256-pass4.txt); third-pass value was: 3b8d5ae6f6eabf26f44eab0af21c83e3868e02ca13ea309ad296966e42c7a22a *hardhat/scripts/testonly-a-live.js
 39d35ffdbf7d5ad1b8901eb927c1033d1b6e6b9d13c5a87058d0466f855ee110 *hardhat/scripts/testonly-cl04-6.js
-d6e478eaceb5710d967a31f7c77e77cb00e39293b89e51aa92a28a3c6a22ff9b *hardhat/scripts/testonly-twin-equivalence.js
+# superseded in the fourth pass (the script was extended; its new hash is in new-results-sha256-pass4.txt); third-pass value was: d6e478eaceb5710d967a31f7c77e77cb00e39293b89e51aa92a28a3c6a22ff9b *hardhat/scripts/testonly-twin-equivalence.js
 471452b0f4bf8e020b39debf8dfed889330d539e87be24b52aaa054e45c81f05 *logs/Net-F3/node1.log
 e65bf7c75fef5d4ab815800242e55583023090a636a6101a8a6cadbf2c3ccd22 *logs/Net-L04f/node1.log
 9294416aa5dfe987e04ee2b024db3c78ec11c77eef9620e99d0102bb20ce2e9d *logs/Net-L04f/node2.log

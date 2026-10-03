@@ -1,0 +1,16 @@
+{
+ "boardMembers": 0,
+ "isBoardMember": 1,
+ "voterCandidates": 2,
+ "hasVotedFor": 3,
+ "candidateVoters": 4,
+ "voterIndexInCandidateVoters": 5,
+ "boardVersion": 6,
+ "lastBoardRefreshAt": 7,
+ "pendingVacancies": 8,
+ "seatMembershipEpoch": 9,
+ "actions": 10,
+ "actionHasVoted": 11,
+ "actionCount": 12,
+ "_voteTally": 13
+}

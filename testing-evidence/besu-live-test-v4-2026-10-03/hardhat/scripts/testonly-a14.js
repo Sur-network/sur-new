@@ -13,6 +13,8 @@ const { allocStateRoot } = require("./v5-mpt");
 const ROOT = "D:/Amir/Business/SUR/Test/besu-test-v4";
 const accounts = JSON.parse(fs.readFileSync(path.join(ROOT, "TEST-KEYS-DO-NOT-REUSE.json"), "utf8"));
 const FIXED = { FoundationDAO: "0x1111111111111111111111111111111111111111", BlockRewardDistributor: "0x2222222222222222222222222222222222222222", ValidatorsRegistry: "0x3333333333333333333333333333333333333333", ValidatorsBoard: "0x4444444444444444444444444444444444444444", ValidatorsTreasury: "0x5555555555555555555555555555555555555555", IdentityRegistry: "0x6666666666666666666666666666666666666666" };
+// A09 fix (2026-10-04): networks built by the FIXED builder carry exactly one more expected slot, ValidatorsBoard.lastBoardRefreshAt == genesis timestamp (default: none, i.e. the earlier behaviour)
+const BOARD_REFRESH_FIXED = new Set((process.env.A14_BOARD_REFRESH_FIXED || "").split(",").filter(Boolean));
 const NETS = (process.env.A14_NETS || "Net-B,Net-L01,Net-L02,Net-L04,Net-L05,Net-D,Net-F1,Net-F2,Net-F3,Net-F4,Net-F5,Net-F5b,Net-F6,Net-L05a,Net-L05b,Net-D3,Net-E15,Net-E30,Net-E60,Net-A14").split(",");
 
 // Build recipes recovered from the original build commands (session transcript): these four networks were built with BUILDER_SEED_FOUNDATION=0,
@@ -84,6 +86,7 @@ async function main() {
     // Board
     const bmSlot = slotOf("ValidatorsBoard", "boardMembers"), ibSlot = slotOf("ValidatorsBoard", "isBoardMember");
     B[T(bmSlot)] = 5n; founders.slice(0, 5).forEach((a, i) => { B[T(arrBase(bmSlot) + BigInt(i))] = BigInt(a); B[T(mapSlot(a, ibSlot))] = 1n; });
+    if (BOARD_REFRESH_FIXED.has(net)) B[T(slotOf("ValidatorsBoard", "lastBoardRefreshAt"))] = ts;
     // FoundationDAO: 15 members, struct {string name; address wallet} = 2 slots each
     const mlSlot = slotOf("FoundationDAO", "memberList"), miSlot = slotOf("FoundationDAO", "memberIndex");
     const fdLabels = layouts.FoundationDAO.storage.map((s) => `${s.slot}:${s.label}`);

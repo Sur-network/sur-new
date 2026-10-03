@@ -1,0 +1,208 @@
+{
+  "NET": "Net-BR",
+  "MODE": "FIXED",
+  "startedAt": "2026-10-03T19:45:15.337Z",
+  "steps": [
+    {
+      "label": "refreshBoard (mined, before 30 days)",
+      "status": 0,
+      "hash": "0x1214b859a1f00e2b1279bee95b262d84ec42269fb317488f328c42972e554531",
+      "note": "transaction execution reverted"
+    },
+    {
+      "label": "syncBoard() with no exit pending (no-op)",
+      "hash": "0x6fe20a169019718029155f347de8f6d830cd4488d9a555c5116a2ed51bbb1251",
+      "block": 121,
+      "status": 1,
+      "gasUsed": "146799"
+    },
+    {
+      "label": "V5 requestExit()",
+      "hash": "0x05b593966ab1172f5fca4eb7776d76bd55d25566626477cd9809aff1cb4e76bf",
+      "block": 123,
+      "status": 1,
+      "gasUsed": "159924"
+    },
+    {
+      "label": "syncBoard() after V5's exit",
+      "hash": "0x5ff6f5f7f236246cd1671f1b4a1c587bdd6007946b020d1fdb22b2b09286832f",
+      "block": 124,
+      "status": 1,
+      "gasUsed": "186024"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "R0",
+      "text": "pristine: no transaction in blocks 1..head before this test",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "R1.1",
+      "text": "block-0 header timestamp equals the genesis.json timestamp (reference value)",
+      "expected": "1791056279",
+      "actual": "1791056279",
+      "pass": true
+    },
+    {
+      "id": "R1.2",
+      "text": "ValidatorsBoard.lastBoardRefreshAt() == genesis timestamp",
+      "expected": "1791056279",
+      "actual": "1791056279",
+      "pass": true
+    },
+    {
+      "id": "R1.3",
+      "text": "raw storage slot 7 (lastBoardRefreshAt) equals the genesis timestamp",
+      "expected": "1791056279",
+      "actual": "1791056279",
+      "pass": true
+    },
+    {
+      "id": "R1.4",
+      "text": "genesis.json alloc has the same value at that slot",
+      "expected": "1791056279",
+      "actual": "1791056279",
+      "pass": true
+    },
+    {
+      "id": "R2.1",
+      "text": "BOARD_REFRESH_INTERVAL() = 30 days",
+      "expected": "2592000",
+      "actual": "2592000",
+      "pass": true
+    },
+    {
+      "id": "R2.2",
+      "text": "board seeded with 5 members, boardVersion 1",
+      "expected": "5;1",
+      "actual": "5;1",
+      "pass": true
+    },
+    {
+      "id": "R3.1",
+      "text": "block.timestamp < lastBoardRefreshAt + 30 days (elapsed since genesis is minutes, remaining ≈ 30 days)",
+      "expected": "elapsed < 30 d",
+      "actual": "elapsed 438 s; remaining 2591562 s",
+      "pass": true
+    },
+    {
+      "id": "R4.1",
+      "text": "refreshBoard() (eth_call, any caller) is rejected with the exact message",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "pass": true
+    },
+    {
+      "id": "R4.2",
+      "text": "same rejection for a caller that is not a validator (permissionless function, same gate)",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "pass": true
+    },
+    {
+      "id": "R5.1",
+      "text": "refreshBoard() mined before 30 days: status 0 (reverted)",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "R5.2",
+      "text": "board state unchanged by the reverted call (members, boardVersion, lastBoardRefreshAt, pendingVacancies)",
+      "expected": "{\"lastBoardRefreshAt\":\"1791056279\",\"boardVersion\":\"1\",\"members\":\"0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF\",\"pendingVacancies\":\"0\"}",
+      "actual": "{\"lastBoardRefreshAt\":\"1791056279\",\"boardVersion\":\"1\",\"members\":\"0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF\",\"pendingVacancies\":\"0\"}",
+      "pass": true
+    },
+    {
+      "id": "R6.1",
+      "text": "syncBoard() succeeds within the 30 days (no 30-day gate) and is a no-op when nobody exited",
+      "expected": "{\"lastBoardRefreshAt\":\"1791056279\",\"boardVersion\":\"1\",\"members\":\"0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF\",\"pendingVacancies\":\"0\"}",
+      "actual": "{\"lastBoardRefreshAt\":\"1791056279\",\"boardVersion\":\"1\",\"members\":\"0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF\",\"pendingVacancies\":\"0\"}",
+      "pass": true
+    },
+    {
+      "id": "R6.2",
+      "text": "V5 is a seated board member with authority before its exit",
+      "expected": "true;true",
+      "actual": "true;true",
+      "pass": true
+    },
+    {
+      "id": "R6.3",
+      "text": "after requestExit: V5 loses board authority immediately but is still listed (not yet synced)",
+      "expected": "false;true",
+      "actual": "false;true",
+      "pass": true
+    },
+    {
+      "id": "R6.4",
+      "text": "with an exit pending, refreshBoard() is STILL rejected by the 30-day gate (it is not the exit path)",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "pass": true
+    },
+    {
+      "id": "R6.5",
+      "text": "syncBoard() removes V5: 4 members, V5 no longer seated, boardVersion 2",
+      "expected": "4;false;2",
+      "actual": "4;false;2",
+      "pass": true
+    },
+    {
+      "id": "R6.6",
+      "text": "syncBoard() does NOT touch lastBoardRefreshAt (still the genesis timestamp)",
+      "expected": "1791056279",
+      "actual": "1791056279",
+      "pass": true
+    },
+    {
+      "id": "R6.7",
+      "text": "after the exit-driven sync the 30-day gate still applies to refreshBoard() (board is not empty, < 30 days)",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "pass": true
+    },
+    {
+      "id": "R6.8",
+      "text": "V5 left the validator set (4 validators); the network kept producing blocks",
+      "expected": "4",
+      "actual": "4",
+      "pass": true
+    },
+    {
+      "id": "R6.9",
+      "text": "block production continues after the exit (≥ 3 new blocks in 15 s)",
+      "expected": ">= 3",
+      "actual": "5",
+      "pass": true
+    }
+  ],
+  "genesisTimestamp": "1791056279",
+  "headAtStart": {
+    "number": 118,
+    "timestamp": 1791056714
+  },
+  "timing": {
+    "blockNumber": 119,
+    "blockTimestamp": 1791056717,
+    "lastBoardRefreshAt": "1791056279",
+    "elapsedSeconds": "438",
+    "remainingSeconds": "2591562"
+  },
+  "syncBoardObservation": {
+    "pendingVacanciesBefore": "0",
+    "pendingVacanciesAfter": "1",
+    "membersAfter": 4,
+    "note": "no eligible outside candidate exists on this G5 network, so the freed seat stays vacant (contract behaviour); recorded as is"
+  },
+  "finishedAt": "2026-10-03T19:45:50.276Z",
+  "summary": {
+    "total": 21,
+    "pass": 21,
+    "fail": 0,
+    "failing": []
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "rule": "alloc, config (without chainId), gasLimit, difficulty and extraData must be identical; storage values equal to the genesis timestamp are compared symbolically",
+  "results": {
+    "Net-BR ~ Net-L04f": {
+      "equivalent": false,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L04f/genesis.json",
+      "differences": [
+        "storage 0x4444444444444444444444444444444444444444 0x000000000000…: undefined vs <GENESIS_TIMESTAMP>"
+      ]
+    },
+    "Net-L04g ~ Net-L04f": {
+      "equivalent": false,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L04f/genesis.json",
+      "differences": [
+        "storage 0x4444444444444444444444444444444444444444 0x000000000000…: undefined vs <GENESIS_TIMESTAMP>"
+      ]
+    },
+    "Net-BR0 ~ Net-L04f": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L04f/genesis.json",
+      "differences": []
+    }
+  }
+}

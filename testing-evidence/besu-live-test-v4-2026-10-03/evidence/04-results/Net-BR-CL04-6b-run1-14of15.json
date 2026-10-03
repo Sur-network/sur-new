@@ -1,0 +1,438 @@
+{
+  "NET": "Net-BR",
+  "startedAt": "2026-10-03T19:45:57.750Z",
+  "steps": [
+    {
+      "label": "fund 0x1d3419D1ba10CdfCE6a137130C002b5441278674 to 500 SUR",
+      "hash": "0x2292467977652c5b7de56dab77c3ff14452568f2908102e142a6d410ac412d33",
+      "block": 133,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x1Bd552985D620F96030Da2f3E2161a269Ca1b7E7 to 500 SUR",
+      "hash": "0xdff50885d961ad499b5c7c44b6673b85cb5986fdfdd46b0339868f397e31930b",
+      "block": 135,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x7E85257f965a31d1157FD5aE540C9A0686bF9fa3 to 500 SUR",
+      "hash": "0x0c584b5f8c42aff4bb87918c21ce31e4f69f49e48abcd5186ea0b23660adc024",
+      "block": 136,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xA500eCbCd8ac3Cd21520E1b8Fe8B5cd7b7BF0B8F to 500 SUR",
+      "hash": "0x4c52a3fccb0d05c165c8bb27d07b352346844c41cf67ad99186792f3eaf77629",
+      "block": 137,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x495F319d34832eA7Be6A385e8D4983dd2eD91115 to 500 SUR",
+      "hash": "0xa2bb7cacb78aa1f078a89ccf74d12470bf27f4f26b428aaa85e520ea739fbf06",
+      "block": 139,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xdFa4FF4Ed03A219dEF7D23827A8e9CE51278183a to 500 SUR",
+      "hash": "0x7740968fc2a1df9abfe60f7f4b4c9d9bbc023b80ca00b2d5fb041e40cfc7b378",
+      "block": 140,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xF5D6528b6233D560039EF83D8390B348ce3D7077 to 500 SUR",
+      "hash": "0xde764820624365bbac7175c721ab168b56564d5825a275ac3ca300a506a2679a",
+      "block": 142,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x3af97848C86cB31AeCe53eED39F974F4cAd9cD2f to 500 SUR",
+      "hash": "0x9a860ec276f85f8b1ba2c66465865b4086b3113d40d2aca3c67b885eb7acd355",
+      "block": 143,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x075d4A9d73DE61efB4371faF9f9EDBAB4EFfb704 to 500 SUR",
+      "hash": "0xd39048129e8df80e79b6cc68ef3937b6e43ad9c368aff9346074ec006f6fa3e6",
+      "block": 145,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xf1cB3CBB625b470B09f5992eD0472ffE48229f70 to 500 SUR",
+      "hash": "0xf6b60a47458aaf7ff62f746f0700d8bd9566864535dc53d8791bbd5a1094caf0",
+      "block": 146,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xB7D27FBDf075531c431A2d5e53D23C0EA4006966 to 500 SUR",
+      "hash": "0xf34e8aa9498b27c2c2b3bc7f53b3535c1e149da14509f8ff798c4f08302742d1",
+      "block": 147,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x183774E2e6Cf9e78Fd4b40d75e40CBE680A60Ee4 to 500 SUR",
+      "hash": "0xbf049e58d78436427c24f022c82a9e46f3096f042a9cfd3d45dd6488e52601e3",
+      "block": 149,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xA1D271b5D4C5b5e14685373C4564736E09502d2D to 500 SUR",
+      "hash": "0x86708e7c855ae6b4e5ae8771fdf27fcf18deeece5d37ec6199b18eb12a5b9d2c",
+      "block": 150,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0x0aeD318c70D7b6ACB50c0126c55F635a388b7587 to 500 SUR",
+      "hash": "0x953ff9722f3fc1674e766a85532d7d6042b4866148532b71ed8d1b5f10735330",
+      "block": 152,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund 0xA9e2D7AfE5701278F704B70256c8479c85213ed8 to 500 SUR",
+      "hash": "0xd0cc632e23c3ed8b85daa1f2e76068a61b9bd1c76ffae79ab20625a829bf8c19",
+      "block": 153,
+      "status": 1,
+      "gasUsed": "21000"
+    },
+    {
+      "label": "fund FoundationDAO to 5 SUR",
+      "hash": "0xda7cd735b5e494db095ec9740c602e7caa139e79b870f422dd1b2f97c4e09768",
+      "block": 154,
+      "status": 1,
+      "gasUsed": "21055"
+    },
+    {
+      "label": "P4 propose SendETH 1 SUR (M1)",
+      "hash": "0xf3a87800d9069b6f682f1e72f64b02ac3b6f7227c56d33839688e10a16fcc08b",
+      "block": 156,
+      "status": 1,
+      "gasUsed": "360723"
+    },
+    {
+      "label": "P4 vote M4 (the member that will be removed and re-added)",
+      "hash": "0xea059bd72241972357c663e392453e0844a19f3ea84aae37ab84585d5ec34b1a",
+      "block": 157,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "P4 vote M2",
+      "hash": "0x58aac9515314daa58852e988c704991e65ad30450d7923791309bfea31b7feb1",
+      "block": 159,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 propose (M1)",
+      "hash": "0x0e1c476bd5ba227be898196c771617ceaf8c483d8007a21830b1818097226704",
+      "block": 160,
+      "status": 1,
+      "gasUsed": "280884"
+    },
+    {
+      "label": "remove-M4 vote M2",
+      "hash": "0xea48313016ea6a93ee0d3576472234b35da8e54128052aa3959454789caabc20",
+      "block": 161,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M3",
+      "hash": "0x7fa98d12a8cef75d2c5815f5b513137f842e9567afe8e4f6c7816a8200348bb0",
+      "block": 163,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M5",
+      "hash": "0x511d660e5da97dd57838badbab919a1786866e77d520ca37639e679c1d1352a3",
+      "block": 164,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M6",
+      "hash": "0x9c1cf48e21d768e993af29f7732da9b73ad4ecc31b2cd4c19b7d85971ec4ac59",
+      "block": 166,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M7",
+      "hash": "0x0d6b4d2924b86f5c967420d1e54a37b638d13b13956be9f8b19f67070e49f813",
+      "block": 167,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M8",
+      "hash": "0xce78278463a4773685a61ac1dc56110a25c47504b8c7c5db7922634630be9c82",
+      "block": 168,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M9",
+      "hash": "0xff36b0c3f6704bfb61a9fa9db4a959a6a56f223e548cb1fdbdf892a51985b55b",
+      "block": 170,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M10",
+      "hash": "0xe2dbe584a6ac483f12e86806e146a2de50d999db3e8868833b0156f8deaadec0",
+      "block": 171,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "remove-M4 vote M11",
+      "hash": "0xa1c73b17a2baa54b082ccf5a592adb4d81d0ccfa17917da0598e505310c406ea",
+      "block": 173,
+      "status": 1,
+      "gasUsed": "142659"
+    },
+    {
+      "label": "re-add-M4 propose (M1)",
+      "hash": "0x560d686cbee8f37b8c2cfb62474f114f7c18f07f3d42b5b651295e7e5a24baf5",
+      "block": 174,
+      "status": 1,
+      "gasUsed": "301842"
+    },
+    {
+      "label": "re-add-M4 vote M2",
+      "hash": "0x47466cfb35aff8402639ae906a827d1d234ae9569cbc54aafe05caf549af7bce",
+      "block": 175,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M3",
+      "hash": "0x5bd7da2c5514601cae0c9783bb6d94682953244a29b5d5267ccf43aa62dd6591",
+      "block": 177,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M5",
+      "hash": "0x5c63e0f383beae1a256081876e94e4f2dd42ae167bcca3acfa31db9451ca0b12",
+      "block": 178,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M6",
+      "hash": "0x47afa437f2abe7f0cbd223b5d312028ff8626a9905eedddf74749c65d85e596f",
+      "block": 180,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M7",
+      "hash": "0x613df18d8a39c69d42f7c7c55b9c54674686192017c2c9b69b7d20bc8e8add44",
+      "block": 181,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M8",
+      "hash": "0x1e3ace36c64acba88587314f031907188eeff0c343d326dad0b38ae47aa76b61",
+      "block": 182,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M9",
+      "hash": "0x5071a7e28b2b30acd7e5aec5f3195f4f52f930206041f1cee2d8258563c17ec3",
+      "block": 184,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M10",
+      "hash": "0x11452910f1525fbbf3ebe6f7a50ed507d5fc95efbbc912c97131b94e518a9884",
+      "block": 185,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "re-add-M4 vote M11",
+      "hash": "0xd346d323adc4baf6f3e506f111ee381897c1685da809d85989462e901198c4dc",
+      "block": 187,
+      "status": 1,
+      "gasUsed": "220180"
+    },
+    {
+      "label": "re-added M4 re-votes on P4 (mined)",
+      "status": 0,
+      "hash": "0x6e1bd7eeb722c88cd3e47617f635c0a46297bdbc08668bfb347fcbb4faec19e7",
+      "note": "transaction execution reverted"
+    },
+    {
+      "label": "P4 vote M3",
+      "hash": "0xa3762afaaeb5f14cffc83a1c47fa67175903c729bd1cd5a500350867079f6181",
+      "block": 190,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "P4 vote M5",
+      "hash": "0xea1fc3fd7e0430e98c367be8538f6a1fc4d4a976ad53cd662c4816c7099df2b1",
+      "block": 191,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "P4 vote M6",
+      "hash": "0x8732b3b57db2410f1160e5bee5c7aaae8e9da29da89f39e81650773fd8141024",
+      "block": 192,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "P4 vote M7",
+      "hash": "0x1e6c303922cd5cef7b95a409d6a8748f59806713fef01b8dceedba532cef00b5",
+      "block": 194,
+      "status": 1,
+      "gasUsed": "66794"
+    },
+    {
+      "label": "P4 vote M8 (8th vote -> executes)",
+      "hash": "0x97414e8b724a92644577cd9cd784524bc22be3ae72b7fdf0e3a1ea5e026d7710",
+      "block": 195,
+      "status": 1,
+      "gasUsed": "129846"
+    }
+  ],
+  "assertions": [
+    {
+      "id": "S0.1",
+      "text": "FoundationDAO untouched: proposalCount()==0 and membershipNonce()==0",
+      "expected": "0;0",
+      "actual": "0;0",
+      "pass": true
+    },
+    {
+      "id": "S0.2",
+      "text": "15 members, requiredVotesNow(SendETH)=8, (AddMember)=10, (RemoveMember)=10",
+      "expected": "15;8;10;10",
+      "actual": "15;8;10;10",
+      "pass": true
+    },
+    {
+      "id": "S2.1",
+      "text": "P4 pending, 3 votes (M1 auto, M4, M2), snapshot quorum 8; M4 has voted",
+      "expected": "Pending;3;8;true",
+      "actual": "Pending;3;8;true",
+      "pass": true
+    },
+    {
+      "id": "S3.1",
+      "text": "M4 removed: isMember false; 14 members; membershipNonce 1; memberSinceNonce(M4)=0",
+      "expected": "false;14;1;0",
+      "actual": "false;14;1;0",
+      "pass": true
+    },
+    {
+      "id": "S3.2",
+      "text": "P4 still PENDING after the removal; M4's vote is KEPT (hasVoted true; votes still 3); snapshot quorum still 8",
+      "expected": "Pending;3;8;true",
+      "actual": "Pending;3;8;true",
+      "pass": true
+    },
+    {
+      "id": "S3.3",
+      "text": "while removed, M4's second vote on P4 is rejected (eth_call). Because M4 already voted, the contract's check order gives 'already voted' before the membership checks",
+      "expected": "FoundationDAO: already voted",
+      "actual": "FoundationDAO: caller is not a member",
+      "pass": false
+    },
+    {
+      "id": "S4.1",
+      "text": "M4 re-added: member; 15 members; membershipNonce 2; memberSinceNonce(M4)=2 (> P4's creation nonce 0)",
+      "expected": "true;15;2;2",
+      "actual": "true;15;2;2",
+      "pass": true
+    },
+    {
+      "id": "S4.2",
+      "text": "P4 is STILL pending (not executed, not expired) with 3 votes and M4's old vote kept — this is the case under test",
+      "expected": "Pending;3;true",
+      "actual": "Pending;3;true",
+      "pass": true
+    },
+    {
+      "id": "S4.3",
+      "text": "P4 has not expired (block time < expiresAt)",
+      "expected": "true",
+      "actual": "1791056921 < 1793648828",
+      "pass": true
+    },
+    {
+      "id": "S5.1",
+      "text": "re-added M4 re-voting on the still-pending P4 (eth_call) is rejected: 'already voted' (its earlier vote was kept and cannot be cast twice; the eligibility message is not reached for a member that already voted)",
+      "expected": "FoundationDAO: already voted",
+      "actual": "FoundationDAO: already voted",
+      "pass": true
+    },
+    {
+      "id": "S5.2",
+      "text": "the same vote mined: status 0, P4 votes unchanged at 3 (no double count), still Pending",
+      "expected": "0;3;Pending",
+      "actual": "0;3;Pending",
+      "pass": true
+    },
+    {
+      "id": "S5.3",
+      "text": "'not pending' is NOT the reason: the proposal is pending at the moment of the call",
+      "expected": "true",
+      "actual": "true",
+      "pass": true
+    },
+    {
+      "id": "S6.1",
+      "text": "P4 at 7 votes is still pending (had M4's re-vote been double-counted it would be 8 and executed)",
+      "expected": "Pending;7",
+      "actual": "Pending;7",
+      "pass": true
+    },
+    {
+      "id": "S6.2",
+      "text": "P4 executes at exactly 8 distinct votes (M4 counted once); DAO balance −1 SUR; sink +1 SUR",
+      "expected": "Executed;8;-1;1",
+      "actual": "Executed;8;-1.0;1.0",
+      "pass": true
+    },
+    {
+      "id": "S6.3",
+      "text": "after execution the same call gives 'proposal not pending' (the different, closed-proposal reason — recorded to show it is not what S5 measured)",
+      "expected": "FoundationDAO: proposal not pending",
+      "actual": "FoundationDAO: proposal not pending",
+      "pass": true
+    }
+  ],
+  "final": {
+    "memberCount": 15,
+    "membershipNonce": 2,
+    "balance": "4.0"
+  },
+  "finishedAt": "2026-10-03T19:49:08.167Z",
+  "summary": {
+    "total": 15,
+    "pass": 14,
+    "fail": 1
+  }
+}

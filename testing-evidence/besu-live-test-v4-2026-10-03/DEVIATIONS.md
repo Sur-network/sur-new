@@ -239,3 +239,25 @@ Assertions follow the brief's §7 table plus the genesis-builder spec's §4.2.1 
 
 ## 28. Net-F3 node1 was started once, alone, read-only, to re-read the block timestamps of the Net-F3 outage — [this session's own judgment call]
 While preparing `PLAN-path-L-real-time.md` (restart behaviour after an outage), `Net-F3/node1` was launched once (22:00 local on 2026-10-03, no peers, no block produced, no transaction sent), queried for the timestamps of blocks 722–725 (722 = 09:39:39 UTC, 723 = 09:39:42, 724 = 09:54:46, 725 = 09:54:49 — a 904 s jump at the outage) and stopped. Its only effect on the evidence is that `logs/Net-F3/node1.log` has about 140 additional start-up lines (after the previous package's copy) and the node's data directory was opened again (the data directory itself is not part of the package). Nothing else of Net-F3 was changed.
+
+
+---
+
+# Fourth pass (2026-10-04): A09 fix in the test builder, C-L04-6b
+
+No contract or policy changed, no fork was used, the real-time path L was not started. Earlier evidence files are not overwritten; scripts changed in this pass keep their previous version next to them.
+
+## 29. Test tools were modified — [as requested for the builder; the other changes are this session's own judgment calls]
+- `testonly-build-one-v5.js` and `testonly-build-one.js`: the `lastBoardRefreshAt` write (requested). The pre-fix versions are kept as `testonly-build-one-v5.js.pre-A09-fix` and `testonly-build-one.js.pre-A09-fix`. The earlier networks were built with the pre-fix versions.
+- `testonly-a14.js` / `testonly-a14-live.js`: the extra expected slot is switched on by `A14_BOARD_REFRESH_FIXED` (default empty = earlier behaviour) and the live leg's output file can be set with `OUT`, so the earlier A14 evidence files were not overwritten (pre-fix copies: `*.pre-A09-fix`). **A14 was run again only for the three new genesis files** because their content differs by one slot; no other network was re-scanned.
+- `testonly-twin-equivalence.js`: three pairs and an `OUT` variable added; its earlier output `A-twin-equivalence.json` is untouched. `testonly-a-live.js`: META entries for Net-BR, Net-BR0, Net-L04g.
+- New: `testonly-board-refresh.js`, `testonly-cl04-6b.js`, `scan-board-refresh-scope.js`, `evidence/00-baseline/storage-layout-ValidatorsBoard.json` (slot numbers taken from the compile output).
+
+## 30. C-L04-6b first run had a wrong expectation and was repeated on a second network — [this session's own judgment call / disclosed fault]
+Run 1 on Net-BR passed 14/15; S3.3 expected `already voted` for the *removed* member, but `vote()` has the `onlyMember` modifier first. Instead of editing the result, the expectation was corrected, run 1 kept (`Net-BR-CL04-6b-run1-14of15.json`, `testonly-cl04-6b.js.run1`, SUPERSEDED row), and the whole scenario was re-run on the fresh Net-L04g (15/15).
+
+## 31. Three fresh networks and how they were used — [this session's own judgment call]
+Net-BR (fixed builder; Group A, the A09 behaviour test with its transactions, and C-L04-6b run 1), Net-BR0 (negative control, built with the old behaviour, **read-only**), Net-L04g (fixed builder; Group A, then C-L04-6b run 2). The A09 behaviour test ran *before* the DAO transactions so its pristine check held; its exit-and-sync step reduces Net-BR to 4 validators, which is why the DAO run came second only for run 1 (the DAO is independent of the validator set). Net-BR's first Group A invocation was made when only 4 blocks existed and its A15 criterion (100 blocks) failed for timing; it is kept as `A-live-Net-BR-run1-too-early.json` and the run was repeated at block ≥ 100 on the still-pristine network.
+
+## 32. The pre-fix networks were not rebuilt — [as instructed: keep earlier evidence, do not repeat the suite]
+They keep `lastBoardRefreshAt` = 0; the scope of that is in FINDINGS.md item 22.

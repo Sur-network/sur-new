@@ -1,0 +1,17 @@
+--- a/README.md (previous package v5, Plan commit d6f5469)
++++ b/README.md (this package)
+@@ -19,6 +19,8 @@
+ 
+ **Third follow-up pass (2026-10-03/04):** C-L04-6 on the fresh seeded Net-L04f (31/31), Group A (A01-A15) per network and test for the follow-up networks via fresh twin networks (Net-T-F1/F2/F3/F4/F6/L05/D3/E15/E30/E60) with proven genesis equivalence (15/15), the A09-spec finding (`lastBoardRefreshAt`), and the plan for the real-time path L (`PLAN-path-L-real-time.md`, **not started**). New scripts: `hardhat/scripts/testonly-a-live.js`, `testonly-twin-equivalence.js`, `make-a-coverage.js`, `testonly-cl04-6.js`; `evidence/03-commands/v6-build-twins.sh`; per-network coverage table in `evidence/06-coverage/`; raw results `evidence/04-results/A-live-*.json`, `A-twin-equivalence.json`, `Net-L04f-CL04-6.json`; hashes of the new result files in `evidence/06-coverage/new-results-sha256.txt`.
+ 
++**Fourth pass (2026-10-04):** A09 fixed in the test builder (`testonly-build-one-v5.js`, `testonly-build-one.js`; pre-fix copies `*.pre-A09-fix`) and verified on Net-BR / Net-L04g with a negative control Net-BR0 (`testonly-board-refresh.js`, `04-results/Net-BR-board-refresh.json`, `Net-BR0-board-refresh.json`, `A-live-Net-BR*.json`, `A-live-Net-L04g.json`, `A09-fix-genesis-diff.json`, `A09-fix-genesis-scope.json`, `A14-*-A09fix*.json`); C-L04-6b (`testonly-cl04-6b.js`, `Net-L04g-CL04-6b.json`, superseded run 1 `Net-BR-CL04-6b-run1-14of15.json`). Hashes of the new files of this pass: `evidence/06-coverage/new-results-sha256-pass4.txt`.
++
+ ```
+ REPORT.md                    <- full result table + summary
+ FINDINGS.md                  <- unexpected results, raw evidence
+@@ -44,4 +46,4 @@
+ > آزمون‌ها به‌معنای آمادگی یا عدم آمادگی production نیست. RewardRouter و ابزار genesis production
+ > پیاده‌سازی نشده‌اند و این بسته آن‌ها را آزمون نکرده است. داده‌های گروه E فقط benchmark مصنوعی هزینه‌اند
+ > و gasLimit تولیدی را تعیین نمی‌کنند. gasLimit تولیدی، مسیر رفع «پاداش واقعی بیش از سقف» برای بازهٔ گذشته،
+-> صفحهٔ حکمرانی نرخ در داشبورد، و اجرای زمان‌واقعیِ مسیر L (مرحلهٔ L4) همچنان باز هستند. C-L04-6 اکنون اجرا و پاس شده؛ A09-spec (lastBoardRefreshAt) شکست ثبت‌شدهٔ ابزار/مشخصات است.
++> صفحهٔ حکمرانی نرخ در داشبورد، و اجرای زمان‌واقعیِ مسیر L (مرحلهٔ L4) همچنان باز هستند. C-L04-6 و C-L04-6b اجرا و پاس شده‌اند؛ شکست A09-spec (lastBoardRefreshAt) با اصلاح ابزار genesis آزمایشی رفع شد و در دور چهارم تأیید شد (۳۳ شبکهٔ قدیمی مقدار صفر را نگه می‌دارند).

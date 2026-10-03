@@ -1,0 +1,125 @@
+{
+  "NET": "Net-BR0",
+  "MODE": "CONTROL",
+  "startedAt": "2026-10-03T19:59:46.231Z",
+  "steps": [],
+  "assertions": [
+    {
+      "id": "R0",
+      "text": "pristine: no transaction in blocks 1..head before this test",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "R1.1",
+      "text": "block-0 header timestamp equals the genesis.json timestamp (reference value)",
+      "expected": "1791056929",
+      "actual": "1791056929",
+      "pass": true
+    },
+    {
+      "id": "R1.2",
+      "text": "ValidatorsBoard.lastBoardRefreshAt() == genesis timestamp",
+      "expected": "1791056929",
+      "actual": "0",
+      "pass": false
+    },
+    {
+      "id": "R1.3",
+      "text": "raw storage slot 7 (lastBoardRefreshAt) equals the genesis timestamp",
+      "expected": "1791056929",
+      "actual": "0",
+      "pass": false
+    },
+    {
+      "id": "R1.4",
+      "text": "genesis.json alloc has the same value at that slot",
+      "expected": "1791056929",
+      "actual": "0",
+      "pass": false
+    },
+    {
+      "id": "R2.1",
+      "text": "BOARD_REFRESH_INTERVAL() = 30 days",
+      "expected": "2592000",
+      "actual": "2592000",
+      "pass": true
+    },
+    {
+      "id": "R2.2",
+      "text": "board seeded with 5 members, boardVersion 1",
+      "expected": "5;1",
+      "actual": "5;1",
+      "pass": true
+    },
+    {
+      "id": "R3.1",
+      "text": "block.timestamp < lastBoardRefreshAt + 30 days (elapsed since genesis is minutes, remaining ≈ 30 days)",
+      "expected": "elapsed < 30 d",
+      "actual": "elapsed 1791057588 s; remaining -1788465588 s",
+      "pass": false
+    },
+    {
+      "id": "R4.1",
+      "text": "refreshBoard() (eth_call, any caller) is rejected with the exact message",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "NO_REVERT (call succeeded)",
+      "pass": false
+    },
+    {
+      "id": "R4.2",
+      "text": "same rejection for a caller that is not a validator (permissionless function, same gate)",
+      "expected": "ValidatorsBoard: ordinary board changes are applied once every 30 days",
+      "actual": "NO_REVERT (call succeeded)",
+      "pass": false
+    }
+  ],
+  "genesisTimestamp": "1791056929",
+  "headAtStart": {
+    "number": 195,
+    "timestamp": 1791057585
+  },
+  "timing": {
+    "blockNumber": 196,
+    "blockTimestamp": 1791057588,
+    "lastBoardRefreshAt": "0",
+    "elapsedSeconds": "1791057588",
+    "remainingSeconds": "-1788465588"
+  },
+  "finishedAt": "2026-10-03T19:59:49.792Z",
+  "summary": {
+    "total": 10,
+    "pass": 4,
+    "fail": 6,
+    "failing": [
+      "R1.2",
+      "R1.3",
+      "R1.4",
+      "R3.1",
+      "R4.1",
+      "R4.2"
+    ]
+  },
+  "negativeControl": {
+    "expectedToFail": [
+      "R1.2",
+      "R1.3",
+      "R1.4",
+      "R3.1",
+      "R4.1",
+      "R4.2"
+    ],
+    "actuallyFailed": [
+      "R1.2",
+      "R1.3",
+      "R1.4",
+      "R3.1",
+      "R4.1",
+      "R4.2"
+    ],
+    "defectDetected": true,
+    "refreshBoardCallableImmediately": true,
+    "note": "R3.1 also fails on the control: with value 0 the elapsed time since lastBoardRefreshAt exceeds 30 days, which is exactly why refreshBoard() is callable at once"
+  }
+}

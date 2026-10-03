@@ -1,0 +1,12 @@
+# Plan working tree vs the copies in this package (sha256)
+# the package copies are taken from the Plan working tree, so every line must be EQUAL
+EQUAL      4e71476869b13de521c15f0709cc416c861813b35fdc34ab74abb8ae8c8a8333  technical-design/sur-audit-2026-09-30-final-status.md
+EQUAL      59df55000e0cda9001818afd98a6b503a3816c28404583da3c9a227611430788  sur-master-open-items.md
+EQUAL      fe381904bb50ff723855271cb125fcbd0aefe4e11f26f167eb77f01cc086f784  offchain-services/sur-reward-router-spec.md
+EQUAL      4f387436c9707725fe67edd838d26c6604d4e6b3f534d7d0bc5970721c46b02d  technical-design/sur-contracts-deploy-notes.md
+EQUAL      128abdd2851fee6c5c425e38e4bf6d14fe77a046c70f1037410326d96e057449  sur-besu-test-status.md
+EQUAL      bec7155ed3521357d24a9ccc9d9679803fb7837043f4f31be1aabe595f4b5b75  economics/sur-tokenomics.md
+EQUAL      fa71d569b1cbd0d20f0166154c326d5c17b7a3d7e425a1a0ecd205561d406095  technical-design/sur-contracts-oracles-accounts-report.md
+EQUAL      3c0f1cf76939fe963b574b3e2efa8a699a52a72127f4c0827c941f920b2c00d8  offchain-services/sur-genesis-builder-tool-spec.md
+EQUAL      864c746413da12ce8763f84c7e8c3fff9c9d4202f387bfadd7b05f6ad51ae2e9  sur-project-handoff-summary.md
+EQUAL      67516620d8ae7174281adda47106c1d26de13d20f29e2d3d7caf2f9d54d88537  sur-besu-live-test-brief-v4.md
