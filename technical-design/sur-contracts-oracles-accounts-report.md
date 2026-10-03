@@ -33,7 +33,7 @@
 | نام | قرارداد میزبان | کاربرد اصلی | چرخش توسط |
 |---|---|---|---|
 | `distributionOracle` | BlockRewardDistributor | گزارش تعداد بلاک هر ولیدیتور و مجموع reward/fee هر epoch؛ فراخوانی `distributeRewards` | ValidatorsBoard (رأی اکثریت داخلی board) |
-| `verifier` | ValidatorsRegistry | گزارش زنده‌بودن (liveness) ولیدیتورها؛ `reportLiveness` | ValidatorsBoard (رأی اکثریت داخلی board) |
+| `verifier` | ValidatorsRegistry | ثبت تصمیم‌های وضعیت ولیدیتورها (`recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery`) بر پایه‌ی بررسی آف‌چین | ValidatorsBoard (رأی اکثریت داخلی board) |
 | `identityOracle` | IdentityRegistry | ثبت نتیجه احراز تلفن/تلگرام/KYC و مهاجرت هویت | فقط FoundationDAO |
 | `paymentOracle` | SurenSale | گزارش پرداخت‌های تومانی تأییدشده و واریز Suren معادل | فقط FoundationDAO (اکثریت ساده) |
 
