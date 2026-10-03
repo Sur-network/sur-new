@@ -520,8 +520,9 @@
 | دور دوم (بخش ۲۷) | Besu/QBFT | کد شامل P01–P06/C01/N04 (۲۸–۲۹ سپتامبر) | `testing-evidence/besu-live-test-v2-2026-09-28/` |
 | دور سوم | Besu ۲۶.۹.۰ | کد شامل سیاست `everActivated` (۳۰ سپتامبر)، **پیش از اصلاحات L01–L03 و D05** | `testing-evidence/besu-live-test-v3-2026-09-30/` و بخش ۶ `technical-design/sur-reward-policy-decision-2026-09-29.md` |
 | ممیزی ۲۰۲۶-۰۹-۳۰ | **فقط Hardhat** (solc ۰٫۸٫۳۷ و ۰٫۸٫۲۴) | **کد فعلی** — اصلاحات L01–L03 و getter D05 | `testing-evidence/hardhat-regression/results/audit-2026-09-30-L01-L03/` و `.../audit-2026-09-30-D05/` |
+| دور چهارم (v4، ۲۰۲۶-۱۰-۰۲ تا ۰۳) | Besu ۲۶.۹.۰ — **کد فعلی** (بستهٔ L05 نسخهٔ ۲ + اصلاح فقط‌متنی نسخهٔ ۳؛ سورس‌ها با Plan بایت‌به‌بایت یکسان)؛ تک‌میزبان | `testing-evidence/besu-live-test-v4-2026-10-03/` (جدول ۷۳ ردیفی: ۶۷ PASS، ۲ NOT-RUN، ۴ SUPERSEDED، شمارش با اسکریپت) و بخش «نتایج آزمون Besu دور v4» در `technical-design/sur-audit-2026-09-30-final-status.md`؛ شاهد baseline، test-fork، شبیه‌سازی و benchmark مصنوعی در آنجا جدا شده‌اند |
 
-**کد فعلی هنوز روی Besu آزموده نشده است.** نتایج دورهای Besu به کد فعلی تعمیم داده نمی‌شوند و نتایج Hardhat هم جایگزین اجرای Besu نیستند. مشخصات اجرای بعدی Besu: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶.
+**کد فعلی در دور چهارم روی Besu آزموده شد** (دامنه و تفکیک شواهد: بخش «نتایج آزمون Besu دور v4» در final-status؛ دو مورد اجرانشده: C-L04-6 و مسیر ترکیبی زمان واقعی L). نتایج دورهای ۱ تا ۳ به کد فعلی تعمیم داده نمی‌شوند، نتایج Hardhat جایگزین اجرای Besu نیستند و بالعکس؛ **آمادگی production اعلام نمی‌شود.** مشخصات اجرای بعدی Besu: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶.
 
 ### ب) وضعیت جاری موارد باز بخش ۲۵ (بازبینی ۲۰۲۶-۰۹-۲۸)
 | مورد | وضعیت جاری | مرجع در ممیزی ۲۰۲۶-۰۹-۳۰ |
@@ -538,6 +539,18 @@
 
 جدول وضعیت کامل شناسه‌های ممیزی ۲۰۲۶-۰۹-۳۰: `technical-design/sur-audit-2026-09-30-stage1-report.md` و `technical-design/sur-audit-2026-09-30-stage3-summary.md`.
 
+### ج) موارد باز و تصمیم‌های ناشی از آزمون Besu دور v4 (ثبت؛ هیچ‌کدام انتخاب نشده)
+| مورد | وضعیت | مرجع |
+|---|---|---|
+| اجرای ترکیبی زمان واقعی مسیر L (مرحلهٔ L4) | **اجرا نشده** (≈۱۴ روز؛ دو نیمهٔ آن جدا شاهد دارند) | final-status؛ `testing-evidence/besu-live-test-v4-2026-10-03/` |
+| C-L04-6 (اختیاری) | **اجرا نشده**؛ Net-L04 بدون seed FoundationDAO ساخته شده بود | همان |
+| رویهٔ اپراتوری هماهنگی transition در همهٔ نودها و نودهای تازه‌وارد؛ مسئول بررسی | تصمیم باز | `sur-reward-router-spec.md` بخش ۱۰.۳ و ۱۰.۴ |
+| طراحی هشدار «پاداش واقعی < نرخ مصوب» (قرارداد آن را نمی‌بیند) | تصمیم باز | Router بخش ۱۰.۲ و ۱۰.۴ |
+| داده‌های تاریخی Router: نود archive/FOREST یا جمع‌آوری لحظه‌ای (Besu خارج از پنجرهٔ ≈۵۱۲ بلاک `null`/`[]` بی‌خطا برمی‌گرداند) | تصمیم باز | Router بخش ۱۰.۴ |
+| مقدار و روش تأمین موجودی گس اوراکل و هشدار موجودی کم | تصمیم باز | Router بخش ۱۰.۴؛ `sur-contracts-oracles-accounts-report.md` |
+| توصیهٔ heap و هشدار «نود روی ارتفاع N گیر کرده» برای نود با genesis ناهماهنگ | تصمیم باز | `sur-contracts-deploy-notes.md` (بخش نتایج v4) |
+| سرنوشت انتقال‌های مستقیم به distributor و منظور از بازگشت کارمزد تراکنش توزیع به epoch بعدی | نیازمند تصمیم | final-status؛ QUESTIONS بستهٔ v4 |
+| ابزار genesis: تولید یا نتولید `transitions.qbft` | تصمیم باز | `sur-genesis-builder-tool-spec.md` بخش ۱۰ |
 ## خلاصه‌ی اولویت‌بندی پیشنهادی
 
 
