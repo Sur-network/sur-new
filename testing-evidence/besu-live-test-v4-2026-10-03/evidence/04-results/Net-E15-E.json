@@ -1,0 +1,473 @@
+{
+  "NET": "Net-E15",
+  "LABEL": "15M",
+  "label": "SYNTHETIC BENCHMARK -- TEST-ONLY-SEED; not operational evidence, not production capacity",
+  "startedAt": "2026-10-03T10:20:24.624Z",
+  "preconditions": {
+    "head": 573,
+    "blockGasLimit": 15000000,
+    "epochCount": "0",
+    "lastSettledBlock": "0",
+    "rewardRateChangeCount": "399",
+    "firstEntry": [
+      "151",
+      "2000000000000000000"
+    ],
+    "lastEntry": [
+      "549",
+      "2000000000000000000"
+    ],
+    "distributorBalance": "1150000000000000000000",
+    "payeesTotal": 150,
+    "payeesAllEverActivated": true,
+    "anyPayeeIsValidator": false,
+    "rpcGasCapDefault_note": "Besu 26.9.0 --rpc-gas-cap default 100000000 (read from `besu --help`); not overridden in config.toml. --rpc-tx-feecap default 1e18 wei."
+  },
+  "matrix": [
+    {
+      "N": 5,
+      "k": 0,
+      "toBlock": 150,
+      "rangeLen": 150,
+      "sumBlocksMined": 150,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "300000000000000000000",
+      "capForRange": "300000000000000000000",
+      "calldataBytes": 580,
+      "estimateGas": 1114170
+    },
+    {
+      "N": 5,
+      "k": 1,
+      "toBlock": 151,
+      "rangeLen": 151,
+      "sumBlocksMined": 151,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "302000000000000000000",
+      "capForRange": "302000000000000000000",
+      "calldataBytes": 580,
+      "estimateGas": 1115006
+    },
+    {
+      "N": 5,
+      "k": 20,
+      "toBlock": 170,
+      "rangeLen": 170,
+      "sumBlocksMined": 170,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "340000000000000000000",
+      "capForRange": "340000000000000000000",
+      "calldataBytes": 580,
+      "estimateGas": 1163124
+    },
+    {
+      "N": 5,
+      "k": 100,
+      "toBlock": 250,
+      "rangeLen": 250,
+      "sumBlocksMined": 250,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "500000000000000000000",
+      "capForRange": "500000000000000000000",
+      "calldataBytes": 580,
+      "estimateGas": 1385206
+    },
+    {
+      "N": 5,
+      "k": 399,
+      "toBlock": 549,
+      "rangeLen": 549,
+      "sumBlocksMined": 549,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "1098000000000000000000",
+      "capForRange": "1098000000000000000000",
+      "calldataBytes": 580,
+      "estimateGas": 2234257
+    },
+    {
+      "N": 25,
+      "k": 0,
+      "toBlock": 150,
+      "rangeLen": 150,
+      "sumBlocksMined": 150,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "300000000000000000000",
+      "capForRange": "300000000000000000000",
+      "calldataBytes": 1860,
+      "estimateGas": 3866360
+    },
+    {
+      "N": 25,
+      "k": 1,
+      "toBlock": 151,
+      "rangeLen": 151,
+      "sumBlocksMined": 151,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "302000000000000000000",
+      "capForRange": "302000000000000000000",
+      "calldataBytes": 1860,
+      "estimateGas": 3867195
+    },
+    {
+      "N": 25,
+      "k": 20,
+      "toBlock": 170,
+      "rangeLen": 170,
+      "sumBlocksMined": 170,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "340000000000000000000",
+      "capForRange": "340000000000000000000",
+      "calldataBytes": 1860,
+      "estimateGas": 3915316
+    },
+    {
+      "N": 25,
+      "k": 100,
+      "toBlock": 250,
+      "rangeLen": 250,
+      "sumBlocksMined": 250,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "500000000000000000000",
+      "capForRange": "500000000000000000000",
+      "calldataBytes": 1860,
+      "estimateGas": 4137412
+    },
+    {
+      "N": 25,
+      "k": 399,
+      "toBlock": 549,
+      "rangeLen": 549,
+      "sumBlocksMined": 549,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "1098000000000000000000",
+      "capForRange": "1098000000000000000000",
+      "calldataBytes": 1860,
+      "estimateGas": 4986509
+    },
+    {
+      "N": 50,
+      "k": 0,
+      "toBlock": 150,
+      "rangeLen": 150,
+      "sumBlocksMined": 150,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "300000000000000000000",
+      "capForRange": "300000000000000000000",
+      "calldataBytes": 3460,
+      "estimateGas": 7306642
+    },
+    {
+      "N": 50,
+      "k": 1,
+      "toBlock": 151,
+      "rangeLen": 151,
+      "sumBlocksMined": 151,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "302000000000000000000",
+      "capForRange": "302000000000000000000",
+      "calldataBytes": 3460,
+      "estimateGas": 7307477
+    },
+    {
+      "N": 50,
+      "k": 20,
+      "toBlock": 170,
+      "rangeLen": 170,
+      "sumBlocksMined": 170,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "340000000000000000000",
+      "capForRange": "340000000000000000000",
+      "calldataBytes": 3460,
+      "estimateGas": 7355602
+    },
+    {
+      "N": 50,
+      "k": 100,
+      "toBlock": 250,
+      "rangeLen": 250,
+      "sumBlocksMined": 250,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "500000000000000000000",
+      "capForRange": "500000000000000000000",
+      "calldataBytes": 3460,
+      "estimateGas": 7577713
+    },
+    {
+      "N": 50,
+      "k": 399,
+      "toBlock": 549,
+      "rangeLen": 549,
+      "sumBlocksMined": 549,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "1098000000000000000000",
+      "capForRange": "1098000000000000000000",
+      "calldataBytes": 3460,
+      "estimateGas": 8426869
+    },
+    {
+      "N": 100,
+      "k": 0,
+      "toBlock": 150,
+      "rangeLen": 150,
+      "sumBlocksMined": 150,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "300000000000000000000",
+      "capForRange": "300000000000000000000",
+      "calldataBytes": 6660,
+      "estimateGas": 14187189
+    },
+    {
+      "N": 100,
+      "k": 1,
+      "toBlock": 151,
+      "rangeLen": 151,
+      "sumBlocksMined": 151,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "302000000000000000000",
+      "capForRange": "302000000000000000000",
+      "calldataBytes": 6660,
+      "estimateGas": 14188025
+    },
+    {
+      "N": 100,
+      "k": 20,
+      "toBlock": 170,
+      "rangeLen": 170,
+      "sumBlocksMined": 170,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "340000000000000000000",
+      "capForRange": "340000000000000000000",
+      "calldataBytes": 6660,
+      "estimateGas": 14236158
+    },
+    {
+      "N": 100,
+      "k": 100,
+      "toBlock": 250,
+      "rangeLen": 250,
+      "sumBlocksMined": 250,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "500000000000000000000",
+      "capForRange": "500000000000000000000",
+      "calldataBytes": 6660,
+      "estimateGas": 14458300
+    },
+    {
+      "N": 100,
+      "k": 399,
+      "toBlock": 549,
+      "rangeLen": 549,
+      "sumBlocksMined": 549,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "1098000000000000000000",
+      "capForRange": "1098000000000000000000",
+      "calldataBytes": 6660,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    },
+    {
+      "N": 150,
+      "k": 0,
+      "toBlock": 150,
+      "rangeLen": 150,
+      "sumBlocksMined": 150,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "300000000000000000000",
+      "capForRange": "300000000000000000000",
+      "calldataBytes": 9860,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    },
+    {
+      "N": 150,
+      "k": 1,
+      "toBlock": 151,
+      "rangeLen": 151,
+      "sumBlocksMined": 151,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "302000000000000000000",
+      "capForRange": "302000000000000000000",
+      "calldataBytes": 9860,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    },
+    {
+      "N": 150,
+      "k": 20,
+      "toBlock": 170,
+      "rangeLen": 170,
+      "sumBlocksMined": 170,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "340000000000000000000",
+      "capForRange": "340000000000000000000",
+      "calldataBytes": 9860,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    },
+    {
+      "N": 150,
+      "k": 100,
+      "toBlock": 250,
+      "rangeLen": 250,
+      "sumBlocksMined": 250,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "500000000000000000000",
+      "capForRange": "500000000000000000000",
+      "calldataBytes": 9860,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    },
+    {
+      "N": 150,
+      "k": 399,
+      "toBlock": 549,
+      "rangeLen": 549,
+      "sumBlocksMined": 549,
+      "ratio": 1,
+      "classification": "complete",
+      "totalRewards": "1098000000000000000000",
+      "capForRange": "1098000000000000000000",
+      "calldataBytes": 9860,
+      "estimateError": "-32000: Transaction processing could not be completed due to an exception (Out of gas)"
+    }
+  ],
+  "E03": [
+    {
+      "k": 0,
+      "toBlock": 150,
+      "rateChangesInRange": 0,
+      "estimateGas": 47992
+    },
+    {
+      "k": 1,
+      "toBlock": 151,
+      "rateChangesInRange": 1,
+      "estimateGas": 48822
+    },
+    {
+      "k": 20,
+      "toBlock": 170,
+      "rateChangesInRange": 20,
+      "estimateGas": 97136
+    },
+    {
+      "k": 100,
+      "toBlock": 250,
+      "rateChangesInRange": 100,
+      "estimateGas": 320169
+    },
+    {
+      "k": 399,
+      "toBlock": 549,
+      "rateChangesInRange": 399,
+      "estimateGas": 1169166
+    }
+  ],
+  "E02": {
+    "points": 19,
+    "fit": {
+      "model": "gas = g0 + perPayee*N + perRateChange*k   (k = number of rate entries inside the range, equal to the matrix k)",
+      "g0": 421845.66672934627,
+      "perPayee": 137605.71959455486,
+      "perRateChange": 2813.138998511909,
+      "maxAbsResidual": 5982.164553311421
+    },
+    "perPayeeSlopeAtEachK": [
+      {
+        "k": 0,
+        "slope": 137610.72631578948
+      },
+      {
+        "k": 1,
+        "slope": 137610.72631578948
+      },
+      {
+        "k": 20,
+        "slope": 137610.8842105263
+      },
+      {
+        "k": 100,
+        "slope": 137611.5157894737
+      },
+      {
+        "k": 399,
+        "slope": 137613.6
+      }
+    ],
+    "perRateChangeSlopeAtEachN": [
+      {
+        "N": 5,
+        "slope": 2807.2355889724313
+      },
+      {
+        "N": 25,
+        "slope": 2807.3909774436092
+      },
+      {
+        "N": 50,
+        "slope": 2807.5864661654136
+      },
+      {
+        "N": 100,
+        "slope": 2711.11
+      },
+      {
+        "N": 150,
+        "slope": null
+      }
+    ],
+    "hardhatReference_note": "document's reference: ~2,800 gas per rate change inside maxRewardsForRange (Hardhat; comparison only)"
+  },
+  "E04": {
+    "blockGasLimit": 15000000,
+    "largestN_at_k0": {
+      "fits": 100,
+      "withMargin50pct": 50
+    },
+    "largestK_at_N5": {
+      "fits": 399,
+      "withMargin50pct": 399
+    },
+    "largestK_at_N100": {
+      "fits": 100,
+      "withMargin50pct": -1
+    },
+    "note": "values are from the tested grid only (N in {5,25,50,100,150}, k in {0,1,20,100,399}); -1/0 = none of the tested values fits"
+  },
+  "E05": {
+    "combination": {
+      "N": 100,
+      "k": 100,
+      "toBlock": 250
+    },
+    "estimateGas": 14458300,
+    "txGasLimit": 15000000,
+    "txHash": "0xcda5ca04b922df8e984b8097e29154534c117b6b9ea2d18d8423d5c3e0f2f5f9",
+    "status": 1,
+    "gasUsed": "14323397",
+    "gasUsedOverEstimate": 0.990669511629998,
+    "block": 577,
+    "epochCountAfter": "1",
+    "lastSettledAfter": "250"
+  },
+  "finishedAt": "2026-10-03T10:20:40.458Z"
+}

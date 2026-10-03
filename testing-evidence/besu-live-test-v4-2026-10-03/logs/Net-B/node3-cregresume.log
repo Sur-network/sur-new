@@ -1,0 +1,197 @@
+[2m2026-10-02 11:22:30.199+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mStarting Besu
+[m[2m2026-10-02 11:22:31.526+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mRPC HTTP JSON-RPC config: JsonRpcConfiguration{enabled=true, port=8703, host=127.0.0.1, corsAllowedDomains=[*], hostsAllowlist=[*], rpcApis=[ETH, NET, QBFT, ADMIN, WEB3, DEBUG, TRACE, TXPOOL], authenticationEnabled=false, authenticationCredentialsFile=null, authenticationPublicKeyFile=null, tlsConfiguration=Optional.empty, httpTimeoutSec=30, maxActiveConnections=80, maxBatchSize=1024}
+[m[2m2026-10-02 11:22:31.540+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing --bonsai-limit-trie-logs-enabled=false, since it cannot be enabled with --sync-mode=FULL and --data-storage-format=BONSAI.
+[m[2m2026-10-02 11:22:31.595+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mConnecting to 5 static nodes.
+[m[2m2026-10-02 11:22:31.617+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-02 11:22:32.004+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32m
+####################################################################################################
+#                                                                                                  #
+# Besu version 26.9.0                                                                              #
+#                                                                                                  #
+# Configuration:                                                                                   #
+# Network: Custom genesis file                                                                     #
+# D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\genesis.json                                   #
+# Network Id: 424301                                                                               #
+# Data storage: Bonsai                                                                             #
+# RocksDB max open files: 3960 (derived from available resources)                                  #
+# Sync mode: Full                                                                                  #
+# Sync min peers: 5                                                                                #
+# RPC HTTP APIs: ETH,NET,QBFT,ADMIN,WEB3,DEBUG,TRACE,TXPOOL                                        #
+# RPC HTTP port: 8703                                                                              #
+# Using LAYERED transaction pool implementation                                                    #
+# Using STACKED worldstate update mode                                                             #
+# Opcode optimizations enabled                                                                     #
+# Parallel transaction processing enabled                                                          #
+# BAL pruning enabled (retained BALs: 113056)                                                      #
+#                                                                                                  #
+# Host:                                                                                            #
+# Java: openjdk-java-25                                                                            #
+# Maximum heap size: 0.50 GB                                                                       #
+# OS: windows-x86_64                                                                               #
+# Total memory: 31.75 GB                                                                           #
+# CPU cores: 16                                                                                    #
+#                                                                                                  #
+# Plugin Registration Summary:                                                                     #
+# No plugins have been registered.                                                                 #
+# TOTAL = 0 of 0 plugins successfully registered.                                                  #
+#                                                                                                  #
+####################################################################################################
+[m[2m2026-10-02 11:22:32.006+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mSecurity Module: localfile
+[m[2m2026-10-02 11:22:32.007+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mLookup version metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\data
+[m[2m2026-10-02 11:22:32.066+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mExisting version data detected. Besu version 26.9.0
+[mjava.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.gnark.LibGnarkEIP196.<clinit>(LibGnarkEIP196.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.maybeEnableNative(AbstractAltBnPrecompiledContract.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.<clinit>(AbstractAltBnPrecompiledContract.java:41)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1490)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-02 11:22:32.101+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of alt bn128
+[m[2m2026-10-02 11:22:32.102+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of modexp
+[m[2m2026-10-02 11:22:32.128+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the signature algorithm
+[m[2m2026-10-02 11:22:32.149+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the blake2bf algorithm
+[mjava.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.boringssl.BoringSSLPrecompiles.<clinit>(BoringSSLPrecompiles.java:35)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.maybeEnableNativeBoringSSL(P256VerifyPrecompiledContract.java:66)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.<clinit>(P256VerifyPrecompiledContract.java:54)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1522)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-02 11:22:32.259+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java secp256r1 implementation of p256verify
+[m[2m2026-10-02 11:22:32.398+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-02 11:22:32.401+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mAttempting to load public key from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\key
+[m[2m2026-10-02 11:22:32.416+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mLoaded public key 0x6d9982346ca16d540287254402876e5d3e82e000a7f6d9b565a531ae2fe6a2114f5bf524108e87f11730549e4e6563ec0ec5925173eb9cce66fbb9bfb22f516b from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\key
+[m[2m2026-10-02 11:22:32.553+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.554+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.559+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.560+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.560+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.560+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:22:32.600+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mProtocolScheduleBuilder[m[2m | [m[32mProtocol schedule created with milestones: [London:0]
+[m[2m2026-10-02 11:22:32.604+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDatabaseMetadata[m[2m | [m[32mLookup database metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\data
+[m[2m2026-10-02 11:22:32.638+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRocksDBKeyValueStorageFactory[m[2m | [m[32mExisting database at D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\data. Metadata versionedStorageFormat=BaseVersionedStorageFormat{format=BONSAI, version=3}. Processing WAL...
+[m[2m2026-10-02 11:22:36.381+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-02 11:22:36.384+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-02 11:22:36.433+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-02 11:22:36.434+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-02 11:22:36.561+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mAdding ChainDataPruner to observe block added events
+[m[2m2026-10-02 11:22:36.563+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mBAL pruning enabled | BALs retained: 113056 | Frequency: 256
+[m[2m2026-10-02 11:22:36.589+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction pool
+[m[2m2026-10-02 11:22:36.612+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mQBFT is configured, creating initial sync for BFT
+[m[2m2026-10-02 11:22:36.613+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBFTPivotSelectorFromPeers[m[2m | [m[32mCreating pivot block selector for BFT node
+[m[2m2026-10-02 11:22:36.646+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mResolved 0 bootnodes.
+[m[2m2026-10-02 11:22:36.653+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mDetecting NAT service.
+[m[2m2026-10-02 11:22:36.684+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgentFactory[m[2m | [m[32mPeer discovery mode: V4 (requested=V4, V4=true, V5=false)
+[m[2m2026-10-02 11:22:36.922+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting external services ... 
+[m[2m2026-10-02 11:22:36.923+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mStarting JSON-RPC service on 127.0.0.1:8703
+[m[2m2026-10-02 11:22:37.077+0330[m[2m | [m[2mvert.x-eventloop-thread-1[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mJSON-RPC service started and listening on 127.0.0.1:8703
+[m[2m2026-10-02 11:22:37.080+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAutoTransactionLogBloomCachingService[m[2m | [m[32mStarting auto transaction log bloom caching service.
+[m[2m2026-10-02 11:22:37.081+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mLogBloomCacheMetadata[m[2m | [m[32mLookup cache metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node3\data\caches
+[m[2m2026-10-02 11:22:37.092+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting Ethereum main loop ... 
+[m[2m2026-10-02 11:22:37.092+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNatService[m[2m | [m[32mNo NAT environment detected so no service could be started
+[m[2m2026-10-02 11:22:37.092+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mStarting Network.
+[m[2m2026-10-02 11:22:37.098+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRlpxAgent[m[2m | [m[32mP2P RLPx agent started and listening on /[0:0:0:0:0:0:0:0]:33003.
+[m[2m2026-10-02 11:22:37.099+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgent[m[2m | [m[32mStarting discovery on shared UDP socket (V4 only)
+[m[2m2026-10-02 11:22:37.111+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mStarting peer discovery agent on host=0.0.0.0, port=33003. IPv6 available.
+[m[2m2026-10-02 11:22:37.132+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mP2P peer discovery agent started and listening on /0.0.0.0:33003
+[m[2m2026-10-02 11:22:37.133+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mEnode URL enode://6d9982346ca16d540287254402876e5d3e82e000a7f6d9b565a531ae2fe6a2114f5bf524108e87f11730549e4e6563ec0ec5925173eb9cce66fbb9bfb22f516b@127.0.0.1:33003
+[m[2m2026-10-02 11:22:37.136+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mENR URL enr:-Je4QGMe4p3YUhqKmYbCWyRAXXPqxSqk57LF6kcHLc4WdhP1Lm7eiu_fTQS3yhD77FVN8f-Ju3ka0rvfZJdxBQ-KaqIBg2V0aMfGhKKKcemAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQNtmYI0bKFtVAKHJUQCh25dPoLgAKf22bVlpTGuL-aiEYN0Y3CCgOuDdWRwgoDr
+[m[2m2026-10-02 11:22:37.137+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mNode address 0xead76a1d9d569762c57a886bb9b17798df2defe1
+[m[2m2026-10-02 11:22:37.164+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mSupported capabilities: [eth/68, eth/69, eth/70, eth/71], [istanbul/100], [snap/1]
+[m[2m2026-10-02 11:22:37.165+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultSynchronizer[m[2m | [m[32mStarting synchronizer.
+[m[2m2026-10-02 11:22:37.166+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction handling following initial sync
+[m[2m2026-10-02 11:22:37.167+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following initial sync
+[m[2m2026-10-02 11:22:37.326+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncDownloader[m[2m | [m[32mStarting full sync.
+[m[2m2026-10-02 11:22:37.328+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:22:37.335+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mEthereum main loop is up.
+[m[2m2026-10-02 11:22:47.688+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftRound[m[2m | [m[32mImporting proposed block to chain. round=ConsensusRoundIdentifier{Sequence=4710, Round=1}, hash=0xc29030c93cc49b3de3ac940c783c4f7787431e8a10b4e25c61050c8ac8e73fd3
+[m[2m2026-10-02 11:22:47.720+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,710 / 0 tx / 0 pending / 0 (0.0%) gas / (0xc29030c93cc49b3de3ac940c783c4f7787431e8a10b4e25c61050c8ac8e73fd3)
+[m[2m2026-10-02 11:22:50.119+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,711  (92173.....cbe39)|    0 tx | 0 pending | 0 (0.0%) gas in 0.109s | Timing(started at 2026-10-02T07:52:50.009328Z, duplicateWorldState=0ms, preTxsSelection=1ms, txsSelection=11ms, selectedTxsEvaluation=0ms, blockAssembled=2ms, blockImported=93ms)
+[m[2m2026-10-02 11:22:53.122+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,712 / 0 tx / 0 pending / 0 (0.0%) gas / (0x7477f16806a9ae7e33850d7b59f9cbdb7548dc1d6bfe665a59c9482e753774e7)
+[m[2m2026-10-02 11:22:56.113+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,713 / 0 tx / 0 pending / 0 (0.0%) gas / (0x5adae9ceba6dab927e9f1fcb156fc88e834501504a08489ba923d80c551c3177)
+[m[2m2026-10-02 11:22:59.091+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,714 / 0 tx / 0 pending / 0 (0.0%) gas / (0x6d0769e730bd29391d17ea25adcc43a2cd2b68ee7048c4e995955a770e8e4fa2)
+[m[2m2026-10-02 11:23:02.093+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,715  (53376.....1c122)|    0 tx | 0 pending | 0 (0.0%) gas in 0.085s | Timing(started at 2026-10-02T07:53:02.007743Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=83ms)
+[m[2m2026-10-02 11:23:05.094+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,716 / 0 tx / 0 pending / 0 (0.0%) gas / (0x38c96a53cb692aa5eed1118cf981273f88b2dd76c0cdc4fcfeb7cfd885969594)
+[m[2m2026-10-02 11:23:08.094+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,717 / 0 tx / 0 pending / 0 (0.0%) gas / (0x4f2fcb8cde5ba893db04ec73261413a18bc6f9f06022ef5cc430ebb5971b9d7a)
+[m[2m2026-10-02 11:23:11.075+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,718 / 0 tx / 0 pending / 0 (0.0%) gas / (0x65dfd59b8b3d8e8bf382fd7ece5e800616cc927b907825edbde603247e9be20f)
+[m[2m2026-10-02 11:23:14.098+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,719  (e56f3.....51c82)|    0 tx | 0 pending | 0 (0.0%) gas in 0.089s | Timing(started at 2026-10-02T07:53:14.008720600Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=1ms, selectedTxsEvaluation=0ms, blockAssembled=2ms, blockImported=84ms)
+[m[2m2026-10-02 11:23:17.087+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,720 / 0 tx / 0 pending / 0 (0.0%) gas / (0x8b646f37d880a0d1577cad73c4a6dfc015ea384cd10e04c491d2eff9b941e4e6)
+[m[2m2026-10-02 11:23:20.090+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,721 / 0 tx / 0 pending / 0 (0.0%) gas / (0xbbbaeb4e0d92ac3c35bb69095309e05ca36febad62f452ff8bc93f62eae538cf)
+[m[2m2026-10-02 11:23:23.092+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,722 / 0 tx / 0 pending / 0 (0.0%) gas / (0xd89c76292c6c6efc6c17517317e3c110e6b28d4e6ff9c694cb0bc3196234b5fa)
+[m[2m2026-10-02 11:23:26.079+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,723  (555f1.....88a32)|    0 tx | 0 pending | 0 (0.0%) gas in 0.072s | Timing(started at 2026-10-02T07:53:26.006291800Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=71ms)
+[m[2m2026-10-02 11:23:29.080+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,724 / 0 tx / 0 pending / 0 (0.0%) gas / (0x3cd9afd304169dac293fa0177de9597258b959abc0b16b302bf46263daf9d1d8)
+[m[2m2026-10-02 11:23:32.085+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,725 / 0 tx / 0 pending / 0 (0.0%) gas / (0x56ebf487c04a5d1cff9caf719f8488a73b13d76b7e4c976c66a00b4ca41b98ce)
+[m[2m2026-10-02 11:23:32.086+0330[m[2m | [m[2mEthScheduler-Workers-0[m[2m | [m[32mINFO [m[2m | [m[2mPersistBlockTask[m[2m | [m[32mBlock 4725 (0x56ebf487c04a5d1cff9caf719f8488a73b13d76b7e4c976c66a00b4ca41b98ce) is already imported
+[m[2m2026-10-02 11:23:35.085+0330[m[2m | [m[2mEthScheduler-Workers-2[m[2m | [m[32mINFO [m[2m | [m[2mPersistBlockTask[m[2m | [m[32mBlock 4726 (0xb8bd5779ceafa77df7f81c4538af873e384c1398ea8ccfb560e8b1a8da00d5a4) is already imported
+[m[2m2026-10-02 11:23:35.085+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,726 / 0 tx / 0 pending / 0 (0.0%) gas / (0xb8bd5779ceafa77df7f81c4538af873e384c1398ea8ccfb560e8b1a8da00d5a4)
+[m[2m2026-10-02 11:23:38.077+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,727  (a7ba5.....00f70)|    0 tx | 0 pending | 0 (0.0%) gas in 0.073s | Timing(started at 2026-10-02T07:53:38.003698900Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=72ms)
+[m[2m2026-10-02 11:23:41.079+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,728 / 0 tx / 0 pending / 0 (0.0%) gas / (0xa968201d37b9f3ba661ca01340e942f2fbe79fc7f9c6d1edc3c1c391dbba37b6)
+[m[2m2026-10-02 11:23:44.082+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,729 / 0 tx / 0 pending / 0 (0.0%) gas / (0x0f39c7e37f787671d9264ec577c9d9f2b2b0d55d38125841fab309f03d751346)
+[m[2m2026-10-02 11:23:47.079+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,730 / 0 tx / 0 pending / 0 (0.0%) gas / (0x9d570d9eccd18068922af082602f2d52c71825dfe411c44bb25bec5069d2b1dd)
+[m[2m2026-10-02 11:23:50.073+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,731  (331e4.....ce38c)|    0 tx | 0 pending | 0 (0.0%) gas in 0.070s | Timing(started at 2026-10-02T07:53:50.003425600Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=68ms)
+[m[2m2026-10-02 11:23:53.083+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,732 / 0 tx / 0 pending / 0 (0.0%) gas / (0xf0beb2f2f9b9944f8928fe77167afa8c2315c0f71cf354fdef82d27a2eb934c5)
+[m[2m2026-10-02 11:23:56.089+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,733 / 0 tx / 0 pending / 0 (0.0%) gas / (0x4d422cc535dc4b9fb14438155dfcc1db71c3aa430bf9b1a87dc9ae0d3b1f165d)
+[m[2m2026-10-02 11:23:59.082+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,734 / 0 tx / 0 pending / 0 (0.0%) gas / (0x9d5d89d4a44babc02dc000dfb2adb72a038c61e5462203bb07004820e685c8ed)
+[m[2m2026-10-02 11:24:02.070+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,735  (7e9c3.....cd9fe)|    0 tx | 0 pending | 0 (0.0%) gas in 0.066s | Timing(started at 2026-10-02T07:54:02.004263900Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=64ms)
+[m[2m2026-10-02 11:24:05.080+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,736 / 0 tx / 0 pending / 0 (0.0%) gas / (0x99ab11d540d7d6a3b46dca0a7d280ba258f44ed174f2b1aa00161a2b05c02ecb)
+[m[2m2026-10-02 11:24:08.082+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,737 / 0 tx / 0 pending / 0 (0.0%) gas / (0x382cf394cb21429324e9f7b66e59bcc80ac858f01a1ef396dbb71a939723c125)
+[m[2m2026-10-02 11:24:11.083+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,738 / 0 tx / 0 pending / 0 (0.0%) gas / (0xbdbf2e2f6c567c4e2df984efc1ce9a657fc4534510f922bf2a341365c3269ed5)
+[m[2m2026-10-02 11:24:14.080+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,739  (8b0de.....7169f)|    0 tx | 0 pending | 0 (0.0%) gas in 0.075s | Timing(started at 2026-10-02T07:54:14.004551700Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=74ms)
+[m[2m2026-10-02 11:24:17.074+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,740 / 0 tx / 0 pending / 0 (0.0%) gas / (0x5004f00cf402a281077ba90eaaff67eb5e44e54acc1509d7129396384a232031)
+[m[2m2026-10-02 11:24:20.079+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,741 / 0 tx / 0 pending / 0 (0.0%) gas / (0x89d26424016882e27376bdd162bfddc42a65ca152469c994531801c776b4c39e)
+[m[2m2026-10-02 11:24:23.067+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,742 / 0 tx / 0 pending / 0 (0.0%) gas / (0x0a1f253bd6f679d39c71d251a6a63e079c10d0394d81b1c59a53a7b529e521da)
+[m[2m2026-10-02 11:24:26.078+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,743  (4fd92.....6b72a)|    0 tx | 0 pending | 0 (0.0%) gas in 0.073s | Timing(started at 2026-10-02T07:54:26.003539500Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=1ms, blockImported=71ms)
+[m[2m2026-10-02 11:24:29.066+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,744 / 0 tx / 0 pending / 0 (0.0%) gas / (0xbdd055a50d0222217a18caf074bc38d9be725819eb5fbb01fa44df16d7b454b1)
+[m[2m2026-10-02 11:24:32.075+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,745 / 0 tx / 0 pending / 0 (0.0%) gas / (0x1e20887e936135237a112bbced7a79dc96faeb7dd7c21bc7c3e82b1cd48b945a)
+[m[2m2026-10-02 11:24:35.083+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,746 / 0 tx / 0 pending / 0 (0.0%) gas / (0x9cb0fd7b8e8e479fa2b2d711f93969ee31eb36f41a27c3452483bd383650a9e6)
+[m[2m2026-10-02 11:24:38.084+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,747  (12947.....9b83c)|    0 tx | 0 pending | 0 (0.0%) gas in 0.075s | Timing(started at 2026-10-02T07:54:38.008585900Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=73ms)
+[m[2m2026-10-02 11:24:41.077+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,748 / 0 tx / 0 pending / 0 (0.0%) gas / (0x4ed873242969fb00122fcd684bb72f9d5709db483649c38791d26fc8ebeb7d1a)
+[m[2m2026-10-02 11:24:44.079+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,749 / 0 tx / 0 pending / 0 (0.0%) gas / (0xa33ae37e4dfc35d137e5425c64921123a916ab5ee29d6bbc2dc3f4bccac4b7bd)
+[m[2m2026-10-02 11:24:47.060+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,750 / 0 tx / 0 pending / 0 (0.0%) gas / (0x3f46817514ffa7418e7344643a9a17f54b8c4b476cc231c6d0b5f22683ccce6b)
+[m[2m2026-10-02 11:24:50.074+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,751  (9b34b.....ee826)|    0 tx | 0 pending | 0 (0.0%) gas in 0.069s | Timing(started at 2026-10-02T07:54:50.004790200Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=67ms)
+[m[2m2026-10-02 11:24:53.152+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported block       #4,752 / 1 tx / 0 pending / 1,304,513 (4.3%) gas / (0x2ee7548e42c3df2b6371571afe5a00acd3da2eca709a2c6ccc26719bb393fd26)
+[m[2m2026-10-02 11:24:56.085+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,753 / 0 tx / 0 pending / 0 (0.0%) gas / (0xa3c7e088928491a60780d84c17981e564b81507b4bf89172d81e32bd9491421d)
+[m[2m2026-10-02 11:24:59.071+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,754 / 0 tx / 0 pending / 0 (0.0%) gas / (0x564f18ddde129c48b6866f4baae216a46ad84afeed25641fe9060ba8d7cf858b)
+[m[2m2026-10-02 11:25:02.068+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,755  (19f5b.....4b66c)|    0 tx | 0 pending | 0 (0.0%) gas in 0.064s | Timing(started at 2026-10-02T07:55:02.004405300Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=63ms)
+[m[2m2026-10-02 11:25:05.064+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,756 / 0 tx / 0 pending / 0 (0.0%) gas / (0x72076526700255c4649559a07e3e374f7dcc65a053328b3136bc8b930a771644)
+[m[2m2026-10-02 11:25:08.064+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,757 / 0 tx / 0 pending / 0 (0.0%) gas / (0x2d028ec567c6253a726f70aa59b5e9b6f938021c140d37a15e14764c73fee7a4)
+[m[2m2026-10-02 11:25:11.062+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,758 / 0 tx / 0 pending / 0 (0.0%) gas / (0xd8a9e9776ddf42fd759b37eb56a36789f5af4d255cc24d898e137fadc433d376)
+[m[2m2026-10-02 11:25:14.073+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mProduced #4,759  (bfb6e.....9fb17)|    0 tx | 0 pending | 0 (0.0%) gas in 0.066s | Timing(started at 2026-10-02T07:55:14.006844900Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=0ms, blockImported=66ms)
+[m[2m2026-10-02 11:25:17.070+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #4,760 / 0 tx / 0 pending / 0 (0.0%) gas / (0xb8e6ab99bdf45890eb56166ece79bec830a885c840659fe4d930ae2db8d0c531)
+[m

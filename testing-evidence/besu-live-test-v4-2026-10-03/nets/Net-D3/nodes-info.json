@@ -1,0 +1,50 @@
+[
+  {
+    "dir": "node1",
+    "role": "g6_v1",
+    "p2p": 33171,
+    "rpc": 8871,
+    "address": "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c",
+    "enode": "enode://92cd07267fc6d25cb6e62d23ca1bf1f0f0fe410284e97e87d4ac9a3a36f93064e8982a8914c5308c2ada1248ac2a9eaccb065430771291d586c54fe9194389e2@127.0.0.1:33171"
+  },
+  {
+    "dir": "node2",
+    "role": "g6_v2",
+    "p2p": 33172,
+    "rpc": 8872,
+    "address": "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC",
+    "enode": "enode://9e67a4cfff42c9d33b15a7f5511b20272e210c8a639da226a216e902273d3c86ea0b598a1b77b564fe19e89f31c8bc191cd74a77120cefa63342c7b362b7c55d@127.0.0.1:33172"
+  },
+  {
+    "dir": "node3",
+    "role": "g6_v3",
+    "p2p": 33173,
+    "rpc": 8873,
+    "address": "0xA0379A0bf817877535Bfd43c58278B765bE85618",
+    "enode": "enode://25a46f74d4f506eb9aec10e43444eaa8deb5e806bb73c4c0372cfade28d4fe65999c663950dbd73de2db434abd0062a0238ceb871612258fb3636b6ebe5759b7@127.0.0.1:33173"
+  },
+  {
+    "dir": "node4",
+    "role": "g6_v4",
+    "p2p": 33174,
+    "rpc": 8874,
+    "address": "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb",
+    "enode": "enode://0acea96baac7c8e7e070dc4599186f353e743d82329db2231ec5ac3c43cce0a248e884095681a308a62748cbf6877c4a95c287c6a013433267e095b9dc7c839a@127.0.0.1:33174"
+  },
+  {
+    "dir": "node5",
+    "role": "g6_v5",
+    "p2p": 33175,
+    "rpc": 8875,
+    "address": "0xd01B11074080932823A66e212f2B1ceFD63887aA",
+    "enode": "enode://ca2d4f0aa92b26972caee950ade0e45146b6743194bb8f225322752eba9c1a19f043af044c4919dfaffa9a559aac5d4e518dfcc37ae2b6636baa6bab38653c96@127.0.0.1:33175"
+  },
+  {
+    "dir": "node6",
+    "role": "g6_v6",
+    "p2p": 33176,
+    "rpc": 8876,
+    "address": "0xDB2D47448782258F7bcE7963a40CA987e4729013",
+    "enode": "enode://b97119bb85523a615abad15f6ecbda5910ff167b16482bb5b69fa02649dca975998fad2026622692903766c61525a5021fe424136ff41066e93d2befe5a4a67f@127.0.0.1:33176"
+  }
+]

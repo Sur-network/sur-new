@@ -1,0 +1,24 @@
+--- D:/Amir/Business/SUR/Test/besu-test-v4/hardhat/contracts-baseline/BlockRewardDistributor.sol	2026-10-02 04:53:30.739592300 +0330
++++ D:/Amir/Business/SUR/Test/besu-test-v4/hardhat-fork/contracts-testfork/BlockRewardDistributor.sol	2026-10-02 04:58:51.142008400 +0330
+@@ -139,7 +139,7 @@
+     uint256 public totalFeesBurned;
+ 
+     /// @notice Minimum allowed interval between two consecutive distribution calls.
+-    uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
++    uint256 public constant MIN_DISTRIBUTION_INTERVAL = 90; // TEST-FORK (v4): 23 hours -> 90s, per owner-authorized compressed-constants table (2026-10-02)
+ 
+     // L03 (audit 2026-09-30): MIN_BLOCK_PERIOD_SECONDS and the time-based "physical maximum" check were REMOVED — see
+     // the design note above _settleRange. The block count is bounded by the P05 range control, not by elapsed time.
+@@ -328,10 +328,10 @@
+     /// @notice Voting phase only. An approved proposal waiting for its delay/execution is NOT removed by this expiry.
+     uint256 public constant RATE_VOTING_EXPIRY = 30 days;
+     /// @notice Starts when BOTH chambers have completed.
+-    uint256 public constant RATE_CHANGE_DELAY = 7 days;
++    uint256 public constant RATE_CHANGE_DELAY = 180; // TEST-FORK (v4): 7 days -> 180s, per owner-authorized compressed-constants table (2026-10-02)
+     /// @notice Minimum distance, in BLOCKS, between the block that executes the change and its startBlock. Roughly 7 days only at the
+     ///         nominal 3 s cadence; it is a block count, not a time, and is independent of RATE_CHANGE_DELAY.
+-    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 201_600;
++    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 80; // TEST-FORK (v4): 201,600 blocks -> 80 blocks, per owner-authorized compressed-constants table (2026-10-02)
+ 
+     struct RateProposal {
+         uint128 startBlock;

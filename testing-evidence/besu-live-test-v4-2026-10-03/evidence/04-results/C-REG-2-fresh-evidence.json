@@ -1,0 +1,43 @@
+{
+  "submittedAt": "2026-10-02T07:54:51.295Z",
+  "txHash": "0x3a2f1fb86d52144ee62f1183f61921eb1320c863b49eeefdb97e10830429dabb",
+  "status": 1,
+  "gasUsed": "1304513",
+  "fromBlock": 1,
+  "toBlock": 4724,
+  "totalRewards": "9448000000000000000000",
+  "V4": {
+    "addressRole": "g5_v4",
+    "statusBeforePayment": "Demoted",
+    "statusAfterPayment": "Demoted",
+    "isValidatorBefore": false,
+    "blocksMinedHistorically": 311,
+    "balanceDelta": "1627680779000846740050"
+  },
+  "V5": {
+    "addressRole": "g5_v5",
+    "statusBeforePayment": "Demoted",
+    "statusAfterPayment": "Demoted",
+    "isValidatorBefore": false,
+    "blocksMinedHistorically": 23,
+    "balanceDelta": "120375105842506350550"
+  },
+  "allBlocksMined": {
+    "0xbb0ad6351f7566daeef259555874053470e195c7": 1137,
+    "0xa0be660791823a493b965c325d02527f2cfbfc6c": 1136,
+    "0xead76a1d9d569762c57a886bb9b17798df2defe1": 1137,
+    "0xcdc464346bf75a910c6c207ca6280e0ba94060b2": 311,
+    "0x23d8cda291b4914cb7742fa2a5d724495377b1df": 23,
+    "0x7418b8c56b27f689c19abc59a735cfc70160fd07": 980
+  },
+  "allDeltas": {
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": "120375105842506350550",
+    "0x7418B8c56b27F689C19AbC59A735cFc70160fD07": "5129026248941574936494",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c": "5945483488569009314140",
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7": "5950717188823031329381",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": "1627680779000846740050",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": "5950717188823031329381",
+    "0x1111111111111111111111111111111111111111": "1417200000000000000000",
+    "0x5555555555555555555555555555555555555555": "3306800000000000000004"
+  }
+}

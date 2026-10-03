@@ -1,0 +1,85 @@
+{
+  "net": "Net-L05",
+  "timestamp": "2026-10-02T02:01:02.262Z",
+  "A01_note": "covered in Phase 0 baseline hash report + per-network genesis.json evidence",
+  "A06_getValidators": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1"
+  ],
+  "A06_matchesFounders": false,
+  "A07": {
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": {
+      "isValidator": false,
+      "everActivated": true
+    },
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": {
+      "isValidator": false,
+      "everActivated": true
+    }
+  },
+  "A08": {
+    "statusNonce": "2",
+    "wasActiveAt_founders": {
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7": true,
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c": true,
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": true,
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": true,
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": true
+    },
+    "wasActiveAt_nonFounder": false
+  },
+  "A09": {
+    "boardMembers": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1"
+    ],
+    "boardVersion": "3",
+    "lastBoardRefreshAt": "0"
+  },
+  "A10": {
+    "membershipNonce": "0",
+    "members": []
+  },
+  "A11": {
+    "INITIAL_REWARD_PER_BLOCK": "2000000000000000000",
+    "rewardRateChangeCount": "0",
+    "rateProposalCount": "4",
+    "lastSettledBlock": "0",
+    "epochCount": "0",
+    "distributionOracle": "0xBa7D298200Fc26Cb88A21e546D097337F0517706",
+    "validatorDirectShareBps": "5000",
+    "maxRewardsForRange_1_1000": "2000000000000000000000",
+    "RATE_VOTING_EXPIRY": "2592000",
+    "RATE_CHANGE_DELAY": "604800",
+    "MIN_RATE_CHANGE_LEAD_BLOCKS": "201600"
+  },
+  "A13": {
+    "verifier": "0x0d3a16Eba9b3777E49854c34C204c8c1aeB95F7e",
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10",
+    "windowStart": "1790904653"
+  },
+  "A15": {
+    "blocksChecked": 100,
+    "avgPeriod": 6.75,
+    "min": 3,
+    "max": 378,
+    "p95": 3
+  }
+}

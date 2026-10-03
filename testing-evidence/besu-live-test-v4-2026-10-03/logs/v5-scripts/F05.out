@@ -1,0 +1,9 @@
+[F05] head=83, X'=383; genesis.json updated (sha d51a9a5b241d)
+[F05] node1: stopped, restarted, rejoined=true h=88
+[F05] node2: stopped, restarted, rejoined=true h=93
+[F05] node3: stopped, restarted, rejoined=true h=99
+[F05] node4: stopped, restarted, rejoined=true h=101
+[F05] node5: stopped, restarted, rejoined=true h=106
+[F05] waiting for the chain to pass X' ...
+[F05] firstBlockPaying3: 383 X': 383 hashAgreement: true heights: {"node1":398,"node2":398,"node3":398,"node4":398,"node5":398}
+wrote evidence: Net-F4-F05.json

@@ -1,0 +1,11 @@
+--- a/DEVIATIONS.md (previous 902-file package)
++++ b/DEVIATIONS.md (this package)
+@@ -126,7 +126,7 @@
+ ## 12. Hard process kills for node restarts; 512 MB JVM heap cap on every node — [this session's own judgment call]
+ F05's "restart nodes one at a time" and the F05 control used `taskkill /F` + relaunch, not a graceful
+ shutdown. Every node ran with `-Xmx512m -Xms256m` (the host-capacity workaround from FINDINGS.md item 2),
+-which is the likely confounder in F07's node5 `OutOfMemoryError` (FINDINGS.md item 10).
++which is a possible confounder in F07's node5 `OutOfMemoryError` (FINDINGS.md item 10; not established — see item 23 and FINDINGS.md item 18).
+ 
+ ## 13. F03 used the test tool's FORCE mode — [the document's F03 requires observing the contract's own rejection]
+ `testonly-settle.js` normally refuses to send when the independent R exceeds the contract cap (document

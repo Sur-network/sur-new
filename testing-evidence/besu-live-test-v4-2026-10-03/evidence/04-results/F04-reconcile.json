@@ -1,0 +1,250 @@
+{
+  "ID": "F04",
+  "NET": "Net-F3",
+  "startedAt": "2026-10-03T09:25:21.993Z",
+  "gates": {
+    "equationCloses": true,
+    "countComplete": true,
+    "noUnknownMiners": true,
+    "emptyBlockMethodAgreesWithTrace": true,
+    "rewardAtOrBelowCap": true,
+    "contractCap": "1009000000000000000000",
+    "independentR": "872000000000000000000",
+    "independentF": "0",
+    "submittedTotalRewardsEqualsIndependentR": true,
+    "submittedTotalFeesEqualsIndependentF": true
+  },
+  "warnings": [
+    "MISMATCH WARNING: actual reward 872.0 is BELOW the contract cap 1009.0 (cap - R = 137.0): the contract's approved rate history is ahead of what Besu actually paid"
+  ],
+  "range": {
+    "S": 0,
+    "from": 1,
+    "L": 436,
+    "head": 436,
+    "length": 436
+  },
+  "preState": {
+    "epochCount": "0",
+    "lastSettledBlock": 0,
+    "pendingMembershipFees": "0",
+    "shareBps": "5000",
+    "foundationBps": "1500",
+    "feeBurnBps": "3000"
+  },
+  "extraction": {
+    "R": "872000000000000000000",
+    "F": "0",
+    "M_traceRegistryForward": "0",
+    "X_otherInflows": "0",
+    "P_outflowsInRange": "0",
+    "nonEmptyBlocks": 0,
+    "emptyBlocks": 436,
+    "emptyBlocksCrossChecked": 436,
+    "emptyBlockMethodMismatches": [],
+    "emptyBlockMismatchCount": 0,
+    "traceRewardAuthors": [
+      "0x2222222222222222222222222222222222222222"
+    ],
+    "traceMissingBlocks": 0,
+    "unknownMiners": {},
+    "M_events": "0",
+    "M_eventCount": 0
+  },
+  "conservationEquation": {
+    "available": true,
+    "B_L": "872000000000000000000",
+    "B_S": "0",
+    "lhs": "872000000000000000000",
+    "rhs": "872000000000000000000",
+    "closes": true,
+    "residual": "0",
+    "note": "B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"
+  },
+  "submission": {
+    "addresses": [
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1"
+    ],
+    "blocksMined": [
+      88,
+      87,
+      87,
+      87,
+      87
+    ],
+    "totalBlocks": 436,
+    "rangeLength": 436
+  },
+  "blockers": [],
+  "capComparison": {
+    "independentR": "872000000000000000000",
+    "contractCap": "1009000000000000000000",
+    "capMinusR": "137000000000000000000",
+    "rEqualsCap": false
+  },
+  "expected": {
+    "shareBps": "5000",
+    "validatorDirect": "436000000000000000000",
+    "foundation": "130800000000000000000",
+    "feeBurn": "0",
+    "feePool": "0",
+    "feesToDistribute": "0",
+    "treasury": "305200000000000000000",
+    "perValidator": [
+      {
+        "a": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+        "blocks": 88,
+        "reward": "88000000000000000000",
+        "fee": "0"
+      },
+      {
+        "a": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+        "blocks": 87,
+        "reward": "87000000000000000000",
+        "fee": "0"
+      },
+      {
+        "a": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+        "blocks": 87,
+        "reward": "87000000000000000000",
+        "fee": "0"
+      },
+      {
+        "a": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+        "blocks": 87,
+        "reward": "87000000000000000000",
+        "fee": "0"
+      },
+      {
+        "a": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+        "blocks": 87,
+        "reward": "87000000000000000000",
+        "fee": "0"
+      }
+    ],
+    "membershipFeeFoldedIn": "0"
+  },
+  "stateBefore": {
+    "epochCount": "0",
+    "lastSettledBlock": "0",
+    "pendingMembershipFees": "0",
+    "lastDistributionTime": "0"
+  },
+  "tx": {
+    "hash": "0x833f07ba31789948343bf994fcb4add0d7e936560f73658a05f43807d839b846",
+    "status": 1,
+    "gasUsed": "939575",
+    "block": 699,
+    "effectiveGasPrice": "100000000000000"
+  },
+  "balanceDeltasAtBlock": {
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": "88000000000000000000",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c": "87000000000000000000",
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7": "87000000000000000000",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": "87000000000000000000",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": "87000000000000000000",
+    "0x1111111111111111111111111111111111111111": "130800000000000000000",
+    "0x5555555555555555555555555555555555555555": "305200000000000000000",
+    "0x0000000000000000000000000000000000000000": "0",
+    "0x2222222222222222222222222222222222222222": "-776042500000000000000",
+    "0xBa7D298200Fc26Cb88A21e546D097337F0517706": "-93957500000000000000"
+  },
+  "postState": {
+    "epochCount": "1",
+    "lastSettledBlock": "436",
+    "totalFeesBurned": "0",
+    "pendingMembershipFees": "0"
+  },
+  "perValidatorCheck": [
+    {
+      "validator": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "blocks": 88,
+      "recordedBlocks": "88",
+      "recordedRewardShare": "88000000000000000000",
+      "expectedRewardShare": "88000000000000000000",
+      "recordedFeeShare": "0",
+      "expectedFeeShare": "0",
+      "balanceDelta": "88000000000000000000",
+      "expectedPayout": "88000000000000000000",
+      "balanceDeltaEqualsPayout": true,
+      "sharesMatch": true,
+      "validatorSentTxInSameBlock": false
+    },
+    {
+      "validator": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "blocks": 87,
+      "recordedBlocks": "87",
+      "recordedRewardShare": "87000000000000000000",
+      "expectedRewardShare": "87000000000000000000",
+      "recordedFeeShare": "0",
+      "expectedFeeShare": "0",
+      "balanceDelta": "87000000000000000000",
+      "expectedPayout": "87000000000000000000",
+      "balanceDeltaEqualsPayout": true,
+      "sharesMatch": true,
+      "validatorSentTxInSameBlock": false
+    },
+    {
+      "validator": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "blocks": 87,
+      "recordedBlocks": "87",
+      "recordedRewardShare": "87000000000000000000",
+      "expectedRewardShare": "87000000000000000000",
+      "recordedFeeShare": "0",
+      "expectedFeeShare": "0",
+      "balanceDelta": "87000000000000000000",
+      "expectedPayout": "87000000000000000000",
+      "balanceDeltaEqualsPayout": true,
+      "sharesMatch": true,
+      "validatorSentTxInSameBlock": false
+    },
+    {
+      "validator": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "blocks": 87,
+      "recordedBlocks": "87",
+      "recordedRewardShare": "87000000000000000000",
+      "expectedRewardShare": "87000000000000000000",
+      "recordedFeeShare": "0",
+      "expectedFeeShare": "0",
+      "balanceDelta": "87000000000000000000",
+      "expectedPayout": "87000000000000000000",
+      "balanceDeltaEqualsPayout": true,
+      "sharesMatch": true,
+      "validatorSentTxInSameBlock": false
+    },
+    {
+      "validator": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "blocks": 87,
+      "recordedBlocks": "87",
+      "recordedRewardShare": "87000000000000000000",
+      "expectedRewardShare": "87000000000000000000",
+      "recordedFeeShare": "0",
+      "expectedFeeShare": "0",
+      "balanceDelta": "87000000000000000000",
+      "expectedPayout": "87000000000000000000",
+      "balanceDeltaEqualsPayout": true,
+      "sharesMatch": true,
+      "validatorSentTxInSameBlock": false
+    }
+  ],
+  "postDistributionConservation": {
+    "totalOutflowFromContract": "872000000000000000000",
+    "expectedOutflow_R_plus_F_plus_pendingM": "872000000000000000000",
+    "outflowEqualsRFM": true,
+    "contractBalanceDelta": "-776042500000000000000",
+    "blockRewardInThatBlock": "2000000000000000000",
+    "distributionTxOwnFee": "93957500000000000000",
+    "expectedContractDelta": "-776042500000000000000",
+    "contractDeltaEqualsExpected": true,
+    "feeBurnedDeltaAtZeroAddress": "0",
+    "expectedBurn": "0",
+    "burnMatches": true,
+    "foundationMatches": true,
+    "treasuryMatches": true,
+    "membershipFeeNotBurned": "n/a (M=0 in this range)"
+  }
+}

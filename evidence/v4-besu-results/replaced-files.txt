@@ -1,0 +1,35 @@
+# Replaced / changed files: sha256 BEFORE this round -> AFTER (this package)
+## Plan documents (before = Plan working copy at the start of this round)
+e58726d550bd85e0407cb6539c3cc25e1a1ac3cb9928262c2268a0d7d7204aba -> d632fe7296d7221e8dcd2659a3ab0799d4a7f973500eeef02693f2f2f30cabe5  technical-design/sur-audit-2026-09-30-final-status.md
+268711d04cded3ae1dbfcfb7f4108b3d9cd8ecf0c03748b43ff5108179ffb7c2 -> 5a15f5162fb1db235d0e125ea0d9112fe66efbe5863eb22424a5b5f68aec3f8c  sur-master-open-items.md
+c5cbc8497a99c20b2d59b946d1feb0c86110b508b7334340d02be19396460d30 -> 88059dfdafd6261fb519b33277fb23e4871919dc71130670cca2ffef639091cc  offchain-services/sur-reward-router-spec.md
+3061ce83b2062a6e7e5a69527184cfd6932b78f2426827db4cacbabfe75f771b -> d805d7cb2be980b5e4440c9505e261ef897e4848460f55cae4d608205da4f190  technical-design/sur-contracts-deploy-notes.md
+e514bf9677d4acc3c501ce6ecc2021c3d53151e5182064a77fca0dfe4a1272d0 -> 31031a8b99cf367ec0865cb54f1d9cb19b4ae855e92a4ba39671084e69a45b35  sur-besu-test-status.md
+57e4eb3256302e2eb164f98dcc0eb2346c2291f55a984976cb05a5b2a4cc319c -> bec7155ed3521357d24a9ccc9d9679803fb7837043f4f31be1aabe595f4b5b75  economics/sur-tokenomics.md
+80b38a6d9d9d64254bd3dea1558f59f9e2ee068eb15e1e108bf1afaec038ac90 -> fa71d569b1cbd0d20f0166154c326d5c17b7a3d7e425a1a0ecd205561d406095  technical-design/sur-contracts-oracles-accounts-report.md
+e19c2600a61694e8cd6a7d06dd638eee01c5481add150862baa6da942eed4611 -> 8b0d14f0ed839a7c67e1403c212c9ddd1e044f765459ab2a3dfd6bfbb698428f  offchain-services/sur-genesis-builder-tool-spec.md
+c5a98520cb91836bf06a8aa2c74214e352d4175be9d3c11c13db64b52b54d2ef -> deeaaf1b453fd149e590ed9980cf81f3d36a1a9b3fdac0ffa51a6b426814a5d3  sur-project-handoff-summary.md
+3a2ac4d2f77d3842396292ed57495a9cfe1fff659d36755a1efdcb9512390840 -> 8bc75463b69d9c5f336c3438bd7d33326e4b4caf28c4f372756bd89c44a1ae86  sur-besu-live-test-brief-v4.md
+8829c9b06e3f38fb622f61f5d3de3ee1fcd8c808259ce9b95464b02511703491 -> (replaced by this package's MANIFEST.sha256)  MANIFEST.sha256 (v3, kept as previous-MANIFEST-v3.sha256)
+
+## Evidence documents (before = previous 902-file package)
+82d89aacae9aea23b359d488788fc702d7f4552caf5dcabed8f35c13fa51f814 -> 5c88ead729afab1e1941c584622d2a66baf43d1a2e87ea95ac0e68bb1b47d4ad  testing-evidence/besu-live-test-v4-2026-10-03/REPORT.md
+974555747ff249e21506dc7b61d535374988b851bc489c6fe1715d05e0b8af42 -> dfbd736198d2c93d43f7f7b8e04e569de89db7ac6fc51f6ceb55c5f22ce2dd0a  testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md
+7276ec2798c5341a821093d35ba2e65699e3385b10d98f3983e6869041dc0bf0 -> 732d1e723307aec76c975e1744bb9e5754e52c351745d363d1e6f5d3bbc3e0a6  testing-evidence/besu-live-test-v4-2026-10-03/DEVIATIONS.md
+c8bb9b93a8bf4c2c9265dbfeafbb83fb24eed713f838377df292afe994ca1425 -> c337ba0beea150ba6866418e88adfdf597c1fef3ec5eec917610034a5657cea4  testing-evidence/besu-live-test-v4-2026-10-03/LIMITATIONS.md
+dc801a0e4a38de3cddb0c20ddd9f4ea16ed31c8f1f0bfe7b84f79fb9166bc09b -> 6b9af36f5fa944b0536a0b5ed7b3b4bd6db665f2534019be3200aa80e5437928  testing-evidence/besu-live-test-v4-2026-10-03/QUESTIONS.md
+ecfc43156869441639fc30ba8e50478760a40e58239df212df2109b79fc37847 -> ecfc43156869441639fc30ba8e50478760a40e58239df212df2109b79fc37847  testing-evidence/besu-live-test-v4-2026-10-03/README.md
+
+## Previous package: besu-test-v4-evidence-package.tar.gz (902 files) sha256 05020dd7fdf4246127f78aef687bad80adaea05a8f55e0b6a6f7c947f167fd21
+## Manifest comparison: previous package manifest vs this evidence directory's manifest
+(lines present only in one of them; expected: exactly the five changed evidence documents (REPORT, FINDINGS, DEVIATIONS, LIMITATIONS, QUESTIONS); MANIFEST.sha256 itself is not listed in either)
+this-package-only: 5c88ead729afab1e1941c584622d2a66baf43d1a2e87ea95ac0e68bb1b47d4ad *REPORT.md
+this-package-only: 6b9af36f5fa944b0536a0b5ed7b3b4bd6db665f2534019be3200aa80e5437928 *QUESTIONS.md
+previous-only: 7276ec2798c5341a821093d35ba2e65699e3385b10d98f3983e6869041dc0bf0 *DEVIATIONS.md
+this-package-only: 732d1e723307aec76c975e1744bb9e5754e52c351745d363d1e6f5d3bbc3e0a6 *DEVIATIONS.md
+previous-only: 82d89aacae9aea23b359d488788fc702d7f4552caf5dcabed8f35c13fa51f814 *REPORT.md
+previous-only: 974555747ff249e21506dc7b61d535374988b851bc489c6fe1715d05e0b8af42 *FINDINGS.md
+this-package-only: c337ba0beea150ba6866418e88adfdf597c1fef3ec5eec917610034a5657cea4 *LIMITATIONS.md
+previous-only: c8bb9b93a8bf4c2c9265dbfeafbb83fb24eed713f838377df292afe994ca1425 *LIMITATIONS.md
+previous-only: dc801a0e4a38de3cddb0c20ddd9f4ea16ed31c8f1f0bfe7b84f79fb9166bc09b *QUESTIONS.md
+this-package-only: dfbd736198d2c93d43f7f7b8e04e569de89db7ac6fc51f6ceb55c5f22ce2dd0a *FINDINGS.md

@@ -1,0 +1,213 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IZetherVerifier",
+  "sourceName": "contracts-testfork/reference-dapps/SurZether.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.PubKey",
+          "name": "pubKey",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dy",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.Ciphertext",
+          "name": "balance",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "verifyBurn",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dy",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.Ciphertext",
+          "name": "senderBalance",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.PubKey",
+          "name": "senderPubKey",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.PubKey",
+          "name": "receiverPubKey",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dy",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.Ciphertext",
+          "name": "deltaFrom",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "cx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cy",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dx",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dy",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SurZetherTypes.Ciphertext",
+          "name": "deltaTo",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "verifyTransfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

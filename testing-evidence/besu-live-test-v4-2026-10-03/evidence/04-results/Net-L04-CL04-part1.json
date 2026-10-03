@@ -1,0 +1,32 @@
+{
+  "c6_join": {
+    "txHash": "0x6cebaf05bffac25744af3a176c9ef06e2828127a5baecb3264948a73790b0826",
+    "status": 1
+  },
+  "proposals_before_c6": {
+    "idP1": 1,
+    "idT1": 1,
+    "idD1": 1
+  },
+  "c6_activated": {
+    "isValidator": true
+  },
+  "cl04_1": {
+    "P1": "ValidatorsRegistry: not eligible - not Active when this proposal was created",
+    "T1": "ValidatorsTreasury: not eligible - not Active when this proposal was created",
+    "D1": "BlockRewardDistributor: not eligible - not Active when this proposal was created"
+  },
+  "v5_suspended_count": "5",
+  "proposals_p2t2d2": {
+    "idP2": 2,
+    "idT2": 2,
+    "idD2": 2
+  },
+  "v4_suspended_count": "4",
+  "v4_vote_while_suspended": "ValidatorsRegistry: caller is not an active validator",
+  "v3_vote_p2": {
+    "status": 1
+  },
+  "active_after_v3_exit": "3",
+  "v3_vote_t2_after_exit": "ValidatorsTreasury: caller is not an active validator"
+}

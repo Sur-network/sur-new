@@ -1,0 +1,231 @@
+{
+  "NET": "Net-L05b",
+  "MODE": "3",
+  "startedAt": "2026-10-03T09:40:51.748Z",
+  "preconditions": {
+    "head": 14,
+    "MIN_RATE_CHANGE_LEAD_BLOCKS": 201600,
+    "RATE_CHANGE_DELAY": 604800,
+    "boardVersion": "1",
+    "boardMembers": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+    ],
+    "activeValidatorCount": 5,
+    "activeValidators": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+    ],
+    "rewardRateChangeCount": "0",
+    "rateProposalCount": "0"
+  },
+  "cl05_3a": {
+    "proposeR1": {
+      "hash": "0xd4f2148f2406adf0f614102a91e39968b3c22da817d1e7381504b0978f9e8432",
+      "status": 1,
+      "block": 15
+    },
+    "idR1": 1,
+    "afterCreate": {
+      "startBlock": "203614",
+      "ratePerBlock": "2600000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 0,
+      "validatorApprovals": 0,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "expectedFrozenQuorum": 4,
+    "boardVotes": [
+      {
+        "hash": "0x0689f4c441e841d9f94a5d0003b9d181849a284ee3d83af9d2bd95b983d94c13",
+        "status": 1,
+        "block": 16
+      },
+      {
+        "hash": "0xb616f16c8b0e87648d6a76c380b5ebece55d7f2babd4ff14f170cefcefc95409",
+        "status": 1,
+        "block": 18
+      },
+      {
+        "hash": "0xce417b96f1b1dededd62be3e261361c09e99e02b421c17deb48d96cb92f71d93",
+        "status": 1,
+        "block": 19
+      }
+    ],
+    "validatorVotes": [
+      {
+        "hash": "0x69c54ce7a08f352ffaf033b851f4c04b9bf2c0cf09d45ae8555def7e79efbf6c",
+        "status": 1,
+        "block": 20
+      },
+      {
+        "hash": "0x94cb94059865399a6a4657daa649022c592a9e986eec4be1b071a4bacb9f3170",
+        "status": 1,
+        "block": 22
+      },
+      {
+        "hash": "0x07dae72d4c4be845684e99894d8cf23c92ad1b58f0ac91b3f7d1af06a316a225",
+        "status": 1,
+        "block": 23
+      }
+    ],
+    "beforeBoardChange": {
+      "startBlock": "203614",
+      "ratePerBlock": "2600000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 3,
+      "validatorApprovals": 3,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "statusBeforeBoardChange": {
+      "status": 1,
+      "problem": 0
+    },
+    "preconditionHeld": true,
+    "exitV5": {
+      "hash": "0x971bb3e31e25e87751bd612980a799436371ec037eb63132f2ec759336e15e91",
+      "status": 1,
+      "block": 25
+    },
+    "syncBoard": {
+      "hash": "0x847de6565a8f127664b9442b5f3196b730606d0869ec99e698448c9ac1bb124a",
+      "status": 1,
+      "block": 26
+    },
+    "boardVersionBefore": "1",
+    "boardVersionAfter": "2",
+    "activeAfter": 4,
+    "activeAtLeast4": true,
+    "completingVoterIsActive": true,
+    "completingVoteStaticCallRevert": "BlockRewardDistributor: board membership changed since this proposal was created - propose again",
+    "completingVoteRealTx": {
+      "status": 0,
+      "note": "transaction execution reverted",
+      "hash": "0xc6a68cb513b7af2704d53af6c5ea1dab1402e14747cc02cc90fe7f7352a5011a"
+    },
+    "afterCompletingAttempt": {
+      "startBlock": "203614",
+      "ratePerBlock": "2600000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 3,
+      "validatorApprovals": 3,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "approvedAtStillZero": true,
+    "validatorApprovalsUnchanged": true,
+    "statusR1": {
+      "status": 7,
+      "problem": 1
+    },
+    "statusR1_note": "document expects (7,1); the ACTUAL value is recorded as-is (expiry takes precedence over status 7)",
+    "pass": true
+  },
+  "cl05_3b": {
+    "boardVersionAtStart": "2",
+    "activeAtStart": 4,
+    "proposeR2": {
+      "hash": "0xd387865853303720cff0de6fd0e68bc4a6ee2d15290a26c6e9f04ffab02a4664",
+      "status": 1,
+      "block": 29
+    },
+    "idR2": 2,
+    "afterCreate": {
+      "startBlock": "204628",
+      "ratePerBlock": "2700000000000000000",
+      "requiredValidatorApprovals": 3,
+      "boardApprovals": 0,
+      "validatorApprovals": 0,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "2",
+      "validatorNonceAtCreation": "1"
+    },
+    "createdOnCurrentBoardVersion": true,
+    "expectedFrozenQuorum": 3,
+    "validatorVotes": [
+      {
+        "hash": "0xcf2fc55fde1d431f051f704d563f0fe0f1cd755083700773aed380382e1772a5",
+        "status": 1,
+        "block": 30
+      },
+      {
+        "hash": "0x0d2f5dc61869cf91b03a6ef9d9e93208d789dac51f69c723c00451cf60a0510c",
+        "status": 1,
+        "block": 32
+      },
+      {
+        "hash": "0x15c04a35af6eabfdf3641da4df7f3adf2e60693fa0e0330319aca01cc2f97b94",
+        "status": 1,
+        "block": 33
+      }
+    ],
+    "afterValidatorChamber": {
+      "startBlock": "204628",
+      "ratePerBlock": "2700000000000000000",
+      "requiredValidatorApprovals": 3,
+      "boardApprovals": 0,
+      "validatorApprovals": 3,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "2",
+      "validatorNonceAtCreation": "1"
+    },
+    "validatorChamberComplete": true,
+    "exitV4": {
+      "hash": "0xdcf40cb8ddae677e7f818e6c87caf61ded194e0120e614a6bd80651689ee6f3e",
+      "status": 1,
+      "block": 34
+    },
+    "syncBoard": {
+      "hash": "0x31d8fb6c1ab3cb3a07c494bcc14202ae62f48bd4b66320d5c9be093004030986",
+      "status": 1,
+      "block": 36
+    },
+    "boardVersionAfter": "3",
+    "activeAfter": 3,
+    "boardVoteStaticCallRevert": "BlockRewardDistributor: board membership changed since this proposal was created - propose again",
+    "boardVoteRealTx": {
+      "status": 0,
+      "note": "transaction execution reverted",
+      "hash": "0x4c2d8f31966cf289b5946c646c2b67a217e6231ff0c141e1aabb43b134f1101a"
+    },
+    "afterBoardVoteAttempt": {
+      "startBlock": "204628",
+      "ratePerBlock": "2700000000000000000",
+      "requiredValidatorApprovals": 3,
+      "boardApprovals": 0,
+      "validatorApprovals": 3,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "2",
+      "validatorNonceAtCreation": "1"
+    },
+    "boardApprovalsStillZero": true,
+    "statusR2": {
+      "status": 7,
+      "problem": 1
+    },
+    "pass": true,
+    "deviationNote": "the second composition change (V4 exit) leaves 3 active validators, below the document's general >=4 guideline; the document's 3b sequence ('another member + syncBoard') requires it on a G5 network. All 5 node processes were kept running throughout and chain liveness was re-checked afterwards."
+  },
+  "chainAliveAfter": {
+    "head": 38,
+    "headAfter6s": 40
+  },
+  "finishedAt": "2026-10-03T09:42:09.422Z"
+}

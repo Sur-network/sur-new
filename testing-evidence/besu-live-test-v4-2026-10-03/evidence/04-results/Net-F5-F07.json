@@ -1,0 +1,336 @@
+{
+  "NET": "Net-F5",
+  "X": 300,
+  "startedAt": "2026-10-03T09:12:06.543Z",
+  "nodeConfigs": {
+    "node1": {
+      "genesisFile": "genesis.json"
+    },
+    "node2": {
+      "genesisFile": "genesis.json"
+    },
+    "node3": {
+      "genesisFile": "genesis.json"
+    },
+    "node4": {
+      "genesisFile": "genesis.json"
+    },
+    "node5": {
+      "genesisFile": "node5/genesis-notransition.json"
+    }
+  },
+  "heights": {
+    "node1": 360,
+    "node2": 360,
+    "node3": 360,
+    "node4": 360,
+    "node5": "ERR: fetch failed"
+  },
+  "peerCounts": {
+    "node1": 3,
+    "node2": 3,
+    "node3": 3,
+    "node4": 3,
+    "node5": "ERR: fetch failed"
+  },
+  "hashes": {
+    "298": {
+      "node1": "0xed15493c10ea507d5ab547ec448c1fe5110d6165ccae38c5de6fc12c15f0e1f5",
+      "node2": "0xed15493c10ea507d5ab547ec448c1fe5110d6165ccae38c5de6fc12c15f0e1f5",
+      "node3": "0xed15493c10ea507d5ab547ec448c1fe5110d6165ccae38c5de6fc12c15f0e1f5",
+      "node4": "0xed15493c10ea507d5ab547ec448c1fe5110d6165ccae38c5de6fc12c15f0e1f5",
+      "node5": "ERR: fetch failed"
+    },
+    "299": {
+      "node1": "0x837a59092f34e1b98dcf071144ad8d12570a2a3cc5058291f6e315ba8184a1a4",
+      "node2": "0x837a59092f34e1b98dcf071144ad8d12570a2a3cc5058291f6e315ba8184a1a4",
+      "node3": "0x837a59092f34e1b98dcf071144ad8d12570a2a3cc5058291f6e315ba8184a1a4",
+      "node4": "0x837a59092f34e1b98dcf071144ad8d12570a2a3cc5058291f6e315ba8184a1a4",
+      "node5": "ERR: fetch failed"
+    },
+    "300": {
+      "node1": "0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5",
+      "node2": "0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5",
+      "node3": "0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5",
+      "node4": "0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5",
+      "node5": "ERR: fetch failed"
+    },
+    "301": {
+      "node1": "0xe86b5df8a2f372f75cd441f2149e2db19f15885bf346bbfec191077e95cdc226",
+      "node2": "0xe86b5df8a2f372f75cd441f2149e2db19f15885bf346bbfec191077e95cdc226",
+      "node3": "0xe86b5df8a2f372f75cd441f2149e2db19f15885bf346bbfec191077e95cdc226",
+      "node4": "0xe86b5df8a2f372f75cd441f2149e2db19f15885bf346bbfec191077e95cdc226",
+      "node5": "ERR: fetch failed"
+    },
+    "302": {
+      "node1": "0x3c15519fc32ba8b0239d27ab4ab26585a4d8b6ce8f9d512edb8232ebb9b924a3",
+      "node2": "0x3c15519fc32ba8b0239d27ab4ab26585a4d8b6ce8f9d512edb8232ebb9b924a3",
+      "node3": "0x3c15519fc32ba8b0239d27ab4ab26585a4d8b6ce8f9d512edb8232ebb9b924a3",
+      "node4": "0x3c15519fc32ba8b0239d27ab4ab26585a4d8b6ce8f9d512edb8232ebb9b924a3",
+      "node5": "ERR: fetch failed"
+    },
+    "310": {
+      "node1": "0x9fe34bf6019019a1d6f065e682f8a9a7e6b9ddbb59be2b67e6017f8f82cdb884",
+      "node2": "0x9fe34bf6019019a1d6f065e682f8a9a7e6b9ddbb59be2b67e6017f8f82cdb884",
+      "node3": "0x9fe34bf6019019a1d6f065e682f8a9a7e6b9ddbb59be2b67e6017f8f82cdb884",
+      "node4": "0x9fe34bf6019019a1d6f065e682f8a9a7e6b9ddbb59be2b67e6017f8f82cdb884",
+      "node5": "ERR: fetch failed"
+    },
+    "355": {
+      "node1": "0x66c4905a503c1b0dea9cb4140d86f25c4fe9b5e2b020013bd3e62a139df3c871",
+      "node2": "0x66c4905a503c1b0dea9cb4140d86f25c4fe9b5e2b020013bd3e62a139df3c871",
+      "node3": "0x66c4905a503c1b0dea9cb4140d86f25c4fe9b5e2b020013bd3e62a139df3c871",
+      "node4": "0x66c4905a503c1b0dea9cb4140d86f25c4fe9b5e2b020013bd3e62a139df3c871",
+      "node5": "ERR: fetch failed"
+    }
+  },
+  "hashAgreementAmongHealthyFour": {
+    "298": true,
+    "299": true,
+    "300": true,
+    "301": true,
+    "302": true,
+    "310": true,
+    "355": true
+  },
+  "node5AgreesWithHealthy": {
+    "298": false,
+    "299": false,
+    "300": false,
+    "301": false,
+    "302": false,
+    "310": false,
+    "355": false
+  },
+  "boundaryHealthyView": [
+    {
+      "n": 298,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 299,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 300,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 301,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 302,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 303,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    }
+  ],
+  "minersAfterX": {
+    "0xead76a1d9d569762c57a886bb9b17798df2defe1": 15,
+    "0xa0be660791823a493b965c325d02527f2cfbfc6c": 15,
+    "0xbb0ad6351f7566daeef259555874053470e195c7": 15,
+    "0xcdc464346bf75a910c6c207ca6280e0ba94060b2": 14
+  },
+  "node5Addr": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+  "blockTimesAroundX": [
+    {
+      "n": 297,
+      "ts": 1791019259,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c"
+    },
+    {
+      "n": 298,
+      "ts": 1791019262,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "gapSeconds": 3
+    },
+    {
+      "n": 299,
+      "ts": 1791019265,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "gapSeconds": 3
+    },
+    {
+      "n": 300,
+      "ts": 1791019268,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "gapSeconds": 3
+    },
+    {
+      "n": 301,
+      "ts": 1791019281,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "gapSeconds": 13
+    },
+    {
+      "n": 302,
+      "ts": 1791019284,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "gapSeconds": 3
+    },
+    {
+      "n": 303,
+      "ts": 1791019287,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "gapSeconds": 3
+    },
+    {
+      "n": 304,
+      "ts": 1791019290,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "gapSeconds": 3
+    },
+    {
+      "n": 305,
+      "ts": 1791019303,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "gapSeconds": 13
+    },
+    {
+      "n": 306,
+      "ts": 1791019306,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "gapSeconds": 3
+    },
+    {
+      "n": 307,
+      "ts": 1791019309,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "gapSeconds": 3
+    },
+    {
+      "n": 308,
+      "ts": 1791019312,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "gapSeconds": 3
+    },
+    {
+      "n": 309,
+      "ts": 1791019325,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "gapSeconds": 13
+    },
+    {
+      "n": 310,
+      "ts": 1791019328,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "gapSeconds": 3
+    },
+    {
+      "n": 311,
+      "ts": 1791019331,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "gapSeconds": 3
+    },
+    {
+      "n": 312,
+      "ts": 1791019334,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "gapSeconds": 3
+    }
+  ],
+  "logExtracts": {
+    "node5_problems": [
+      "2026-10-03 12:36:05.645+0330 | main | WARN  | Besu | Forcing --bonsai-limit-trie-logs-enabled=false, since it cannot be enabled with --sync-mode=FULL and --data-storage-format=BONSAI.\r",
+      "2026-10-03 12:36:05.737+0330 | main | WARN  | Besu | Forcing price bump for transaction replacement to 0, since we are on a zero basefee network\r",
+      "2026-10-03 12:36:06.316+0330 | main | WARN  | Besu | Forcing price bump for transaction replacement to 0, since we are on a zero basefee network\r",
+      "2026-10-03 12:51:08.014+0330 | BftProcessorExecutor-QBFT-0 | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:08.017+0330 | BftProcessorExecutor-QBFT-0 | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:08.017+0330 | BftProcessorExecutor-QBFT-0 | INFO  | MainnetBlockValidator | Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5): Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]\r",
+      "2026-10-03 12:51:08.018+0330 | BftProcessorExecutor-QBFT-0 | INFO  | ProposalPayloadValidator | Invalid Proposal Payload: block did not pass validation. Reason Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]\r",
+      "2026-10-03 12:51:08.018+0330 | BftProcessorExecutor-QBFT-0 | INFO  | ProposalValidator | Invalid Proposal Payload: invalid proposal payload in proposal message\r",
+      "2026-10-03 12:51:21.676+0330 | EthScheduler-Services-8 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:21.676+0330 | EthScheduler-Services-8 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:21.677+0330 | EthScheduler-Services-8 (importBlock) | INFO  | MainnetBlockValidator | Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5): Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]",
+      "Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)",
+      "\tat: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)\r",
+      "2026-10-03 12:51:21.679+0330 | EthScheduler-Services-8 (importBlock) | WARN  | PipelineChainDownloader | Invalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)\r",
+      "2026-10-03 12:51:21.679+0330 | EthScheduler-Services-8 (importBlock) | WARN  | PipelineChainDownloader | Chain download failed. Restarting after short delay.\r",
+      "java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)\r",
+      "\tat org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)\r",
+      "Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)\r",
+      "\tat org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)\r",
+      "\tat org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)\r",
+      "\tat org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)\r",
+      "2026-10-03 12:51:24.034+0330 | EthScheduler-Services-0 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:24.035+0330 | EthScheduler-Services-0 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53\r",
+      "2026-10-03 12:51:24.035+0330 | EthScheduler-Services-0 (importBlock) | INFO  | MainnetBlockValidator | Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5): Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]",
+      "Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)"
+    ],
+    "node1_problems": [
+      "2026-10-03 12:36:04.698+0330 | main | WARN  | Besu | Forcing --bonsai-limit-trie-logs-enabled=false, since it cannot be enabled with --sync-mode=FULL and --data-storage-format=BONSAI.\r",
+      "2026-10-03 12:36:04.769+0330 | main | WARN  | Besu | Forcing price bump for transaction replacement to 0, since we are on a zero basefee network\r",
+      "2026-10-03 12:36:05.548+0330 | main | WARN  | Besu | Forcing price bump for transaction replacement to 0, since we are on a zero basefee network\r"
+    ]
+  },
+  "finishedAt": "2026-10-03T09:26:56.322Z"
+}

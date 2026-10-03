@@ -1,0 +1,18 @@
+{
+  "scenario": "B02",
+  "submittedAt": "2026-10-02T01:39:57.601Z",
+  "txHash": "0xe3147da3bcbaf62a9a5a203024443b7fa3c3c0bedf07bf35173f8e0c6b8a1d13",
+  "status": 1,
+  "gasUsed": "408731",
+  "minedInBlock": 107,
+  "blockBefore": 106,
+  "countBefore": "5",
+  "countAfter": "4",
+  "isValidatorAfter": false,
+  "validatorsAfter": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2"
+  ]
+}

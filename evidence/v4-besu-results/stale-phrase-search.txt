@@ -1,0 +1,27 @@
+# Search for remaining 'not run / not tested' statements about Besu in the Plan Markdown files (outside testing-evidence and evidence), after the edits (2026-10-03T16:17Z)
+# Remaining hits are (a) historical sections of dated documents, (b) the intended 'not executed' statements for C-L04-6 and the real-time path L, (c) unrelated topics. See README-PACKAGE-v4-besu-results.md for the one known stale reference left untouched.
+./economics/sur-tokenomics.md:71:🔶 **اعمال واقعی نرخ روی Besu هنوز خارج از قرارداد است:** پاداش واقعی بلاک را پیکربندی Besu (`transitions
+./governance/sur-emergency-consensus-recovery.md:3:> **وضعیت:** سیاست تصمیم‌گرفته‌شده + روش فنی مستند شده از منبع رسمی Besu. ✅ **روش فنی در
+./governance/sur-emergency-consensus-recovery.md:103:- ✅ **آزمون عملی روی Besu انجام شد (۲۰۲۶-۰۹-۲۹)** — هر دو مرحله تأیید شد؛ جزئیات در بنر 
+./offchain-services/sur-validator-app-claudecode-brief.md:98:علاوه بر بند بالا، یک قطعه‌ی **تازه و مجزا** لازم است که این اپلیکیشن با ماهیت 
+./sur-besu-live-test-brief-v4.md:6:**وضعیت:** دستور اجرا — **اجرا شد (۲۰۲۶-۱۰-۰۲ تا ۰۳، با دستور صریح مالک)**؛ دو مورد اجرانشده و نت
+./sur-besu-test-status.md:17:> بعد از دور دوم، یک تصمیم تازه (سیاست پرداخت مستقیم پاداش به تولیدکننده‌ی واقعیِ بلاک، صرف‌ن�
+./sur-detailed-plan-and-rationale.md:14:- **🧪 Besu:** رفتار مربوط روی یک شبکه‌ی Besu/QBFT واقعی دیده شده است. توجه: آزمون واقعی روی نسخه‌
+./sur-detailed-plan-and-rationale.md:345:> - **هزینه یا محدودیت:** پارامترهای جایگزینی (`REPLACE_AFTER`، `MAX_REPLACEMENTS` و حداقل افزایش ۱۰٪) پیشن
+./sur-detailed-plan-and-rationale.md:642:> - **وضعیت:** ✅ کد، 🧪 Besu (جریان تحویل، بی‌اعتراض و جریمه‌ی خودکار با زمان واقعی دیده شده�
+./sur-detailed-plan-and-rationale.md:793:> - **هزینه یا محدودیت:** این‌که transition پاداش واقعاً اعمال می‌شود؛ لزوم تغییر فایل و ری‌اس
+./sur-final-decisions-2026-09-28.md:12:| **P02** | اختیار عضو با درخواست خروج فوراً قطع؛ تعلیق به‌تنهایی قطع نمی‌کند؛ در بازتعیین م
+./sur-final-decisions-2026-09-28.md:14:| **P04** | خروج فوراً وظیفه را پایان دهد؛ انتظار ۷ روز؛ Verifier تا ۷۲ ساعت برای تخلف **قبل از** خرو
+./sur-final-decisions-2026-09-28.md:18:| **N04** | اول احیای مجموعه؛ اگر ممکن نبود ۵ از ۷ مسئول مستقل؛ هیچ‌کس اکثریت کلید ندارد؛ فقط 
+./sur-final-decisions-2026-09-28.md:113:**وضعیت آزمون (✅ اصلاح ممیزی ۲۰۲۶-۰۹-۳۰، D13):** این تصمیم روی Hardhat و سپس در اجرای Besu دور سوم (�
+./sur-master-open-items.md:114:| اجرای واقعی ابزار ساخت genesis.json (مشخصات فنی آماده؛ فقط پیاده‌سازی باقی مانده) — ⚠️ **یادآوری 
+./sur-master-open-items.md:325:🔴 کامپایل هر دو زبان تأیید شده. **هنوز آزمون اجرایی روی یه شبکه‌ی Besu واقعی انجام نشده.**
+./sur-master-open-items.md:336:🔴 هر دو زبان کامپایل تأیید شده. **آزمون Besu واقعی هنوز انجام نشده.**
+./sur-master-open-items.md:370:🔴 هر دو زبان کامپایل تأیید شده. آزمون Besu واقعی هنوز انجام نشده. اسناد `sur-tokenomics.md` و `sur-verifier-servic
+./sur-master-open-items.md:454:🔴 هیچ‌چیز از این دور روی Besu واقعی اجرا نشده؛ اصلاح N01 فقط روی Hardhat محلی آزموده شده.
+./sur-master-open-items.md:545:| اجرای ترکیبی زمان واقعی مسیر L (مرحلهٔ L4) | **اجرا نشده** (≈۱۴ روز؛ دو نیمهٔ آن جدا شاهد دارند) | f
+./technical-design/sur-audit-2026-09-30-final-status.md:10:| L04 | بسته در محدودهٔ Hardhat (تصمیم مالک: snapshot واجدان هنگام ساخت، بازگشت حق رأی پس 
+./technical-design/sur-audit-2026-09-30-final-status.md:11:| L05 | بسته در محدودهٔ Hardhat (تصمیم مالک: سقف پاداش بازه‌ای با نرخ مصوب و حکمرانی �
+./technical-design/sur-audit-2026-09-30-stage1-report.md:39:**L05 — نبود سقف totalRewards برحسب بلاک.** معنای جاری (reward-router-spec §۳، گام ۳): مجموع reward �
+./technical-design/sur-blockchain-design-doc.md:280:  - ⚠️ **تصحیح یک ادعای قبلی این سند:** نسخه‌ی قبلی این بند می‌گفت `transitions.qbft` روی زن�
+./technical-design/sur-reward-policy-decision-2026-09-29.md:3:> **وضعیت: اجراشده در کد (هر دو زبان)؛ آزموده روی Hardhat و در اجرای Besu دور سوم (۲۰۲�

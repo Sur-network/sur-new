@@ -1,0 +1,5 @@
+[F6-F04] range [1, 180] (len 180), S=0, head=272
+[F6-F04] R=410.0 F=63.484 M=20000.0 X=7.0 P=0.0 | equation: {"available":true,"B_L":"20480484000000000000000","B_S":"0","lhs":"20480484000000000000000","rhs":"20480484000000000000000","closes":true,"residual":"0","note":"B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"}
+[F6-F04] gates: {"equationCloses":true,"countComplete":true,"noUnknownMiners":true,"emptyBlockMethodAgreesWithTrace":true,"perBlockConservationAgrees":true,"rewardAtOrBelowCap":true,"contractCap":"441000000000000000000","independentR":"410000000000000000000","independentF":"63484000000000000000","submittedTotalRewardsEqualsIndependentR":true,"submittedTotalFeesEqualsIndependentF":true} blockers: []
+[F6-F04] simulation: {"result":"SUCCESS (eth_call; nothing mined)"}
+wrote evidence: F6-F04-reconcile.json

@@ -1,0 +1,6 @@
+[F6-F03] range [1, 260] (len 260), S=0, head=272
+[F6-F03] R=692.0 F=63.484 M=20000.0 X=7.0 P=0.0 | equation: {"available":true,"B_L":"20762484000000000000000","B_S":"0","lhs":"20762484000000000000000","rhs":"20762484000000000000000","closes":true,"residual":"0","note":"B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"}
+[F6-F03] gates: {"equationCloses":true,"countComplete":true,"noUnknownMiners":true,"emptyBlockMethodAgreesWithTrace":true,"perBlockConservationAgrees":true,"rewardAtOrBelowCap":false,"contractCap":"681000000000000000000","independentR":"692000000000000000000","independentF":"63484000000000000000","submittedTotalRewardsEqualsIndependentR":true,"submittedTotalFeesEqualsIndependentF":true} blockers: []
+[F6-F03] staticCall: {"revertReason":"BlockRewardDistributor: totalRewards exceed approved reward for range"}
+[F6-F03] tx 0x8e2a717fdbf0cab3945f6ee3ea86bfd7f5b93edcf1f55075881c0728e85d3bf1 status=0 block=412
+wrote evidence: F6-F03-reconcile.json

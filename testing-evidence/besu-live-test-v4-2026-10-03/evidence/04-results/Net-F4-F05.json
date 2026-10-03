@@ -1,0 +1,351 @@
+{
+  "NET": "Net-F4",
+  "steps": [
+    {
+      "node": "node1",
+      "role": "g5_v1",
+      "heightsBeforeStop": {
+        "node1": 83,
+        "node2": 83,
+        "node3": 83,
+        "node4": 83,
+        "node5": 83
+      },
+      "stop": "stopped Net-F4/node1 (pid 28628, rpc 8831)",
+      "heightsWhileDown": {
+        "node1": null,
+        "node2": 86,
+        "node3": 86,
+        "node4": 86,
+        "node5": 86
+      },
+      "rejoinedAtHeight": 88,
+      "peersAfterRejoin": 4,
+      "rejoinedAndSynced": true,
+      "heightsAfterRejoin": {
+        "node1": 89,
+        "node2": 89,
+        "node3": 89,
+        "node4": 89,
+        "node5": 89
+      },
+      "logSignals": {
+        "errorLines": [
+          "java.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.",
+          "java.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path."
+        ]
+      }
+    },
+    {
+      "node": "node2",
+      "role": "g5_v2",
+      "heightsBeforeStop": {
+        "node1": 91,
+        "node2": 91,
+        "node3": 91,
+        "node4": 91,
+        "node5": 91
+      },
+      "stop": "stopped Net-F4/node2 (pid 27844, rpc 8832)",
+      "heightsWhileDown": {
+        "node1": 91,
+        "node2": null,
+        "node3": 91,
+        "node4": 91,
+        "node5": 91
+      },
+      "rejoinedAtHeight": 93,
+      "peersAfterRejoin": 4,
+      "rejoinedAndSynced": true,
+      "heightsAfterRejoin": {
+        "node1": 93,
+        "node2": 93,
+        "node3": 93,
+        "node4": 93,
+        "node5": 93
+      },
+      "logSignals": {
+        "errorLines": [
+          "java.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.",
+          "java.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path."
+        ]
+      }
+    },
+    {
+      "node": "node3",
+      "role": "g5_v3",
+      "heightsBeforeStop": {
+        "node1": 95,
+        "node2": 95,
+        "node3": 95,
+        "node4": 95,
+        "node5": 95
+      },
+      "stop": "stopped Net-F4/node3 (pid 28140, rpc 8833)",
+      "heightsWhileDown": {
+        "node1": 98,
+        "node2": 98,
+        "node3": null,
+        "node4": 98,
+        "node5": 98
+      },
+      "rejoinedAtHeight": 99,
+      "peersAfterRejoin": 4,
+      "rejoinedAndSynced": true,
+      "heightsAfterRejoin": {
+        "node1": 99,
+        "node2": 99,
+        "node3": 99,
+        "node4": 99,
+        "node5": 99
+      },
+      "logSignals": {
+        "errorLines": [
+          "java.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.",
+          "java.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path."
+        ]
+      }
+    },
+    {
+      "node": "node4",
+      "role": "g5_v4",
+      "heightsBeforeStop": {
+        "node1": 101,
+        "node2": 101,
+        "node3": 101,
+        "node4": 101,
+        "node5": 101
+      },
+      "stop": "stopped Net-F4/node4 (pid 28064, rpc 8834)",
+      "heightsWhileDown": {
+        "node1": 102,
+        "node2": 102,
+        "node3": 102,
+        "node4": null,
+        "node5": 102
+      },
+      "rejoinedAtHeight": 101,
+      "peersAfterRejoin": 4,
+      "rejoinedAndSynced": true,
+      "heightsAfterRejoin": {
+        "node1": 103,
+        "node2": 103,
+        "node3": 103,
+        "node4": 101,
+        "node5": 103
+      },
+      "logSignals": {
+        "errorLines": [
+          "java.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.",
+          "java.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path."
+        ]
+      }
+    },
+    {
+      "node": "node5",
+      "role": "g5_v5",
+      "heightsBeforeStop": {
+        "node1": 105,
+        "node2": 105,
+        "node3": 105,
+        "node4": 105,
+        "node5": 105
+      },
+      "stop": "stopped Net-F4/node5 (pid 28540, rpc 8835)",
+      "heightsWhileDown": {
+        "node1": 108,
+        "node2": 108,
+        "node3": 108,
+        "node4": 108,
+        "node5": null
+      },
+      "rejoinedAtHeight": 106,
+      "peersAfterRejoin": 4,
+      "rejoinedAndSynced": true,
+      "heightsAfterRejoin": {
+        "node1": 108,
+        "node2": 108,
+        "node3": 108,
+        "node4": 108,
+        "node5": 106
+      },
+      "logSignals": {
+        "errorLines": [
+          "java.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.",
+          "java.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path."
+        ]
+      }
+    }
+  ],
+  "startedAt": "2026-10-03T09:07:46.098Z",
+  "originalGenesisSha256": "6e38aaad5df1adc9e87786734070ccc67f310c2b9bda8da0f9da46d1d9be4b95",
+  "originalHasTransitions": false,
+  "headAtStart": 83,
+  "XPrime": 383,
+  "blockZeroHashBefore": {
+    "node1": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e",
+    "node2": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e",
+    "node3": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e",
+    "node4": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e",
+    "node5": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e"
+  },
+  "newGenesisSha256": "d51a9a5b241d4feebdefcf4735159885d45ea2fc0fc67f61d8284a1b43370232",
+  "transitionAdded": {
+    "qbft": [
+      {
+        "block": 383,
+        "blockreward": "3000000000000000000"
+      }
+    ]
+  },
+  "boundary": [
+    {
+      "n": 380,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 381,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 382,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 383,
+      "miner": "0x23d8cda291b4914cb7742fa2a5d724495377b1df",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 384,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 385,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 386,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 387,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null
+    }
+  ],
+  "finalHeights": {
+    "node1": 398,
+    "node2": 398,
+    "node3": 398,
+    "node4": 398,
+    "node5": 398
+  },
+  "hashAgreement": {
+    "atBlock": 397,
+    "hashes": {
+      "node1": "0x3e38a7cae6d6ba78a77f7058f697ca02962840b50bcb3fbb02716b749f2e4650",
+      "node2": "0x3e38a7cae6d6ba78a77f7058f697ca02962840b50bcb3fbb02716b749f2e4650",
+      "node3": "0x3e38a7cae6d6ba78a77f7058f697ca02962840b50bcb3fbb02716b749f2e4650",
+      "node4": "0x3e38a7cae6d6ba78a77f7058f697ca02962840b50bcb3fbb02716b749f2e4650",
+      "node5": "0x3e38a7cae6d6ba78a77f7058f697ca02962840b50bcb3fbb02716b749f2e4650"
+    },
+    "allEqual": true
+  },
+  "firstBlockPaying3": 383,
+  "rewardChangedAtXPrime": true,
+  "peerCounts": {
+    "node1": 4,
+    "node2": 4,
+    "node3": 4,
+    "node4": 4,
+    "node5": 4
+  },
+  "finishedAt": "2026-10-03T09:24:16.296Z"
+}

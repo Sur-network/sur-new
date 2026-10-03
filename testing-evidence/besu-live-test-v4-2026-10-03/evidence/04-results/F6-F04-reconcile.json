@@ -1,0 +1,260 @@
+{
+  "ID": "F6-F04",
+  "NET": "Net-F6",
+  "startedAt": "2026-10-03T11:20:27.950Z",
+  "gates": {
+    "equationCloses": true,
+    "countComplete": true,
+    "noUnknownMiners": true,
+    "emptyBlockMethodAgreesWithTrace": true,
+    "perBlockConservationAgrees": true,
+    "rewardAtOrBelowCap": true,
+    "contractCap": "441000000000000000000",
+    "independentR": "410000000000000000000",
+    "independentF": "63484000000000000000",
+    "submittedTotalRewardsEqualsIndependentR": true,
+    "submittedTotalFeesEqualsIndependentF": true
+  },
+  "warnings": [
+    "MISMATCH WARNING: actual reward 410.0 is BELOW the contract cap 441.0 (cap - R = 31.0): the contract's approved rate history is ahead of what Besu actually paid"
+  ],
+  "range": {
+    "S": 0,
+    "from": 1,
+    "L": 180,
+    "head": 272,
+    "length": 180
+  },
+  "preState": {
+    "epochCount": "0",
+    "lastSettledBlock": 0,
+    "pendingMembershipFees": "20000000000000000000000",
+    "shareBps": "5000",
+    "foundationBps": "1500",
+    "feeBurnBps": "3000"
+  },
+  "extraction": {
+    "R": "410000000000000000000",
+    "F": "63484000000000000000",
+    "M_traceRegistryForward": "20000000000000000000000",
+    "X_otherInflows": "7000000000000000000",
+    "P_outflowsInRange": "0",
+    "nonEmptyBlocks": 19,
+    "emptyBlocks": 161,
+    "emptyBlocksCrossChecked": 161,
+    "emptyBlockMethodMismatches": [],
+    "emptyBlockMismatchCount": 0,
+    "perBlockConservation": {
+      "checked": 180,
+      "rangeLength": 180,
+      "mismatchCount": 0,
+      "mismatches": []
+    },
+    "nonEmptyBlocksDetail": [
+      {
+        "n": 93,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 94,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 95,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 96,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 97,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 98,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 99,
+        "txs": 2,
+        "fees": "23434900000000000000",
+        "inflowCalls": "20000000000000000000000"
+      },
+      {
+        "n": 100,
+        "txs": 2,
+        "fees": "4349100000000000000",
+        "inflowCalls": "7000000000000000000"
+      },
+      {
+        "n": 101,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 102,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 103,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 104,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 105,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 106,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 107,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 108,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 109,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 110,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      },
+      {
+        "n": 111,
+        "txs": 1,
+        "fees": "2100000000000000000",
+        "inflowCalls": "0"
+      }
+    ],
+    "traceRewardAuthors": [
+      "0x2222222222222222222222222222222222222222"
+    ],
+    "traceMissingBlocks": 0,
+    "unknownMiners": {},
+    "M_events": "20000000000000000000000",
+    "M_eventCount": 1
+  },
+  "conservationEquation": {
+    "available": true,
+    "B_L": "20480484000000000000000",
+    "B_S": "0",
+    "lhs": "20480484000000000000000",
+    "rhs": "20480484000000000000000",
+    "closes": true,
+    "residual": "0",
+    "note": "B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"
+  },
+  "submission": {
+    "addresses": [
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1"
+    ],
+    "blocksMined": [
+      36,
+      36,
+      36,
+      36,
+      36
+    ],
+    "totalBlocks": 180,
+    "rangeLength": 180
+  },
+  "blockers": [],
+  "capComparison": {
+    "independentR": "410000000000000000000",
+    "contractCap": "441000000000000000000",
+    "capMinusR": "31000000000000000000",
+    "rEqualsCap": false
+  },
+  "expected": {
+    "shareBps": "5000",
+    "validatorDirect": "205000000000000000000",
+    "foundation": "61500000000000000000",
+    "feeBurn": "19045200000000000000",
+    "feePool": "20063484000000000000000",
+    "feesToDistribute": "20044438800000000000000",
+    "treasury": "143500000000000000000",
+    "perValidator": [
+      {
+        "a": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+        "blocks": 36,
+        "reward": "41000000000000000000",
+        "fee": "4008887760000000000000"
+      },
+      {
+        "a": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+        "blocks": 36,
+        "reward": "41000000000000000000",
+        "fee": "4008887760000000000000"
+      },
+      {
+        "a": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+        "blocks": 36,
+        "reward": "41000000000000000000",
+        "fee": "4008887760000000000000"
+      },
+      {
+        "a": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+        "blocks": 36,
+        "reward": "41000000000000000000",
+        "fee": "4008887760000000000000"
+      },
+      {
+        "a": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+        "blocks": 36,
+        "reward": "41000000000000000000",
+        "fee": "4008887760000000000000"
+      }
+    ],
+    "membershipFeeFoldedIn": "20000000000000000000000"
+  },
+  "simulation": {
+    "result": "SUCCESS (eth_call; nothing mined)"
+  },
+  "sent": false,
+  "reason": "STATIC_ONLY simulation",
+  "lastSettledBlockAfter": "0"
+}

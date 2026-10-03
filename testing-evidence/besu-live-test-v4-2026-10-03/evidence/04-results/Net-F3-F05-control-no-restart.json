@@ -1,0 +1,189 @@
+{
+  "NET": "Net-F3",
+  "purpose": "F05 control: genesis file edited on disk while nodes keep running (no restart)",
+  "startedAt": "2026-10-03T09:55:49.714Z",
+  "transitionsBefore": null,
+  "headAtEdit": 745,
+  "Xdoubleprime": 865,
+  "boundary": [
+    {
+      "n": 863,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 864,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 865,
+      "miner": "0x23d8cda291b4914cb7742fa2a5d724495377b1df",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 866,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 867,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 868,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 869,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    },
+    {
+      "n": 870,
+      "miner": "0x23d8cda291b4914cb7742fa2a5d724495377b1df",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null
+    }
+  ],
+  "rewardsAroundX": [
+    {
+      "n": 863,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 864,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 865,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 866,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 867,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 868,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 869,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    },
+    {
+      "n": 870,
+      "delta": "2000000000000000000",
+      "txCount": 0
+    }
+  ],
+  "anyBlockPaid3": false,
+  "heightsAfter": {
+    "node1": 879,
+    "node2": 879,
+    "node3": 879,
+    "node4": 879,
+    "node5": 879
+  },
+  "hashes": {
+    "node1": "0x6910bbd813313f5de673d4d1341c3024d7db5f1532f3653adb057a5200d1dd57",
+    "node2": "0x6910bbd813313f5de673d4d1341c3024d7db5f1532f3653adb057a5200d1dd57",
+    "node3": "0x6910bbd813313f5de673d4d1341c3024d7db5f1532f3653adb057a5200d1dd57",
+    "node4": "0x6910bbd813313f5de673d4d1341c3024d7db5f1532f3653adb057a5200d1dd57",
+    "node5": "0x6910bbd813313f5de673d4d1341c3024d7db5f1532f3653adb057a5200d1dd57"
+  },
+  "allNodesAgree": true,
+  "verdict": "CONFIRMED: editing the genesis file on disk does nothing for running nodes; the reward did not change at X'' and no node diverged"
+}

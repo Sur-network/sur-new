@@ -1,0 +1,164 @@
+{
+  "net": "Net-B",
+  "timestamp": "2026-10-02T02:00:38.914Z",
+  "A01_note": "covered in Phase 0 baseline hash report + per-network genesis.json evidence",
+  "A06_getValidators": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2"
+  ],
+  "A06_matchesFounders": false,
+  "A07": {
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": {
+      "isValidator": false,
+      "everActivated": true
+    }
+  },
+  "A08": {
+    "statusNonce": "1",
+    "wasActiveAt_founders": {
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7": true,
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c": true,
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1": true,
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2": true,
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF": true
+    },
+    "wasActiveAt_nonFounder": false
+  },
+  "A09": {
+    "boardMembers": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+    ],
+    "boardVersion": "1",
+    "lastBoardRefreshAt": "0"
+  },
+  "A10": {
+    "membershipNonce": "0",
+    "members": [
+      {
+        "name": "Abbas Ashtiani",
+        "acct": "0x1d3419D1ba10CdfCE6a137130C002b5441278674",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Alireza Zojaji",
+        "acct": "0x1Bd552985D620F96030Da2f3E2161a269Ca1b7E7",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Amirabbas Emami",
+        "acct": "0x7E85257f965a31d1157FD5aE540C9A0686bF9fa3",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Citex Corp.",
+        "acct": "0xA500eCbCd8ac3Cd21520E1b8Fe8B5cd7b7BF0B8F",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Hojjat Abbasi",
+        "acct": "0x495F319d34832eA7Be6A385e8D4983dd2eD91115",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Kamyar Sharafi",
+        "acct": "0xdFa4FF4Ed03A219dEF7D23827A8e9CE51278183a",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Kaveh Moshtagh",
+        "acct": "0xF5D6528b6233D560039EF83D8390B348ce3D7077",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mahdi Noori",
+        "acct": "0x3af97848C86cB31AeCe53eED39F974F4cAd9cD2f",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mahkameh Sharifzad",
+        "acct": "0x075d4A9d73DE61efB4371faF9f9EDBAB4EFfb704",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Maryam Nemati",
+        "acct": "0xf1cB3CBB625b470B09f5992eD0472ffE48229f70",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mostafa Naghipoorfar",
+        "acct": "0xB7D27FBDf075531c431A2d5e53D23C0EA4006966",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Sepehr Mohammadi",
+        "acct": "0x183774E2e6Cf9e78Fd4b40d75e40CBE680A60Ee4",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Siavash Tafazzoli",
+        "acct": "0xA1D271b5D4C5b5e14685373C4564736E09502d2D",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Soheil Nikzad",
+        "acct": "0x0aeD318c70D7b6ACB50c0126c55F635a388b7587",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Yashar Rashedi",
+        "acct": "0xA9e2D7AfE5701278F704B70256c8479c85213ed8",
+        "sinceNonce": "0"
+      }
+    ]
+  },
+  "A11": {
+    "INITIAL_REWARD_PER_BLOCK": "2000000000000000000",
+    "rewardRateChangeCount": "0",
+    "rateProposalCount": "0",
+    "lastSettledBlock": "0",
+    "epochCount": "0",
+    "distributionOracle": "0xBa7D298200Fc26Cb88A21e546D097337F0517706",
+    "validatorDirectShareBps": "5000",
+    "maxRewardsForRange_1_1000": "2000000000000000000000",
+    "RATE_VOTING_EXPIRY": "2592000",
+    "RATE_CHANGE_DELAY": "604800",
+    "MIN_RATE_CHANGE_LEAD_BLOCKS": "201600"
+  },
+  "A13": {
+    "verifier": "0x0d3a16Eba9b3777E49854c34C204c8c1aeB95F7e",
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10",
+    "windowStart": "1790904587"
+  },
+  "A15": {
+    "blocksChecked": 100,
+    "avgPeriod": 5.9,
+    "min": 3,
+    "max": 244,
+    "p95": 3
+  }
+}

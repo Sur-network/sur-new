@@ -1,0 +1,157 @@
+{
+  "proposals": {
+    "A": {
+      "id": "1",
+      "bps": 5500,
+      "txHash": "0x78a0be66a1533ac1c9abc5bd054cd18098d2581f62be7a03a7c9b2e8e5480505",
+      "status": 1,
+      "requiredValidatorApprovals": "4"
+    },
+    "B": {
+      "id": "2",
+      "bps": 5200,
+      "txHash": "0x4266145dae95137fd6b1f683790a24c66713bb483b761207fab0fb666e9f0979",
+      "status": 1,
+      "requiredValidatorApprovals": "4"
+    },
+    "C": {
+      "id": "3",
+      "bps": 5800,
+      "txHash": "0x6654b31baebcba5f209ae437833318f248b3daa6ccba6aa24bd2830af328e2c6",
+      "status": 1,
+      "requiredValidatorApprovals": "4"
+    }
+  },
+  "cl01_1": {
+    "validatorVotes": [
+      {
+        "voter": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+        "status": 1
+      },
+      {
+        "voter": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+        "status": 1
+      },
+      {
+        "voter": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+        "status": 1
+      },
+      {
+        "voter": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+        "status": 1
+      },
+      {
+        "voter": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+        "status": 1
+      }
+    ],
+    "boardVotes": [
+      {
+        "voter": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+        "status": 1,
+        "executedAfter": false
+      },
+      {
+        "voter": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+        "status": 1,
+        "executedAfter": false
+      },
+      {
+        "voter": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+        "status": 1,
+        "executedAfter": true
+      }
+    ],
+    "proposalA_final": {
+      "newValidatorShareBps": "5500",
+      "createdAt": "1790905449",
+      "expiresAt": "1793497449",
+      "requiredValidatorApprovals": "4",
+      "boardApprovals": "3",
+      "validatorApprovals": "5",
+      "boardPassed": true,
+      "validatorPassed": true,
+      "executed": true,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "validatorDirectShareBps_after": "5500",
+    "lastShareChangeTime_after": "1790905491"
+  },
+  "cl01_2a": {
+    "requiredB": 4,
+    "snapBeforeCompletingVote": {
+      "newValidatorShareBps": "5200",
+      "createdAt": "1790905452",
+      "expiresAt": "1793497452",
+      "requiredValidatorApprovals": "4",
+      "boardApprovals": "3",
+      "validatorApprovals": "3",
+      "boardPassed": true,
+      "validatorPassed": false,
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "completingVoteAttempt": {
+      "revertReason": "BlockRewardDistributor: too soon since the last successful share change",
+      "decodedViaStaticCall": true
+    },
+    "snapAfterCompletingVote": {
+      "newValidatorShareBps": "5200",
+      "createdAt": "1790905452",
+      "expiresAt": "1793497452",
+      "requiredValidatorApprovals": "4",
+      "boardApprovals": "3",
+      "validatorApprovals": "3",
+      "boardPassed": true,
+      "validatorPassed": false,
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "stateUnchanged": true
+  },
+  "cl01_2b": {
+    "snapBeforeC": {
+      "newValidatorShareBps": "5800",
+      "createdAt": "1790905455",
+      "expiresAt": "1793497455",
+      "requiredValidatorApprovals": "4",
+      "boardApprovals": "2",
+      "validatorApprovals": "5",
+      "boardPassed": false,
+      "validatorPassed": true,
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "completingVoteAttempt": {
+      "revertReason": "BlockRewardDistributor: too soon since the last successful share change",
+      "decodedViaStaticCall": true
+    },
+    "snapAfterC": {
+      "newValidatorShareBps": "5800",
+      "createdAt": "1790905455",
+      "expiresAt": "1793497455",
+      "requiredValidatorApprovals": "4",
+      "boardApprovals": "2",
+      "validatorApprovals": "5",
+      "boardPassed": false,
+      "validatorPassed": true,
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "stateUnchanged": true
+  },
+  "cl01_3": {
+    "countBefore": "3",
+    "attempt": {
+      "revertReason": "BlockRewardDistributor: too soon since the last successful share change",
+      "decodedViaStaticCall": true
+    },
+    "countAfter": "3",
+    "countUnchanged": true
+  }
+}

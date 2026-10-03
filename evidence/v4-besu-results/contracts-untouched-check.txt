@@ -1,0 +1,31 @@
+# Contract sources — hash comparison (generated 2026-10-03T16:17Z)
+IDENTICAL (9 files): Plan/contracts == evidence baseline/contracts
+IDENTICAL (9 files): Plan/contracts-fa == evidence baseline/contracts-fa
+IDENTICAL (9 files): Plan/contracts == hardhat/contracts-baseline (the files the Besu genesis code was compiled from)
+
+# git status --short -- contracts contracts-fa (Plan working tree; empty = no change)
+(end)
+
+# Plan/contracts sha256
+850a13fdd11480bc7e554db3c0ecd42be378445a5b4326109c2f45f35046e21c *BlockRewardDistributor.sol
+97b79a603c861bb0d66dae58bf555663713a5e13cd821b118ed7561ec96a0ae4 *FoundationDAO.sol
+038145ba314840660fc06b29ad6394b390efe53d27fe964fd785aba4cfc103cc *IdentityRegistry.sol
+224efe619356978b4bc1b897b6af900019ace54b69209519acf35466ca80e6bf *ServiceStaking.sol
+e1159fc11434cde06efca3d89cf72ce1435fe9c46998089c1e0d9b1de990d4d6 *SurAddresses.sol
+ee93f621b56b7344d4e96e879dd5c17822e7816271c8a188ecd3752986c82803 *SurenSale.sol
+6eb5d5092b666c57f1875aa9b935ab2e1d30f7c7ba1608ff4dabc4e6b3855be1 *ValidatorsBoard.sol
+8ca2eeef8edc2615175fc8d59a72811f97f4d93e10a1add306dfabcdc86de7cf *ValidatorsRegistry.sol
+908387912c3dc3428bea5639eb032745005357a4bd611f39a41c2dd90e0c1c1f *ValidatorsTreasury.sol
+
+# Plan/contracts-fa sha256
+032de8ff29ac779caf31ea9c119a2253a6653d6fe95a69905d1b0b343fde1f88 *BlockRewardDistributor.sol
+9cbb4e02fe9819e234cec31bc692e78f258d288415bef5da9b1dd9e50b17eb03 *FoundationDAO.sol
+003738abb63af1920bdc3a17818f3ddc63d402df9d63d5a878177eb5e92c533b *IdentityRegistry.sol
+c3f54301fc3760964a43a75ebf4f66c8105f21bc77d8dd93c706560ba2638256 *ServiceStaking.sol
+d69a54a35ac424c2b49e7c952360545b39359ea2878faa0a8e2f7b3afe97687d *SurAddresses.sol
+16cceb7b34896a153e72084ea6cd019df292c8ea45d8b2cb9ea85017d3ae0657 *SurenSale.sol
+104347af8e56254e9f60e2a36474f290ad0f41cb8f81c49cf59c098b92823931 *ValidatorsBoard.sol
+eb3e2a5aa9d8a399b9e0fcdf9b3548558dd0c840bad1fabd956d3473550c4363 *ValidatorsRegistry.sol
+298a73af96174271143a41bf77271abcf00946e0ff1224e170ddc5228c2c4053 *ValidatorsTreasury.sol
+
+# earlier checks of this round (recorded inside the evidence directory): evidence/00-baseline/followup-source-integrity.txt

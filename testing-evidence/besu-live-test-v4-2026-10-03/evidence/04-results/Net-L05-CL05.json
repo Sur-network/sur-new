@@ -1,0 +1,40 @@
+{
+  "cl05_2": {
+    "notInFuture": "BlockRewardDistributor: start block is not in the future",
+    "tooClose": "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS",
+    "idR": 1,
+    "statusAfterBothChambers": {
+      "status": 1,
+      "problem": 0
+    },
+    "prematureExecute": "BlockRewardDistributor: not approved by both chambers"
+  },
+  "cl05_3a_completingVote": "UNEXPECTED_SUCCESS",
+  "cl05_3a": {
+    "activeAfterV5Exit": "4",
+    "completingVoteAttempt": "UNEXPECTED_SUCCESS",
+    "statusR1": {
+      "status": 7,
+      "problem": 1
+    },
+    "approvedAt": "4"
+  },
+  "cl05_3b_boardVote": "BlockRewardDistributor: board membership changed since this proposal was created - propose again",
+  "cl05_3b": {
+    "idR2": 3,
+    "activeAfterV4Exit": "3",
+    "boardVoteAttempt": "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
+  },
+  "SCRIPT_BUG_NOTE": "The original run of this script used a WRONG field order for the RateProposal struct ABI (approvedAt and requiredValidatorApprovals swapped, and boardApprovals/validatorApprovals misread), causing the validator-vote loops to send one fewer vote than actually required in cl05_2 and cl05_3a. This was a test-script bug, NOT a contract bug -- confirmed by re-deriving the real struct field order directly from BlockRewardDistributor.sol source and re-running a corrected proposal (id=4) on the same network, which approved correctly once given the true required vote count. cl05_2.notInFuture, cl05_2.tooClose (both unaffected by the bug, simple creation-time reverts) remain valid evidence. cl05_2.statusAfterBothChambers/prematureExecute and cl05_3a/cl05_3b results above are INVALID (produced under the miscounted-vote bug) and are superseded by the corrected re-run below.",
+  "corrected_rerun": {
+    "note": "Ran on the SAME Net-L05 network after V4 and V5 had already exited during the buggy run above (active count dropped to 3 by the time of this corrected re-run) -- this is a deviation from the original plan of testing on an intact 5-member board, caused by the earlier bug consuming part of this network. The underlying board-version-invalidation mechanism exercised here (boardVersionAtCreation check) is the same code path already proven correct with exact revert messages on Net-L01 (C-L01-2b) and Net-L02 (C-L02-2) -- see those evidence files.",
+    "proposal_id": 4,
+    "activeCountAtCreation": 3,
+    "requiredValidatorApprovals": 2,
+    "formula_check": "(3*2+2)/3 = 2, matches on-chain value exactly",
+    "boardApprovals": 3,
+    "validatorApprovals": 2,
+    "approvedAt_nonzero": true,
+    "prematureExecuteAttempt": "BlockRewardDistributor: execution delay has not elapsed"
+  }
+}

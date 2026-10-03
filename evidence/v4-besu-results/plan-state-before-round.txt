@@ -1,0 +1,31 @@
+# sha256sum -c MANIFEST.sha256 at the Plan root, BEFORE any edit of this round (2026-10-03T16:01Z)
+./README-PACKAGE-v3-text-fix.md: OK
+./README-PACKAGE.md: OK
+./evidence/contracts-untouched-check.txt: OK
+./evidence/diffs/README-PACKAGE.diff: OK
+./evidence/diffs/sur-audit-2026-09-30-final-status.diff: OK
+./evidence/diffs/sur-besu-test-status.diff: OK
+./evidence/diffs/sur-contracts-deploy-notes.diff: OK
+./evidence/diffs/sur-master-open-items.diff: OK
+./evidence/diffs/sur-reward-policy-decision-2026-09-29.diff: OK
+./evidence/diffs/sur-smart-contracts-reference.diff: OK
+./evidence/plan-vs-package-hash-check.txt: OK
+./evidence/search-coverage.txt: OK
+./sur-besu-test-status.md: FAILED
+./sur-master-open-items.md: FAILED
+./technical-design/sur-audit-2026-09-30-final-status.md: FAILED
+./technical-design/sur-contracts-deploy-notes.md: OK
+./technical-design/sur-reward-policy-decision-2026-09-29.md: OK
+./technical-design/sur-smart-contracts-reference.md: OK
+sha256sum: WARNING: 3 computed checksums did NOT match
+
+# git status --short (Plan working tree, before this round's edits)
+ M "presentations/Sur - Board Presentation.pptx"
+ M "presentations/Sur - Technical Team Presentation.pptx"
+ M technical-design/sur-audit-2026-09-30-final-status.md
+?? "presentations/Sur - Board Presentation.pdf"
+?? "presentations/Sur - Technical Team Presentation.pdf"
+?? sur-detailed-plan-and-rationale.md
+
+# git log -1
+5a52567 2026-10-03 15:25:02 +0330 220

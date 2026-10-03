@@ -1,0 +1,40 @@
+{
+  "NET": "Net-F6",
+  "FOUNDERS": "G5",
+  "founderAddrs": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+  ],
+  "INCLUDE_C6": true,
+  "genesisTimestamp": 1791025123,
+  "CHAIN_ID": 424431,
+  "GAS_LIMIT": 30000000,
+  "IS_FORK": false,
+  "TRANSITIONS": [
+    {
+      "block": 100,
+      "blockreward": "3000000000000000000"
+    },
+    {
+      "block": 150,
+      "blockreward": "2000000000000000000"
+    },
+    {
+      "block": 200,
+      "blockreward": "4000000000000000000"
+    }
+  ],
+  "RATE_HISTORY_SPEC": "[[100,\"3000000000000000000\"]]",
+  "RATE_HISTORY_ENTRIES": 1,
+  "PAYEES": 0,
+  "TEST_ONLY_SEED": true,
+  "OVERLAY": {
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10"
+  }
+}

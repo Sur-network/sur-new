@@ -1,0 +1,13 @@
+data-path="node2/data"
+genesis-file="genesis.json"
+node-private-key-file="node2/key"
+p2p-host="127.0.0.1"
+p2p-port=33012
+rpc-http-enabled=true
+rpc-http-host="127.0.0.1"
+rpc-http-port=8712
+rpc-http-api=["ETH","NET","QBFT","ADMIN","WEB3","DEBUG","TRACE","TXPOOL"]
+rpc-http-cors-origins=["*"]
+host-allowlist=["*"]
+min-gas-price=100000000000000
+discovery-enabled=true

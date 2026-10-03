@@ -1,0 +1,8 @@
+{
+  "txHash": "0x9c33dd556caa3b48a4d2856f58261606dfd61e203f36fd0f88a0e1bbc032fb5f",
+  "status": 1,
+  "minedInBlock": 1413,
+  "countBefore": "5",
+  "countAfter": "6",
+  "slashCaseResolutionNote": "V5s suspension (B02) created a pending slash case that blocked recordRecovery until resolved via resolveMassFailureCheck + confirmDelivery + fileAppeal + 3-of-5 confirmSlash votes (fast path, avoiding the 72h uncontested-slash wait) - see FINDINGS.md"
+}

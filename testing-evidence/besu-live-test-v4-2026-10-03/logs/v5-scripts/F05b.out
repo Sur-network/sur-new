@@ -1,0 +1,3 @@
+[F05b] head=745; genesis.json edited with transition at 865; NO restart
+CONFIRMED: editing the genesis file on disk does nothing for running nodes; the reward did not change at X'' and no node diverged agree: true
+wrote evidence: Net-F3-F05-control-no-restart.json

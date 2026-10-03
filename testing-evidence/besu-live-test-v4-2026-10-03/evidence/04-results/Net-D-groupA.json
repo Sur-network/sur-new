@@ -1,0 +1,171 @@
+{
+  "net": "Net-D",
+  "timestamp": "2026-10-02T02:00:43.816Z",
+  "A01_note": "covered in Phase 0 baseline hash report + per-network genesis.json evidence",
+  "A06_getValidators": [
+    "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c",
+    "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC",
+    "0xA0379A0bf817877535Bfd43c58278B765bE85618",
+    "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb",
+    "0xd01B11074080932823A66e212f2B1ceFD63887aA",
+    "0xDB2D47448782258F7bcE7963a40CA987e4729013"
+  ],
+  "A06_matchesFounders": true,
+  "A07": {
+    "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xA0379A0bf817877535Bfd43c58278B765bE85618": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xd01B11074080932823A66e212f2B1ceFD63887aA": {
+      "isValidator": true,
+      "everActivated": true
+    },
+    "0xDB2D47448782258F7bcE7963a40CA987e4729013": {
+      "isValidator": true,
+      "everActivated": true
+    }
+  },
+  "A08": {
+    "statusNonce": "0",
+    "wasActiveAt_founders": {
+      "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c": true,
+      "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC": true,
+      "0xA0379A0bf817877535Bfd43c58278B765bE85618": true,
+      "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb": true,
+      "0xd01B11074080932823A66e212f2B1ceFD63887aA": true,
+      "0xDB2D47448782258F7bcE7963a40CA987e4729013": true
+    },
+    "wasActiveAt_nonFounder": false
+  },
+  "A09": {
+    "boardMembers": [
+      "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c",
+      "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC",
+      "0xA0379A0bf817877535Bfd43c58278B765bE85618",
+      "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb",
+      "0xd01B11074080932823A66e212f2B1ceFD63887aA"
+    ],
+    "boardVersion": "1",
+    "lastBoardRefreshAt": "0"
+  },
+  "A10": {
+    "membershipNonce": "0",
+    "members": [
+      {
+        "name": "Abbas Ashtiani",
+        "acct": "0x1d3419D1ba10CdfCE6a137130C002b5441278674",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Alireza Zojaji",
+        "acct": "0x1Bd552985D620F96030Da2f3E2161a269Ca1b7E7",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Amirabbas Emami",
+        "acct": "0x7E85257f965a31d1157FD5aE540C9A0686bF9fa3",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Citex Corp.",
+        "acct": "0xA500eCbCd8ac3Cd21520E1b8Fe8B5cd7b7BF0B8F",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Hojjat Abbasi",
+        "acct": "0x495F319d34832eA7Be6A385e8D4983dd2eD91115",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Kamyar Sharafi",
+        "acct": "0xdFa4FF4Ed03A219dEF7D23827A8e9CE51278183a",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Kaveh Moshtagh",
+        "acct": "0xF5D6528b6233D560039EF83D8390B348ce3D7077",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mahdi Noori",
+        "acct": "0x3af97848C86cB31AeCe53eED39F974F4cAd9cD2f",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mahkameh Sharifzad",
+        "acct": "0x075d4A9d73DE61efB4371faF9f9EDBAB4EFfb704",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Maryam Nemati",
+        "acct": "0xf1cB3CBB625b470B09f5992eD0472ffE48229f70",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Mostafa Naghipoorfar",
+        "acct": "0xB7D27FBDf075531c431A2d5e53D23C0EA4006966",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Sepehr Mohammadi",
+        "acct": "0x183774E2e6Cf9e78Fd4b40d75e40CBE680A60Ee4",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Siavash Tafazzoli",
+        "acct": "0xA1D271b5D4C5b5e14685373C4564736E09502d2D",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Soheil Nikzad",
+        "acct": "0x0aeD318c70D7b6ACB50c0126c55F635a388b7587",
+        "sinceNonce": "0"
+      },
+      {
+        "name": "Yashar Rashedi",
+        "acct": "0xA9e2D7AfE5701278F704B70256c8479c85213ed8",
+        "sinceNonce": "0"
+      }
+    ]
+  },
+  "A11": {
+    "INITIAL_REWARD_PER_BLOCK": "2000000000000000000",
+    "rewardRateChangeCount": "0",
+    "rateProposalCount": "0",
+    "lastSettledBlock": "119",
+    "epochCount": "1",
+    "distributionOracle": "0xBa7D298200Fc26Cb88A21e546D097337F0517706",
+    "validatorDirectShareBps": "5000",
+    "maxRewardsForRange_1_1000": "2000000000000000000000",
+    "RATE_VOTING_EXPIRY": "2592000",
+    "RATE_CHANGE_DELAY": "604800",
+    "MIN_RATE_CHANGE_LEAD_BLOCKS": "201600"
+  },
+  "A13": {
+    "verifier": "0x0d3a16Eba9b3777E49854c34C204c8c1aeB95F7e",
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10",
+    "windowStart": "1790904655"
+  },
+  "A15": {
+    "blocksChecked": 100,
+    "avgPeriod": 5.82,
+    "min": 3,
+    "max": 284,
+    "p95": 3
+  }
+}

@@ -1,0 +1,125 @@
+== 11:21:34
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2223731K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 90 young (368640K), 2 survivors (8192K)
+     -  81.60  13.74  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:22:34
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2475651K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 152 young (622592K), 2 survivors (8192K)
+     -  81.60  23.54  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:23:35
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2731635K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 214 young (876544K), 2 survivors (8192K)
+     -  81.60  33.33  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:24:35
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3006067K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 281 young (1150976K), 2 survivors (8192K)
+     -  81.60  43.92  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:25:36
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3274379K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 347 young (1421312K), 2 survivors (8192K)
+     -  81.60  54.50  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:26:37
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3550835K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 414 young (1695744K), 2 survivors (8192K)
+     -  81.60  64.93  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:27:37
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3847295K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 487 young (1994752K), 2 survivors (8192K)
+     -  81.60  76.46  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:28:38
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4132483K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 557 young (2281472K), 2 survivors (8192K)
+     -  81.60  87.52  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:29:38
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4413065K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 625 young (2560000K), 2 survivors (8192K)
+     -  81.60  98.26  39.66  99.21  98.30    321     9.692     0     0.000    18     0.048     9.740
+== 11:30:39
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2129992K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 68 young (278528K), 3 survivors (12288K)
+     -  74.77   6.84  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:31:39
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2396232K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 133 young (544768K), 3 survivors (12288K)
+     -  74.77  13.69  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:32:40
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2680916K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 203 young (831488K), 3 survivors (12288K)
+     -  74.77  21.18  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:33:41
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2953303K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 269 young (1101824K), 3 survivors (12288K)
+     -  74.77  28.24  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:34:42
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3221562K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 334 young (1368064K), 3 survivors (12288K)
+     -  74.77  35.19  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:35:42
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3500090K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 402 young (1646592K), 3 survivors (12288K)
+     -  74.77  42.46  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:36:43
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3754042K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 464 young (1900544K), 3 survivors (12288K)
+     -  74.77  49.20  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:37:44
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4003927K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 526 young (2154496K), 3 survivors (12288K)
+     -  74.77  55.72  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:38:45
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4300858K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 598 young (2449408K), 3 survivors (12288K)
+     -  74.77  63.42  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:39:45
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4571194K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 664 young (2719744K), 3 survivors (12288K)
+     -  74.77  70.48  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:40:46
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 4845626K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 731 young (2994176K), 3 survivors (12288K)
+     -  74.77  77.65  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:41:46
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 5111866K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 796 young (3260416K), 3 survivors (12288K)
+     -  74.77  84.60  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:42:47
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 5388346K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 863 young (3534848K), 3 survivors (12288K)
+     -  74.77  91.76  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:43:47
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 5656634K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 929 young (3805184K), 3 survivors (12288K)
+     -  74.77  98.82  53.96  99.15  98.30    322     9.695     0     0.000    18     0.048     9.744
+== 11:44:48
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2098174K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 60 young (245760K), 4 survivors (16384K)
+     -  86.58   5.18  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:45:49
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2384834K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 130 young (532480K), 4 survivors (16384K)
+     -  86.58  11.77  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:46:49
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2640834K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 193 young (790528K), 4 survivors (16384K)
+     -  86.58  17.70  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:47:50
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 2898879K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 255 young (1044480K), 4 survivors (16384K)
+     -  86.58  23.54  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:48:51
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3177178K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 323 young (1323008K), 4 survivors (16384K)
+     -  86.58  29.94  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:49:51
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3431359K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 385 young (1576960K), 4 survivors (16384K)
+     -  86.58  35.78  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:50:52
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3691518K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 449 young (1839104K), 4 survivors (16384K)
+     -  86.58  41.71  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+== 11:51:53
+garbage-first heap   total reserved 8323072K, committed 7282688K, used 3959743K [0x0000000604000000, 0x0000000800000000)
+ region size 4096K, 514 young (2105344K), 4 survivors (16384K)
+     -  86.58  47.83  63.66  99.17  98.29    323     9.712     0     0.000    18     0.048     9.761
+process 28020 gone at 11:52:53

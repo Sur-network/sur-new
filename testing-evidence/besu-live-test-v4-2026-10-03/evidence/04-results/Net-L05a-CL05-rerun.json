@@ -1,0 +1,132 @@
+{
+  "NET": "Net-L05a",
+  "MODE": "2",
+  "startedAt": "2026-10-03T09:39:53.266Z",
+  "preconditions": {
+    "head": 34,
+    "MIN_RATE_CHANGE_LEAD_BLOCKS": 201600,
+    "RATE_CHANGE_DELAY": 604800,
+    "boardVersion": "1",
+    "boardMembers": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+    ],
+    "activeValidatorCount": 5,
+    "activeValidators": [
+      "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+      "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+      "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+      "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+      "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+    ],
+    "rewardRateChangeCount": "0",
+    "rateProposalCount": "0"
+  },
+  "cl05_2": {
+    "rejectNotInFuture": "BlockRewardDistributor: start block is not in the future",
+    "rejectTooClose": "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS",
+    "startBlock": 202634,
+    "propose": {
+      "hash": "0x21510bf71b7fcc45b8a1e955285a2d0527a1e4129bc9f66f761f2cce72ba3878",
+      "status": 1,
+      "block": 35
+    },
+    "id": 1,
+    "afterCreate": {
+      "startBlock": "202634",
+      "ratePerBlock": "2500000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 0,
+      "validatorApprovals": 0,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "expectedFrozenQuorum_ceil2n3": 4,
+    "frozenQuorumMatchesFormula": true,
+    "statusAfterCreate": {
+      "status": 1,
+      "problem": 0
+    },
+    "boardVotes": [
+      {
+        "hash": "0xfb24fba8f44e0bb5d7bbe25449b5dabd3a137d1905ca5cac5235bc21a6f63bc1",
+        "status": 1,
+        "block": 37
+      },
+      {
+        "hash": "0xeccdbbf015d2c20e3ad605492a66050d9830d17b88580d17d32af9c9930b946c",
+        "status": 1,
+        "block": 38
+      },
+      {
+        "hash": "0x03e50b549c8752bc85448cb5547e560b38f7a74dab93e4d0bebdf16499327ed2",
+        "status": 1,
+        "block": 40
+      }
+    ],
+    "afterBoardVotes": {
+      "startBlock": "202634",
+      "ratePerBlock": "2500000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 3,
+      "validatorApprovals": 0,
+      "approvedAt": "0",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "statusAfterBoard": {
+      "status": 1,
+      "problem": 0
+    },
+    "validatorVotes": [
+      {
+        "hash": "0xd899ac6be575479cf4705d18d67cdd330ab2bfe0d05f4925195d23ff7e4d754c",
+        "status": 1,
+        "block": 41
+      },
+      {
+        "hash": "0xf4badf7b222a4a9a7e219e121f722b5dc3fdfcbf50dc5f698b6f86f53578fae9",
+        "status": 1,
+        "block": 42
+      },
+      {
+        "hash": "0x34512578d54facd525da412dd92fb80dc93c9c7a8634a832ba6583c1f1be0166",
+        "status": 1,
+        "block": 44
+      },
+      {
+        "hash": "0xf04d66d9258dbdde2c70da9ca17ffa88fe0d5becf1896946fbafc3ff5c4fcaf1",
+        "status": 1,
+        "block": 45
+      }
+    ],
+    "afterBothChambers": {
+      "startBlock": "202634",
+      "ratePerBlock": "2500000000000000000",
+      "requiredValidatorApprovals": 4,
+      "boardApprovals": 3,
+      "validatorApprovals": 4,
+      "approvedAt": "1791020425",
+      "executed": false,
+      "boardVersionAtCreation": "1",
+      "validatorNonceAtCreation": "0"
+    },
+    "statusAfterBothChambers": {
+      "status": 4,
+      "problem": 0
+    },
+    "expectStatus_4_0": true,
+    "prematureExecuteRevert": "BlockRewardDistributor: execution delay has not elapsed",
+    "rewardRateChangeCountAfter": "0",
+    "boardVersionAfter": "1",
+    "activeValidatorCountAfter": 5,
+    "pass": true
+  },
+  "finishedAt": "2026-10-03T09:40:28.030Z"
+}

@@ -1,0 +1,34 @@
+{
+ "heights": {
+  "node1": 360,
+  "node2": 360,
+  "node3": 360,
+  "node4": 360,
+  "node5": "ERR: fetch failed"
+ },
+ "node5AgreesWithHealthy": {
+  "298": false,
+  "299": false,
+  "300": false,
+  "301": false,
+  "302": false,
+  "310": false,
+  "355": false
+ },
+ "healthyAgree": {
+  "298": true,
+  "299": true,
+  "300": true,
+  "301": true,
+  "302": true,
+  "310": true,
+  "355": true
+ },
+ "minersAfterX": {
+  "0xead76a1d9d569762c57a886bb9b17798df2defe1": 15,
+  "0xa0be660791823a493b965c325d02527f2cfbfc6c": 15,
+  "0xbb0ad6351f7566daeef259555874053470e195c7": 15,
+  "0xcdc464346bf75a910c6c207ca6280e0ba94060b2": 14
+ }
+}
+wrote evidence: Net-F5-F07.json

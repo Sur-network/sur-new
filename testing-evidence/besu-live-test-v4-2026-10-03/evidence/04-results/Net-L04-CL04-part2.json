@@ -1,0 +1,21 @@
+{
+  "cl04_2": {
+    "P2_v5": "ValidatorsRegistry: not eligible - not Active when this proposal was created",
+    "T2_v5": "ValidatorsTreasury: not eligible - not Active when this proposal was created",
+    "D2_v5": "BlockRewardDistributor: not eligible - not Active when this proposal was created"
+  },
+  "cl04_3_5": {
+    "P2_firstVote": {
+      "status": 1
+    },
+    "P2_secondVote": "ValidatorsRegistry: already executed",
+    "T2_firstVote": {
+      "status": 1
+    },
+    "T2_secondVote": "ValidatorsTreasury: already voted",
+    "D2_firstVote": {
+      "status": 1
+    },
+    "D2_secondVote": "BlockRewardDistributor: validator already voted"
+  }
+}

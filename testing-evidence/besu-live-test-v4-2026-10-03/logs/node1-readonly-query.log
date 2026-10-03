@@ -1,0 +1,237 @@
+[2m2026-10-02 11:19:30.672+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mStarting Besu
+[m[2m2026-10-02 11:19:33.578+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mRPC HTTP JSON-RPC config: JsonRpcConfiguration{enabled=true, port=8701, host=127.0.0.1, corsAllowedDomains=[*], hostsAllowlist=[*], rpcApis=[ETH, NET, QBFT, ADMIN, WEB3, DEBUG, TRACE, TXPOOL], authenticationEnabled=false, authenticationCredentialsFile=null, authenticationPublicKeyFile=null, tlsConfiguration=Optional.empty, httpTimeoutSec=30, maxActiveConnections=80, maxBatchSize=1024}
+[m[2m2026-10-02 11:19:33.581+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing --bonsai-limit-trie-logs-enabled=false, since it cannot be enabled with --sync-mode=FULL and --data-storage-format=BONSAI.
+[m[2m2026-10-02 11:19:33.616+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mConnecting to 5 static nodes.
+[m[2m2026-10-02 11:19:33.677+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-02 11:19:34.064+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32m
+####################################################################################################
+#                                                                                                  #
+# Besu version 26.9.0                                                                              #
+#                                                                                                  #
+# Configuration:                                                                                   #
+# Network: Custom genesis file                                                                     #
+# D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\genesis.json                                   #
+# Network Id: 424301                                                                               #
+# Data storage: Bonsai                                                                             #
+# RocksDB max open files: 4440 (derived from available resources)                                  #
+# Sync mode: Full                                                                                  #
+# Sync min peers: 5                                                                                #
+# RPC HTTP APIs: ETH,NET,QBFT,ADMIN,WEB3,DEBUG,TRACE,TXPOOL                                        #
+# RPC HTTP port: 8701                                                                              #
+# Using LAYERED transaction pool implementation                                                    #
+# Using STACKED worldstate update mode                                                             #
+# Opcode optimizations enabled                                                                     #
+# Parallel transaction processing enabled                                                          #
+# BAL pruning enabled (retained BALs: 113056)                                                      #
+#                                                                                                  #
+# Host:                                                                                            #
+# Java: openjdk-java-25                                                                            #
+# Maximum heap size: 0.50 GB                                                                       #
+# OS: windows-x86_64                                                                               #
+# Total memory: 31.75 GB                                                                           #
+# CPU cores: 16                                                                                    #
+#                                                                                                  #
+# Plugin Registration Summary:                                                                     #
+# No plugins have been registered.                                                                 #
+# TOTAL = 0 of 0 plugins successfully registered.                                                  #
+#                                                                                                  #
+####################################################################################################
+[m[2m2026-10-02 11:19:34.064+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mSecurity Module: localfile
+[m[2m2026-10-02 11:19:34.065+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mLookup version metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\data
+[m[2m2026-10-02 11:19:34.087+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mExisting version data detected. Besu version 26.9.0
+[mjava.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.gnark.LibGnarkEIP196.<clinit>(LibGnarkEIP196.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.maybeEnableNative(AbstractAltBnPrecompiledContract.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.<clinit>(AbstractAltBnPrecompiledContract.java:41)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1490)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-02 11:19:34.098+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of alt bn128
+[m[2m2026-10-02 11:19:34.099+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of modexp
+[m[2m2026-10-02 11:19:34.106+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the signature algorithm
+[m[2m2026-10-02 11:19:34.114+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the blake2bf algorithm
+[mjava.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.boringssl.BoringSSLPrecompiles.<clinit>(BoringSSLPrecompiles.java:35)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.maybeEnableNativeBoringSSL(P256VerifyPrecompiledContract.java:66)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.<clinit>(P256VerifyPrecompiledContract.java:54)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1522)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-02 11:19:34.246+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java secp256r1 implementation of p256verify
+[m[2m2026-10-02 11:19:34.414+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-02 11:19:34.415+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mAttempting to load public key from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\key
+[m[2m2026-10-02 11:19:34.428+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mLoaded public key 0x2e7177cead2f868797f3c9d280d6af242b1ea8d155d5baea8271a76b94830bc5f92d2e143e0ba2632149dd1d719b8fab8b0c50e7a675faf8eebd49ff7c352abe from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\key
+[m[2m2026-10-02 11:19:34.535+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.539+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.543+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.543+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.543+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.543+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-02 11:19:34.586+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mProtocolScheduleBuilder[m[2m | [m[32mProtocol schedule created with milestones: [London:0]
+[m[2m2026-10-02 11:19:34.589+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDatabaseMetadata[m[2m | [m[32mLookup database metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\data
+[m[2m2026-10-02 11:19:34.609+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRocksDBKeyValueStorageFactory[m[2m | [m[32mExisting database at D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\data. Metadata versionedStorageFormat=BaseVersionedStorageFormat{format=BONSAI, version=3}. Processing WAL...
+[m[2m2026-10-02 11:19:35.752+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-02 11:19:35.784+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-02 11:19:35.821+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-02 11:19:35.822+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-02 11:19:35.981+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mAdding ChainDataPruner to observe block added events
+[m[2m2026-10-02 11:19:35.984+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mBAL pruning enabled | BALs retained: 113056 | Frequency: 256
+[m[2m2026-10-02 11:19:36.084+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction pool
+[m[2m2026-10-02 11:19:36.117+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mQBFT is configured, creating initial sync for BFT
+[m[2m2026-10-02 11:19:36.120+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBFTPivotSelectorFromPeers[m[2m | [m[32mCreating pivot block selector for BFT node
+[m[2m2026-10-02 11:19:36.257+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mResolved 0 bootnodes.
+[m[2m2026-10-02 11:19:36.269+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mDetecting NAT service.
+[m[2m2026-10-02 11:19:36.327+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgentFactory[m[2m | [m[32mPeer discovery mode: V4 (requested=V4, V4=true, V5=false)
+[m[2m2026-10-02 11:19:36.859+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting external services ... 
+[m[2m2026-10-02 11:19:36.859+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mStarting JSON-RPC service on 127.0.0.1:8701
+[m[2m2026-10-02 11:19:37.162+0330[m[2m | [m[2mvert.x-eventloop-thread-1[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mJSON-RPC service started and listening on 127.0.0.1:8701
+[m[2m2026-10-02 11:19:37.164+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAutoTransactionLogBloomCachingService[m[2m | [m[32mStarting auto transaction log bloom caching service.
+[m[2m2026-10-02 11:19:37.164+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mLogBloomCacheMetadata[m[2m | [m[32mLookup cache metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-B\node1\data\caches
+[m[2m2026-10-02 11:19:37.178+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting Ethereum main loop ... 
+[m[2m2026-10-02 11:19:37.178+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNatService[m[2m | [m[32mNo NAT environment detected so no service could be started
+[m[2m2026-10-02 11:19:37.178+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mStarting Network.
+[m[2m2026-10-02 11:19:37.181+0330[m[2m | [m[2mnioEventLoopGroup-2-1[m[2m | [m[32mINFO [m[2m | [m[2mRlpxAgent[m[2m | [m[32mP2P RLPx agent started and listening on /[0:0:0:0:0:0:0:0]:33001.
+[m[2m2026-10-02 11:19:37.182+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgent[m[2m | [m[32mStarting discovery on shared UDP socket (V4 only)
+[m[2m2026-10-02 11:19:37.191+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mStarting peer discovery agent on host=0.0.0.0, port=33001. IPv6 available.
+[m[2m2026-10-02 11:19:37.207+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mP2P peer discovery agent started and listening on /0.0.0.0:33001
+[m[2m2026-10-02 11:19:37.208+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mEnode URL enode://2e7177cead2f868797f3c9d280d6af242b1ea8d155d5baea8271a76b94830bc5f92d2e143e0ba2632149dd1d719b8fab8b0c50e7a675faf8eebd49ff7c352abe@127.0.0.1:33001
+[m[2m2026-10-02 11:19:37.209+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mENR URL enr:-Je4QBrVF5yNC0eaPa-j5kC9ghwFbomfNrEp9RbKThttLiveFFl5lZyh3fzXK_vPT0SD2nE7qwvMcirWJ3ZqT4IMxLABg2V0aMfGhKKKcemAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQIucXfOrS-Gh5fzydKA1q8kKx6o0VXVuuqCcadrlIMLxYN0Y3CCgOmDdWRwgoDp
+[m[2m2026-10-02 11:19:37.210+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mNode address 0xbb0ad6351f7566daeef259555874053470e195c7
+[m[2m2026-10-02 11:19:37.235+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mSupported capabilities: [eth/68, eth/69, eth/70, eth/71], [istanbul/100], [snap/1]
+[m[2m2026-10-02 11:19:37.236+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultSynchronizer[m[2m | [m[32mStarting synchronizer.
+[m[2m2026-10-02 11:19:37.237+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction handling following initial sync
+[m[2m2026-10-02 11:19:37.238+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following initial sync
+[m[2m2026-10-02 11:19:37.350+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncDownloader[m[2m | [m[32mStarting full sync.
+[m[2m2026-10-02 11:19:37.351+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:19:37.355+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mEthereum main loop is up.
+[m[2m2026-10-02 11:19:47.357+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:19:57.359+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:07.361+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:07.360+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mRoundTimer[m[2m | [m[32mMoved to round 2 which will expire in 40 seconds
+[m[2m2026-10-02 11:20:17.365+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:20.158+0330[m[2m | [m[2mvert.x-worker-thread-18[m[2m | [m[33mWARN [m[2m | [m[2mPathBasedWorldStateProvider[m[2m | [m[33mExceeded the limit of historical blocks that can be loaded (512). If you need to make older historical queries, configure your `--bonsai-historical-block-limit`.
+[m[2m2026-10-02 11:20:20.164+0330[m[2m | [m[2mvert.x-worker-thread-18[m[2m | [m[1;31mERROR[m[2m | [m[2mBaseJsonRpcProcessor[m[2m | [m[1;31mError processing method: qbft_getValidatorsByBlockNumber ["0x6b"]
+com.google.common.util.concurrent.UncheckedExecutionException: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 107
+	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2077)
+	at com.google.common.cache.LocalCache.get(LocalCache.java:3985)
+	at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4854)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsFromContract(TransactionValidatorProvider.java:88)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsForBlock(TransactionValidatorProvider.java:79)
+	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsForBlock(ForkingValidatorProvider.java:73)
+	at org.hyperledger.besu.consensus.qbft.jsonrpc.methods.QbftGetValidatorsByBlockNumber.lambda$resultByBlockNumber$0(QbftGetValidatorsByBlockNumber.java:82)
+	at java.base/java.util.Optional.map(Optional.java:260)
+	at org.hyperledger.besu.consensus.qbft.jsonrpc.methods.QbftGetValidatorsByBlockNumber.resultByBlockNumber(QbftGetValidatorsByBlockNumber.java:80)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.AbstractBlockParameterMethod.findResultByParamType(AbstractBlockParameterMethod.java:88)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.AbstractBlockParameterMethod.response(AbstractBlockParameterMethod.java:102)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.BaseJsonRpcProcessor.process(BaseJsonRpcProcessor.java:48)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.TracedJsonRpcProcessor.process(TracedJsonRpcProcessor.java:59)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.TimedJsonRpcProcessor.process(TimedJsonRpcProcessor.java:49)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.JsonRpcExecutor.execute(JsonRpcExecutor.java:81)
+	at org.hyperledger.besu.ethereum.api.handlers.AbstractJsonRpcExecutor.executeRequest(AbstractJsonRpcExecutor.java:86)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcObjectExecutor.execute(JsonRpcObjectExecutor.java:64)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcExecutorHandler.lambda$handler$2(JsonRpcExecutorHandler.java:71)
+	at java.base/java.util.Optional.ifPresentOrElse(Optional.java:196)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcExecutorHandler.lambda$handler$0(JsonRpcExecutorHandler.java:68)
+	at io.vertx.ext.web.impl.BlockingHandlerDecorator.lambda$handle$0(BlockingHandlerDecorator.java:48)
+	at io.vertx.core.impl.ExecuteBlocking$1.execute(ExecuteBlocking.java:36)
+	at io.vertx.core.impl.WorkerTask.run(WorkerTask.java:57)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 107
+	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.lambda$getValidators$0(ValidatorContractController.java:79)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.getValidators(ValidatorContractController.java:79)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.lambda$getValidatorsFromContract$0(TransactionValidatorProvider.java:91)
+	at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4859)
+	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3556)
+	at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2307)
+	at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2180)
+	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2071)
+	... 26 more
+[m[2m2026-10-02 11:20:27.368+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:27.422+0330[m[2m | [m[2mvert.x-worker-thread-19[m[2m | [m[33mWARN [m[2m | [m[2mPathBasedWorldStateProvider[m[2m | [m[33mExceeded the limit of historical blocks that can be loaded (512). If you need to make older historical queries, configure your `--bonsai-historical-block-limit`.
+[m[2m2026-10-02 11:20:27.423+0330[m[2m | [m[2mvert.x-worker-thread-19[m[2m | [m[1;31mERROR[m[2m | [m[2mBaseJsonRpcProcessor[m[2m | [m[1;31mError processing method: qbft_getValidatorsByBlockNumber ["0x6b"]
+com.google.common.util.concurrent.UncheckedExecutionException: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 107
+	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2077)
+	at com.google.common.cache.LocalCache.get(LocalCache.java:3985)
+	at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4854)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsFromContract(TransactionValidatorProvider.java:88)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsForBlock(TransactionValidatorProvider.java:79)
+	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsForBlock(ForkingValidatorProvider.java:73)
+	at org.hyperledger.besu.consensus.qbft.jsonrpc.methods.QbftGetValidatorsByBlockNumber.lambda$resultByBlockNumber$0(QbftGetValidatorsByBlockNumber.java:82)
+	at java.base/java.util.Optional.map(Optional.java:260)
+	at org.hyperledger.besu.consensus.qbft.jsonrpc.methods.QbftGetValidatorsByBlockNumber.resultByBlockNumber(QbftGetValidatorsByBlockNumber.java:80)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.AbstractBlockParameterMethod.findResultByParamType(AbstractBlockParameterMethod.java:88)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.AbstractBlockParameterMethod.response(AbstractBlockParameterMethod.java:102)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.BaseJsonRpcProcessor.process(BaseJsonRpcProcessor.java:48)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.TracedJsonRpcProcessor.process(TracedJsonRpcProcessor.java:59)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.TimedJsonRpcProcessor.process(TimedJsonRpcProcessor.java:49)
+	at org.hyperledger.besu.ethereum.api.jsonrpc.execution.JsonRpcExecutor.execute(JsonRpcExecutor.java:81)
+	at org.hyperledger.besu.ethereum.api.handlers.AbstractJsonRpcExecutor.executeRequest(AbstractJsonRpcExecutor.java:86)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcObjectExecutor.execute(JsonRpcObjectExecutor.java:64)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcExecutorHandler.lambda$handler$2(JsonRpcExecutorHandler.java:71)
+	at java.base/java.util.Optional.ifPresentOrElse(Optional.java:196)
+	at org.hyperledger.besu.ethereum.api.handlers.JsonRpcExecutorHandler.lambda$handler$0(JsonRpcExecutorHandler.java:68)
+	at io.vertx.ext.web.impl.BlockingHandlerDecorator.lambda$handle$0(BlockingHandlerDecorator.java:48)
+	at io.vertx.core.impl.ExecuteBlocking$1.execute(ExecuteBlocking.java:36)
+	at io.vertx.core.impl.WorkerTask.run(WorkerTask.java:57)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 107
+	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.lambda$getValidators$0(ValidatorContractController.java:79)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.getValidators(ValidatorContractController.java:79)
+	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.lambda$getValidatorsFromContract$0(TransactionValidatorProvider.java:91)
+	at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4859)
+	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3556)
+	at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2307)
+	at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2180)
+	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2071)
+	... 26 more
+[m[2m2026-10-02 11:20:37.369+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:47.362+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mRoundTimer[m[2m | [m[32mMoved to round 3 which will expire in 80 seconds
+[m[2m2026-10-02 11:20:47.373+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:20:57.374+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:21:07.378+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-02 11:21:17.382+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m

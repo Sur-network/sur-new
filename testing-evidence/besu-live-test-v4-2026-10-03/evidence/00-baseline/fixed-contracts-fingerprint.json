@@ -1,0 +1,2409 @@
+{
+  "FoundationDAO": {
+    "address": "0x1111111111111111111111111111111111111111",
+    "runtimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+    "runtimeSizeBytes": 9677,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 2807,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "memberList",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_array(t_struct(Member)2752_storage)dyn_storage"
+        },
+        {
+          "astId": 2811,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "memberIndex",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 2815,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "isMember",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_mapping(t_address,t_bool)"
+        },
+        {
+          "astId": 2817,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "proposalCount",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 2822,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "proposals",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_uint256,t_struct(Proposal)2799_storage)"
+        },
+        {
+          "astId": 2824,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "membershipNonce",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 2828,
+          "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+          "label": "memberSinceNonce",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_mapping(t_address,t_uint256)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_struct(Member)2752_storage)dyn_storage": {
+          "base": "t_struct(Member)2752_storage",
+          "encoding": "dynamic_array",
+          "label": "struct FoundationDAO.Member[]",
+          "numberOfBytes": "32"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes_storage": {
+          "encoding": "bytes",
+          "label": "bytes",
+          "numberOfBytes": "32"
+        },
+        "t_enum(ProposalStatus)2761": {
+          "encoding": "inplace",
+          "label": "enum FoundationDAO.ProposalStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(ProposalType)2758": {
+          "encoding": "inplace",
+          "label": "enum FoundationDAO.ProposalType",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_uint256,t_struct(Proposal)2799_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct FoundationDAO.Proposal)",
+          "numberOfBytes": "32",
+          "value": "t_struct(Proposal)2799_storage"
+        },
+        "t_string_storage": {
+          "encoding": "bytes",
+          "label": "string",
+          "numberOfBytes": "32"
+        },
+        "t_struct(Member)2752_storage": {
+          "encoding": "inplace",
+          "label": "struct FoundationDAO.Member",
+          "members": [
+            {
+              "astId": 2749,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "name",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_string_storage"
+            },
+            {
+              "astId": 2751,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "account",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_address"
+            }
+          ],
+          "numberOfBytes": "64"
+        },
+        "t_struct(Proposal)2799_storage": {
+          "encoding": "inplace",
+          "label": "struct FoundationDAO.Proposal",
+          "members": [
+            {
+              "astId": 2764,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "id",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2767,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "pType",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_enum(ProposalType)2758"
+            },
+            {
+              "astId": 2769,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "description",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_string_storage"
+            },
+            {
+              "astId": 2771,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "proposer",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_address"
+            },
+            {
+              "astId": 2773,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "newMemberName",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_string_storage"
+            },
+            {
+              "astId": 2775,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "targetAccount",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_address"
+            },
+            {
+              "astId": 2777,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "amount",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2779,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "tokenAddress",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_address"
+            },
+            {
+              "astId": 2781,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "data",
+              "offset": 0,
+              "slot": "8",
+              "type": "t_bytes_storage"
+            },
+            {
+              "astId": 2783,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "votes",
+              "offset": 0,
+              "slot": "9",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2785,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "requiredVotes",
+              "offset": 0,
+              "slot": "10",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2787,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "11",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2789,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "expiresAt",
+              "offset": 0,
+              "slot": "12",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 2792,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "status",
+              "offset": 0,
+              "slot": "13",
+              "type": "t_enum(ProposalStatus)2761"
+            },
+            {
+              "astId": 2796,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "hasVoted",
+              "offset": 0,
+              "slot": "14",
+              "type": "t_mapping(t_address,t_bool)"
+            },
+            {
+              "astId": 2798,
+              "contract": "contracts-baseline/FoundationDAO.sol:FoundationDAO",
+              "label": "createdAtNonce",
+              "offset": 0,
+              "slot": "15",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "512"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    }
+  },
+  "BlockRewardDistributor": {
+    "address": "0x2222222222222222222222222222222222222222",
+    "runtimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+    "runtimeSizeBytes": 18519,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 68,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "validatorDirectShareBps",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 91,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalFeesBurned",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 141,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "lastShareChangeTime",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 146,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "distributionOracle",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_address"
+        },
+        {
+          "astId": 148,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "lastDistributionTime",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 150,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochCount",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 158,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "lastSettledBlock",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 164,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochBlockRanges",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_mapping(t_uint256,t_struct(BlockRange)155_storage)"
+        },
+        {
+          "astId": 174,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "locked",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_bool"
+        },
+        {
+          "astId": 192,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochs",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_mapping(t_uint256,t_struct(Epoch)187_storage)"
+        },
+        {
+          "astId": 198,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochValidatorRewardShare",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "astId": 204,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochValidatorFeeShare",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "astId": 210,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "epochValidatorBlocks",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "astId": 214,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalRewardsPaid",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 218,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalFeesPaid",
+          "offset": 0,
+          "slot": "14",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 222,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalBlocksRecorded",
+          "offset": 0,
+          "slot": "15",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 224,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalDistributedToValidators",
+          "offset": 0,
+          "slot": "16",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 226,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalDistributedToTreasury",
+          "offset": 0,
+          "slot": "17",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 228,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "totalDistributedToFoundation",
+          "offset": 0,
+          "slot": "18",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 231,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "pendingMembershipFees",
+          "offset": 0,
+          "slot": "19",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 265,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "shareProposals",
+          "offset": 0,
+          "slot": "20",
+          "type": "t_mapping(t_uint256,t_struct(ShareProposal)256_storage)"
+        },
+        {
+          "astId": 271,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "shareBoardVoted",
+          "offset": 0,
+          "slot": "21",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 277,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "shareValidatorVoted",
+          "offset": 0,
+          "slot": "22",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 279,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "shareProposalCount",
+          "offset": 0,
+          "slot": "23",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 291,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "rewardRateChanges",
+          "offset": 0,
+          "slot": "24",
+          "type": "t_array(t_struct(RewardRateChange)287_storage)dyn_storage"
+        },
+        {
+          "astId": 335,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "rateProposals",
+          "offset": 0,
+          "slot": "25",
+          "type": "t_mapping(t_uint256,t_struct(RateProposal)330_storage)"
+        },
+        {
+          "astId": 341,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "rateBoardVoted",
+          "offset": 0,
+          "slot": "26",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 347,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "rateValidatorVoted",
+          "offset": 0,
+          "slot": "27",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 349,
+          "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+          "label": "rateProposalCount",
+          "offset": 0,
+          "slot": "28",
+          "type": "t_uint256"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_struct(RewardRateChange)287_storage)dyn_storage": {
+          "base": "t_struct(RewardRateChange)287_storage",
+          "encoding": "dynamic_array",
+          "label": "struct BlockRewardDistributor.RewardRateChange[]",
+          "numberOfBytes": "32"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => uint256))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_uint256)"
+        },
+        "t_mapping(t_uint256,t_struct(BlockRange)155_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct BlockRewardDistributor.BlockRange)",
+          "numberOfBytes": "32",
+          "value": "t_struct(BlockRange)155_storage"
+        },
+        "t_mapping(t_uint256,t_struct(Epoch)187_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct BlockRewardDistributor.Epoch)",
+          "numberOfBytes": "32",
+          "value": "t_struct(Epoch)187_storage"
+        },
+        "t_mapping(t_uint256,t_struct(RateProposal)330_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct BlockRewardDistributor.RateProposal)",
+          "numberOfBytes": "32",
+          "value": "t_struct(RateProposal)330_storage"
+        },
+        "t_mapping(t_uint256,t_struct(ShareProposal)256_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct BlockRewardDistributor.ShareProposal)",
+          "numberOfBytes": "32",
+          "value": "t_struct(ShareProposal)256_storage"
+        },
+        "t_struct(BlockRange)155_storage": {
+          "encoding": "inplace",
+          "label": "struct BlockRewardDistributor.BlockRange",
+          "members": [
+            {
+              "astId": 152,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "fromBlock",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 154,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "toBlock",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "64"
+        },
+        "t_struct(Epoch)187_storage": {
+          "encoding": "inplace",
+          "label": "struct BlockRewardDistributor.Epoch",
+          "members": [
+            {
+              "astId": 176,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "timestamp",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 178,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "totalRewards",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 180,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "totalFees",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 182,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "treasuryAmount",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 184,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "totalBlocksMined",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 186,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorCount",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "192"
+        },
+        "t_struct(RateProposal)330_storage": {
+          "encoding": "inplace",
+          "label": "struct BlockRewardDistributor.RateProposal",
+          "members": [
+            {
+              "astId": 309,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "startBlock",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint128"
+            },
+            {
+              "astId": 311,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "ratePerBlock",
+              "offset": 16,
+              "slot": "0",
+              "type": "t_uint128"
+            },
+            {
+              "astId": 313,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 315,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "votingExpiresAt",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 317,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "requiredValidatorApprovals",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 319,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "boardApprovals",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 321,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorApprovals",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 323,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "approvedAt",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 325,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "executed",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_bool"
+            },
+            {
+              "astId": 327,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "boardVersionAtCreation",
+              "offset": 0,
+              "slot": "8",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 329,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorNonceAtCreation",
+              "offset": 0,
+              "slot": "9",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "320"
+        },
+        "t_struct(RewardRateChange)287_storage": {
+          "encoding": "inplace",
+          "label": "struct BlockRewardDistributor.RewardRateChange",
+          "members": [
+            {
+              "astId": 284,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "startBlock",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint128"
+            },
+            {
+              "astId": 286,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "ratePerBlock",
+              "offset": 16,
+              "slot": "0",
+              "type": "t_uint128"
+            }
+          ],
+          "numberOfBytes": "32"
+        },
+        "t_struct(ShareProposal)256_storage": {
+          "encoding": "inplace",
+          "label": "struct BlockRewardDistributor.ShareProposal",
+          "members": [
+            {
+              "astId": 234,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "newValidatorShareBps",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 236,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 238,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "expiresAt",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 240,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "requiredValidatorApprovals",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 242,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "boardApprovals",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 244,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorApprovals",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 246,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "boardPassed",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 248,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorPassed",
+              "offset": 1,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 250,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "executed",
+              "offset": 2,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 253,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "boardVersionAtCreation",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 255,
+              "contract": "contracts-baseline/BlockRewardDistributor.sol:BlockRewardDistributor",
+              "label": "validatorNonceAtCreation",
+              "offset": 0,
+              "slot": "8",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "288"
+        },
+        "t_uint128": {
+          "encoding": "inplace",
+          "label": "uint128",
+          "numberOfBytes": "16"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    }
+  },
+  "ValidatorsRegistry": {
+    "address": "0x3333333333333333333333333333333333333333",
+    "runtimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+    "runtimeSizeBytes": 21840,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 8253,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "validators",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_mapping(t_address,t_struct(ValidatorInfo)8248_storage)"
+        },
+        {
+          "astId": 8256,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "paidValidatorCount",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8261,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "verifier",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_address"
+        },
+        {
+          "astId": 8310,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "activeValidators",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_array(t_address)dyn_storage"
+        },
+        {
+          "astId": 8314,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "activeIndex",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 8339,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "lastEconomicParamChangeTime",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8343,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "entryThresholdBase",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8347,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "growthFactorPerValidator",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8359,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "membershipFeeBps",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8363,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "maxEntriesPerWindow",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8366,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "entryWindowSeconds",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8369,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "probationPeriod",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8373,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "recoveryPeriod",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8376,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "slashBps",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8379,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "exitCooldown",
+          "offset": 0,
+          "slot": "14",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8396,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "demotionEpochs",
+          "offset": 0,
+          "slot": "15",
+          "type": "t_mapping(t_uint256,t_struct(DemotionEpoch)8391_storage)"
+        },
+        {
+          "astId": 8398,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "currentDemotionEpochId",
+          "offset": 0,
+          "slot": "16",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8411,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "windowStart",
+          "offset": 0,
+          "slot": "17",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8413,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "entriesInWindow",
+          "offset": 0,
+          "slot": "18",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8465,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "massFailureChecked",
+          "offset": 0,
+          "slot": "19",
+          "type": "t_mapping(t_uint256,t_bool)"
+        },
+        {
+          "astId": 8470,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "everActivated",
+          "offset": 0,
+          "slot": "20",
+          "type": "t_mapping(t_address,t_bool)"
+        },
+        {
+          "astId": 8475,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "permanentlyExited",
+          "offset": 0,
+          "slot": "21",
+          "type": "t_mapping(t_address,t_bool)"
+        },
+        {
+          "astId": 8480,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "membershipEpoch",
+          "offset": 0,
+          "slot": "22",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 8485,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "pendingSlashDecisionId",
+          "offset": 0,
+          "slot": "23",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 8490,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "decisionSlashAmount",
+          "offset": 0,
+          "slot": "24",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 8495,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "decisionViolationAt",
+          "offset": 0,
+          "slot": "25",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 8500,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "statusBeforeExit",
+          "offset": 0,
+          "slot": "26",
+          "type": "t_mapping(t_address,t_uint8)"
+        },
+        {
+          "astId": 8521,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "statusDecisions",
+          "offset": 0,
+          "slot": "27",
+          "type": "t_mapping(t_uint256,t_struct(StatusDecision)8460_storage)"
+        },
+        {
+          "astId": 8523,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "statusDecisionCount",
+          "offset": 0,
+          "slot": "28",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8529,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "hasVotedOnSlash",
+          "offset": 0,
+          "slot": "29",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 8550,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "deliveryDisputes",
+          "offset": 0,
+          "slot": "30",
+          "type": "t_mapping(t_uint256,t_struct(DeliveryDispute)8545_storage)"
+        },
+        {
+          "astId": 8556,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "hasVotedOnDelivery",
+          "offset": 0,
+          "slot": "31",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 8639,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "locked",
+          "offset": 0,
+          "slot": "32",
+          "type": "t_bool"
+        },
+        {
+          "astId": 8674,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "paramProposals",
+          "offset": 0,
+          "slot": "33",
+          "type": "t_mapping(t_uint256,t_struct(ParamProposal)8665_storage)"
+        },
+        {
+          "astId": 8680,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "paramHasVoted",
+          "offset": 0,
+          "slot": "34",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 8682,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "paramProposalCount",
+          "offset": 0,
+          "slot": "35",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8689,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "statusNonce",
+          "offset": 0,
+          "slot": "36",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 8695,
+          "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+          "label": "activeCheckpoints",
+          "offset": 0,
+          "slot": "37",
+          "type": "t_mapping(t_address,t_array(t_struct(ActiveCheckpoint)8687_storage)dyn_storage)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_address)dyn_storage": {
+          "base": "t_address",
+          "encoding": "dynamic_array",
+          "label": "address[]",
+          "numberOfBytes": "32"
+        },
+        "t_array(t_struct(ActiveCheckpoint)8687_storage)dyn_storage": {
+          "base": "t_struct(ActiveCheckpoint)8687_storage",
+          "encoding": "dynamic_array",
+          "label": "struct ValidatorsRegistry.ActiveCheckpoint[]",
+          "numberOfBytes": "32"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(DecisionType)8417": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsRegistry.DecisionType",
+          "numberOfBytes": "1"
+        },
+        "t_enum(DeliveryStatus)8422": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsRegistry.DeliveryStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(ParamKey)8646": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsRegistry.ParamKey",
+          "numberOfBytes": "1"
+        },
+        "t_enum(SlashOutcome)8430": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsRegistry.SlashOutcome",
+          "numberOfBytes": "1"
+        },
+        "t_enum(Status)8234": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsRegistry.Status",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_array(t_struct(ActiveCheckpoint)8687_storage)dyn_storage)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => struct ValidatorsRegistry.ActiveCheckpoint[])",
+          "numberOfBytes": "32",
+          "value": "t_array(t_struct(ActiveCheckpoint)8687_storage)dyn_storage"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_address,t_struct(ValidatorInfo)8248_storage)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => struct ValidatorsRegistry.ValidatorInfo)",
+          "numberOfBytes": "32",
+          "value": "t_struct(ValidatorInfo)8248_storage"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_address,t_uint8)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => uint8)",
+          "numberOfBytes": "32",
+          "value": "t_uint8"
+        },
+        "t_mapping(t_uint256,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_mapping(t_uint256,t_struct(DeliveryDispute)8545_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsRegistry.DeliveryDispute)",
+          "numberOfBytes": "32",
+          "value": "t_struct(DeliveryDispute)8545_storage"
+        },
+        "t_mapping(t_uint256,t_struct(DemotionEpoch)8391_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsRegistry.DemotionEpoch)",
+          "numberOfBytes": "32",
+          "value": "t_struct(DemotionEpoch)8391_storage"
+        },
+        "t_mapping(t_uint256,t_struct(ParamProposal)8665_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsRegistry.ParamProposal)",
+          "numberOfBytes": "32",
+          "value": "t_struct(ParamProposal)8665_storage"
+        },
+        "t_mapping(t_uint256,t_struct(StatusDecision)8460_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsRegistry.StatusDecision)",
+          "numberOfBytes": "32",
+          "value": "t_struct(StatusDecision)8460_storage"
+        },
+        "t_mapping(t_uint256,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_struct(ActiveCheckpoint)8687_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.ActiveCheckpoint",
+          "members": [
+            {
+              "astId": 8684,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "nonce",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint64"
+            },
+            {
+              "astId": 8686,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "active",
+              "offset": 8,
+              "slot": "0",
+              "type": "t_bool"
+            }
+          ],
+          "numberOfBytes": "32"
+        },
+        "t_struct(DeliveryDispute)8545_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.DeliveryDispute",
+          "members": [
+            {
+              "astId": 8532,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "decisionId",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8534,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "filedAt",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8536,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "votingDeadline",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8538,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "votesConfirmingDelivery",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8540,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "requiredVotes",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8542,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "resolved",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_bool"
+            },
+            {
+              "astId": 8544,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "deliveryConfirmed",
+              "offset": 1,
+              "slot": "5",
+              "type": "t_bool"
+            }
+          ],
+          "numberOfBytes": "192"
+        },
+        "t_struct(DemotionEpoch)8391_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.DemotionEpoch",
+          "members": [
+            {
+              "astId": 8382,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "startedAt",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8384,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "referenceCount",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8386,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "demotionCount",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8388,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "resolved",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_bool"
+            },
+            {
+              "astId": 8390,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "wasMassFailure",
+              "offset": 1,
+              "slot": "3",
+              "type": "t_bool"
+            }
+          ],
+          "numberOfBytes": "128"
+        },
+        "t_struct(ParamProposal)8665_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.ParamProposal",
+          "members": [
+            {
+              "astId": 8650,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "key",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_enum(ParamKey)8646"
+            },
+            {
+              "astId": 8652,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "newValue",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8654,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "votes",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8656,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "requiredVotes",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8658,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8660,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "expiresAt",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8662,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "executed",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 8664,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "createdAtNonce",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "256"
+        },
+        "t_struct(StatusDecision)8460_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.StatusDecision",
+          "members": [
+            {
+              "astId": 8432,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "validator",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_address"
+            },
+            {
+              "astId": 8435,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "decisionType",
+              "offset": 20,
+              "slot": "0",
+              "type": "t_enum(DecisionType)8417"
+            },
+            {
+              "astId": 8437,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "decidedAt",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8439,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "evidenceHash",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_bytes32"
+            },
+            {
+              "astId": 8441,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "demotionEpochId",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8444,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "delivery",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_enum(DeliveryStatus)8422"
+            },
+            {
+              "astId": 8446,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "deliveryProvenAt",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8448,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "appealFiled",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 8450,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "appealFiledAt",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8452,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "appealVotingDeadline",
+              "offset": 0,
+              "slot": "8",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8454,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "confirmVotes",
+              "offset": 0,
+              "slot": "9",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8456,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "requiredConfirmVotes",
+              "offset": 0,
+              "slot": "10",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8459,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "slashOutcome",
+              "offset": 0,
+              "slot": "11",
+              "type": "t_enum(SlashOutcome)8430"
+            }
+          ],
+          "numberOfBytes": "384"
+        },
+        "t_struct(ValidatorInfo)8248_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsRegistry.ValidatorInfo",
+          "members": [
+            {
+              "astId": 8237,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "status",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_enum(Status)8234"
+            },
+            {
+              "astId": 8239,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "lockedStake",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8241,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "periodStartedAt",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8243,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "pendingSlashEpoch",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8245,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "demotedAt",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 8247,
+              "contract": "contracts-baseline/ValidatorsRegistry.sol:ValidatorsRegistry",
+              "label": "isPaidEntrant",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_bool"
+            }
+          ],
+          "numberOfBytes": "192"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_uint64": {
+          "encoding": "inplace",
+          "label": "uint64",
+          "numberOfBytes": "8"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        }
+      }
+    }
+  },
+  "ValidatorsBoard": {
+    "address": "0x4444444444444444444444444444444444444444",
+    "runtimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+    "runtimeSizeBytes": 17013,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 5725,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "boardMembers",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_array(t_address)dyn_storage"
+        },
+        {
+          "astId": 5729,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "isBoardMember",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_mapping(t_address,t_bool)"
+        },
+        {
+          "astId": 5735,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "voterCandidates",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_mapping(t_address,t_array(t_address)dyn_storage)"
+        },
+        {
+          "astId": 5742,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "hasVotedFor",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 5748,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "candidateVoters",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_mapping(t_address,t_array(t_address)dyn_storage)"
+        },
+        {
+          "astId": 5755,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "voterIndexInCandidateVoters",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "astId": 5793,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "boardVersion",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 5800,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "lastBoardRefreshAt",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 5803,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "pendingVacancies",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 5816,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "seatMembershipEpoch",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "astId": 5821,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "actions",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_mapping(t_uint256,t_struct(BoardAction)5786_storage)"
+        },
+        {
+          "astId": 5827,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "actionHasVoted",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 5829,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "actionCount",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 6960,
+          "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+          "label": "_voteTally",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_mapping(t_address,t_uint256)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_address)dyn_storage": {
+          "base": "t_address",
+          "encoding": "dynamic_array",
+          "label": "address[]",
+          "numberOfBytes": "32"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_enum(ActionType)5762": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsBoard.ActionType",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_array(t_address)dyn_storage)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => address[])",
+          "numberOfBytes": "32",
+          "value": "t_array(t_address)dyn_storage"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => mapping(address => uint256))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_uint256)"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_mapping(t_uint256,t_struct(BoardAction)5786_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsBoard.BoardAction)",
+          "numberOfBytes": "32",
+          "value": "t_struct(BoardAction)5786_storage"
+        },
+        "t_string_storage": {
+          "encoding": "bytes",
+          "label": "string",
+          "numberOfBytes": "32"
+        },
+        "t_struct(BoardAction)5786_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsBoard.BoardAction",
+          "members": [
+            {
+              "astId": 5766,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "atype",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_enum(ActionType)5762"
+            },
+            {
+              "astId": 5768,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "target",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_address"
+            },
+            {
+              "astId": 5770,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "amount",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 5772,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "description",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_string_storage"
+            },
+            {
+              "astId": 5774,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "votes",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 5776,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "requiredVotes",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 5778,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 5780,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "expiresAt",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 5782,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "executed",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_bool"
+            },
+            {
+              "astId": 5785,
+              "contract": "contracts-baseline/ValidatorsBoard.sol:ValidatorsBoard",
+              "label": "boardVersionAtCreation",
+              "offset": 0,
+              "slot": "8",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "288"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    }
+  },
+  "ValidatorsTreasury": {
+    "address": "0x5555555555555555555555555555555555555555",
+    "runtimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+    "runtimeSizeBytes": 5755,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 11551,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "locked",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_bool"
+        },
+        {
+          "astId": 11553,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "totalDistributedToTreasury",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 11555,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "totalSpent",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 11559,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "perPaymentCap",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 11563,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "periodCap",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 11576,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "dailySpend",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_mapping(t_uint256,t_uint256)"
+        },
+        {
+          "astId": 11606,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "capChangeProposals",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_mapping(t_uint256,t_struct(CapChangeProposal)11598_storage)"
+        },
+        {
+          "astId": 11612,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "capChangeHasVoted",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 11614,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "capChangeProposalCount",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 11627,
+          "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+          "label": "pendingCapChange",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_mapping(t_uint256,t_struct(PendingCapChange)11622_storage)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_enum(CapKind)11579": {
+          "encoding": "inplace",
+          "label": "enum ValidatorsTreasury.CapKind",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_mapping(t_uint256,t_struct(CapChangeProposal)11598_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsTreasury.CapChangeProposal)",
+          "numberOfBytes": "32",
+          "value": "t_struct(CapChangeProposal)11598_storage"
+        },
+        "t_mapping(t_uint256,t_struct(PendingCapChange)11622_storage)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => struct ValidatorsTreasury.PendingCapChange)",
+          "numberOfBytes": "32",
+          "value": "t_struct(PendingCapChange)11622_storage"
+        },
+        "t_mapping(t_uint256,t_uint256)": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => uint256)",
+          "numberOfBytes": "32",
+          "value": "t_uint256"
+        },
+        "t_struct(CapChangeProposal)11598_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsTreasury.CapChangeProposal",
+          "members": [
+            {
+              "astId": 11583,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "kind",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_enum(CapKind)11579"
+            },
+            {
+              "astId": 11585,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "newValue",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11587,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "votes",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11589,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "requiredVotes",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11591,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "createdAt",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11593,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "expiresAt",
+              "offset": 0,
+              "slot": "5",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11595,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "executed",
+              "offset": 0,
+              "slot": "6",
+              "type": "t_bool"
+            },
+            {
+              "astId": 11597,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "createdAtNonce",
+              "offset": 0,
+              "slot": "7",
+              "type": "t_uint256"
+            }
+          ],
+          "numberOfBytes": "256"
+        },
+        "t_struct(PendingCapChange)11622_storage": {
+          "encoding": "inplace",
+          "label": "struct ValidatorsTreasury.PendingCapChange",
+          "members": [
+            {
+              "astId": 11617,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "newValue",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11619,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "effectiveAt",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_uint256"
+            },
+            {
+              "astId": 11621,
+              "contract": "contracts-baseline/ValidatorsTreasury.sol:ValidatorsTreasury",
+              "label": "exists",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_bool"
+            }
+          ],
+          "numberOfBytes": "96"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    }
+  },
+  "IdentityRegistry": {
+    "address": "0x6666666666666666666666666666666666666666",
+    "runtimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+    "runtimeSizeBytes": 3892,
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 3862,
+          "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+          "label": "identities",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_mapping(t_address,t_struct(Identity)3857_storage)"
+        },
+        {
+          "astId": 3932,
+          "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+          "label": "identityOracle",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_address"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(PersonType)3839": {
+          "encoding": "inplace",
+          "label": "enum IdentityRegistry.PersonType",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_struct(Identity)3857_storage)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => struct IdentityRegistry.Identity)",
+          "numberOfBytes": "32",
+          "value": "t_struct(Identity)3857_storage"
+        },
+        "t_string_storage": {
+          "encoding": "bytes",
+          "label": "string",
+          "numberOfBytes": "32"
+        },
+        "t_struct(Identity)3857_storage": {
+          "encoding": "inplace",
+          "label": "struct IdentityRegistry.Identity",
+          "members": [
+            {
+              "astId": 3841,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "registered",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_bool"
+            },
+            {
+              "astId": 3844,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "personType",
+              "offset": 1,
+              "slot": "0",
+              "type": "t_enum(PersonType)3839"
+            },
+            {
+              "astId": 3846,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "name",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_string_storage"
+            },
+            {
+              "astId": 3848,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "phoneVerified",
+              "offset": 0,
+              "slot": "2",
+              "type": "t_bool"
+            },
+            {
+              "astId": 3850,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "telegramVerified",
+              "offset": 1,
+              "slot": "2",
+              "type": "t_bool"
+            },
+            {
+              "astId": 3852,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "kycVerified",
+              "offset": 2,
+              "slot": "2",
+              "type": "t_bool"
+            },
+            {
+              "astId": 3854,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "kycCommitment",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_bytes32"
+            },
+            {
+              "astId": 3856,
+              "contract": "contracts-baseline/IdentityRegistry.sol:IdentityRegistry",
+              "label": "migratedTo",
+              "offset": 0,
+              "slot": "4",
+              "type": "t_address"
+            }
+          ],
+          "numberOfBytes": "160"
+        }
+      }
+    }
+  }
+}

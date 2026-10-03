@@ -1,0 +1,8 @@
+{
+  "blocksChecked": 167,
+  "candidatesChecked": 6,
+  "totalChecks": 1002,
+  "mismatches": 0,
+  "mismatchDetails": [],
+  "historicalLimitNote": "Besu's default BONSAI historical-state limit (~512 blocks back) made blocks older than ~block 261 (on a chain at height 781) unreadable via eth_call at blockTag; B01's live-collected data (Net-B-B01.json) already covers the B02 transition in full. This pass covers the B03 transition (~block 651) plus a spread sample of the still-reachable recent window."
+}

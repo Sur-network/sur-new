@@ -1,0 +1,214 @@
+{
+  "generatedAt": "2026-10-03T11:32:25.182Z",
+  "method": "block-0 stateRoot reported by a live Besu 26.9.0 node vs MPT root of the genesis.json alloc",
+  "results": {
+    "Net-B": {
+      "computedRootOfGenesisAlloc": "0x323f5f5735632d885c8f40abca8deba5d4ee59c8d0e2b2e5a53a92207b9f44b6",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x1df2c8bb62c3a9eacc6f49936a665eb1de6a9f9ceca0683b7015416ce9ceea08",
+        "stateRoot": "0x323f5f5735632d885c8f40abca8deba5d4ee59c8d0e2b2e5a53a92207b9f44b6"
+      },
+      "match": true,
+      "stopped": "stopped Net-B/node1 (pid 24820, rpc 8701)"
+    },
+    "Net-L01": {
+      "computedRootOfGenesisAlloc": "0x7f3cf05cee0eceeb2d6eeecbb3d684d72ef3f7f8072433d888a9615fc8073fe9",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xeea8df436b0bedfd6e0254528ca0dbba97edaa14a4043045c52ec8e3d62051ea",
+        "stateRoot": "0x7f3cf05cee0eceeb2d6eeecbb3d684d72ef3f7f8072433d888a9615fc8073fe9"
+      },
+      "match": true,
+      "stopped": "stopped Net-L01/node1 (pid 22844, rpc 8711)"
+    },
+    "Net-L02": {
+      "computedRootOfGenesisAlloc": "0xcf1e23d7071e1ea6a6d160555e5398a7afa7da1c7143170d1842138342faae4e",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xb13b2a78130825c35e5a513caaa799887c6a30fb1b2b4b8275a3a6a8f60d8e98",
+        "stateRoot": "0xcf1e23d7071e1ea6a6d160555e5398a7afa7da1c7143170d1842138342faae4e"
+      },
+      "match": true,
+      "stopped": "stopped Net-L02/node1 (pid 9560, rpc 8721)"
+    },
+    "Net-L04": {
+      "computedRootOfGenesisAlloc": "0xc936590f54546c342789050df43a55a748100c5ca944217673ee7591c8fe5b75",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x8423a374e6a530e53f4e8924c24302929e781f3d5e387ff0df46d5b961216a73",
+        "stateRoot": "0xc936590f54546c342789050df43a55a748100c5ca944217673ee7591c8fe5b75"
+      },
+      "match": true,
+      "stopped": "stopped Net-L04/node1 (pid 23120, rpc 8731)"
+    },
+    "Net-L05": {
+      "computedRootOfGenesisAlloc": "0x72ffe3dc389df5a177048cf45ba801d448ed3b2701ce07e2cf7860674970fc1b",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xf0e982a1c4228b079fcbc3c4ce6784e3db05d44866e643090e7dad6518e71e9c",
+        "stateRoot": "0x72ffe3dc389df5a177048cf45ba801d448ed3b2701ce07e2cf7860674970fc1b"
+      },
+      "match": true,
+      "stopped": "stopped Net-L05/node1 (pid 36948, rpc 8741)"
+    },
+    "Net-D": {
+      "computedRootOfGenesisAlloc": "0xfb09390c684c8fdecefb8afd0a66475ca287e9c6386f3b92eb889f13e53442f6",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xd5c765a4043d1581f15d5a5e9b4008dbeeba84cf2dc87c1d74bb70582142a7ef",
+        "stateRoot": "0xfb09390c684c8fdecefb8afd0a66475ca287e9c6386f3b92eb889f13e53442f6"
+      },
+      "match": true,
+      "stopped": "stopped Net-D/node1 (pid 36976, rpc 8751)"
+    },
+    "Net-F1": {
+      "computedRootOfGenesisAlloc": "0xb7bf5abcee7801b53c80a1f33554ddb055d612cf33193885bda87dff2d80472d",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x69f0ffaf2c337fb8e0be112dbaa3d11b126359ea5088ca4082387ff4e466ba01",
+        "stateRoot": "0xb7bf5abcee7801b53c80a1f33554ddb055d612cf33193885bda87dff2d80472d"
+      },
+      "match": true,
+      "stopped": "stopped Net-F1/node1 (pid 31036, rpc 8801)"
+    },
+    "Net-F2": {
+      "computedRootOfGenesisAlloc": "0x707fbf664f8d2f1d08e7ede0bc51b799f50419a404990dbec0dc727e0f698139",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xc0528dd7e281b313347f837f6fd08ebf25e3ff45cf6b8a60681fe8c66eb39139",
+        "stateRoot": "0x707fbf664f8d2f1d08e7ede0bc51b799f50419a404990dbec0dc727e0f698139"
+      },
+      "match": true,
+      "stopped": "stopped Net-F2/node1 (pid 25760, rpc 8811)"
+    },
+    "Net-F3": {
+      "computedRootOfGenesisAlloc": "0x40e40bb9d878d91473f3093ea2dc2932556483bce9374238cca594f706ad3acc",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xca0c3ee52bd6326cbff711cb1e31f7ffe77b4304752bbdb50ee947967981ba28",
+        "stateRoot": "0x40e40bb9d878d91473f3093ea2dc2932556483bce9374238cca594f706ad3acc"
+      },
+      "match": true,
+      "stopped": "stopped Net-F3/node1 (pid 31804, rpc 8821)"
+    },
+    "Net-F4": {
+      "computedRootOfGenesisAlloc": "0x29fec7caf246da3c6aa43b057c67516ba44f84c60d32f75bddb62054547a335c",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x6bcd309ebfcf301b671f761790949d96a3853af2d5cbec62a6b148c0b636b48e",
+        "stateRoot": "0x29fec7caf246da3c6aa43b057c67516ba44f84c60d32f75bddb62054547a335c"
+      },
+      "match": true,
+      "stopped": "stopped Net-F4/node1 (pid 27308, rpc 8831)"
+    },
+    "Net-F5": {
+      "computedRootOfGenesisAlloc": "0x99899110fc9df903151aa5f05c4dc835325501376daaf5bcd8886265a46d74a9",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x653dac83f654e2b014bd4f169fdaad785b84fde80b4a4b11bb6089ba8b220e34",
+        "stateRoot": "0x99899110fc9df903151aa5f05c4dc835325501376daaf5bcd8886265a46d74a9"
+      },
+      "match": true,
+      "stopped": "stopped Net-F5/node1 (pid 37200, rpc 8841)"
+    },
+    "Net-F5b": {
+      "computedRootOfGenesisAlloc": "0x8ed73b10d7b52d4683a6235db5e24983dad992e12dd2fcb462aed8b279aaf7be",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0x666e01d76632f89ef329807163f7b71480ae125ad4f4a3676202a26c197f725f",
+        "stateRoot": "0x8ed73b10d7b52d4683a6235db5e24983dad992e12dd2fcb462aed8b279aaf7be"
+      },
+      "match": true
+    },
+    "Net-F6": {
+      "computedRootOfGenesisAlloc": "0xc9812c634e4137b8974145aa6c9e5c9c510cf2438b9394197d9e0ec09904f76d",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0x9af0c67c4b77781cc4c74b751a1a42704f3345709c0abf0b2a0c495889bf665c",
+        "stateRoot": "0xc9812c634e4137b8974145aa6c9e5c9c510cf2438b9394197d9e0ec09904f76d"
+      },
+      "match": true
+    },
+    "Net-L05a": {
+      "computedRootOfGenesisAlloc": "0x3236513fa7a913ffe9649fe9046168dfaaadea8294086806692886995a8b6e6e",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xae3255586d226d8a3cad31d32d6ca391dd7163bdf886dd4dcbcb0092c7163af7",
+        "stateRoot": "0x3236513fa7a913ffe9649fe9046168dfaaadea8294086806692886995a8b6e6e"
+      },
+      "match": true,
+      "stopped": "stopped Net-L05a/node1 (pid 35332, rpc 8851)"
+    },
+    "Net-L05b": {
+      "computedRootOfGenesisAlloc": "0xea06ed4d49ea529ad838c04940311c5b4f44d8b44ae5faa56dfb7165e3a794ff",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0xbd788f3a854a0af74325ffba0db28c1c7225fc34d2de6dd57cce18b02719f917",
+        "stateRoot": "0xea06ed4d49ea529ad838c04940311c5b4f44d8b44ae5faa56dfb7165e3a794ff"
+      },
+      "match": true,
+      "stopped": "stopped Net-L05b/node1 (pid 32028, rpc 8861)"
+    },
+    "Net-D3": {
+      "computedRootOfGenesisAlloc": "0xa7388a4553a5f33edabc9b37f740b3b9288fc6e6cd0cdd5538224c1fcf2b47a2",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x69b236b741722d79819776739b6f1c7cd2a2321a192cd26ed9ad4ff7eaa6c1a8",
+        "stateRoot": "0xa7388a4553a5f33edabc9b37f740b3b9288fc6e6cd0cdd5538224c1fcf2b47a2"
+      },
+      "match": true,
+      "stopped": "stopped Net-D3/node1 (pid 38416, rpc 8871)"
+    },
+    "Net-E15": {
+      "computedRootOfGenesisAlloc": "0xe5ee7b3112df918b0061cb8aa88dc05d6a77cc4a758b4f83e2ad21c075805826",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x9aa02bf87cda07f18f5db277019ebd5ba8c4f45a125bf763ecd9ed49b6a1e918",
+        "stateRoot": "0xe5ee7b3112df918b0061cb8aa88dc05d6a77cc4a758b4f83e2ad21c075805826"
+      },
+      "match": true,
+      "stopped": "stopped Net-E15/node1 (pid 33872, rpc 8881)"
+    },
+    "Net-E30": {
+      "computedRootOfGenesisAlloc": "0x35419f5935f554681e870cad6098cf43c562d63c8c39ff86f448a0bb6c4b4386",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x1f66371e7277ddd8f7b6e8306f026aa54f0c32ce1f0818bf08a97eaeacc6ea65",
+        "stateRoot": "0x35419f5935f554681e870cad6098cf43c562d63c8c39ff86f448a0bb6c4b4386"
+      },
+      "match": true,
+      "stopped": "stopped Net-E30/node1 (pid 28328, rpc 8891)"
+    },
+    "Net-E60": {
+      "computedRootOfGenesisAlloc": "0xdcf6e884e684aeb02b4234cf0766eba9f7393643b42717c913cdf361623b48a6",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x0831e44bb9d222713ad8ec44e6b686c013fa54608551c934f5c7440ecca404e3",
+        "stateRoot": "0xdcf6e884e684aeb02b4234cf0766eba9f7393643b42717c913cdf361623b48a6"
+      },
+      "match": true,
+      "stopped": "stopped Net-E60/node1 (pid 31568, rpc 8901)"
+    },
+    "Net-A14": {
+      "computedRootOfGenesisAlloc": "0x499693b15f588b48892709000c388d647c47b2121165eee444df8a48b2c9073c",
+      "startedForThisCheck": false,
+      "besuBlock0": {
+        "hash": "0x9c23211d4606d520fe9b6ff71dba85b3799abd5a5edf6732b8949a2e23feb93c",
+        "stateRoot": "0x499693b15f588b48892709000c388d647c47b2121165eee444df8a48b2c9073c"
+      },
+      "match": true
+    },
+    "Net-Fork": {
+      "computedRootOfGenesisAlloc": "0x35a2e7271ae028e7f681b4ea453e4922ad48bc9bc0db61d5961936a6a516a40f",
+      "startedForThisCheck": true,
+      "besuBlock0": {
+        "hash": "0x358950d67353218e4893f185d7bb44cb1ebc4402e9ec28092f2508ec9123d250",
+        "stateRoot": "0x35a2e7271ae028e7f681b4ea453e4922ad48bc9bc0db61d5961936a6a516a40f"
+      },
+      "match": true,
+      "stopped": "stopped Net-Fork/node1 (pid 37720, rpc 8791)"
+    }
+  },
+  "allMatch": true
+}

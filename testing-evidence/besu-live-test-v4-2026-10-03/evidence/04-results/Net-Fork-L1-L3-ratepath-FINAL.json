@@ -1,0 +1,8 @@
+{
+  "proposalId": 2,
+  "executed": true,
+  "startBlock": "590",
+  "ratePerBlock": "3300000000000000000",
+  "historyCount": "1",
+  "note": "Full governance path L1 (propose + both-chamber approval) -> L2 (real 180s RATE_CHANGE_DELAY wait) -> L3/execute (MIN_RATE_CHANGE_LEAD_BLOCKS=80 satisfied, executeRateChange succeeded) completed end-to-end on real Besu using the compressed test-fork constants. This is the first time this governed rate-change path has been exercised end-to-end on a real Besu network for this codebase (the real-constant path per the v4 document needs ~14 real days and was left to the owner's discretion). Prior attempts (proposal id=1) failed due to script bugs (wrong RateProposal struct field order in the ABI, and an insufficient startBlock margin that did not account for blocks produced during the 180s wait) -- both test-script bugs, not contract bugs, superseded by this successful run. L4's Besu-side blockreward-transition coordination at startBlock is separately covered by Group F (F01-F04) using seeded history; not re-attempted here since this network is already mid-distribution-sequence (D02'/D04'/D05' were run earlier on it)."
+}

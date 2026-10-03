@@ -1,0 +1,39 @@
+{
+  "NET": "Net-F5",
+  "test": "F07 addendum: raw log extracts (the main F07 JSON could not query node5 because its process had already terminated)",
+  "node5_genesisFile": "node5/genesis-notransition.json (config.transitions removed); nodes 1-4 use genesis.json with transition {block:300,blockreward:3e18}",
+  "node5_stateRootMismatch": [
+    "2026-10-03 12:51:08.014+0330 | BftProcessorExecutor-QBFT-0 | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53",
+    "2026-10-03 12:51:08.017+0330 | BftProcessorExecutor-QBFT-0 | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd, actual 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53",
+    "2026-10-03 12:51:08.017+0330 | BftProcessorExecutor-QBFT-0 | INFO  | MainnetBlockValidator | Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5): Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]",
+    "2026-10-03 12:51:08.018+0330 | BftProcessorExecutor-QBFT-0 | INFO  | ProposalPayloadValidator | Invalid Proposal Payload: block did not pass validation. Reason Optional[World State Root does not match expected value, header 0xe92e7ea0c81ec059afedf1e5fcd9a4ec1e4a5a73eb71ca0bf5029f912c5540fd calculated 0x31ded47d3d0af624923cfa58663269d196567799e405d17ce1b40e8941f1df53]"
+  ],
+  "node5_disconnect_and_peers": [
+    "2026-10-03 12:36:10.850+0330 | main | INFO  | FullSyncTargetManager | Unable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness",
+    "2026-10-03 12:51:21.679+0330 | EthScheduler-Services-8 (importBlock) | WARN  | PipelineChainDownloader | Invalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)",
+    "2026-10-03 12:51:24.038+0330 | EthScheduler-Services-0 (importBlock) | WARN  | PipelineChainDownloader | Invalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 300 (0xa7f8768445d40e2040e09794a3dfcf25ba67d773225a68963037088165fd69b5)"
+  ],
+  "node5_roundChanges": [
+    "2026-10-03 12:52:01.077+0330 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 40 seconds",
+    "2026-10-03 12:52:54.849+0330 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 40 seconds"
+  ],
+  "node5_termination": [
+    "Terminating due to java.lang.OutOfMemoryError: Java heap space"
+  ],
+  "healthyNode1_roundChangeLines": [
+    "2026-10-03 12:51:21.149+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=301, Round=1}, hash=0xe86b5df8a2f372f75cd441f2149e2db19f15885bf346bbfec191077e95cdc226",
+    "2026-10-03 12:51:43.122+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=305, Round=1}, hash=0x0eb05a05e4238f57185ccb6348651a70b69802cb6f80bec95b977771f2233501",
+    "2026-10-03 12:52:05.086+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=309, Round=1}, hash=0x93e0026622b9d282a90ebf3d3b2437529a23e5588e50dfe77d6227b9acccde1b",
+    "2026-10-03 12:52:27.152+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=313, Round=1}, hash=0xe903d23d36f13a2cf2bf05dc14af7f0b78c928bfdd1a5acf5b4a25911326a6d0",
+    "2026-10-03 12:52:49.219+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=317, Round=1}, hash=0x68157fd21c21d931767b045ef5b57baee74ada46fbfd546dfc2407dbc5e344b0",
+    "2026-10-03 12:53:11.069+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=321, Round=1}, hash=0x24d7a86c43d2210af262f7872747c604fd4bf8069ce51249627f22a9bf8e5857",
+    "2026-10-03 12:53:33.126+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=325, Round=1}, hash=0xf18ba20febc30977392c817833617e43e7e2ad0b573a97df9abe0034e7e38504",
+    "2026-10-03 12:53:55.133+0330 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=329, Round=1}, hash=0x525059709e8bcee72861ecbd1047bf2992b171ee42c249ada957369b208bec1f"
+  ],
+  "interpretation": {
+    "whatHappenedAtX": "The one validator started WITHOUT the transition computed a different state at block 300 (reward 2 SUR vs 3 SUR) and rejected the canonical block 300 as invalid (state root mismatch); it dropped out of consensus. It did not fork the chain: it produced no accepted block after 300.",
+    "networkBehavior": "The four healthy validators (exactly the QBFT quorum of 4/5) continued without a halt. Block 300 itself was produced on time; blocks 301, 305, 309, ... show a 13 s gap (3 s + one 10 s request-timeout round change) -- the slots in which the missing validator was the round-0 proposer.",
+    "caveat": "node5 later died with java.lang.OutOfMemoryError: Java heap space. All nodes ran with the test-wide -Xmx512m cap, so this may be an artifact of the cap interacting with the repeated failed-sync loop; it is NOT established that Besu terminates on its own in this situation with a normal heap.",
+    "consequence": "With f=1 already consumed, any second fault would halt the chain (no quorum). A one-node configuration mismatch is survivable but visibly degrades block time (~+10 s every 4th block) until fixed."
+  }
+}

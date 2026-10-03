@@ -1,0 +1,28 @@
+{
+  "NET": "Net-D3",
+  "FOUNDERS": "G6",
+  "founderAddrs": [
+    "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c",
+    "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC",
+    "0xA0379A0bf817877535Bfd43c58278B765bE85618",
+    "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb",
+    "0xd01B11074080932823A66e212f2B1ceFD63887aA",
+    "0xDB2D47448782258F7bcE7963a40CA987e4729013"
+  ],
+  "INCLUDE_C6": true,
+  "genesisTimestamp": 1791018083,
+  "CHAIN_ID": 424418,
+  "GAS_LIMIT": 30000000,
+  "IS_FORK": false,
+  "TRANSITIONS": null,
+  "RATE_HISTORY_SPEC": "",
+  "RATE_HISTORY_ENTRIES": 0,
+  "PAYEES": 0,
+  "TEST_ONLY_SEED": false,
+  "OVERLAY": {
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10"
+  }
+}

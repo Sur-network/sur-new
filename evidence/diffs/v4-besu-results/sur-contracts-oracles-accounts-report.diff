@@ -1,0 +1,10 @@
+--- a/technical-design/sur-contracts-oracles-accounts-report.md (before this round)
++++ b/technical-design/sur-contracts-oracles-accounts-report.md (this package)
+@@ -42,6 +42,7 @@
+ - **اختیارات:** می‌تواند زمان‌بندی و مقدار توزیع را تعیین کند، اما نمی‌تواند به آدرسی که در ValidatorsRegistry واجد شرایط (`isValidator`) نیست پرداخت کند — این بررسی مستقیماً روی زنجیره انجام می‌شود، بدون واسطه.
+ - **محدودیت طراحی حذف‌شده:** نسخه‌ی قدیمی یک «`validatorSyncOracle`» جداگانه هم داشت که کاملاً حذف شده؛ ValidatorsRegistry اکنون تنها منبع حقیقت است.
+ - ✅ **به‌روزرسانی:** مقدار `distributionOracle` دیگر placeholder نیست — نهایی و هاردکد شده: `0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6` (چک‌سام‌شده طبق EIP-55).
++- 🔶 **موجودی گس (مشاهدهٔ آزمون Besu v4؛ تصمیم باز):** هزینهٔ یک `distributeRewards` با حداقل gas price آزمایشی (۰٫۰۰۰۱ SUR به‌ازای هر گس) در آزمون‌های واقعی از ≈۹۴ تا ≈۱۳۶ SUR بود و در benchmark مصنوعی ۱۵۰ payee حدود ۲٬۱۹۹ SUR؛ این کارمزد به distributor برمی‌گردد. حساب اوراکل پیش از ارسال باید `gasLimit × gasPrice` موجودی داشته باشد. مقدار و روش تأمین موجودی و هشدار موجودی کم انتخاب نشده است — `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۴.
+ 
+ ### ۲.۲ `verifier` — در ValidatorsRegistry
+ - **کاربرد دوگانه:** هم گزارش وضعیت آنلاین/سینک‌بودن نود در دوره Probation/Demoted (recovery)، و هم گزارش تولید واقعی بلاک (فیلد miner/coinbase) برای ولیدیتورهای Active — از طریق تابع `reportLiveness`.

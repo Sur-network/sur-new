@@ -1,0 +1,94 @@
+{
+  "d01": {
+    "empty_list": {
+      "label": "empty_list",
+      "revertReason": "BlockRewardDistributor: empty validator list"
+    },
+    "length_mismatch": {
+      "label": "length_mismatch",
+      "revertReason": "BlockRewardDistributor: length mismatch"
+    },
+    "nothing_to_distribute": {
+      "label": "nothing_to_distribute",
+      "revertReason": "BlockRewardDistributor: nothing to distribute"
+    },
+    "insufficient_balance": {
+      "label": "insufficient_balance",
+      "revertReason": "BlockRewardDistributor: insufficient contract balance"
+    },
+    "range_not_from_s_plus_1": {
+      "label": "range_not_from_s_plus_1",
+      "revertReason": "BlockRewardDistributor: range must start right after the last settled block"
+    },
+    "range_inverted": {
+      "label": "range_inverted",
+      "revertReason": "BlockRewardDistributor: range must start right after the last settled block"
+    },
+    "range_not_yet_produced": {
+      "label": "range_not_yet_produced",
+      "revertReason": "BlockRewardDistributor: range includes blocks that are not yet produced"
+    },
+    "blocks_exceed_range": {
+      "label": "blocks_exceed_range",
+      "revertReason": "BlockRewardDistributor: reported blocks exceed the range size"
+    },
+    "cap_plus_1wei": {
+      "label": "cap_plus_1wei (L05)",
+      "revertReason": "BlockRewardDistributor: totalRewards exceed approved reward for range"
+    },
+    "duplicate_address": {
+      "label": "duplicate_address (L07)",
+      "revertReason": "BlockRewardDistributor: reported blocks exceed the range size"
+    },
+    "descending_order": {
+      "label": "descending_order (L07)",
+      "revertReason": "BlockRewardDistributor: validators must be strictly ascending"
+    },
+    "zero_address": {
+      "label": "zero_address",
+      "revertReason": "BlockRewardDistributor: reported blocks exceed the range size"
+    },
+    "never_activated_address": {
+      "label": "never_activated_address (C-REG-2)",
+      "revertReason": "BlockRewardDistributor: reported blocks exceed the range size"
+    },
+    "non_oracle_sender": {
+      "revertReason": "BlockRewardDistributor: caller is not the distribution oracle"
+    }
+  },
+  "d02": {
+    "submittedAt": "2026-10-02T01:41:41.867Z",
+    "txHash": "0x055665e8a8b42c29bb3308d05f44af71015159bc198555f9aea7c1a83b5b1c31",
+    "status": 1,
+    "gasUsed": "1047741",
+    "fromBlock": 1,
+    "toBlock": 119,
+    "blocksMined": [
+      20,
+      20,
+      20,
+      20,
+      20,
+      19
+    ],
+    "totalRewards": "238000000000000000000",
+    "lastSettledBlockAfter": "119",
+    "epochCountAfter": "1",
+    "deltas": {
+      "0xA0379A0bf817877535Bfd43c58278B765bE85618": "20000000000000000000",
+      "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb": "20000000000000000000",
+      "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC": "20000000000000000000",
+      "0xd01B11074080932823A66e212f2B1ceFD63887aA": "20000000000000000000",
+      "0xDB2D47448782258F7bcE7963a40CA987e4729013": "20000000000000000000",
+      "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c": "19000000000000000000",
+      "0x1111111111111111111111111111111111111111": "35700000000000000000",
+      "0x5555555555555555555555555555555555555555": "83300000000000000000"
+    },
+    "expectedFoundation": "35700000000000000000",
+    "expectedValidatorDirectTotal": "119000000000000000000",
+    "expectedTreasury": "83300000000000000000"
+  },
+  "d03": {
+    "revertReason": "BlockRewardDistributor: too soon since last distribution"
+  }
+}

@@ -1,0 +1,273 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 532676608 bytes. Error detail: G1 virtual space
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   This process is running with CompressedOops enabled, and the Java Heap may be blocking the growth of the native heap
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+#   JVM is running with Zero Based Compressed Oops mode in which the Java heap is
+#     placed in the first 32GB address space. The Java Heap base address is the
+#     maximum limit for the native heap growth. Please use -XX:HeapBaseMinAddress
+#     to set the Java Heap base and to place the Java Heap above 32GB virtual address.
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_windows.cpp:3573), pid=22280, tid=7048
+#
+# JRE version:  (25.0.4+7) (build )
+# Java VM: OpenJDK 64-Bit Server VM (25.0.4+7-LTS, mixed mode, sharing, tiered, compressed oops, compact obj headers, g1 gc, windows-amd64)
+# No core dump will be written. Minidumps are not enabled by default on client versions of Windows
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Dvertx.disableFileCPResolving=true -XX:+ExitOnOutOfMemoryError -Dbesu.home=D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary\bin\.. -Dlog4j.shutdownHookEnabled=false -Dlog4j2.formatMsgNoLookups=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager --add-opens=java.base/sun.security.provider=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED -XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -XX:MaxGCPauseMillis=100 -XX:+UseCompactObjectHeaders -XX:StartFlightRecording,settings=default.jfc -Xlog:jfr*=off --sun-misc-unsafe-memory-access=allow org.hyperledger.besu.Besu --config-file=node5/config.toml
+
+Host: Intel(R) Core(TM) i5-14400, 16 cores, 31G,  Windows 11 , 64 bit Build 26100 (10.0.26100.7920)
+Time: Fri Oct  2 05:02:53 2026 Iran Standard Time elapsed time: 2.036052 seconds (0d 0h 0m 2s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000002259bd01590):  JavaThread "Unknown thread" [_thread_in_vm, id=7048, stack(0x000000fde7e00000,0x000000fde7f00000) (1024K)]
+
+Stack: [0x000000fde7e00000,0x000000fde7f00000]
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [jvm.dll+0x7aba79]  (no source info available)
+V  [jvm.dll+0x775a3d]  (no source info available)
+V  [jvm.dll+0x9fb9ed]  (no source info available)
+V  [jvm.dll+0x9fdfe1]  (no source info available)
+V  [jvm.dll+0x9fe6f3]  (no source info available)
+V  [jvm.dll+0x2fdb36]  (no source info available)
+V  [jvm.dll+0x7a7c75]  (no source info available)
+V  [jvm.dll+0x79b007]  (no source info available)
+V  [jvm.dll+0x3f6848]  (no source info available)
+V  [jvm.dll+0x3fe7b6]  (no source info available)
+V  [jvm.dll+0x3eaf1e]  (no source info available)
+V  [jvm.dll+0x3eb1d8]  (no source info available)
+V  [jvm.dll+0x3c2025]  (no source info available)
+V  [jvm.dll+0x3c2cae]  (no source info available)
+V  [jvm.dll+0x9c2614]  (no source info available)
+V  [jvm.dll+0x45b4c2]  (no source info available)
+V  [jvm.dll+0x9a6442]  (no source info available)
+V  [jvm.dll+0x4fc461]  (no source info available)
+V  [jvm.dll+0x4fdd51]  (no source info available)
+C  [jli.dll+0x5406]  (no source info available)
+C  [ucrtbase.dll+0x37b0]  (no source info available)
+C  [KERNEL32.DLL+0x2e8d7]  (no source info available)
+C  [ntdll.dll+0x8c48c]  (no source info available)
+
+Lock stack of current Java thread (top to bottom):
+
+
+---------------  P R O C E S S  ---------------
+
+Threads class SMR info:
+_java_thread_list=0x00007ff932f47008, length=0, elements={
+}
+
+Java Threads: ( => current thread )
+Total: 0
+
+Other Threads:
+  0x000002259e0de1f0 WorkerThread "GC Thread#0"                     [id=41568, stack(0x000000fde7f00000,0x000000fde8000000) (1024K)]
+  0x00000225c03ae4a0 ConcurrentGCThread "G1 Main Marker"            [id=34200, stack(0x000000fde8000000,0x000000fde8100000) (1024K)]
+  0x00000225c03af9b0 WorkerThread "G1 Conc#0"                       [id=39088, stack(0x000000fde8100000,0x000000fde8200000) (1024K)]
+
+[error occurred during error reporting (printing all threads), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ff932566f2a]
+VM state: not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00007ff932fcf8d8] Heap_lock - owner thread: 0x000002259bd01590
+
+Heap address: 0x0000000604000000, size: 8128 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+
+CDS archive(s) mapped at: [0x0000000000000000-0x0000000000000000-0x0000000000000000), size 0, SharedBaseAddress: 0x0000000800000000, ArchiveRelocationMode: 1.
+UseCompressedClassPointers 1, UseCompactObjectHeaders 1
+Narrow klass pointer bits 22, Max shift 10
+Narrow klass base: 0xffffffffffffffff, Narrow klass shift: -1
+Encoding Range: [0xffffffffffffffff - 0x00000000001fffff), (2097152 bytes)
+Klass Range:    [0x0000000000000000 - 0x0000000000000000), (0 bytes)
+Klass ID Range:  [4294967295 - 0) (1)
+No protection zone.
+
+GC Precious Log:
+ CardTable entry size: 512
+ Card Set container configuration: InlinePtr #cards 4 size 8 Array Of Cards #cards 32 size 80 Howl #buckets 8 coarsen threshold 7372 Howl Bitmap #cards 1024 size 144 coarsen threshold 921 Card regions per heap region 1 cards per card region 8192
+
+Heap:
+ garbage-first heap   total reserved 8323072K, committed 0K, used 0K [0x0000000604000000, 0x0000000800000000)
+  region size 4096K, 0 young (0K), 0 survivors (0K)
+
+Heap Regions: E=young(eden), S=young(survivor), O=old, HS=humongous(starts), HC=humongous(continues), CS=collection set, F=free, TAMS=top-at-mark-start, PB=parsable bottom
+
+Card table byte_map: [0x00000225b73a0000,0x00000225b8380000] _byte_map_base: 0x00000225b4380000
+
+Marking Bits: (CMBitMap*) 0x00000225c03960a0
+ Bits: [0x00000225b8380000, 0x00000225c0280000)
+
+GC Heap Usage History (0 events):
+No events
+
+Metaspace Usage History (0 events):
+No events
+
+Dll operation events (2 events):
+Event: 0.009 Attempting to load shared library C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\java.dll
+Event: 0.011 Loaded shared library C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\java.dll
+
+Deoptimization events (0 events):
+No events
+
+Classes loaded (0 events):
+No events
+
+Classes unloaded (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+VM Operations (0 events):
+No events
+
+Memory protections (0 events):
+No events
+
+Nmethod flushes (0 events):
+No events
+
+Events (0 events):
+No events
+
+
+Dynamic libraries:
+0x00007ff6a2350000 - 0x00007ff6a235e000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\java.exe
+0x00007ff9ff980000 - 0x00007ff9ffbe7000 	C:\WINDOWS\SYSTEM32\ntdll.dll
+0x00007ff9fdea0000 - 0x00007ff9fdf69000 	C:\WINDOWS\System32\KERNEL32.DLL
+0x00007ff9fcf80000 - 0x00007ff9fd371000 	C:\WINDOWS\System32\KERNELBASE.dll
+0x00007ff9f9ac0000 - 0x00007ff9f9b5f000 	C:\WINDOWS\SYSTEM32\apphelp.dll
+0x00007ff9fc260000 - 0x00007ff9fc3ab000 	C:\WINDOWS\System32\ucrtbase.dll
+0x00007ff9d0da0000 - 0x00007ff9d0dbe000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\VCRUNTIME140.dll
+0x00007ff9d0930000 - 0x00007ff9d0946000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\jli.dll
+0x00007ff9ff6c0000 - 0x00007ff9ff885000 	C:\WINDOWS\System32\USER32.dll
+0x00007ff9fc4e0000 - 0x00007ff9fc507000 	C:\WINDOWS\System32\win32u.dll
+0x00007ff9de3c0000 - 0x00007ff9de653000 	C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.8037_none_3e092faae333b53b\COMCTL32.dll
+0x00007ff9ff0f0000 - 0x00007ff9ff11b000 	C:\WINDOWS\System32\GDI32.dll
+0x00007ff9fd8c0000 - 0x00007ff9fd969000 	C:\WINDOWS\System32\msvcrt.dll
+0x00007ff9fc3b0000 - 0x00007ff9fc4db000 	C:\WINDOWS\System32\gdi32full.dll
+0x00007ff9fd4f0000 - 0x00007ff9fd593000 	C:\WINDOWS\System32\msvcp_win.dll
+0x00007ff9ff220000 - 0x00007ff9ff251000 	C:\WINDOWS\System32\IMM32.DLL
+0x00007ff9f1240000 - 0x00007ff9f124c000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\vcruntime140_1.dll
+0x00007ff9c6d80000 - 0x00007ff9c6e0d000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\msvcp140.dll
+0x00007ff932190000 - 0x00007ff9330c1000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\server\jvm.dll
+0x00007ff9fe020000 - 0x00007ff9fe0db000 	C:\WINDOWS\System32\ADVAPI32.dll
+0x00007ff9fd720000 - 0x00007ff9fd7c7000 	C:\WINDOWS\System32\sechost.dll
+0x00007ff9fdd20000 - 0x00007ff9fde38000 	C:\WINDOWS\System32\RPCRT4.dll
+0x00007ff9fd7f0000 - 0x00007ff9fd864000 	C:\WINDOWS\System32\WS2_32.dll
+0x00007ff9fc0c0000 - 0x00007ff9fc11e000 	C:\WINDOWS\SYSTEM32\POWRPROF.dll
+0x00007ff9f0f80000 - 0x00007ff9f0fb5000 	C:\WINDOWS\SYSTEM32\WINMM.dll
+0x00007ff9f6e00000 - 0x00007ff9f6e0b000 	C:\WINDOWS\SYSTEM32\VERSION.dll
+0x00007ff9fc0a0000 - 0x00007ff9fc0b4000 	C:\WINDOWS\SYSTEM32\UMPDC.dll
+0x00007ff9fafb0000 - 0x00007ff9fafcb000 	C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+0x00007ff9e2460000 - 0x00007ff9e246a000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\jimage.dll
+0x00007ff9de680000 - 0x00007ff9de8c2000 	C:\WINDOWS\SYSTEM32\DBGHELP.DLL
+0x00007ff9fe860000 - 0x00007ff9febe2000 	C:\WINDOWS\System32\combase.dll
+0x00007ff9ff440000 - 0x00007ff9ff517000 	C:\WINDOWS\System32\OLEAUT32.dll
+0x00007ff9e1a50000 - 0x00007ff9e1a8b000 	C:\WINDOWS\SYSTEM32\dbgcore.DLL
+0x00007ff9fcd80000 - 0x00007ff9fce25000 	C:\WINDOWS\System32\bcryptPrimitives.dll
+0x00007ff9d0470000 - 0x00007ff9d048e000 	C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\java.dll
+0x00007ff9ff520000 - 0x00007ff9ff6b5000 	C:\WINDOWS\System32\ole32.dll
+0x00007ff9fe0f0000 - 0x00007ff9fe84f000 	C:\WINDOWS\System32\SHELL32.dll
+0x00007ff9fd380000 - 0x00007ff9fd4ea000 	C:\WINDOWS\System32\wintypes.dll
+
+JVMTI agents: none
+
+dbghelp: loaded successfully - version: 4.0.5 - missing functions: none
+symbol engine: initialized successfully - sym options: 0x614 - pdb path: .;C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin;C:\WINDOWS\SYSTEM32;C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.8037_none_3e092faae333b53b;C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin\server
+
+VM Arguments:
+jvm_args: -Dvertx.disableFileCPResolving=true -XX:+ExitOnOutOfMemoryError -Dbesu.home=D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary\bin\.. -Dlog4j.shutdownHookEnabled=false -Dlog4j2.formatMsgNoLookups=true -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager --add-opens=java.base/sun.security.provider=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED -XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -XX:MaxGCPauseMillis=100 -XX:+UseCompactObjectHeaders -XX:StartFlightRecording,settings=default.jfc -Xlog:jfr*=off --sun-misc-unsafe-memory-access=allow 
+java_command: org.hyperledger.besu.Besu --config-file=node5/config.toml
+java_class_path (initial): D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/abi-5.0.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/animal-sniffer-annotations-1.26.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/annotations-13.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/annotations-4.1.1.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/antlr-runtime-3.5.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/antlr4-4.13.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/antlr4-runtime-4.13.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/arithmetic-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/asm-9.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/asm-analysis-9.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/asm-commons-9.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/asm-tree-9.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/asm-util-9.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/async-profiler-4.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/bcpkix-jdk18on-1.84.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/bcprov-jdk18on-1.84.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/bcutil-jdk18on-1.84.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-app-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-config-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-clique-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-common-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-ibft-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-ibftlegacy-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-merge-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-qbft-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-consensus-qbft-core-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-crypto-algorithms-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-crypto-services-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-datatypes-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-api-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-blockcreation-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-core-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-core-support-test-26.9.0-test-support.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-eth-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-ethstats-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-evmtool-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-p2p-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-permissioning-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-referencetests-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-rlp-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-ethereum-trie-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-evm-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-metrics-core-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-metrics-rocksdb-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-nat-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-native-common-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-blockproduction-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-chain-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-core-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-execution-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-metrics-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-p2p-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-permissioning-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-rpc-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-security-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-storage-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-sync-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-txpool-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-validation-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-worldstate-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugin-api-worldstate-backend-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugins-health-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-plugins-rocksdb-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-services-kvstore-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-services-pipeline-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-services-tasks-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/besu-util-26.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/blake2bf-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/boringssl-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/caffeine-3.2.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/classmate-1.5.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/commons-codec-1.16.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/commons-collections4-4.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/commons-lang3-3.20.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/commons-net-3.9.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/dagger-2.59.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/discovery-26.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/dnsjava-3.6.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/encoder-1.4.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/error_prone_annotations-2.45.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/failureaccess-1.0.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/framework-1.3.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/framework-internal-1.3.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/gnark-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/graphql-java-22.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/grpc-api-1.79.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/grpc-context-1.79.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/grpc-core-1.79.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/grpc-netty-1.79.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/grpc-util-1.79.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/gson-2.12.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/guava-33.5.0-jre.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/hibernate-validator-8.0.2.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/icu4j-72.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/ipaddress-5.6.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/j2objc-annotations-3.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jackson-annotations-2.21.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jackson-core-2.21.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jackson-databind-2.21.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jackson-datatype-jdk8-2.21.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jakarta.inject-api-2.0.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jakarta.validation-api-3.1.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jansi-2.4.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/java-dataloader-3.3.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/javax.inject-1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jboss-logging-3.4.3.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jc-kzg-4844-2.1.8.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jctools-core-4.0.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jffi-1.3.11-native.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jffi-1.3.11.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jna-5.18.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jna-platform-5.18.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jnr-a64asm-1.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jnr-ffi-2.2.14.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jnr-x86asm-1.0.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jspecify-1.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/jsr305-3.0.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/kotlin-stdlib-2.4.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/log4j-api-2.25.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/log4j-core-2.25.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/log4j-jul-2.25.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/log4j-layout-template-json-2.25.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/log4j-slf4j2-impl-2.25.5.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/maven-artifact-3.9.15.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-all-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-buffer-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-base-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-classes-quic-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-compression-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-dns-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-haproxy-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-http-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-http2-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-http3-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-marshalling-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-memcache-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-mqtt-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-native-quic-4.2.17.Final-linux-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-native-quic-4.2.17.Final-linux-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-native-quic-4.2.17.Final-osx-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-native-quic-4.2.17.Final-osx-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-native-quic-4.2.17.Final-windows-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-protobuf-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-redis-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-smtp-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-socks-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-stomp-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-codec-xml-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-common-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-handler-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-handler-proxy-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-handler-ssl-ocsp-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-resolver-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-resolver-dns-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-resolver-dns-classes-macos-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-resolver-dns-native-macos-4.2.17.Final-osx-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-resolver-dns-native-macos-4.2.17.Final-osx-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-tcnative-boringssl-static-2.0.81.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-tcnative-classes-2.0.81.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-classes-epoll-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-classes-io_uring-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-classes-kqueue-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-epoll-4.2.17.Final-linux-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-epoll-4.2.17.Final-linux-riscv64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-epoll-4.2.17.Final-linux-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-epoll-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-io_uring-4.2.17.Final-linux-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-io_uring-4.2.17.Final-linux-riscv64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-io_uring-4.2.17.Final-linux-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-kqueue-4.2.17.Final-osx-aarch_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-kqueue-4.2.17.Final-osx-x86_64.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-kqueue-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-native-unix-common-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-rxtx-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-sctp-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/netty-transport-udt-4.2.17.Final.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/okhttp-jvm-5.3.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/okio-jvm-3.16.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-api-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-common-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-context-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-exporter-common-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-exporter-otlp-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-exporter-otlp-common-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-exporter-sender-okhttp-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-extension-trace-propagators-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-common-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-extension-autoconfigure-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-extension-autoconfigure-spi-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-logs-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-metrics-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-sdk-trace-1.62.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-semconv-1.40.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/opentelemetry-semconv-incubating-1.40.0-alpha.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/org.abego.treelayout.core-1.0.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/org.jupnp-3.0.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/org.jupnp.support-3.0.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/oshi-core-6.10.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/perfmark-api-0.27.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/picocli-4.7.7.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/plexus-utils-3.6.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-config-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-core-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-exporter-common-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-exporter-httpserver-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-exporter-pushgateway-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-exposition-formats-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-exposition-textformats-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-instrumentation-guava-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-instrumentation-jvm-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-model-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-tracer-common-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-tracer-initializer-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-tracer-otel-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/prometheus-metrics-tracer-otel-agent-1.5.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/reactive-streams-1.0.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/reactor-core-3.8.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/rocksdbjni-10.6.2.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/secp256k1-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/secp256r1-2.0.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/slf4j-api-2.0.17.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/snappy-java-1.1.10.7.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/splunk-library-javalogging-1.11.8.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/spring-security-crypto-6.4.9.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/ST4-4.3.4.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-bytes-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-concurrent-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-config-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-crypto-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-io-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-net-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-rlp-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-toml-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/tuweni-units-2.8.0.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/utils-5.0.3.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/value-annotations-2.12.1.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-auth-common-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-auth-jwt-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-bridge-common-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-codegen-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-codegen-api-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-codegen-json-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-codegen-processor-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-core-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-core-logging-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-eventbus-bridge-common-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-unit-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-web-5.1.6.jar;D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/vertx-web-common-5.1.6.jar
+Launcher Type: SUN_STANDARD
+
+[Global flags]
+     intx CICompilerCount                          = 12                                        {product} {ergonomic}
+     uint ConcGCThreads                            = 3                                         {product} {ergonomic}
+     bool ExitOnOutOfMemoryError                   = true                                      {product} {command line}
+     uint G1ConcRefinementThreads                  = 13                                        {product} {ergonomic}
+   size_t G1HeapRegionSize                         = 4194304                                   {product} {ergonomic}
+   size_t InitialHeapSize                          = 532676608                                 {product} {ergonomic}
+   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
+   size_t MarkStackSizeMax                         = 536870912                                 {product} {ergonomic}
+    uintx MaxGCPauseMillis                         = 100                                       {product} {command line}
+    uintx MaxHeapFreeRatio                         = 30                                     {manageable} {command line}
+   size_t MaxHeapSize                              = 8522825728                                {product} {ergonomic}
+   size_t MinHeapDeltaBytes                        = 4194304                                   {product} {ergonomic}
+    uintx MinHeapFreeRatio                         = 10                                     {manageable} {command line}
+   size_t MinHeapSize                              = 8388608                                   {product} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 7667712                                {pd product} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122028032                              {pd product} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122028032                              {pd product} {ergonomic}
+    uintx ReservedCodeCacheSize                    = 251723776                              {pd product} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+   size_t SoftMaxHeapSize                          = 8522825728                             {manageable} {ergonomic}
+    ccstr StartFlightRecording                     = settings=default.jfc                      {product} {command line}
+     bool UseCompactObjectHeaders                  = true                           {product lp64_product} {command line}
+     bool UseCompressedOops                        = true                           {product lp64_product} {ergonomic}
+     bool UseG1GC                                  = true                                      {product} {ergonomic}
+     bool UseLargePagesIndividualAllocation        = false                                  {pd product} {ergonomic}
+
+Logging:
+Log output configuration:
+ #0: stdout all=warning,jfr*=off uptime,level,tags foldmultilines=false (reconfigured)
+ #1: stderr all=off uptime,level,tags foldmultilines=false
+
+Release file:
+<release file has not been read>
+Environment Variables:
+CLASSPATH=D:\Amir\Business\SUR\Test\besu-test-v4\besu-binary/lib/*
+PATH=C:\Users\Amir\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Amir\bin;C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot\bin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files\dotnet;C:\Program Files\nodejs;D:\nodejs\npm-global;D:\nodejs\npm-global\node_modules;C:\xampp\php;C:\Program Files\Composer;C:\Program Files\Git\cmd;C:\Program Files\PuTTY;C:\Program Files\Microsoft VS Code\bin;D:\Programs\ffmpeg-8.0-essentials_build\bin;C:\Program Files\OpenSSL-Win64\bin;C:\Users\Amir\AppData\Local\Microsoft\WindowsApps;C:\Users\Amir\AppData\Local\GitHubDesktop\bin;C:\Users\Amir\AppData\Roaming\npm;C:\Program Files\Graphviz\bin;C:\Program Files\cursor\resources\app\bin;C:\Users\Amir\AppData\Local\Programs\Antigravity\bin;C:\Users\Amir\AppData\Local\Programs\Qoder\bin;C:\Users\Amir\AppData\Local\Python\bin;C:\Users\Amir\AppData\Local\Microsoft\WinGet\Links;C:\Android\sdk\cmdline-tools\latest\bin;C:\Android\sdk\platform-tools;C:\Users\Amir\AppData\Local\Programs\DockerDesktop\resources\bin;C:\Program Files\nodejs;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program Files\Git\usr\bin\core_perl
+USERNAME=Amir
+SHELL=C:\Program Files\Git\bin\bash.exe
+TERM=xterm-256color
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 191 Stepping 2, GenuineIntel
+TMP=C:\Users\Amir\AppData\Local\Temp
+TEMP=C:\Users\Amir\AppData\Local\Temp
+
+
+
+
+Compilation memory statistics disabled.
+
+Periodic native trim disabled
+
+---------------  S Y S T E M  ---------------
+
+OS:
+ Windows 11 , 64 bit Build 26100 (10.0.26100.7920)
+OS uptime: 10 days 7:40 hours
+Hyper-V role detected
+
+CPU: total 16 (initial active 16) (8 cores per cpu, 2 threads per core) family 6 model 191 stepping 2 microcode 0x34, cx8, cmov, fxsr, ht, mmx, 3dnowpref, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, lzcnt, tsc, tscinvbit, avx, avx2, aes, erms, clmul, bmi1, bmi2, adx, sha, fma, vzeroupper, clflush, clflushopt, clwb, hv, serialize, rdtscp, rdpid, fsrm, gfni, f16c, cet_ibt, cet_ss
+Processor Information for the first 16 processors :
+  Max Mhz: 2500, Current Mhz: 2500, Mhz Limit: 2500
+
+Memory: 4k page, system-wide physical 32509M (4277M free)
+TotalPageFile size 78081M (AvailPageFile size 541M)
+current process WorkingSet (physical memory assigned to process): 15M, peak: 15M
+current process commit charge ("private bytes"): 72M, peak: 580M
+
+vm_info: OpenJDK 64-Bit Server VM (25.0.4+7-LTS) for windows-amd64 JRE (25.0.4+7-LTS), built on 2026-07-21T00:00:00Z with MS VC++ 17.12 (VS2022)
+
+END.

@@ -1,0 +1,16 @@
+{
+  "joinTxHash": "0x6bb3bb4361c98816d9c2289917cc379c75307c54b096c8a4a215043c8dc4e683",
+  "joinStatus": 1,
+  "activateTxHash": "0xaa9e5a70f7861cb48abea69b5cab777accf6f539e46cb46df0e7bb984b57143f",
+  "activateStatus": 1,
+  "activatedInBlock": 651,
+  "isValidatorAfter": true,
+  "activeCountAfter": "5",
+  "validatorsAfter": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+    "0x7418B8c56b27F689C19AbC59A735cFc70160fD07"
+  ]
+}

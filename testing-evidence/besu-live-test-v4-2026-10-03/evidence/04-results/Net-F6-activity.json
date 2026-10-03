@@ -1,0 +1,307 @@
+{
+  "startedAt": "2026-10-03T11:07:02.525Z",
+  "plan": "fee transfer each block 92..110; membership sent after block 98 (lands ~99); plain inflow sent after block 99 (lands in 100)",
+  "txs": [
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 92,
+      "minedInBlock": 93,
+      "hash": "0x459768f3c62d8f237eae6426410989654d941f74a5b6887dfb7628a58afd6ce5",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 93,
+      "minedInBlock": 94,
+      "hash": "0xcf6649b9c647bd2e9e7357aa910cbce5c0b0c70543e8733fe0f2321acd77d532",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 94,
+      "minedInBlock": 95,
+      "hash": "0xdf2877031e9baf97d2abbee0e31410614088ea5d60568bc0b3c801ffd3f545ee",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 95,
+      "minedInBlock": 96,
+      "hash": "0xf9e914cfacb7daf5aa5e0b62cbab84f2ec8c0498561007d7b287408ab2675d92",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 96,
+      "minedInBlock": 97,
+      "hash": "0xccac2609d4685f8fd8271d0bfb83cb39cef92fb0ad9c12e266f2615572105d50",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 97,
+      "minedInBlock": 98,
+      "hash": "0xa000bf15faee24988c943947680a91da68519b60e0c6818b6f83c6cdcb130fb5",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 98,
+      "minedInBlock": 99,
+      "hash": "0x6b694951084f7fd49ee3c229ed0ad1937c00325f24f568b060161cdb281cada9",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 99,
+      "minedInBlock": 100,
+      "hash": "0xee37a123113c9fa33deca236bcd80658b848dca6afe02803e70ce5f89e46cbb8",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "plain-transfer-into-distributor",
+      "sentAfterBlock": 99,
+      "minedInBlock": 100,
+      "hash": "0x37842b70c577434367550cbcc7bf85ede4918ea1f44f6e9c33beffb771b6b868",
+      "status": 1,
+      "gasUsed": "22491",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "requestMembership(C6)",
+      "sentAfterBlock": 98,
+      "minedInBlock": 99,
+      "hash": "0xfd6355d2d716063afd61e5fd07200dcc1a1066f9e6aed098363b6879bd044fc1",
+      "status": 1,
+      "gasUsed": "213349",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 100,
+      "minedInBlock": 101,
+      "hash": "0xa6e93c288a86516d673c88afd510c69cf074cbb7b06fcc0344267ed04a48c530",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 101,
+      "minedInBlock": 102,
+      "hash": "0xb92d612b43a8ba700d351c5fa1dabd525558838c25c549792bc915419bfc9030",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 102,
+      "minedInBlock": 103,
+      "hash": "0x973bd5fa49fd5cd7df0ea52519855ebf72139382fd598d606466e071d5ff3b77",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 103,
+      "minedInBlock": 104,
+      "hash": "0x113b03d13af90067cf7dc59bb49c2698adff6595d36296762d8fcfd904e24607",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 104,
+      "minedInBlock": 105,
+      "hash": "0x91dac34649a55b170ed8af4afb7929a5219810db54b8e2f3ab589f0f6d3c2851",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 105,
+      "minedInBlock": 106,
+      "hash": "0xc9a73fa90b3e74a1e97fae7ed8df5b51943b2d01346e0d7a5b5dc3aa75bec994",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 106,
+      "minedInBlock": 107,
+      "hash": "0xebfd192baf482e31eb4de7ab8be42b7c872dc235a11f68eacd1088508ba5cef9",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 107,
+      "minedInBlock": 108,
+      "hash": "0xe080b81b7803bebad0349a927a2e5293b0a3e78fca55cd3de1ea8d0a7a8f6f7d",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 108,
+      "minedInBlock": 109,
+      "hash": "0x959981e6121bacf1fe8455cacdb4837f8d79474007b84cb45a7c17c723da29a6",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 109,
+      "minedInBlock": 110,
+      "hash": "0xcf56d5db48035d32ea8ca2096c5d97fea01fbaf23b45c6bc19bc38bac6ef8a78",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "sentAfterBlock": 110,
+      "minedInBlock": 111,
+      "hash": "0x0f5292b099de6372b16a0500676e45f8e25251ae0cac2ef885c43d9b2c97d7c2",
+      "status": 1,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    }
+  ],
+  "preconditions": {
+    "head": 91,
+    "activeValidators": 5,
+    "distributorBalance": "182000000000000000000"
+  },
+  "membership": {
+    "threshold": "500000000000000000000000",
+    "fee": "20000000000000000000000"
+  },
+  "blocksNonEmpty": [
+    {
+      "n": 90,
+      "txs": 0
+    },
+    {
+      "n": 91,
+      "txs": 0
+    },
+    {
+      "n": 92,
+      "txs": 0
+    },
+    {
+      "n": 93,
+      "txs": 1
+    },
+    {
+      "n": 94,
+      "txs": 1
+    },
+    {
+      "n": 95,
+      "txs": 1
+    },
+    {
+      "n": 96,
+      "txs": 1
+    },
+    {
+      "n": 97,
+      "txs": 1
+    },
+    {
+      "n": 98,
+      "txs": 1
+    },
+    {
+      "n": 99,
+      "txs": 2
+    },
+    {
+      "n": 100,
+      "txs": 2
+    },
+    {
+      "n": 101,
+      "txs": 1
+    },
+    {
+      "n": 102,
+      "txs": 1
+    },
+    {
+      "n": 103,
+      "txs": 1
+    },
+    {
+      "n": 104,
+      "txs": 1
+    },
+    {
+      "n": 105,
+      "txs": 1
+    },
+    {
+      "n": 106,
+      "txs": 1
+    },
+    {
+      "n": 107,
+      "txs": 1
+    },
+    {
+      "n": 108,
+      "txs": 1
+    },
+    {
+      "n": 109,
+      "txs": 1
+    },
+    {
+      "n": 110,
+      "txs": 1
+    },
+    {
+      "n": 111,
+      "txs": 1
+    },
+    {
+      "n": 112,
+      "txs": 0
+    }
+  ],
+  "postconditions": {
+    "head": 113,
+    "activeValidatorsStill": 5
+  },
+  "kindsMined": {
+    "fee-transfer": 19,
+    "plain-transfer-into-distributor": 1,
+    "requestMembership(C6)": 1
+  }
+}

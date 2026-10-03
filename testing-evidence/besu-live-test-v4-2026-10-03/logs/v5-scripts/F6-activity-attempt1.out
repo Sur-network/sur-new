@@ -1,0 +1,11 @@
+fee-transfer sent after 93 mined in 94
+fee-transfer sent after 95 mined in 96
+fee-transfer sent after 97 mined in 98
+fee-transfer sent after 99 mined in 100
+fee-transfer sent after 101 mined in 102
+fee-transfer sent after 103 mined in 104
+fee-transfer sent after 105 mined in 106
+fee-transfer sent after 107 mined in 108
+TypeError: Cannot read properties of null (reading 'transactions')
+    at main (D:\Amir\Business\SUR\Test\besu-test-v4\hardhat\scripts\testonly-f6-activity.js:39:160)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

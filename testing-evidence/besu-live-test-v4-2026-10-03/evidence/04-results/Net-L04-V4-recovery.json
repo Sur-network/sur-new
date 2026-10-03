@@ -1,0 +1,8 @@
+{
+  "massFailureResolveTx": "0x8d295cfc2475e1fbc32b9980833200f47e1a69f3a0d612368792c2fb92327ca1",
+  "massFailureStatus": 1,
+  "v4RecoveryTx": "0x9d0940329891daa1e5c86967bce2f1b622e859bc6f6e0638f31f4743980bb4cf",
+  "v4Status": 1,
+  "countBefore": "4",
+  "countAfter": "5"
+}

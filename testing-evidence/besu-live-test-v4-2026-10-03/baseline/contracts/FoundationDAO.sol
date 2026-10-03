@@ -1,0 +1,434 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+/// @notice Minimal ERC20 interface for token transfers
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
+/// @title FoundationDAO
+/// @notice Deployed at the fixed genesis address SurAddresses.FOUNDATION_DAO (0x1111...1111).
+///         Governance contract for the SUR Foundation (renamed from MemberDAO). Manages the
+///         foundation's own members and funds.
+///
+///         GOVERNANCE THRESHOLDS (final — corrected after an explicit user decision):
+///           - AddMember, RemoveMember: TWO-THIRDS supermajority, ceil(2n/3) of
+///             current members — a deliberately higher bar for membership changes specifically.
+///           - SendETH, SendERC20, Execute: simple majority, floor(n/2) + 1. ✅ CORRECTED:
+///             SendETH (including this contract's genesis-allocated 20,000,000 Suren balance —
+///             see design doc section 6 / foundation charter article 3-6) was previously grouped
+///             under the two-thirds bar above; every kind of Foundation payment now uses the
+///             same simple-majority threshold instead, per an explicit user decision.
+///
+///         ⚠️ REMOVED (updated decision): `proposeRequestTreasuryBudget` / `RequestTreasuryBudget`
+///         — judged not useful and removed entirely. This contract now has NO connection
+///         whatsoever to ValidatorsTreasury; it cannot request, propose, or trigger any
+///         expenditure there. The only way SUR funds now reach the foundation from
+///         ValidatorsTreasury is if an active validator or a ValidatorsBoard member initiates
+///         that proposal themselves (see ValidatorsTreasury.sol / ValidatorsBoard.sol) — the
+///         foundation has no self-service request path any more.
+///
+///         Being a foundation member does NOT restrict a person's other civil rights — a
+///         foundation member may simultaneously be a network validator and/or a member of
+///         ValidatorsBoard; nothing in this contract or ValidatorsRegistry/ValidatorsBoard
+///         checks for or restricts this overlap.
+///
+///         IMPORTANT — governance boundary (design doc section 4): the foundation has NO
+///         control over the network, validators, or any oracle related to consensus/validator
+///         status. ✅ CORRECTED (was stale — the absolute "any oracle" claim below omitted a
+///         real exception): this contract DOES still control two oracles tied to its own
+///         off-chain operations — identityOracle (in IdentityRegistry, rotatable via
+///         proposeExecute) and paymentOracle (in SurenSale) — neither of which has any bearing
+///         on consensus or validator eligibility. The earlier design
+///         where this contract (as `MemberDAO`) held `setDistributionOracle` /
+///         `setValidatorSyncOracle` power over BlockRewardDistributor has been fully retired —
+///         those functions, the old BLOCK_REWARD_DISTRIBUTOR constant, and the corresponding
+///         proposal types have been removed entirely, not just deprecated. Oracle control over
+///         consensus/validator-related oracles now
+///         belongs exclusively to ValidatorsBoard (routine rotation) and a full validator vote
+///         (structural changes) — see ValidatorsBoard.sol and BlockRewardDistributor.sol.
+///
+///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
+///         the genesis `alloc`, so a constructor would never execute on the real chain. The
+///         initial 15 foundation members are instead seeded via the off-chain genesis-building
+///         tool (simulate-and-extract, or direct storage computation — see the 🔶 GENESIS
+///         FILL-IN note below), instead of the old single-caller `register()` bootstrap.
+///         Separately, the genesis `alloc` credits this contract's own address with
+///         20,000,000 Suren (native currency, not a token transfer) — the initial distribution
+///         of base network tokens the foundation is responsible for per the charter's article
+///         3-6; distributed onward via proposeSendETH proposals, subject to the simple-majority
+///         threshold like every other kind of Foundation payment.
+contract FoundationDAO {
+    // ------------------------------------------------------------------
+    // Data structures
+    // ------------------------------------------------------------------
+    struct Member {
+        string name;
+        address account;
+    }
+
+    enum ProposalType { AddMember, RemoveMember, SendETH, SendERC20, Execute }
+    enum ProposalStatus { Pending, Executed }
+
+    /// @dev ✅ FIXED (critical stale-vote bug found in review — same class as every other
+    ///      proposal/vote mechanism in this project, but this one was missed in the earlier
+    ///      pass): `requiredVotes`/`expiresAt` are now snapshotted/fixed at proposal creation,
+    ///      exactly like BlockRewardDistributor's ShareProposal, ValidatorsRegistry's
+    ///      ParamProposal, and ValidatorsTreasury's Expenditure/ParamProposal. Previously,
+    ///      `_requiredVotes()` was recomputed live from the CURRENT memberList.length on every
+    ///      vote, while `votes` only ever increased — meaning a proposal (including one to
+    ///      spend the Foundation's 20,000,000 Suren genesis balance, add/remove members, or
+    ///      make an arbitrary call via proposeExecute) that failed to reach its threshold at 15
+    ///      members could later become executable with ZERO new votes, purely because
+    ///      membership shrank enough that the live-recomputed threshold fell below the old,
+    ///      frozen tally.
+    struct Proposal {
+        uint256 id;
+        ProposalType pType;
+        string description;
+        address proposer;
+        string newMemberName;   // only for AddMember
+        address targetAccount;  // target member, transfer/call destination, or treasury budget recipient
+        uint256 amount;         // ETH or token amount, or value for Execute
+        address tokenAddress;   // only for SendERC20
+        bytes data;             // only for Execute
+        uint256 votes;
+        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, never recomputed
+        uint256 createdAt;
+        uint256 expiresAt; // ✅ NEW — proposal can no longer be voted on or executed after this
+        ProposalStatus status;
+        mapping(address => bool) hasVoted;
+        // L04 (owner decision): membershipNonce when the proposal was created; only members whose memberSinceNonce <= this may vote.
+        uint256 createdAtNonce;
+    }
+
+    /// @notice ✅ NEW: how long a Foundation proposal remains votable/executable after
+    ///         creation. A proposal that can't gather the required majority within this window
+    ///         should be re-proposed fresh (with a fresh membership snapshot) rather than left
+    ///         open indefinitely.
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
+
+    // ------------------------------------------------------------------
+    // State variables
+    //
+    // 🔶 GENESIS FILL-IN: the 15 founding foundation members. `memberList` is a dynamic array and
+    // `memberIndex`/`isMember` are mappings — Solidity has no syntax for populating any of them
+    // with a loop outside a function, so this initial state cannot be expressed as a simple
+    // state-variable initializer here. The off-chain genesis-building tool must either
+    // (a) simulate this contract's deployment with the real seeding logic below, on a temporary
+    // local chain, and copy the resulting storage into the final genesis file, or (b) directly
+    // compute and write the corresponding storage slots into the genesis `alloc`. See
+    // "sur-contracts-deploy-notes.md" for the full recipe.
+    //
+    // Reference logic (not live code — for the genesis tool to reproduce, either by simulation
+    // or by direct storage computation) — for each of the 15 founding (name, account) pairs:
+    //   memberList.push(Member({name: name, account: account}));
+    //   memberIndex[account] = memberList.length; // 1-based
+    //   isMember[account] = true;
+    // ------------------------------------------------------------------
+    Member[] public memberList;
+    mapping(address => uint256) private memberIndex; // 1-based index into memberList, 0 means not a member
+    mapping(address => bool) public isMember;
+
+    uint256 public proposalCount;
+    mapping(uint256 => Proposal) private proposals;
+
+    // L04 (owner decision): eligibility snapshot by an ordered counter, not a timestamp — exact even for changes in the same block.
+    // Incremented on every add/remove; memberSinceNonce is the counter value at which the member (re)joined (0 = genesis member).
+    uint256 public membershipNonce;
+    mapping(address => uint256) public memberSinceNonce;
+
+    // ------------------------------------------------------------------
+    // Events
+    // ------------------------------------------------------------------
+    event ProposalCreated(uint256 indexed id, ProposalType pType, address indexed proposer);
+    event Voted(uint256 indexed id, address indexed voter, uint256 totalVotes, uint256 requiredVotes);
+    event ProposalExecuted(uint256 indexed id, ProposalType pType);
+    event MemberAdded(address indexed account, string name);
+    event MemberRemoved(address indexed account);
+
+    modifier onlyMember() {
+        require(isMember[msg.sender], "FoundationDAO: caller is not a member");
+        _;
+    }
+
+    receive() external payable {}
+
+    // ------------------------------------------------------------------
+    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly into
+    // the genesis `alloc` (its constructor would never execute on the real chain). See
+    // "sur-contracts-deploy-notes.md" for the full simulate-and-extract recipe. Separately, the
+    // genesis `alloc` must also credit this contract's own address with 20,000,000 Suren (native
+    // currency — see the contract-level documentation above and sur-tokenomics.md for the full,
+    // three-row genesis distribution).
+    // ------------------------------------------------------------------
+
+    // ------------------------------------------------------------------
+    // Proposal creation — members only
+    // ------------------------------------------------------------------
+    function proposeAddMember(string calldata description, string calldata name, address account) external onlyMember returns (uint256) {
+        require(account != address(0), "FoundationDAO: zero address");
+        require(!isMember[account], "FoundationDAO: already a member");
+        require(bytes(name).length > 0, "FoundationDAO: empty name");
+        return _createProposal(description, ProposalType.AddMember, name, account, 0, address(0), "");
+    }
+
+    function proposeRemoveMember(string calldata description, address account) external onlyMember returns (uint256) {
+        require(isMember[account], "FoundationDAO: not a member");
+        return _createProposal(description, ProposalType.RemoveMember, "", account, 0, address(0), "");
+    }
+
+    function proposeSendETH(string calldata description, address to, uint256 amount) external onlyMember returns (uint256) {
+        // Note: this is also the mechanism for Article 3-6 of the foundation's charter (initial
+        // distribution of genesis-minted Suren, the chain's native currency, by the foundation
+        // to network participants) — no separate distribution contract is needed. Suren credited
+        // to this contract's own genesis `alloc` balance can simply be sent out member-by-member
+        // proposal through this same function, since Suren is native currency, not a token.
+        require(to != address(0), "FoundationDAO: zero address");
+        return _createProposal(description, ProposalType.SendETH, "", to, amount, address(0), "");
+    }
+
+    function proposeSendERC20(string calldata description, address token, address to, uint256 amount) external onlyMember returns (uint256) {
+        require(token != address(0) && to != address(0), "FoundationDAO: zero address");
+        return _createProposal(description, ProposalType.SendERC20, "", to, amount, token, "");
+    }
+
+    /// @notice Execute arbitrary code (data) on a target address, subject to majority member consensus
+    /// @notice ✅ FIXED (governance-bypass bug found in review, kept fixed even after a later
+    ///         quorum decision made it less severe): `Execute` used to accept ANY `value`, and
+    ///         _execute() below forwarded it verbatim via `target.call{value: amount}(data)` —
+    ///         meaning a member could transfer any amount of the Foundation's Suren by calling
+    ///         proposeExecute() with an empty `data` and a nonzero `value`, using this function's
+    ///         quorum instead of proposeSendETH()'s. ✅ DECIDED (later, explicit correction): both
+    ///         functions now use the SAME simple-majority quorum anyway (see _requiredVotes()
+    ///         below — every kind of Foundation payment does), so this particular bypass no
+    ///         longer changes the vote count needed. The `value == 0` requirement is kept
+    ///         regardless, as good separation of concerns: Suren transfers have one dedicated,
+    ///         auditable path (proposeSendETH()), and Execute stays reserved for calls that don't
+    ///         move the Foundation's native balance at all.
+    function proposeExecute(string calldata description, address target, uint256 value, bytes calldata data) external onlyMember returns (uint256) {
+        require(target != address(0), "FoundationDAO: zero address");
+        require(value == 0, "FoundationDAO: Execute cannot move Suren - use proposeSendETH for that");
+        return _createProposal(description, ProposalType.Execute, "", target, value, address(0), data);
+    }
+
+    function _createProposal(
+        string memory description,
+        ProposalType pType,
+        string memory name,
+        address target,
+        uint256 amount,
+        address token,
+        bytes memory data
+    ) private returns (uint256) {
+        proposalCount++;
+        uint256 id = proposalCount;
+
+        Proposal storage p = proposals[id];
+        p.id = id;
+        p.description = description;
+        p.pType = pType;
+        p.proposer = msg.sender;
+        p.newMemberName = name;
+        p.targetAccount = target;
+        p.amount = amount;
+        p.tokenAddress = token;
+        p.data = data;
+        p.requiredVotes = _requiredVotes(pType); // ✅ frozen now, at creation time
+        p.createdAt = block.timestamp;
+        p.expiresAt = block.timestamp + PROPOSAL_EXPIRY; // ✅ NEW
+        p.createdAtNonce = membershipNonce;
+        p.status = ProposalStatus.Pending;
+
+        emit ProposalCreated(id, pType, msg.sender);
+
+        // the proposer is automatically counted as a "yes" vote
+        _vote(id, msg.sender);
+
+        return id;
+    }
+
+    // ------------------------------------------------------------------
+    // Voting — once the majority threshold is reached, the proposal executes immediately
+    // ------------------------------------------------------------------
+    function vote(uint256 proposalId) external onlyMember {
+        _vote(proposalId, msg.sender);
+    }
+
+    function _vote(uint256 proposalId, address voter) private {
+        Proposal storage p = proposals[proposalId];
+        require(p.id != 0, "FoundationDAO: proposal not found");
+        require(p.status == ProposalStatus.Pending, "FoundationDAO: proposal not pending");
+        require(block.timestamp <= p.expiresAt, "FoundationDAO: proposal has expired");
+        require(!p.hasVoted[voter], "FoundationDAO: already voted");
+        // L04: current membership is required here too, not only via onlyMember — a removed member's memberSinceNonce is reset to 0,
+        // so the snapshot condition alone would not exclude it.
+        require(isMember[voter], "FoundationDAO: not a member");
+        // L04: only members that were already members when the proposal was created may vote; a member added (or re-added)
+        // later may not. Membership changes never invalidate the proposal. Removed members fail onlyMember; their earlier vote stays.
+        require(memberSinceNonce[voter] <= p.createdAtNonce, "FoundationDAO: not eligible - not a member when this proposal was created");
+
+        p.hasVoted[voter] = true;
+        p.votes++;
+
+        emit Voted(proposalId, voter, p.votes, p.requiredVotes);
+
+        if (p.votes >= p.requiredVotes) {
+            _execute(p);
+        }
+    }
+
+    /// @dev Voting threshold depends on the proposal type:
+    ///      - AddMember, RemoveMember: TWO-THIRDS supermajority, ceil(2n/3) — a deliberately
+    ///        higher bar for membership changes specifically.
+    ///      - Everything else, including SendETH (spending the genesis-allocated 20,000,000
+    ///        Suren balance this contract holds — Suren is native currency, see design doc
+    ///        section 3-6 / the foundation charter's article 3-6), SendERC20, and Execute:
+    ///        simple majority, floor(n/2) + 1. ✅ DECIDED (explicit correction — SendETH was
+    ///        previously grouped with the membership-change supermajority; every kind of
+    ///        Foundation payment now uses the same simple-majority bar instead).
+    ///      e.g. 15 members: simple majority -> 8, two-thirds supermajority -> 10.
+    /// @notice ✅ DECIDED (explicit user correction — final): SendETH was previously grouped
+    ///         with AddMember/RemoveMember under a two-thirds quorum. That was wrong — every kind
+    ///         of Foundation payment (spending Suren) uses simple majority, matching SendERC20
+    ///         and Execute, which never required more than that. Only membership changes
+    ///         (AddMember, RemoveMember) keep the two-thirds bar.
+    function _requiredVotes(ProposalType pType) private view returns (uint256) {
+        uint256 n = memberList.length;
+        if (pType == ProposalType.AddMember || pType == ProposalType.RemoveMember) {
+            return (2 * n + 2) / 3; // ceil(2n/3)
+        }
+        return (n / 2) + 1;
+    }
+
+    // ------------------------------------------------------------------
+    // Proposal execution once consensus is reached
+    // ------------------------------------------------------------------
+    function _execute(Proposal storage p) private {
+        p.status = ProposalStatus.Executed;
+
+        if (p.pType == ProposalType.AddMember) {
+            _addMember(p.targetAccount, p.newMemberName);
+            emit MemberAdded(p.targetAccount, p.newMemberName);
+
+        } else if (p.pType == ProposalType.RemoveMember) {
+            _removeMember(p.targetAccount);
+            emit MemberRemoved(p.targetAccount);
+
+        } else if (p.pType == ProposalType.SendETH) {
+            (bool success, ) = p.targetAccount.call{value: p.amount}("");
+            require(success, "FoundationDAO: ETH transfer failed");
+
+        } else if (p.pType == ProposalType.SendERC20) {
+            bool success = IERC20(p.tokenAddress).transfer(p.targetAccount, p.amount);
+            require(success, "FoundationDAO: ERC20 transfer failed");
+
+        } else if (p.pType == ProposalType.Execute) {
+            (bool success, ) = p.targetAccount.call{value: p.amount}(p.data);
+            require(success, "FoundationDAO: execution failed");
+        }
+
+        emit ProposalExecuted(p.id, p.pType);
+    }
+
+    // ------------------------------------------------------------------
+    // Internal member management functions
+    // ------------------------------------------------------------------
+    function _addMember(address account, string memory name) private {
+        require(account != address(0), "FoundationDAO: zero address");
+        require(!isMember[account], "FoundationDAO: already a member");
+        memberList.push(Member({name: name, account: account}));
+        memberIndex[account] = memberList.length; // 1-based index
+        isMember[account] = true;
+        membershipNonce++;
+        memberSinceNonce[account] = membershipNonce;
+    }
+
+    function _removeMember(address account) private {
+        require(isMember[account], "FoundationDAO: not a member");
+        uint256 idx = memberIndex[account] - 1;
+        uint256 lastIdx = memberList.length - 1;
+
+        if (idx != lastIdx) {
+            memberList[idx] = memberList[lastIdx];
+            memberIndex[memberList[idx].account] = idx + 1;
+        }
+        memberList.pop();
+
+        delete memberIndex[account];
+        isMember[account] = false;
+        membershipNonce++;
+        delete memberSinceNonce[account];
+    }
+
+    // ------------------------------------------------------------------
+    // View helper functions
+    // ------------------------------------------------------------------
+    function getMemberCount() external view returns (uint256) {
+        return memberList.length;
+    }
+
+    function getAllMembers() external view returns (Member[] memory) {
+        return memberList;
+    }
+
+    /// @notice Voting threshold required right now for a given proposal type — 2/3
+    ///         supermajority for AddMember/RemoveMember, simple majority for everything else
+    ///         (including SendETH — every kind of Foundation payment).
+    function requiredVotesNow(ProposalType pType) external view returns (uint256) {
+        return _requiredVotes(pType);
+    }
+
+    function getProposal(uint256 id) external view returns (
+        ProposalType pType,
+        address proposer,
+        string memory newMemberName,
+        address targetAccount,
+        uint256 amount,
+        address tokenAddress,
+        bytes memory data,
+        uint256 votes,
+        ProposalStatus status
+    ) {
+        Proposal storage p = proposals[id];
+        return (
+            p.pType,
+            p.proposer,
+            p.newMemberName,
+            p.targetAccount,
+            p.amount,
+            p.tokenAddress,
+            p.data,
+            p.votes,
+            p.status
+        );
+    }
+
+    /// @notice D05 (audit 2026-09-30): read-only companion to getProposal(), which is kept unchanged for existing callers.
+    ///         `proposals` is private and getProposal() does not return these four fields, so without this getter a UI
+    ///         could not show a proposal's description, its quorum SNAPSHOTTED at creation (requiredVotesNow() is only the
+    ///         quorum a NEW proposal would get and differs once membership changes), or its expiry.
+    ///         For an id that was never created, every field is empty/zero (same behaviour as getProposal()).
+    function getProposalMeta(uint256 id) external view returns (
+        string memory description,
+        uint256 requiredVotes,
+        uint256 createdAt,
+        uint256 expiresAt
+    ) {
+        Proposal storage p = proposals[id];
+        return (p.description, p.requiredVotes, p.createdAt, p.expiresAt);
+    }
+
+    function getEthBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getErc20Balance(address token) external view returns (uint256) {
+        return IERC20(token).balanceOf(address(this));
+    }
+
+    function hasVoted(uint256 proposalId, address voter) external view returns (bool) {
+        return proposals[proposalId].hasVoted[voter];
+    }
+}

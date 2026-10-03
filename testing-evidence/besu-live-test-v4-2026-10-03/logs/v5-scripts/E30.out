@@ -1,0 +1,28 @@
+preconditions: {"head":570,"blockGasLimit":30000000,"epochCount":"0","lastSettledBlock":"0","rewardRateChangeCount":"399","firstEntry":["151","2000000000000000000"],"lastEntry":["549","2000000000000000000"],"distributorBalance":"1144000000000000000000","payeesTotal":150,"payeesAllEverActivated":true,"anyPayeeIsValidator":false,"rpcGasCapDefault_note":"Besu 26.9.0 --rpc-gas-cap default 100000000 (read from `besu --help`); not overridden in config.toml. --rpc-tx-feecap default 1e18 wei."}
+N=5 k=0: 1114170
+N=5 k=1: 1115006
+N=5 k=20: 1163124
+N=5 k=100: 1385206
+N=5 k=399: 2234257
+N=25 k=0: 3866360
+N=25 k=1: 3867195
+N=25 k=20: 3915316
+N=25 k=100: 4137412
+N=25 k=399: 4986509
+N=50 k=0: 7306642
+N=50 k=1: 7307477
+N=50 k=20: 7355602
+N=50 k=100: 7577713
+N=50 k=399: 8426869
+N=100 k=0: 14187189
+N=100 k=1: 14188025
+N=100 k=20: 14236158
+N=100 k=100: 14458300
+N=100 k=399: 15307573
+N=150 k=0: 21067697
+N=150 k=1: 21068534
+N=150 k=20: 21116674
+N=150 k=100: 21338847
+N=150 k=399: 22188239
+E05: {"combination":{"N":150,"k":399,"toBlock":549},"estimateGas":22188239,"txGasLimit":27735299,"txHash":"0x6fecdb0b8ffe5cae39b7b5c58d45f498bb2c4e109d85029e138a23076c5b2136","status":1,"gasUsed":"21992470","gasUsedOverEstimate":0.9911769023219914,"block":574,"epochCountAfter":"1","lastSettledAfter":"549"}
+wrote evidence: Net-E30-E.json

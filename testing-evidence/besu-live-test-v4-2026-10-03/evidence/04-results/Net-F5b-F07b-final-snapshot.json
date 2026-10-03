@@ -1,0 +1,24 @@
+{
+  "NET": "Net-F5b",
+  "node5": "default heap (Besu reported Maximum heap size 7.94 GB)",
+  "window": {
+    "transitionBlock300SeenOnNode5": "2026-10-03T11:15:33Z",
+    "finalSnapshotUtc": "2026-10-03T11:52:01.589Z"
+  },
+  "jcmdSamples": 31,
+  "heapUsedMB_min": 2049,
+  "heapUsedMB_max": 5524,
+  "heapCommittedMB": 7112,
+  "postGcFloorsMB": [
+    "11:30:39 2080",
+    "11:44:48 2049"
+  ],
+  "node5InvalidBlock300Lines": 1111,
+  "outOfMemoryLines": 0,
+  "terminatingLines": 0,
+  "heights": {
+    "node1": 698,
+    "node5": 299
+  },
+  "peersNode5": 0
+}

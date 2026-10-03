@@ -1,0 +1,35 @@
+{
+  "pre": {
+    "boardVersion": "1",
+    "activeCount": "5"
+  },
+  "proposalP_id": 1,
+  "cl02_1": {
+    "exitTxHash": "0x23e3d8119261976de11758cf9b7fb10808fc3847530a94243689b3c8a8dbe98b",
+    "exitStatus": 1,
+    "hasBoardAuthority_M_afterExit": false,
+    "isBoardMember_M_afterExit": true,
+    "M_vote_result": "BlockRewardDistributor: caller has no live board authority",
+    "otherVotes": [
+      {
+        "voter": "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+        "status": 1
+      },
+      {
+        "voter": "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+        "status": 1
+      }
+    ]
+  },
+  "cl02_2": {
+    "syncTxHash": "0x677feafac0c8c51e5e3830fe9e3ae5c89568a42125574eca30d4a3d065449945",
+    "syncStatus": 1,
+    "boardVersionBefore": "1",
+    "boardVersionAfterSync": "2",
+    "bumped": true,
+    "remainingMemberVoteOnOldP": "BlockRewardDistributor: board membership changed since this proposal was created - propose again",
+    "P2_vote_positive_control": {
+      "status": 1
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "startedAt": "2026-10-03T09:43:06.968Z",
+  "txs": [
+    {
+      "kind": "fee-transfer",
+      "hash": "0x98e73267b84b8890f5654151afbb4d219074893d318ed65b44aa123c266256e1",
+      "block": 63,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0xeae665cad4214c75b643a87e7ab8ac956b4e31a6492273687630bc94102a889e",
+      "block": 65,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x949ab131f7d77e8a9e979d3818579f8b2b1e8d51246748f05a28ceca8c67f40b",
+      "block": 68,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x43d045d188fb5d4c1c8dab65b5e9a9079db6ea62473ff57ceb5354ca5d44aa06",
+      "block": 70,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x34f6eab3016cac237202bb1b47b14a2701e31e84521a5aebd4f34cbc9d30f3cd",
+      "block": 72,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x6526f0631c66a185d5720a829a9cc6213c591622d9a13f21d5c4bd8cd97d15f5",
+      "block": 74,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x7200fe24d594b098874534cbda07a3c4b4fd56f189dd78183bd6802a203fa0c8",
+      "block": 77,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "fee-transfer",
+      "hash": "0x195a85b347f3b6fbc15265d314c27927089b09dfca8e7b8ba8909cce5486c528",
+      "block": 79,
+      "gasUsed": "21000",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "requestMembership(C6)",
+      "hash": "0xe2f0a44fd7bb6a3a92982e220b23f13d210d56c4f86a2cd716670e69dbe03ed8",
+      "block": 81,
+      "status": 1,
+      "gasUsed": "213349",
+      "effectiveGasPrice": "100000000000000"
+    },
+    {
+      "kind": "plain-transfer-into-distributor",
+      "hash": "0xb733db02e8837d9c8627f869e48baf9ed4a994b565df2bf14850be6d741ddaa2",
+      "block": 83,
+      "status": 1,
+      "valueWei": "7000000000000000000",
+      "gasUsed": "22491",
+      "effectiveGasPrice": "100000000000000"
+    }
+  ],
+  "preconditions": {
+    "head": 62,
+    "activeValidators": 6,
+    "distributorBalance": "124000000000000000000"
+  },
+  "membership": {
+    "threshold": "500000000000000000000000",
+    "fee": "20000000000000000000000"
+  },
+  "postconditions": {
+    "head": 83,
+    "activeValidatorsStill": 6
+  }
+}

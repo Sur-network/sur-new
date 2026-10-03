@@ -1,0 +1,8 @@
+--- a/offchain-services/sur-genesis-builder-tool-spec.md (before this round)
++++ b/offchain-services/sur-genesis-builder-tool-spec.md (this package)
+@@ -265,3 +265,5 @@
+ ## ۱۰. سؤالات باز
+ 
+ هیچ سؤال فنی باقی نمانده — تنها پیش‌نیاز، تکمیل واقعی فایل پیکربندی (بخش ۳) با مقادیر نهایی تصمیم‌گیری‌شده است، طبق `sur-master-open-items.md`.
++
++🔶 **تصمیم باز (آزمون Besu v4، ۲۰۲۶-۱۰-۰۳):** فایل پیکربندی بخش ۳ و خروجی ابزار هیچ ورودی یا خروجی برای `transitions.qbft` ندارد. آزمون v4 نشان داد همهٔ نودها، از جمله نودهای تازه‌وارد، باید همان transition پاداش را در genesis خود داشته باشند (وگرنه در ارتفاع X رد می‌شوند). اینکه ابزار genesis این را تولید کند یا رویهٔ جداگانه‌ای انجام دهد، **انتخاب نشده است** (`sur-reward-router-spec.md` بخش ۱۰.۳).

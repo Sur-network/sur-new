@@ -1,0 +1,6 @@
+[F03] range [1, 436] (len 436), S=0, head=436
+[F03] R=1009.0 F=0.0 M=0.0 X=0.0 P=0.0 | equation: {"available":true,"B_L":"1009000000000000000000","B_S":"0","lhs":"1009000000000000000000","rhs":"1009000000000000000000","closes":true,"residual":"0","note":"B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"}
+[F03] gates: {"equationCloses":true,"countComplete":true,"noUnknownMiners":true,"emptyBlockMethodAgreesWithTrace":true,"rewardAtOrBelowCap":false,"contractCap":"872000000000000000000","independentR":"1009000000000000000000","independentF":"0","submittedTotalRewardsEqualsIndependentR":true,"submittedTotalFeesEqualsIndependentF":true} blockers: []
+[F03] staticCall: {"revertReason":"BlockRewardDistributor: totalRewards exceed approved reward for range"}
+[F03] tx 0x18454ab434f69fe509e0ee1d20646d5cc86b49da756050df12a2a1021c56ebfd status=0 block=698
+wrote evidence: F03-reconcile.json

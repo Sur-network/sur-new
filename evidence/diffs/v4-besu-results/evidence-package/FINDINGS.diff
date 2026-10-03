@@ -1,0 +1,46 @@
+--- a/FINDINGS.md (previous 902-file package)
++++ b/FINDINGS.md (this package)
+@@ -266,7 +266,7 @@
+   With f=1 consumed, one more fault would halt the chain.
+ - **Caveat on F07:** node5 later terminated with `java.lang.OutOfMemoryError: Java heap space`, under
+   this test's `-Xmx512m` cap; it is not established that Besu would terminate on its own with a normal
+-  heap. **(Re-run with the default heap: FINDINGS.md item 18.)**
++  heap. **(Re-run with the default heap: FINDINGS.md item 18 — no OutOfMemoryError observed in about 36 minutes; the cause of the earlier crash is not established.)**
+ 
+ ## 11. Independent §D extraction only works inside Besu's ~512-block state window, and OUTSIDE it Besu answers `null` / `[]` — silently, not with an error
+ 
+@@ -378,19 +378,20 @@
+ - A network-design point worth recording: to get R=cap, R<cap and R>cap on three ranges of one network, Besu was given three
+   staged transitions (100→3, 150→2, 200→4 SUR) and the contract a single seeded entry `[(100, 3 SUR)]`; the first range ends at 149.
+ 
+-## 18. F07 re-run with the default heap: the node does NOT run out of memory in the observed ~37 minutes; the earlier crash was the 512 MB cap
++## 18. Operational finding: a node with a mismatched genesis retries the invalid block continuously and uses a lot of memory; with the default heap no OutOfMemoryError was observed in about 36 minutes
+ 
+-**Classification:** رفتار Besu / environment. Evidence: `04-results/Net-F5b-F07.json`, `Net-F5b-F07b-monitor.json`, `Net-F5b-F07b-final-snapshot.json`,
++**Classification:** رفتار Besu / operational finding. Evidence: `04-results/Net-F5b-F07.json`, `Net-F5b-F07b-monitor.json`, `Net-F5b-F07b-final-snapshot.json`,
+ `logs/v5-scripts/F07b-jcmd.log`, `logs/Net-F5b/node5.log`.
+-- Same scenario as F07 (transition at X=300 on nodes 1–4; node5 started without it), but **node5 alone without `-Xmx512m`** (Besu: `Maximum heap size: 7.94 GB`).
+-- Behaviour at X is identical: node5 rejects block 300 with the state-root mismatch and stays at **height 299** while the other four continue (head 698 at the
+-  end), block gaps of 13 s at 301, 305, 309, … (the slots where node5 is the round-0 proposer); node5's peer count flaps 0–4 and its log shows **1,111 retries of
+-  "Invalid block 300"** by the end.
+-- **Memory:** within ~2 minutes of block 300 node5's process grew from ~0.6 GB to ~7.5 GB (the JVM expands the heap to its ceiling because the retry loop allocates
+-  ≈ 270 MB/min of garbage), but `jcmd`/`jstat` show the **actually used heap saw-tooths between ≈ 2.05 and ≈ 5.5 GB and returns to the same floor after each GC
+-  (2,080 MB at 11:30 UTC, 2,049 MB at 11:44 UTC) — no monotonic leak.** The live set (≈ 2 GB) is larger than the old 512 MB cap, which explains why the capped node died within
+-  ~90 s.
+-- **Answer:** `OutOfMemoryError` did **not** recur: 0 `OutOfMemory`/`Terminating` lines in node5's log, process alive and responsive for the whole window
+-  (block 300 at 11:15:33 UTC → final snapshot 11:52:01 UTC, ≈ 36 minutes, ≈ 400 blocks on the healthy nodes). That is an observation over a finite window; the node
+-  is permanently stuck, still consuming ~2 GB live and CPU, and would still need operator action (QUESTIONS.md item 10). Note the Besu launcher sets
+-  `-XX:+ExitOnOutOfMemoryError`.
++- Same scenario as F07 (transition at X=300 on nodes 1–4; node5 started without it), but **node5 alone without `-Xmx512m`** (Besu reported `Maximum heap size: 7.94 GB`).
++- Behaviour at X is the same as in the capped run: node5 rejects block 300 with the state-root mismatch and stays at **height 299** while the other four continue (head 698 at the
++  end), with block gaps of 13 s at 301, 305, 309, … ; node5's peer count flaps between 0 and 4 and its log shows **1,111 repeated "Invalid block 300" rejections** by the end.
++- **Memory (observations):** within about 2 minutes of block 300 node5's process memory grew from ~0.6 GB to ~7.5 GB. In 31 `jcmd GC.heap_info` samples (every 60 s) the
++  *used* heap ranged from 2,049 MB to 5,524 MB; between collections it rose by roughly 250–300 MB per minute, and the sampled post-GC lows were 2,080 MB (11:30 UTC) and
++  2,049 MB (11:44 UTC). These are observations over one finite window; **they do not prove that there is no memory leak**, and they do not by themselves explain why the
++  capped run failed.
++- **Answer to the question asked:** **with the default heap, no `OutOfMemoryError` was observed in about 36 minutes** (0 `OutOfMemory`/`Terminating` lines in node5's log; process
++  alive and responsive throughout; block 300 at 11:15:33 UTC → final snapshot 11:52:01 UTC, ≈ 400 blocks on the healthy nodes). **The definitive cause of the earlier crash
++  (same scenario with `-Xmx512m`, `OutOfMemoryError` ≈ 90 s after block 300) was not established**; a relation to the heap size is plausible but only these two runs exist. The Besu
++  launcher sets `-XX:+ExitOnOutOfMemoryError`, which is why the capped run terminated at once.
++- **Why it is kept as an operational finding:** the node never recovers by itself (it stays at the old height, retrying and consuming memory and CPU) and needs operator action
++  (QUESTIONS.md item 10).

@@ -1,0 +1,5 @@
+[F04] range [1, 436] (len 436), S=0, head=436
+[F04] R=872.0 F=0.0 M=0.0 X=0.0 P=0.0 | equation: {"available":true,"B_L":"872000000000000000000","B_S":"0","lhs":"872000000000000000000","rhs":"872000000000000000000","closes":true,"residual":"0","note":"B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"}
+[F04] gates: {"equationCloses":true,"countComplete":true,"noUnknownMiners":true,"emptyBlockMethodAgreesWithTrace":true,"rewardAtOrBelowCap":true,"contractCap":"1009000000000000000000","independentR":"872000000000000000000","independentF":"0","submittedTotalRewardsEqualsIndependentR":true,"submittedTotalFeesEqualsIndependentF":true} blockers: []
+[F04] tx 0x833f07ba31789948343bf994fcb4add0d7e936560f73658a05f43807d839b846 status=1 block=699
+wrote evidence: F04-reconcile.json

@@ -1,0 +1,35 @@
+{
+  "NET": "Net-F4",
+  "node": "X7 (node7x, non-validator)",
+  "genesisUsed": "genesis-original-no-transition.json (sha256 6e38aaad... == the original Net-F4 genesis)",
+  "XPrime": 383,
+  "x7": {
+    "head": 382,
+    "peerCount": 0,
+    "block382Hash": "0xa07e3d40376195e5240eef9e32cde7a2cb4d620e8b7626ce86fea3416e0fc2dc",
+    "block383": null,
+    "block382EqualsNetwork": true
+  },
+  "network": {
+    "head": 463,
+    "block382Hash": "0xa07e3d40376195e5240eef9e32cde7a2cb4d620e8b7626ce86fea3416e0fc2dc",
+    "block383Hash": "0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99",
+    "block383StateRoot": "0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c"
+  },
+  "rawLogLines_first": [
+    "2026-10-03 12:56:14.525+0330 | main | INFO  | FullSyncTargetManager | Unable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness\r",
+    "2026-10-03 12:56:24.385+0330 | EthScheduler-Services-5 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b\r",
+    "2026-10-03 12:56:24.387+0330 | EthScheduler-Services-5 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b\r",
+    "2026-10-03 12:56:24.388+0330 | EthScheduler-Services-5 (importBlock) | INFO  | MainnetBlockValidator | Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]\r",
+    "Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)",
+    "2026-10-03 12:56:24.391+0330 | EthScheduler-Services-5 (importBlock) | WARN  | PipelineChainDownloader | Invalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)\r",
+    "2026-10-03 12:56:24.397+0330 | EthScheduler-Services-5 (importBlock) | WARN  | PipelineChainDownloader | Chain download failed. Restarting after short delay.\r",
+    "java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)\r",
+    "Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)\r",
+    "2026-10-03 12:56:26.910+0330 | EthScheduler-Services-1 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b\r",
+    "2026-10-03 12:56:26.911+0330 | EthScheduler-Services-1 (importBlock) | INFO  | AbstractBlockProcessor | failed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b\r",
+    "2026-10-03 12:56:26.911+0330 | EthScheduler-Services-1 (importBlock) | INFO  | MainnetBlockValidator | Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]\r"
+  ],
+  "totalMatchingLines": 86,
+  "verdict": "X7 imported blocks 1..382 identically to the network (block 382 hash equal), then rejected block 383 (= X') as invalid: World State Root mismatch (header 0x2875... vs calculated 0x3d5e...). It then disconnected from its sync target as BREACH_OF_PROTOCOL and has 0 peers. The hypothesised failure at X' is CONFIRMED on this Besu version."
+}

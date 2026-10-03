@@ -1,0 +1,28 @@
+preconditions: {"head":573,"blockGasLimit":15000000,"epochCount":"0","lastSettledBlock":"0","rewardRateChangeCount":"399","firstEntry":["151","2000000000000000000"],"lastEntry":["549","2000000000000000000"],"distributorBalance":"1150000000000000000000","payeesTotal":150,"payeesAllEverActivated":true,"anyPayeeIsValidator":false,"rpcGasCapDefault_note":"Besu 26.9.0 --rpc-gas-cap default 100000000 (read from `besu --help`); not overridden in config.toml. --rpc-tx-feecap default 1e18 wei."}
+N=5 k=0: 1114170
+N=5 k=1: 1115006
+N=5 k=20: 1163124
+N=5 k=100: 1385206
+N=5 k=399: 2234257
+N=25 k=0: 3866360
+N=25 k=1: 3867195
+N=25 k=20: 3915316
+N=25 k=100: 4137412
+N=25 k=399: 4986509
+N=50 k=0: 7306642
+N=50 k=1: 7307477
+N=50 k=20: 7355602
+N=50 k=100: 7577713
+N=50 k=399: 8426869
+N=100 k=0: 14187189
+N=100 k=1: 14188025
+N=100 k=20: 14236158
+N=100 k=100: 14458300
+N=100 k=399: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+N=150 k=0: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+N=150 k=1: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+N=150 k=20: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+N=150 k=100: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+N=150 k=399: -32000: Transaction processing could not be completed due to an exception (Out of gas)
+E05: {"combination":{"N":100,"k":100,"toBlock":250},"estimateGas":14458300,"txGasLimit":15000000,"txHash":"0xcda5ca04b922df8e984b8097e29154534c117b6b9ea2d18d8423d5c3e0f2f5f9","status":1,"gasUsed":"14323397","gasUsedOverEstimate":0.990669511629998,"block":577,"epochCountAfter":"1","lastSettledAfter":"250"}
+wrote evidence: Net-E15-E.json

@@ -1,0 +1,495 @@
+[2m2026-10-03 12:56:07.879+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mStarting Besu
+[m[2m2026-10-03 12:56:12.272+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mRPC HTTP JSON-RPC config: JsonRpcConfiguration{enabled=true, port=8837, host=127.0.0.1, corsAllowedDomains=[*], hostsAllowlist=[*], rpcApis=[ETH, NET, QBFT, ADMIN, WEB3, DEBUG, TRACE, TXPOOL], authenticationEnabled=false, authenticationCredentialsFile=null, authenticationPublicKeyFile=null, tlsConfiguration=Optional.empty, httpTimeoutSec=30, maxActiveConnections=80, maxBatchSize=1024}
+[m[2m2026-10-03 12:56:12.275+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing --bonsai-limit-trie-logs-enabled=false, since it cannot be enabled with --sync-mode=FULL and --data-storage-format=BONSAI.
+[m[2m2026-10-03 12:56:12.305+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mConnecting to 5 static nodes.
+[m[2m2026-10-03 12:56:12.316+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-03 12:56:12.585+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32m
+####################################################################################################
+#                                                                                                  #
+# Besu version 26.9.0                                                                              #
+#                                                                                                  #
+# Configuration:                                                                                   #
+# Network: Custom genesis file                                                                     #
+# D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\genesis-original-no-trans                     #
+# ition.json                                                                                       #
+# Network Id: 424414                                                                               #
+# Data storage: Bonsai                                                                             #
+# RocksDB max open files: 1239 (derived from available resources)                                  #
+# Sync mode: Full                                                                                  #
+# Sync min peers: 5                                                                                #
+# RPC HTTP APIs: ETH,NET,QBFT,ADMIN,WEB3,DEBUG,TRACE,TXPOOL                                        #
+# RPC HTTP port: 8837                                                                              #
+# Using LAYERED transaction pool implementation                                                    #
+# Using STACKED worldstate update mode                                                             #
+# Opcode optimizations enabled                                                                     #
+# Parallel transaction processing enabled                                                          #
+# BAL pruning enabled (retained BALs: 113056)                                                      #
+#                                                                                                  #
+# Host:                                                                                            #
+# Java: openjdk-java-25                                                                            #
+# Maximum heap size: 0.50 GB                                                                       #
+# OS: windows-x86_64                                                                               #
+# Total memory: 31.75 GB                                                                           #
+# CPU cores: 16                                                                                    #
+#                                                                                                  #
+# Plugin Registration Summary:                                                                     #
+# No plugins have been registered.                                                                 #
+# TOTAL = 0 of 0 plugins successfully registered.                                                  #
+#                                                                                                  #
+####################################################################################################
+[m[2m2026-10-03 12:56:12.586+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mSecurity Module: localfile
+[m[2m2026-10-03 12:56:12.587+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mLookup version metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\node7x\data
+[m[2m2026-10-03 12:56:12.587+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mVersionMetadata[m[2m | [m[32mNo version data detected. Writing Besu version 26.9.0 to metadata file
+[mjava.lang.RuntimeException: Couldn't load native library (gnark_eip_196). It wasn't available at lib-native/x86-64/gnark_eip_196.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.gnark.LibGnarkEIP196.<clinit>(LibGnarkEIP196.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.maybeEnableNative(AbstractAltBnPrecompiledContract.java:51)
+	at org.hyperledger.besu.evm.precompile.AbstractAltBnPrecompiledContract.<clinit>(AbstractAltBnPrecompiledContract.java:41)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1490)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-03 12:56:12.617+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of alt bn128
+[m[2m2026-10-03 12:56:12.618+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of modexp
+[m[2m2026-10-03 12:56:12.628+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the signature algorithm
+[m[2m2026-10-03 12:56:12.634+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java implementation of the blake2bf algorithm
+[mjava.lang.RuntimeException: Couldn't load native library (boringssl_precompiles). It wasn't available at lib-native/x86-64/boringssl_precompiles.dll or the library path.
+	at org.hyperledger.besu.nativelib.common.BesuNativeLibraryLoader.registerJNA(BesuNativeLibraryLoader.java:60)
+	at org.hyperledger.besu.nativelib.boringssl.BoringSSLPrecompiles.<clinit>(BoringSSLPrecompiles.java:35)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.maybeEnableNativeBoringSSL(P256VerifyPrecompiledContract.java:66)
+	at org.hyperledger.besu.evm.precompile.P256VerifyPrecompiledContract.<clinit>(P256VerifyPrecompiledContract.java:54)
+	at org.hyperledger.besu.cli.BesuCommand.configureNativeLibs(BesuCommand.java:1522)
+	at org.hyperledger.besu.cli.BesuCommand.initialProcess(BesuCommand.java:1095)
+	at org.hyperledger.besu.cli.BesuCommand.run(BesuCommand.java:1057)
+	at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+	at picocli.CommandLine.access$1500(CommandLine.java:148)
+	at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2469)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2461)
+	at picocli.CommandLine$RunLast.handle(CommandLine.java:2423)
+	at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+	at picocli.CommandLine$RunLast.execute(CommandLine.java:2425)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createExecuteTask$0(BesuCommand.java:898)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.lambda$createPluginRegistrationTask$0(BesuCommand.java:931)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.util.ConfigDefaultValueProviderStrategy.execute(ConfigDefaultValueProviderStrategy.java:58)
+	at picocli.CommandLine.execute(CommandLine.java:2174)
+	at org.hyperledger.besu.cli.BesuCommand.executeCommandLine(BesuCommand.java:1015)
+	at org.hyperledger.besu.cli.BesuCommand.parse(BesuCommand.java:877)
+	at org.hyperledger.besu.Besu.main(Besu.java:43)
+[2m2026-10-03 12:56:12.671+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesu[m[2m | [m[32mUsing the Java secp256r1 implementation of p256verify
+[m[2m2026-10-03 12:56:12.737+0330[m[2m | [m[2mmain[m[2m | [m[33mWARN [m[2m | [m[2mBesu[m[2m | [m[33mForcing price bump for transaction replacement to 0, since we are on a zero basefee network
+[m[2m2026-10-03 12:56:12.739+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mAttempting to load public key from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\node7x\key
+[m[2m2026-10-03 12:56:12.760+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mKeyPairUtil[m[2m | [m[32mLoaded public key 0xd508e92ddba5c3bce3326ce4791ad89495b8c3827a3d68c1fee6ddd15f5d3623c043fb08d0ed8f51933a1f6d862f36f66786b3856b622a3f6447f98be6fb06d4 from D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\node7x\key
+[m[2m2026-10-03 12:56:12.843+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.844+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.846+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.847+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.847+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.847+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAbstractAltBnPrecompiledContract[m[2m | [m[32mNative alt bn128 not available
+[m[2m2026-10-03 12:56:12.871+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mProtocolScheduleBuilder[m[2m | [m[32mProtocol schedule created with milestones: [London:0]
+[m[2m2026-10-03 12:56:12.873+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRocksDBKeyValueStorageFactory[m[2m | [m[32mNo existing database at D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\node7x\data. Using default metadata for new db versionedStorageFormat=BaseVersionedStorageFormat{format=BONSAI, version=3}
+[m[2m2026-10-03 12:56:13.843+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-03 12:56:13.846+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-03 12:56:13.857+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mFlat db mode found FULL
+[m[2m2026-10-03 12:56:13.858+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFlatDbStrategyProvider[m[2m | [m[32mDB mode with code stored using code hash enabled = true
+[m[2m2026-10-03 12:56:13.970+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mAdding ChainDataPruner to observe block added events
+[m[2m2026-10-03 12:56:13.972+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mBAL pruning enabled | BALs retained: 113056 | Frequency: 256
+[m[2m2026-10-03 12:56:13.992+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction pool
+[m[2m2026-10-03 12:56:14.013+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBesuControllerBuilder[m[2m | [m[32mQBFT is configured, creating initial sync for BFT
+[m[2m2026-10-03 12:56:14.014+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBFTPivotSelectorFromPeers[m[2m | [m[32mCreating pivot block selector for BFT node
+[m[2m2026-10-03 12:56:14.045+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mResolved 0 bootnodes.
+[m[2m2026-10-03 12:56:14.051+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunnerBuilder[m[2m | [m[32mDetecting NAT service.
+[m[2m2026-10-03 12:56:14.075+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgentFactory[m[2m | [m[32mPeer discovery mode: V4 (requested=V4, V4=true, V5=false)
+[m[2m2026-10-03 12:56:14.243+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting external services ... 
+[m[2m2026-10-03 12:56:14.244+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mStarting JSON-RPC service on 127.0.0.1:8837
+[m[2m2026-10-03 12:56:14.342+0330[m[2m | [m[2mvert.x-eventloop-thread-1[m[2m | [m[32mINFO [m[2m | [m[2mJsonRpcHttpService[m[2m | [m[32mJSON-RPC service started and listening on 127.0.0.1:8837
+[m[2m2026-10-03 12:56:14.345+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mAutoTransactionLogBloomCachingService[m[2m | [m[32mStarting auto transaction log bloom caching service.
+[m[2m2026-10-03 12:56:14.346+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mLogBloomCacheMetadata[m[2m | [m[32mLookup cache metadata file in data directory: D:\Amir\Business\SUR\Test\besu-test-v4\nets\Net-F4\node7x\data\caches
+[m[2m2026-10-03 12:56:14.358+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mStarting Ethereum main loop ... 
+[m[2m2026-10-03 12:56:14.358+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNatService[m[2m | [m[32mNo NAT environment detected so no service could be started
+[m[2m2026-10-03 12:56:14.358+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mStarting Network.
+[m[2m2026-10-03 12:56:14.362+0330[m[2m | [m[2mnioEventLoopGroup-2-1[m[2m | [m[32mINFO [m[2m | [m[2mRlpxAgent[m[2m | [m[32mP2P RLPx agent started and listening on /[0:0:0:0:0:0:0:0]:33137.
+[m[2m2026-10-03 12:56:14.363+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mCompositePeerDiscoveryAgent[m[2m | [m[32mStarting discovery on shared UDP socket (V4 only)
+[m[2m2026-10-03 12:56:14.371+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mStarting peer discovery agent on host=0.0.0.0, port=33137. IPv6 available.
+[m[2m2026-10-03 12:56:14.410+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mNodeRecordManager[m[2m | [m[32mWriting node record to disk. NodeRecord{seq=1, publicKey=0x02d508e92ddba5c3bce3326ce4791ad89495b8c3827a3d68c1fee6ddd15f5d3623, udpAddress=Optional[/127.0.0.1:33137], tcpAddress=Optional[/127.0.0.1:33137], quicAddress=Optional.empty, udp6Address=Optional.empty, tcp6Address=Optional.empty, quic6Address=Optional.empty, asBase64=-Je4QIsK0IJLOTwNJUOJ4J7EiBjn8pXkdsg2xn-i8C2_qH0JeEtv4We3lQyhtKnNOVxWRN-pm0uad9_fOdjUCtJKS-cBg2V0aMfGhJw5dUeAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQLVCOkt26XDvOMybOR5GtiUlbjDgno9aMH-5t3RX102I4N0Y3CCgXGDdWRwgoFx, nodeId=0x5abe8b0f6221b1feffe229d1780ec9191b63ad920c8ae4318a944f4ab6f24ee4, customFields={tcp=33137, udp=33137, eth=[[0x9c397547, 0x]], id=V4, ip=0x7f000001, secp256k1=0x02d508e92ddba5c3bce3326ce4791ad89495b8c3827a3d68c1fee6ddd15f5d3623}}
+[m[2m2026-10-03 12:56:14.418+0330[m[2m | [m[2mdisc-shared-eventloop[m[2m | [m[32mINFO [m[2m | [m[2mPeerDiscoveryAgentV4[m[2m | [m[32mP2P peer discovery agent started and listening on /0.0.0.0:33137
+[m[2m2026-10-03 12:56:14.419+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mEnode URL enode://d508e92ddba5c3bce3326ce4791ad89495b8c3827a3d68c1fee6ddd15f5d3623c043fb08d0ed8f51933a1f6d862f36f66786b3856b622a3f6447f98be6fb06d4@127.0.0.1:33137
+[m[2m2026-10-03 12:56:14.420+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mENR URL enr:-Je4QIsK0IJLOTwNJUOJ4J7EiBjn8pXkdsg2xn-i8C2_qH0JeEtv4We3lQyhtKnNOVxWRN-pm0uad9_fOdjUCtJKS-cBg2V0aMfGhJw5dUeAgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQLVCOkt26XDvOMybOR5GtiUlbjDgno9aMH-5t3RX102I4N0Y3CCgXGDdWRwgoFx
+[m[2m2026-10-03 12:56:14.420+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultP2PNetwork[m[2m | [m[32mNode address 0x780ec9191b63ad920c8ae4318a944f4ab6f24ee4
+[m[2m2026-10-03 12:56:14.435+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mNetworkRunner[m[2m | [m[32mSupported capabilities: [eth/68, eth/69, eth/70, eth/71], [istanbul/100], [snap/1]
+[m[2m2026-10-03 12:56:14.435+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mDefaultSynchronizer[m[2m | [m[32mStarting synchronizer.
+[m[2m2026-10-03 12:56:14.437+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mEnabling transaction handling following initial sync
+[m[2m2026-10-03 12:56:14.438+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following initial sync
+[m[2m2026-10-03 12:56:14.524+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncDownloader[m[2m | [m[32mStarting full sync.
+[m[2m2026-10-03 12:56:14.525+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:56:14.528+0330[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mRunner[m[2m | [m[32mEthereum main loop is up.
+[m[2m2026-10-03 12:56:14.642+0330[m[2m | [m[2mEthScheduler-Services-4[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mNode out of sync, disabling transaction handling
+[m[2m2026-10-03 12:56:19.532+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:56:19.542+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:56:22.181+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mFullImportBlockStep[m[2m | [m[32mImport reached block 200 (0xbe6ebcd5db0859b9d1c5fd0d28cf476587cd2e9d94007e65fe5185a3f943aadf), - Mg/s, Peers: 5
+[m[2m2026-10-03 12:56:24.385+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:24.385+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:24.387+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:24.388+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:56:24.390+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:56:24.391+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:24.397+0330[m[2m | [m[2mEthScheduler-Services-5 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:56:26.400+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:56:26.418+0330[m[2m | [m[2mEthScheduler-Services-5[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:56:26.901+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:56:26.910+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:26.910+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:26.911+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:26.911+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:56:26.911+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:56:26.911+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:26.912+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:56:28.913+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:56:28.919+0330[m[2m | [m[2mEthScheduler-Services-1[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:56:29.414+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:56:29.425+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:29.426+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:29.426+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:29.426+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:56:29.427+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:56:29.427+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:29.427+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:56:31.429+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:56:31.435+0330[m[2m | [m[2mEthScheduler-Services-4[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:56:31.931+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:56:31.937+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:31.938+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:31.938+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:31.938+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:56:31.938+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:56:31.938+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:31.939+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:56:33.940+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:56:33.947+0330[m[2m | [m[2mEthScheduler-Services-1[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:56:34.442+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:56:34.451+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:34.451+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:34.451+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:56:34.451+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:56:34.451+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:56:34.452+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:56:34.452+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:56:36.453+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:56:36.453+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mNode is in sync, enabling transaction handling
+[m[2m2026-10-03 12:56:36.454+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:56:46.458+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:56:56.460+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:57:06.463+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:57:16.458+0330[m[2m | [m[2mEthScheduler-Services-4[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:57:16.514+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:57:16.514+0330[m[2m | [m[2mEthScheduler-Services-4[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mNode out of sync, disabling transaction handling
+[m[2m2026-10-03 12:57:16.521+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:16.521+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:16.522+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:16.522+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:57:16.522+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:57:16.522+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:16.522+0330[m[2m | [m[2mEthScheduler-Services-1 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:57:18.525+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:57:18.531+0330[m[2m | [m[2mEthScheduler-Services-1[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:57:19.080+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:57:19.141+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:19.141+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:19.142+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:19.142+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:57:19.142+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:57:19.142+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:19.144+0330[m[2m | [m[2mEthScheduler-Services-4 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:57:21.146+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:57:21.154+0330[m[2m | [m[2mEthScheduler-Services-4[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:57:21.647+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:57:21.655+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:21.655+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:21.655+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:21.656+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:57:21.656+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:57:21.656+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:21.656+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:57:23.657+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:57:23.663+0330[m[2m | [m[2mEthScheduler-Services-9[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:57:24.158+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:57:24.167+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:24.167+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:24.167+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:24.167+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:57:24.168+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:57:24.168+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:24.168+0330[m[2m | [m[2mEthScheduler-Services-7 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:57:26.169+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:57:26.176+0330[m[2m | [m[2mEthScheduler-Services-7[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStopping BFT mining coordinator while we are syncing
+[m[2m2026-10-03 12:57:26.670+0330[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mBftProcessor[m[2m | [m[32mShutting down BFT event processor
+[m[2m2026-10-03 12:57:26.678+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:26.679+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetParallelBlockProcessor[m[2m | [m[32mParallel transaction processing failure. Falling back to non-parallel processing for block #383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:26.679+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mAbstractBlockProcessor[m[2m | [m[32mfailed persisting block due to stateroot mismatch; expected 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c, actual 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b
+[m[2m2026-10-03 12:57:26.679+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mMainnetBlockValidator[m[2m | [m[32mInvalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99): Optional[World State Root does not match expected value, header 0x28754145b4384b9b45bd4716e400bc3dce75db52e3ce2fc3a7fbacf006896d3c calculated 0x3d5e025a4bd8a093f206d4798626feac0873e68ba5ddd37ffe2e939650cf397b]
+[m[2m2026-10-03 12:57:26.679+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[32mINFO [m[2m | [m[2mPipeline[m[2m | [m[32mUnexpected exception in pipeline. Aborting.
+Throwable summary: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+[m[2m2026-10-03 12:57:26.680+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mInvalid block detected (BREACH_OF_PROTOCOL). Disconnecting from sync target. Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+[m[2m2026-10-03 12:57:26.680+0330[m[2m | [m[2mEthScheduler-Services-9 (importBlock)[m[2m | [m[33mWARN [m[2m | [m[2mPipelineChainDownloader[m[2m | [m[33mChain download failed. Restarting after short delay.
+java.util.concurrent.CompletionException: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeRelay(CompletableFuture.java:412)
+	at java.base/java.util.concurrent.CompletableFuture.completeRelay(CompletableFuture.java:421)
+	at java.base/java.util.concurrent.CompletableFuture$UniRelay.tryFire(CompletableFuture.java:1118)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at org.hyperledger.besu.services.pipeline.Pipeline.abort(Pipeline.java:220)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:199)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException: Failed to import block: Invalid block 383 (0xad9fa453f272057114a7fee5642995a2913c6823c90ed69560daf6c2369e0a99)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:36)
+	at org.hyperledger.besu.ethereum.eth.sync.tasks.exceptions.InvalidBlockException.fromInvalidBlock(InvalidBlockException.java:30)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:65)
+	at org.hyperledger.besu.ethereum.eth.sync.fullsync.FullImportBlockStep.accept(FullImportBlockStep.java:32)
+	at org.hyperledger.besu.services.pipeline.CompleterStage.run(CompleterStage.java:37)
+	at org.hyperledger.besu.services.pipeline.Pipeline.lambda$runWithErrorHandling$0(Pipeline.java:183)
+	... 5 more
+[m[2m2026-10-03 12:57:28.681+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mBftMiningCoordinator[m[2m | [m[32mStarting BFT mining coordinator following sync
+[m[2m2026-10-03 12:57:28.681+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mTransactionPoolFactory[m[2m | [m[32mNode is in sync, enabling transaction handling
+[m[2m2026-10-03 12:57:28.682+0330[m[2m | [m[2mEthScheduler-Timer-0[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-10-03 12:57:38.684+0330[m[2m | [m[2mForkJoinPool.commonPool-delayScheduler[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m

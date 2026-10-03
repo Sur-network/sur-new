@@ -1,0 +1,245 @@
+{
+  "NET": "Net-F1",
+  "X": 300,
+  "headAtStart": 317,
+  "preconditions": {
+    "epochCount": "0",
+    "lastSettledBlock": "0",
+    "rewardRateChangeCount": "1",
+    "history": [
+      {
+        "startBlock": "300",
+        "ratePerBlock": "3000000000000000000"
+      }
+    ],
+    "transitionsInGenesis": {
+      "qbft": [
+        {
+          "block": 300,
+          "blockreward": "3000000000000000000"
+        }
+      ]
+    }
+  },
+  "blocks": [
+    {
+      "n": 295,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 296,
+      "miner": "0x23d8cda291b4914cb7742fa2a5d724495377b1df",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 297,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 298,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 299,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 300,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    },
+    {
+      "n": 301,
+      "miner": "0x23d8cda291b4914cb7742fa2a5d724495377b1df",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    },
+    {
+      "n": 302,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    },
+    {
+      "n": 303,
+      "miner": "0xbb0ad6351f7566daeef259555874053470e195c7",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    },
+    {
+      "n": 304,
+      "miner": "0xcdc464346bf75a910c6c207ca6280e0ba94060b2",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    },
+    {
+      "n": 305,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    }
+  ],
+  "samples": [
+    {
+      "n": 200,
+      "miner": "0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "txCount": 0,
+      "balanceDelta": "2000000000000000000",
+      "emptyBlockMethod": "2000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "2000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "2000000000000000000"
+    },
+    {
+      "n": 317,
+      "miner": "0xa0be660791823a493b965c325d02527f2cfbfc6c",
+      "txCount": 0,
+      "balanceDelta": "3000000000000000000",
+      "emptyBlockMethod": "3000000000000000000",
+      "traceRewards": [
+        {
+          "author": "0x2222222222222222222222222222222222222222",
+          "rewardType": "block",
+          "value": "3000000000000000000"
+        }
+      ],
+      "traceError": null,
+      "contractRewardRateAt": "3000000000000000000"
+    }
+  ],
+  "verdict": {
+    "allWindowBlocksEmpty": true,
+    "besuFirstBlockPaying3": 300,
+    "besuLastBlockPaying2": 299,
+    "contractFirstBlockApplying3": 300,
+    "coordinated": true,
+    "traceBlockReturnedRewardEntries": true,
+    "traceBlockErrors": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "precondition_activeCount": "6",
+  "sendGapMs": 41,
+  "blockV4": 1420,
+  "blockV5": 1420,
+  "sameBlock": true,
+  "statusV4": 1,
+  "statusV5": 1,
+  "countAfter": "4",
+  "neverDroppedBelow4": true,
+  "note": "Only 1 of 3 allowed attempts made; no post-attempt recovery performed (would require resolving 2 independent slash cases via the appeal+vote path, then 2 more recoveries) -- time budget. See DEVIATIONS.md."
+}

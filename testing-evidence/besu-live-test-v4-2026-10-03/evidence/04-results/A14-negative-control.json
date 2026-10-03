@@ -1,0 +1,186 @@
+{
+  "generatedAt": "2026-10-03T11:13:40.212Z",
+  "method": "independent derivation of expected alloc (clean-constructor slots of a fresh deploy + analytically computed seed list from storageLayout) vs genesis.json alloc; semantic round-trip; MPT state root",
+  "assumption": "constructors write only plain (sequential-slot) state variables; hashed-location slots (mappings/arrays) can only come from the seed list",
+  "layoutSummary": {
+    "FoundationDAO": [
+      "0:memberList",
+      "1:memberIndex",
+      "2:isMember",
+      "3:proposalCount",
+      "4:proposals",
+      "5:membershipNonce"
+    ],
+    "BlockRewardDistributor": [
+      "0:validatorDirectShareBps",
+      "1:totalFeesBurned",
+      "2:lastShareChangeTime",
+      "3:distributionOracle",
+      "4:lastDistributionTime",
+      "5:epochCount"
+    ],
+    "ValidatorsRegistry": [
+      "0:validators",
+      "1:paidValidatorCount",
+      "2:verifier",
+      "3:activeValidators",
+      "4:activeIndex",
+      "5:lastEconomicParamChangeTime"
+    ],
+    "ValidatorsBoard": [
+      "0:boardMembers",
+      "1:isBoardMember",
+      "2:voterCandidates",
+      "3:hasVotedFor",
+      "4:candidateVoters",
+      "5:voterIndexInCandidateVoters"
+    ],
+    "ValidatorsTreasury": [
+      "0:locked",
+      "1:totalDistributedToTreasury",
+      "2:totalSpent",
+      "3:perPaymentCap",
+      "4:periodCap",
+      "5:dailySpend"
+    ],
+    "IdentityRegistry": [
+      "0:identities",
+      "1:identityOracle"
+    ]
+  },
+  "fdLabels": {
+    "FoundationDAO": [
+      "0:memberList",
+      "1:memberIndex",
+      "2:isMember",
+      "3:proposalCount",
+      "4:proposals",
+      "5:membershipNonce",
+      "6:memberSinceNonce"
+    ]
+  },
+  "results": {
+    "Net-NEGCTL": {
+      "meta": {
+        "foundationSeeded": true,
+        "FOUNDERS": "G5",
+        "INCLUDE_C6": false,
+        "rateHistoryEntries": 1,
+        "payees": 0,
+        "genesisTimestamp": "1791018049"
+      },
+      "accounts": {
+        "missing": [],
+        "extra": [
+          "0x000000000000000000000000000000000000dead"
+        ],
+        "balanceMismatch": [],
+        "codeOrStorageOnEOA": [],
+        "fixedWithBalance": []
+      },
+      "contracts": {
+        "FoundationDAO": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 61,
+          "actualSlots": 61,
+          "valueChecked": 46,
+          "keyOnlyChecked": 15,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "BlockRewardDistributor": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 4,
+          "actualSlots": 4,
+          "valueChecked": 4,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 47,
+          "actualSlots": 47,
+          "valueChecked": 42,
+          "keyOnlyChecked": 5,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [
+            {
+              "slot": "0x43bd01131212137fe36c20953f97925d4831a8dfab86348d098020c601bf754a",
+              "got": "0x2",
+              "want": "0x1"
+            }
+          ],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsBoard": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 12,
+          "actualSlots": 12,
+          "valueChecked": 11,
+          "keyOnlyChecked": 0,
+          "missing": [
+            "0x0000000000000000000000000000000000000000000000000000000000000006"
+          ],
+          "extra": [
+            {
+              "slot": "0x0000000000000000000000000000000000000000000000000000000000000063",
+              "value": "0x7"
+            }
+          ],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "ValidatorsTreasury": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 2,
+          "actualSlots": 2,
+          "valueChecked": 2,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        },
+        "IdentityRegistry": {
+          "codeMatchesCompiled": true,
+          "expectedSlots": 1,
+          "actualSlots": 1,
+          "valueChecked": 1,
+          "keyOnlyChecked": 0,
+          "missing": [],
+          "extra": [],
+          "valueMismatch": [],
+          "zeroWhereNonZeroExpected": [],
+          "shortStringBad": 0
+        }
+      },
+      "roundTrip": {
+        "registryGetValidators": true,
+        "registryFoundersActiveAndEver": true,
+        "registryPayeesEverNotValidators": "n/a",
+        "registryStatusNonce": "0",
+        "boardMembers": true,
+        "foundation15": true,
+        "distributorOracle": true,
+        "distributorHistoryCount": "1",
+        "distributorHistoryExpected": "1",
+        "distributorHistoryEntriesMatch": true
+      },
+      "genesisAllocStateRoot": "0x9f96aa755e551e36589e85f583210bdf9330affce7a66f8f04b38da3ca80bc30",
+      "deviations": 4,
+      "roundTripOk": true,
+      "verdict": "FAIL"
+    }
+  }
+}

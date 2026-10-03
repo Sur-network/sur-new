@@ -1,0 +1,96 @@
+{
+  "ID": "D06",
+  "NET": "Net-D3",
+  "startedAt": "2026-10-03T09:44:18.912Z",
+  "gates": {
+    "equationCloses": true,
+    "countComplete": false,
+    "noUnknownMiners": true,
+    "emptyBlockMethodAgreesWithTrace": true,
+    "rewardAtOrBelowCap": true,
+    "contractCap": "172000000000000000000",
+    "independentR": "172000000000000000000",
+    "independentF": "40384000000000000000",
+    "submittedTotalRewardsEqualsIndependentR": true,
+    "submittedTotalFeesEqualsIndependentF": true
+  },
+  "warnings": [
+    "D06: deliberately reporting 1 fewer blocks than mined"
+  ],
+  "range": {
+    "S": 0,
+    "from": 1,
+    "L": 86,
+    "head": 86,
+    "length": 86
+  },
+  "preState": {
+    "epochCount": "0",
+    "lastSettledBlock": 0,
+    "pendingMembershipFees": "20000000000000000000000",
+    "shareBps": "5000",
+    "foundationBps": "1500",
+    "feeBurnBps": "3000"
+  },
+  "extraction": {
+    "R": "172000000000000000000",
+    "F": "40384000000000000000",
+    "M_traceRegistryForward": "20000000000000000000000",
+    "X_otherInflows": "7000000000000000000",
+    "P_outflowsInRange": "0",
+    "nonEmptyBlocks": 10,
+    "emptyBlocks": 76,
+    "emptyBlocksCrossChecked": 76,
+    "emptyBlockMethodMismatches": [],
+    "emptyBlockMismatchCount": 0,
+    "traceRewardAuthors": [
+      "0x2222222222222222222222222222222222222222"
+    ],
+    "traceMissingBlocks": 0,
+    "unknownMiners": {},
+    "M_events": "20000000000000000000000",
+    "M_eventCount": 1
+  },
+  "conservationEquation": {
+    "available": true,
+    "B_L": "20219384000000000000000",
+    "B_S": "0",
+    "lhs": "20219384000000000000000",
+    "rhs": "20219384000000000000000",
+    "closes": true,
+    "residual": "0",
+    "note": "B(S)=B(0): the distributor has no genesis balance in this network's alloc (0)"
+  },
+  "submission": {
+    "addresses": [
+      "0xA0379A0bf817877535Bfd43c58278B765bE85618",
+      "0xba033D94774c12E26855c61d3f2FBc9098E7dCeb",
+      "0xc5e7c05f442c270e917c42Ae7DDD9b456b0cB5cC",
+      "0xd01B11074080932823A66e212f2B1ceFD63887aA",
+      "0xDB2D47448782258F7bcE7963a40CA987e4729013",
+      "0xDBa45cFa5bb3Acd3ddaFfe53537a786640e7aF2c"
+    ],
+    "blocksMined": [
+      14,
+      15,
+      14,
+      14,
+      14,
+      14
+    ],
+    "totalBlocks": 85,
+    "rangeLength": 86
+  },
+  "blockers": [
+    "WARN: incomplete count (sum 85 != range 86)"
+  ],
+  "capComparison": {
+    "independentR": "172000000000000000000",
+    "contractCap": "172000000000000000000",
+    "capMinusR": "0",
+    "rEqualsCap": true
+  },
+  "sent": false,
+  "reason": "gate(s) failed -- not sent",
+  "lastSettledBlockAfter": "0"
+}

@@ -1,0 +1,33 @@
+{
+  "method": "Restarted Net-B node1 alone, read-only (no peers, no mining, no new transactions) to query block headers it had already stored before this round's networks were stopped. Block headers (miner, extraData) are retrievable regardless of BONSAI world-state pruning; eth_call-based queries (e.g. getValidators() at an old height) are not, once beyond the ~512-block historical limit -- confirmed again here (qbft_getValidatorsByBlockNumber(107) returned an Internal error at this point, consistent with FINDINGS.md item 7).",
+  "besu_source_confirms": "QbftGetValidatorsByBlockNumber.resultByBlockNumber(N) fetches block N's OWN header and calls validatorProvider.getValidatorsForBlock(header) -- i.e. registry state AS OF (after) block N, not N-1. Source: besu-eth/besu consensus/qbft/src/main/java/org/hyperledger/besu/consensus/qbft/jsonrpc/methods/QbftGetValidatorsByBlockNumber.java (fetched via GitHub, main branch).",
+  "B02_transition": {
+    "stateChangingTxBlock": 107,
+    "blocks": [
+      { "n": 104, "miner": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1", "extraDataBytes": 310 },
+      { "n": 105, "miner": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF", "extraDataBytes": 310 },
+      { "n": 106, "miner": "0xa0bE660791823a493b965C325D02527f2CFBFC6c", "extraDataBytes": 310 },
+      { "n": 107, "miner": "0xbb0ad6351F7566dAeEF259555874053470e195c7", "extraDataBytes": 310, "note": "contains the recordSuspension(V5) transaction; still sealed under the OLD 5-member set" },
+      { "n": 108, "miner": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2", "extraDataBytes": 241, "note": "first block under the NEW 4-member set" },
+      { "n": 109, "miner": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1", "extraDataBytes": 241 },
+      { "n": 110, "miner": "0xa0bE660791823a493b965C325D02527f2CFBFC6c", "extraDataBytes": 241 },
+      { "n": 111, "miner": "0xbb0ad6351F7566dAeEF259555874053470e195c7", "extraDataBytes": 241 },
+      { "n": 112, "miner": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2", "extraDataBytes": 241 }
+    ]
+  },
+  "B05_transition": {
+    "stateChangingTxBlock": 1420,
+    "blocks": [
+      { "n": 1417, "miner": "0xbb0ad6351F7566dAeEF259555874053470e195c7", "extraDataBytes": 310 },
+      { "n": 1418, "miner": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2", "extraDataBytes": 310 },
+      { "n": 1419, "miner": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1", "extraDataBytes": 310 },
+      { "n": 1420, "miner": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF", "extraDataBytes": 310, "note": "contains the double recordSuspension(V4,V5) transactions; miner is g5_v5 itself, still active going into this block; still sealed under the OLD 6-member set" },
+      { "n": 1421, "miner": "0x7418B8c56b27F689C19AbC59A735cFc70160fD07", "extraDataBytes": 241, "note": "first block under the NEW 4-member set" },
+      { "n": 1422, "miner": "0xa0bE660791823a493b965C325D02527f2CFBFC6c", "extraDataBytes": 241 },
+      { "n": 1423, "miner": "0xbb0ad6351F7566dAeEF259555874053470e195c7", "extraDataBytes": 241 },
+      { "n": 1424, "miner": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1", "extraDataBytes": 241 }
+    ]
+  },
+  "conclusion": "miner(N) belongs to Registry@(N-1) for every one of the 17 sampled blocks (both transition windows), including both transition blocks themselves. The extraData size shift lags the state-changing transaction by exactly one block in both independent transitions, confirming -- for the blocks actually inspected here -- that the signing set for block N is drawn from registry state as of N-1. This is distinct from qbft_getValidatorsByBlockNumber(N)'s own reported value, which (per Besu's source) reflects state as of N itself, also confirmed only for these same sampled blocks. Neither claim is extended to the rest of either chain's history (4700+ blocks on Net-B) -- see REPORT.md's B07 row and FINDINGS.md item 1.",
+  "not_attempted": "Full ecrecover-based committed-seal signature recovery (would independently verify every individual signer, not just the proposer/miner) -- see LIMITATIONS.md."
+}

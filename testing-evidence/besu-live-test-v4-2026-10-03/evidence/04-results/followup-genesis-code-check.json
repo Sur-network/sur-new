@@ -1,0 +1,424 @@
+{
+  "note": "Static check of the genesis.json files (the nodes are stopped); this is NOT a live eth_getCode check, which was not repeated on the follow-up networks",
+  "results": {
+    "Net-F1": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-F2": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-F3": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-F4": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-F5": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-L05a": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-L05b": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-D3": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-E15": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-E30": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    },
+    "Net-E60": {
+      "FoundationDAO": {
+        "address": "0x1111111111111111111111111111111111111111",
+        "genesisCodeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "compiledRuntimeHash": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+        "match": true
+      },
+      "BlockRewardDistributor": {
+        "address": "0x2222222222222222222222222222222222222222",
+        "genesisCodeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "compiledRuntimeHash": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+        "match": true
+      },
+      "ValidatorsRegistry": {
+        "address": "0x3333333333333333333333333333333333333333",
+        "genesisCodeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "compiledRuntimeHash": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+        "match": true
+      },
+      "ValidatorsBoard": {
+        "address": "0x4444444444444444444444444444444444444444",
+        "genesisCodeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "compiledRuntimeHash": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+        "match": true
+      },
+      "ValidatorsTreasury": {
+        "address": "0x5555555555555555555555555555555555555555",
+        "genesisCodeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "compiledRuntimeHash": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+        "match": true
+      },
+      "IdentityRegistry": {
+        "address": "0x6666666666666666666666666666666666666666",
+        "genesisCodeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "compiledRuntimeHash": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+        "match": true
+      }
+    }
+  },
+  "allMatch": true
+}
