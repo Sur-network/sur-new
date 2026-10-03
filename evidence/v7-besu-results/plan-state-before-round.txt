@@ -1,0 +1,13 @@
+# Plan state at the start of this round (before this pass's document edits)
+git HEAD: bb03d3f 225
+git status --short at BUILD time (the v7 document corrections are uncommitted; the Plan HEAD above includes the v6 package and the owner's later edits):
+ M business/sur-competitive-advantages.md
+ M business/sur-dapp-business-ideas.md
+ M business/sur-marketing-roadmap.md
+ M economics/sur-validator-yield-analysis.md
+ M offchain-services/sur-genesis-builder-tool-spec.md
+ M sur-master-open-items.md
+ M sur-project-handoff-summary.md
+ M technical-design/sur-audit-2026-09-30-final-status.md
+ M technical-design/sur-contracts-deploy-notes.md
+(end)

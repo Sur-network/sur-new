@@ -1,0 +1,8 @@
+--- a/LIMITATIONS.md (previous package v6, Plan commit bb03d3f)
++++ b/LIMITATIONS.md (this package)
+@@ -42,3 +42,5 @@
+ 
+ - **A09 fix (fourth pass):** verified on three fresh networks (Net-BR, Net-L04g fixed; Net-BR0 control). Only the *rejection of `refreshBoard()` before 30 days* was observed; the 30-day boundary and the success path of `refreshBoard()` after 30 days were not exercised (real time). The 33 networks built before the fix (all earlier follow-up and baseline networks) keep `lastBoardRefreshAt` = 0 and were not rebuilt; that no earlier row depends on the value is inferred from the scripts that sent every transaction of the campaign (none calls `refreshBoard()`; the contract reads the field only in `refreshBoard()`), not from a scan of chain data. A14 was re-applied to the three new genesis files only. On Net-BR the exit-and-sync test left one board vacancy because a G5 network has no outside candidate — the fill path was not exercised there.
+ - **C-L04-6b (fourth pass):** one run on one network (plus the superseded run 1, 14/15, which had a wrong expectation in the script). For a member that had already voted, the eligibility message cannot be produced (`already voted` is checked first); the eligibility message for a re-added member that had not voted was shown in C-L04-6.
++
++- **Production genesis tool (T02) — `lastBoardRefreshAt`:** the production tool is not implemented (see the T02 limitation above). Writing `lastBoardRefreshAt` = genesis timestamp for a seeded board and asserting it is an existing project requirement (P01; genesis-builder spec §4.2.1; deploy-notes item 4) and belongs to the remaining implementation of T02; it is not an open decision. Only the test builder was fixed and verified in this campaign.

@@ -14,7 +14,6 @@
 | الزام حضور فیزیکی نود در ایران: آیا پیامد فوری لازم است یا مسیر پایش آف‌چین (تأخیر حدود ۱ ساعت) کافی است؟ | `economics/sur-tokenomics.md` بخش ۶.۷، `offchain-services/sur-verifier-service-spec.md` بخش ۶.۵ |
 | مبلغ کل و فهرست آدرس‌به‌آدرس ردیف «جبران ولیدیتورهای شبکه‌ی قبلی»، و به‌روزرسانی جدول پیش‌بینی عرضه پس از مشخص‌شدن مبلغ | `economics/sur-tokenomics.md` |
 | تولید یا نتولید `transitions.qbft` در ابزار genesis | `offchain-services/sur-genesis-builder-tool-spec.md` بخش ۱۰ |
-| `lastBoardRefreshAt` در ابزار genesis: ابزار تولیدی مقدار زمان genesis را بنویسد یا مشخصات عوض شود | `offchain-services/sur-genesis-builder-tool-spec.md` بند ۴.۲.۱ |
 | سرنوشت انتقال‌های مستقیم به distributor و منظور از بازگشت کارمزد تراکنش توزیع به epoch بعدی | `technical-design/sur-audit-2026-09-30-final-status.md`؛ QUESTIONS بسته‌ی v4 |
 | بودجه‌ی کمپین بنیاد: برآورد ۳۹ تا ۶۵ میلیون سورن در برابر ۲۰ میلیون؛ هیچ مسیر رسمی روی زنجیره برای آن وجود ندارد | `sur-detailed-plan-and-rationale.md` بخش ۱۳.۳ |
 | زمان و روش درخواست بودجه‌ی تکمیلی بنیاد؛ منبع بودجه‌ی حسابرسی امنیتی؛ اجرای برنامه‌ی جایزه‌ی باگ | `economics/sur-tokenomics.md`، `business/sur-marketing-roadmap.md`، `technical-design/sur-security-audit-plan.md` |
@@ -36,7 +35,7 @@
 |---|---|
 | RewardRouter (شامل بازه‌ی P05 و تعیین بازه‌ها) | `offchain-services/sur-reward-router-spec.md` |
 | Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، `syncBoard`/`refreshBoard`) | `offchain-services/sur-verifier-service-spec.md` |
-| ابزار ساخت `genesis.json` تولیدی (مشخصات کامل؛ اجرا و تست `--verify` روی Besu واقعی وجود ندارد) | `offchain-services/sur-genesis-builder-tool-spec.md` |
+| ابزار ساخت `genesis.json` تولیدی — T02 (مشخصات کامل؛ اجرا و تست `--verify` روی Besu واقعی وجود ندارد). **شامل الزام موجود P01:** نوشتن `lastBoardRefreshAt` = timestamp genesis وقتی هیأت seed می‌شود و assert آن (مشخصات بند ۴.۲.۱)؛ این تصمیم باز نیست و ابزار آزمایشی همین را انجام داد و در دور چهارم آزمون Besu تأیید شد | `offchain-services/sur-genesis-builder-tool-spec.md`؛ `testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md` مورد ۲۲ |
 | Identity Service، PaymentReporter، اپ ولیدیتور، داشبورد حکمرانی، پرتال فروش | `offchain-services/sur-software-inventory.md` |
 | ابزار بازیابی اضطراری | `governance/sur-emergency-consensus-recovery.md` |
 | سرویس همراه نود برای `SUR_NODE_CHECK_V1` (فقط مشخصات) | `offchain-services/sur-node-check-protocol-spec.md` |
