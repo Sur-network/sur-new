@@ -1,0 +1,491 @@
+{
+  "checks": [
+    {
+      "id": "PRE",
+      "sub": "pristine state: no transaction in blocks 1..head, nonces of founders/verifier/oracle are 0",
+      "expected": "0 txs, nonces 0",
+      "actual": "0 txs in 666 blocks; max nonce 0",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "hard forks homestead..london all 0",
+      "expected": "all 0",
+      "actual": "0,0,0,0,0,0,0,0,0,0",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "zeroBaseFee",
+      "expected": "true",
+      "actual": "true",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "qbft blockperiodseconds / epochlength / requesttimeoutseconds",
+      "expected": "3 / 30000 / 10",
+      "actual": "3 / 30000 / 10",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "qbft validatorcontractaddress / miningbeneficiary",
+      "expected": "0x3333333333333333333333333333333333333333 / 0x2222222222222222222222222222222222222222",
+      "actual": "0x3333333333333333333333333333333333333333 / 0x2222222222222222222222222222222222222222",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "qbft blockreward",
+      "expected": "2000000000000000000",
+      "actual": "2000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "chainId (file)",
+      "expected": "424509",
+      "actual": "424509",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "declared gasLimit (file)",
+      "expected": "30000000",
+      "actual": "30000000",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "transitions.qbft (file)",
+      "expected": "null",
+      "actual": "null",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "live eth_chainId",
+      "expected": "424509",
+      "actual": "424509",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "live block-0 gasLimit equals the declared gasLimit",
+      "expected": "30000000",
+      "actual": "30000000",
+      "pass": true
+    },
+    {
+      "id": "A02",
+      "sub": "node config: min-gas-price=100000000000000 and TRACE api enabled",
+      "expected": "both",
+      "actual": "min-gas-price true; TRACE true",
+      "pass": true
+    },
+    {
+      "id": "A03",
+      "sub": "extraData = RLP([vanity 32 bytes, [], [], 0x, []]) (file and live block 0)",
+      "expected": "0xe5a00000000000000000000000000000000000000000000000000000000000000000c0c080c0",
+      "actual": "file 0xe5a00000000000000000000000000000000000000000000000000000000000000000c0c080c0; live 0xe5a00000000000000000000000000000000000000000000000000000000000000000c0c080c0",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of FoundationDAO (0x1111111111111111111111111111111111111111)",
+      "expected": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+      "actual": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of BlockRewardDistributor (0x2222222222222222222222222222222222222222)",
+      "expected": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+      "actual": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of ValidatorsRegistry (0x3333333333333333333333333333333333333333)",
+      "expected": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+      "actual": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of ValidatorsBoard (0x4444444444444444444444444444444444444444)",
+      "expected": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+      "actual": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of ValidatorsTreasury (0x5555555555555555555555555555555555555555)",
+      "expected": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+      "actual": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+      "pass": true
+    },
+    {
+      "id": "A04",
+      "sub": "live keccak256(eth_getCode) of IdentityRegistry (0x6666666666666666666666666666666666666666)",
+      "expected": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+      "actual": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+      "pass": true
+    },
+    {
+      "id": "A05",
+      "sub": "no code at the 9 non-contract alloc accounts and balances equal the genesis balances",
+      "expected": "0 with code, 0 balance differences",
+      "actual": "0 with code, 0 balance differences",
+      "pass": true,
+      "note": "storage/extra-account absence: A14 (static scan + live block-0 state root), not repeated"
+    },
+    {
+      "id": "A06",
+      "sub": "getValidators() == the 5 founders, in seed order",
+      "expected": "0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "actual": "0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "pass": true
+    },
+    {
+      "id": "A07",
+      "sub": "0xbb0ad6351F7566dAeEF259555874053470e195c7: isValidator, everActivated (getter and raw slot 20)",
+      "expected": "true, true, 0x1",
+      "actual": "true, true, 0x1",
+      "pass": true
+    },
+    {
+      "id": "A07",
+      "sub": "0xa0bE660791823a493b965C325D02527f2CFBFC6c: isValidator, everActivated (getter and raw slot 20)",
+      "expected": "true, true, 0x1",
+      "actual": "true, true, 0x1",
+      "pass": true
+    },
+    {
+      "id": "A07",
+      "sub": "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1: isValidator, everActivated (getter and raw slot 20)",
+      "expected": "true, true, 0x1",
+      "actual": "true, true, 0x1",
+      "pass": true
+    },
+    {
+      "id": "A07",
+      "sub": "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2: isValidator, everActivated (getter and raw slot 20)",
+      "expected": "true, true, 0x1",
+      "actual": "true, true, 0x1",
+      "pass": true
+    },
+    {
+      "id": "A07",
+      "sub": "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF: isValidator, everActivated (getter and raw slot 20)",
+      "expected": "true, true, 0x1",
+      "actual": "true, true, 0x1",
+      "pass": true
+    },
+    {
+      "id": "A08",
+      "sub": "statusNonce()",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A08",
+      "sub": "wasActiveAt(founder,0)==true and raw activeCheckpoints (slot 37): length 1, first element 1<<64, for all 5 founders",
+      "expected": "all true",
+      "actual": "all true",
+      "pass": true
+    },
+    {
+      "id": "A08",
+      "sub": "wasActiveAt(non-founder,0) == false (fake address)",
+      "expected": "false",
+      "actual": "false",
+      "pass": true
+    },
+    {
+      "id": "A09",
+      "sub": "getBoardMembers() == first 5 founders",
+      "expected": "0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "actual": "0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "pass": true
+    },
+    {
+      "id": "A09",
+      "sub": "boardVersion()",
+      "expected": "1 (field initializer)",
+      "actual": "1",
+      "pass": true
+    },
+    {
+      "id": "A09",
+      "sub": "lastBoardRefreshAt() vs the genesis-builder spec assertion (spec §4.2.1: == network.genesisTimestamp when the board is seeded; brief A09: compare with the spec)",
+      "expected": "1791050956",
+      "actual": "0",
+      "pass": false,
+      "note": "SPEC DISCREPANCY (test-tool gap, not a contract defect): the test builder does not write lastBoardRefreshAt, so it stays 0 and the first refreshBoard() is immediately allowed; the spec asserts it should equal the genesis timestamp. Identical on every network built by this builder, including the earlier Net-B/Net-D (their A09 was recorded without this comparison)."
+    },
+    {
+      "id": "A10",
+      "sub": "getMemberCount()",
+      "expected": "15",
+      "actual": "15",
+      "pass": true
+    },
+    {
+      "id": "A10",
+      "sub": "membershipNonce()",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A10",
+      "sub": "15 members: account == seed order, memberSinceNonce == 0, non-empty name",
+      "expected": "all 15 ok",
+      "actual": "all 15 ok",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "INITIAL_REWARD_PER_BLOCK()",
+      "expected": "2000000000000000000",
+      "actual": "2000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "rewardRateChangeCount() (seeded entries: 399)",
+      "expected": "399",
+      "actual": "399",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "rateProposalCount()",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "lastSettledBlock()",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "epochCount()",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "distributionOracle()",
+      "expected": "0xBa7D298200Fc26Cb88A21e546D097337F0517706",
+      "actual": "0xBa7D298200Fc26Cb88A21e546D097337F0517706",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "validatorDirectShareBps() (genesis value)",
+      "expected": "5000",
+      "actual": "5000",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "maxRewardsForRange(1,1000) (independent formula over the 399 seeded entries)",
+      "expected": "2000000000000000000000",
+      "actual": "2000000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "RATE_VOTING_EXPIRY()",
+      "expected": "2592000",
+      "actual": "2592000",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "RATE_CHANGE_DELAY()",
+      "expected": "604800",
+      "actual": "604800",
+      "pass": true
+    },
+    {
+      "id": "A11",
+      "sub": "MIN_RATE_CHANGE_LEAD_BLOCKS()",
+      "expected": "201600",
+      "actual": "201600",
+      "pass": true
+    },
+    {
+      "id": "A12",
+      "sub": "distributor slots 24..28 (rewardRateChanges length = seeded count; rateProposals, rateBoardVoted, rateValidatorVoted, rateProposalCount = 0)",
+      "expected": "399,0,0,0,0",
+      "actual": "399,0,0,0,0",
+      "pass": true,
+      "note": "TEST-ONLY-SEED: slot 24 holds the seeded history length"
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.verifier()",
+      "expected": "0x0d3a16Eba9b3777E49854c34C204c8c1aeB95F7e",
+      "actual": "0x0d3a16Eba9b3777E49854c34C204c8c1aeB95F7e",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.probationPeriod() (test overlay)",
+      "expected": "300",
+      "actual": "300",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.recoveryPeriod() (test overlay; must stay > MASS_DEMOTION_WINDOW 3600)",
+      "expected": "3700",
+      "actual": "3700",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.exitCooldown() (test overlay)",
+      "expected": "600",
+      "actual": "600",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.maxEntriesPerWindow() (test overlay)",
+      "expected": "10",
+      "actual": "10",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.windowStart() == genesis timestamp",
+      "expected": "1791050956",
+      "actual": "1791050956",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.entryThresholdBase() (source value)",
+      "expected": "500000000000000000000000",
+      "actual": "500000000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.growthFactorPerValidator() (source value)",
+      "expected": "1017479692102686336",
+      "actual": "1017479692102686336",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.membershipFeeBps() (source value)",
+      "expected": "400",
+      "actual": "400",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.entryWindowSeconds() (source value)",
+      "expected": "86400",
+      "actual": "86400",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.slashBps() (source value)",
+      "expected": "100",
+      "actual": "100",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.paidValidatorCount() (must stay 0)",
+      "expected": "0",
+      "actual": "0",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Registry.getActiveValidatorCount()",
+      "expected": "5",
+      "actual": "5",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "validators(founder).isPaidEntrant == false for every founder",
+      "expected": "all false",
+      "actual": "false,false,false,false,false",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Treasury.perPaymentCap() (source initializer, brief: 50,000 SUR)",
+      "expected": "50000000000000000000000",
+      "actual": "50000000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A13",
+      "sub": "Treasury.periodCap() (source initializer, brief: 200,000 SUR)",
+      "expected": "200000000000000000000000",
+      "actual": "200000000000000000000000",
+      "pass": true
+    },
+    {
+      "id": "A15",
+      "sub": "the chain advances over the first 100 blocks (brief: 'the chain advances'; block-period mean/min/max/p95 recorded, no numeric threshold in the brief)",
+      "expected": "100 consecutive blocks produced",
+      "actual": "100 blocks; {\"avg\":3.04,\"min\":3,\"max\":7,\"p95\":3} (blocks 2..100); genesis->block1 gap 90 s",
+      "pass": true
+    },
+    {
+      "id": "A15",
+      "sub": "qbft_getValidatorsByBlockNumber('latest') equals Registry.getValidators() (as sets)",
+      "expected": "0xbb0ad6351F7566dAeEF259555874053470e195c7,0xa0bE660791823a493b965C325D02527f2CFBFC6c,0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1,0xcdC464346Bf75a910c6C207CA6280E0bA94060B2,0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF",
+      "actual": "0x23d8cda291b4914cb7742fa2a5d724495377b1df,0xa0be660791823a493b965c325d02527f2cfbfc6c,0xbb0ad6351f7566daeef259555874053470e195c7,0xcdc464346bf75a910c6c207ca6280e0ba94060b2,0xead76a1d9d569762c57a886bb9b17798df2defe1",
+      "pass": true
+    }
+  ],
+  "net": "Net-T-E30",
+  "head": 666,
+  "genesisTimestamp": "1791050956",
+  "client": "besu/v26.9.0/windows-x86_64/openjdk-java-25",
+  "A15_stats": {
+    "first100IncludingGenesisGap": {
+      "avg": 3.91,
+      "min": 3,
+      "max": 90,
+      "p95": 3
+    },
+    "first100ExcludingGenesisGap": {
+      "avg": 3.04,
+      "min": 3,
+      "max": 7,
+      "p95": 3
+    },
+    "genesisToBlock1Gap": 90
+  },
+  "preconditionNoTxHead": 666,
+  "summary": {
+    "total": 65,
+    "pass": 64,
+    "fail": 1,
+    "failing": [
+      "A09: lastBoardRefreshAt() vs the genesis-builder spec assertion (spec §4.2.1: == network.genesisTimestamp when the board is seeded; brief A09: compare with the spec)"
+    ]
+  },
+  "at": "2026-10-03T18:44:10.690Z"
+}

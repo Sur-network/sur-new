@@ -1,0 +1,30 @@
+--- a/DEVIATIONS.md (previous package, Plan commit f4d75c3)
++++ b/DEVIATIONS.md (this package)
+@@ -215,3 +215,27 @@
+ `Maximum heap size: 7.94 GB`, 25% of RAM); nodes 1–4 kept `-Xmx512m` (as in every other test; they had never failed). Heap usage was sampled with `jcmd`/`jstat`
+ from the installed Temurin JDK (not a Besu feature) every 60 s, process memory every 15 s. The observation window is finite (see FINDINGS.md item 18); "no
+ OutOfMemoryError" means *not within that window*.
++
++
++---
++
++# Third follow-up pass (2026-10-03/04): C-L04-6, Group A coverage on the follow-up networks, path-L plan
++
++No contract or policy changed, no fork was used, the real-time path L was **not** started, A14 was **not** repeated, SUPERSEDED rows were kept. Items are this session's own judgment calls unless stated.
++
++## 24. Group A coverage uses fresh "twin" networks, not the original follow-up networks — [this session's own judgment call, following the instruction not to run initial-state checks on a changed network]
++The follow-up networks had all sent transactions (or, for F4/F5/F5b, been restarted and edited), so their initial state can no longer be read. Eleven fresh networks (Net-T-F1, T-F2, T-F3, T-F4, T-F6, T-L05, T-D3, T-E15, T-E30, T-E60 and Net-L04f) were built with the identical builder recipe (new timestamp and chainId) and checked before any transaction. Groups of originals share a recipe and therefore a twin (F2/F5/F5b; L05a/L05b; D3/A14); equivalence of every original's genesis to its twin's is proven in `A-twin-equivalence.json`. What this does **not** give: a live read of the *original* network's own first block (impossible after state change); for those, the initial state is covered by the genesis equivalence and by A14's block-0 state-root equality.
++
++## 25. C-L04-6 ran on Net-L04f (G5, FoundationDAO seeded, no candidate C6), not on the brief's Net-L04; a first run stalled — [this session's own judgment call / disclosed fault]
++The brief's Net-L04 has a candidate C6, irrelevant to FoundationDAO, and the original Net-L04 was built without the FoundationDAO seed (item 22 of the previous pass). A first attempt stalled because each member was funded only 10 SUR while an 800,000-gas transaction needs 80 SUR upfront (FINDINGS.md item 20); the script was stopped, all five nodes were restarted together (which cleared the stuck transaction), the script's funding was corrected (every sender topped up to 500 SUR) and its precondition was reworded to what actually must be pristine (the FoundationDAO: 0 proposals, nonce 0 — funding transfers from the oracle already existed). The Group A check of this network ran before any transaction.
++
++## 26. Choices inside the live Group A script — [this session's own judgment call]
++Assertions follow the brief's §7 table plus the genesis-builder spec's §4.2.1 assertion list; A15 has no numeric threshold in the brief, so the mean/min/max/p95 are recorded and the check asserts only that 100 consecutive blocks were produced; A05(b) checks code and balances of non-contract alloc accounts and leaves storage/extra accounts to A14; the A09 spec comparison is reported as FAIL (test-tool gap) rather than hidden. A06–A10 and A15 were run although the brief requires them fully only on Net-B/Net-D.
++
++## 27. Path L: plan only — [as instructed]
++`PLAN-path-L-real-time.md` was written; none of its tools were implemented and no part of the path was started.
++
++**Update to item 18:** A01–A13 and A15 are now covered on the follow-up networks (item 24); A14 stays as executed earlier.
++
++## 28. Net-F3 node1 was started once, alone, read-only, to re-read the block timestamps of the Net-F3 outage — [this session's own judgment call]
++While preparing `PLAN-path-L-real-time.md` (restart behaviour after an outage), `Net-F3/node1` was launched once (22:00 local on 2026-10-03, no peers, no block produced, no transaction sent), queried for the timestamps of blocks 722–725 (722 = 09:39:39 UTC, 723 = 09:39:42, 724 = 09:54:46, 725 = 09:54:49 — a 904 s jump at the outage) and stopped. Its only effect on the evidence is that `logs/Net-F3/node1.log` has about 140 additional start-up lines (after the previous package's copy) and the node's data directory was opened again (the data directory itself is not part of the package). Nothing else of Net-F3 was changed.

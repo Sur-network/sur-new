@@ -1,0 +1,89 @@
+{
+  "checks": [
+    {
+      "id": "A01",
+      "sub": "sha256 of contracts/ vs the brief §2.1 table (13 files)",
+      "expected": "all equal",
+      "actual": "all equal",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "sha256 of contracts-fa/ vs the brief §2.1 table (13 files)",
+      "expected": "all equal",
+      "actual": "all equal",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "hardhat/contracts-baseline (build inputs of every genesis) vs Plan/contracts",
+      "expected": "0 differing files",
+      "actual": "0 differing",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "compile settings",
+      "expected": "solc 0.8.24, optimizer enabled runs=200, viaIR=false",
+      "actual": "solc 0.8.24, optimizer {\"enabled\":true,\"runs\":200}, viaIR=false",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of FoundationDAO (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+      "actual": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of BlockRewardDistributor (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+      "actual": "0x67e1aeaf240020f227e2a1e816b70360793224db7c5cf9ad056b23221352b0de",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of ValidatorsRegistry (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+      "actual": "0xd3d133a75c7aa70c9dc033fa65b9796963ac765a149ec60aaa12414fbde440c6",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of ValidatorsBoard (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+      "actual": "0x06ee5edd6d860a082d390c0741bf4d6a27a5f3b45ceed77703c0214f07f5a0da",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of ValidatorsTreasury (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+      "actual": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+      "pass": true
+    },
+    {
+      "id": "A01",
+      "sub": "runtime-bytecode hash of IdentityRegistry (fresh artifact vs phase-0 fingerprint)",
+      "expected": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+      "actual": "0x050359f5862de9f07d5056d2f8f1b08811a223b853eb5da2bbba1c4b5a92271c",
+      "pass": true
+    },
+    {
+      "id": "A05",
+      "sub": "BlockRewardDistributor immutableReferences in the compile output",
+      "expected": "{}",
+      "actual": "{}",
+      "pass": true
+    }
+  ],
+  "net": "(global)",
+  "summary": {
+    "total": 11,
+    "pass": 11,
+    "fail": 0,
+    "failing": []
+  },
+  "at": "2026-10-03T17:59:06.401Z"
+}

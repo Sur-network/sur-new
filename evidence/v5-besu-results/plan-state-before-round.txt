@@ -1,0 +1,4 @@
+# Plan state at the start of this round (before applying this package)
+git HEAD: f4d75c3 Besu v4 results package: integrated evidence, diffs, status table, new manifest
+git status --short (empty = clean working tree):
+(end)

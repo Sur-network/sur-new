@@ -1,0 +1,125 @@
+{
+  "rule": "alloc, config (without chainId), gasLimit, difficulty and extraData must be identical; storage values equal to the genesis timestamp are compared symbolically",
+  "results": {
+    "Net-T-F1 ~ Net-F1": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 127,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F1/genesis.json",
+      "differences": []
+    },
+    "Net-T-F2 ~ Net-F2": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F2/genesis.json",
+      "differences": []
+    },
+    "Net-T-F2 ~ Net-F5": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F5/genesis.json",
+      "differences": []
+    },
+    "Net-T-F2 ~ Net-F5b": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F5b/genesis.json",
+      "differences": []
+    },
+    "Net-T-F3 ~ Net-F3": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 127,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F3/genesis.json",
+      "differences": []
+    },
+    "Net-T-F4 ~ Net-F4": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F4/genesis-original-no-transition.json",
+      "differences": []
+    },
+    "Net-T-F6 ~ Net-F6": {
+      "equivalent": true,
+      "accounts": 16,
+      "storageSlots": 127,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-F6/genesis.json",
+      "differences": []
+    },
+    "Net-T-L05 ~ Net-L05a": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L05a/genesis.json",
+      "differences": []
+    },
+    "Net-T-L05 ~ Net-L05b": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L05b/genesis.json",
+      "differences": []
+    },
+    "Net-T-D3 ~ Net-D3": {
+      "equivalent": true,
+      "accounts": 17,
+      "storageSlots": 132,
+      "slotsHoldingGenesisTimestamp": 7,
+      "originalGenesisFile": "nets/Net-D3/genesis.json",
+      "differences": []
+    },
+    "Net-T-D3 ~ Net-A14": {
+      "equivalent": true,
+      "accounts": 17,
+      "storageSlots": 132,
+      "slotsHoldingGenesisTimestamp": 7,
+      "originalGenesisFile": "nets/Net-A14/genesis.json",
+      "differences": []
+    },
+    "Net-T-E15 ~ Net-E15": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 675,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-E15/genesis.json",
+      "differences": []
+    },
+    "Net-T-E30 ~ Net-E30": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 675,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-E30/genesis.json",
+      "differences": []
+    },
+    "Net-T-E60 ~ Net-E60": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 675,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-E60/genesis.json",
+      "differences": []
+    },
+    "Net-L04f ~ Net-L05a": {
+      "equivalent": true,
+      "accounts": 15,
+      "storageSlots": 125,
+      "slotsHoldingGenesisTimestamp": 6,
+      "originalGenesisFile": "nets/Net-L05a/genesis.json",
+      "differences": []
+    }
+  }
+}

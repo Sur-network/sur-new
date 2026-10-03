@@ -1,0 +1,26 @@
+--- a/FINDINGS.md (previous package, Plan commit f4d75c3)
++++ b/FINDINGS.md (this package)
+@@ -395,3 +395,23 @@
+   launcher sets `-XX:+ExitOnOutOfMemoryError`, which is why the capped run terminated at once.
+ - **Why it is kept as an operational finding:** the node never recovers by itself (it stays at the old height, retrying and consuming memory and CPU) and needs operator action
+   (QUESTIONS.md item 10).
++
++
++---
++
++# Third follow-up pass (2026-10-03/04): C-L04-6, Group A coverage on the follow-up networks, path-L plan
++
++## 19. A09 spec discrepancy: `lastBoardRefreshAt` is 0 on every network built by the test builder; the genesis-builder spec asserts it equals the genesis timestamp
++
++**Classification:** باگ ابزار آزمایشی / ابهام مشخصات (test-tool gap against the spec; not a contract defect).
++The genesis-builder spec (§4.2.1, assertion list: `ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp`, P01, "if the board is seeded") and the brief's A09 row ("compare with the genesis-builder spec") expect the genesis timestamp. The test builder seeds the board's members and membership flags but never writes `lastBoardRefreshAt`, so it stays **0** — on all 15 follow-up networks (11 fresh twins checked live) and, per their raw files, on Net-B, D, L01, L02, L04, L05 and Fork. The earlier A09 PASS rows were recorded without making this comparison. Consequence: `refreshBoard()` (allowed when `boardMembers.length == 0 || now >= lastBoardRefreshAt + 30 days`) is immediately callable instead of after 30 days. No executed test used `refreshBoard()`. Whether the production genesis tool must write the field, or the spec text should change, is not decided (QUESTIONS.md item 12). Evidence: `04-results/A-live-Net-T-*.json`, `evidence/06-coverage/A-coverage-followup-networks.md`.
++
++## 20. C-L04-6 (FoundationDAO eligibility snapshot) behaves exactly as the L04 policy describes — and an operational observation about unaffordable transactions
++
++**Classification:** measurement (31/31 assertions, `04-results/Net-L04f-CL04-6.json`); observation for the second part.
++- A member added after a proposal's creation is rejected on it with `not eligible - not a member when this proposal was created` while remaining eligible on later proposals; a removed member keeps the vote already cast (`hasVoted` true, tally unchanged) and cannot vote again (`caller is not a member`); a removed-and-re-added member is a *new* member for older proposals (`memberSinceNonce` 3 > the proposal's snapshot nonce); an open proposal keeps its **frozen quorum** in both directions (P2 with 8 votes did not execute while the live quorum was 8, because its snapshot was 9; P1 executed at its snapshot 8 while the live quorum was 9); membership changes never void an open proposal. `createdAtNonce` is not readable by a getter (as the brief notes), so eligibility was observed through `eth_call`/real transactions.
++- **Unaffordable transactions stay pending silently.** In the first run each member had 10 SUR while a transaction with `gasLimit` 800,000 at 0.0001 SUR/gas needs 80 SUR upfront. Besu returned a transaction hash, the transaction sat in the pool (`txpool_besuTransactions` listed it; the sender's pending nonce was 1 while its latest nonce was 0) and was **never mined and never rejected** for 20+ minutes, so the client simply waited. A restart of all nodes cleared the pool. Observed once; the exact Besu rule (why it was accepted into the pool) was not investigated. It matters for the distribution oracle's gas balance (Router spec §10.4 item 3).
++
++## 21. Group A on the follow-up networks: every live check passes on fresh twins with the identical genesis; the only failure is the A09 spec comparison
++
++**Classification:** measurement. 15 follow-up networks were covered by 11 fresh networks whose genesis recipe is identical (`A-twin-equivalence.json`: 15/15 pairs equivalent — same alloc, config, gasLimit, extraData; only the genesis timestamp and the 6–7 storage slots *equal to it* differ). On each fresh network the check ran only after asserting that it was pristine (0 transactions, nonces 0): 65 assertions per G5 network (66 on the G6 network), **64 pass; the single failure is the A09 spec comparison (item 19)**; the critical-stop checks A07 and A08 are clean everywhere; A01 (sources, compile settings, runtime hashes) and A05(a) pass globally (11/11). Block period over the first 100 blocks: mean 3.0 s on all 11 (one network 3.04 s with a single 7 s gap). The genesis→block-1 gap (82–117 s) is the deliberately back-dated genesis timestamp, not a stall.

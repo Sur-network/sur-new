@@ -1,0 +1,37 @@
+# Replaced / changed files: sha256 BEFORE this round (Plan commit f4d75c3) -> AFTER (this package)
+## Plan documents
+d632fe7296d7221e8dcd2659a3ab0799d4a7f973500eeef02693f2f2f30cabe5 -> 70e5d83edfb91c305a0d843156c160128b3c564212bc8f1eb75bdc05f64d2b9a  technical-design/sur-audit-2026-09-30-final-status.md
+5a15f5162fb1db235d0e125ea0d9112fe66efbe5863eb22424a5b5f68aec3f8c -> 7a4ba312fa49a78c63b4a60355610d12e92d9175cc43d63ce3eced8754c45f8e  sur-master-open-items.md
+88059dfdafd6261fb519b33277fb23e4871919dc71130670cca2ffef639091cc -> fe381904bb50ff723855271cb125fcbd0aefe4e11f26f167eb77f01cc086f784  offchain-services/sur-reward-router-spec.md
+d805d7cb2be980b5e4440c9505e261ef897e4848460f55cae4d608205da4f190 -> 745130d146ebf3979e44cda564108149a1eb82d43b395ee797cb5629b21c89d0  technical-design/sur-contracts-deploy-notes.md
+31031a8b99cf367ec0865cb54f1d9cb19b4ae855e92a4ba39671084e69a45b35 -> 0a61c86fff96689b2ce82a008e6e309f6b97186afe1977fd8dc8c0816c140058  sur-besu-test-status.md
+bec7155ed3521357d24a9ccc9d9679803fb7837043f4f31be1aabe595f4b5b75 -> bec7155ed3521357d24a9ccc9d9679803fb7837043f4f31be1aabe595f4b5b75  economics/sur-tokenomics.md
+fa71d569b1cbd0d20f0166154c326d5c17b7a3d7e425a1a0ecd205561d406095 -> fa71d569b1cbd0d20f0166154c326d5c17b7a3d7e425a1a0ecd205561d406095  technical-design/sur-contracts-oracles-accounts-report.md
+8b0d14f0ed839a7c67e1403c212c9ddd1e044f765459ab2a3dfd6bfbb698428f -> 33a8661ca0a8fe2a49e3cd2cdd16f5ae1f9dfbd2135465594aa1253fbc104134  offchain-services/sur-genesis-builder-tool-spec.md
+deeaaf1b453fd149e590ed9980cf81f3d36a1a9b3fdac0ffa51a6b426814a5d3 -> e969011454cfa6eefe6dc71dc5f3d5cb00994e2fa81699db3e8fd12f8f78d20e  sur-project-handoff-summary.md
+8bc75463b69d9c5f336c3438bd7d33326e4b4caf28c4f372756bd89c44a1ae86 -> 45203ccb290bb604fa631a2ff7e820c590f7a96e850add54f5eec736408d0995  sur-besu-live-test-brief-v4.md
+5708f89ed17899b600e395583245f13e703cf43c68add99a47be909afdb0d4f2 -> (replaced by this package's MANIFEST.sha256)  MANIFEST.sha256 (v4 root manifest, kept as previous-MANIFEST-v4.sha256)
+
+## Evidence documents (before = previous package, as committed in the Plan)
+5c88ead729afab1e1941c584622d2a66baf43d1a2e87ea95ac0e68bb1b47d4ad -> bd7c76f1bb437bc377555ef8c571124c6e1abf2610a7f9537dfdc9f764a27b6c  testing-evidence/besu-live-test-v4-2026-10-03/REPORT.md
+dfbd736198d2c93d43f7f7b8e04e569de89db7ac6fc51f6ceb55c5f22ce2dd0a -> d482f48f87068cab5b1f82bf8195cb4f82b459ac787f5d6668a36f68db614313  testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md
+732d1e723307aec76c975e1744bb9e5754e52c351745d363d1e6f5d3bbc3e0a6 -> 4fc4c055f0ae8f3a50aa86aa38661d44f4e90be5aecec94db8d1d0091af9b599  testing-evidence/besu-live-test-v4-2026-10-03/DEVIATIONS.md
+c337ba0beea150ba6866418e88adfdf597c1fef3ec5eec917610034a5657cea4 -> 6d535e1942b54b940a54b7a5eb98f3df470da63bcf48437cc786d9b1fdc96d3a  testing-evidence/besu-live-test-v4-2026-10-03/LIMITATIONS.md
+6b9af36f5fa944b0536a0b5ed7b3b4bd6db665f2534019be3200aa80e5437928 -> 03a614cf274cf46ed6c4e01a5ccf271e8fbccb30ccbfb0d1aade45b8f33213db  testing-evidence/besu-live-test-v4-2026-10-03/QUESTIONS.md
+ecfc43156869441639fc30ba8e50478760a40e58239df212df2109b79fc37847 -> 0ffccb4bc72f07f4d355f8436962e0e557c83ac88f32c8443f872fd1c6cdc9e6  testing-evidence/besu-live-test-v4-2026-10-03/README.md
+
+## Previous package: sur-besu-v4-results-integrated-package.zip sha256 8680b482158e7d77ca87e749b84259c09ed6ae9e99c2a6606bc0dcb4b58124fe (937-file root manifest, 902-file inner evidence manifest)
+## Inner-manifest comparison: previous (Plan commit f4d75c3) vs this package's evidence directory
+(lines present only in one of them; the expected differences are: the six changed documents, the new files of this pass, and Net-F3's node1.log, which gained start-up lines (DEVIATIONS.md item 28); MANIFEST.sha256 itself is not listed)
+previous-only lines: 7  this-package-only lines: 302
+### previous-only (these paths changed content or were removed)
+previous-only: 5c88ead729afab1e1941c584622d2a66baf43d1a2e87ea95ac0e68bb1b47d4ad *REPORT.md
+previous-only: 6b9af36f5fa944b0536a0b5ed7b3b4bd6db665f2534019be3200aa80e5437928 *QUESTIONS.md
+previous-only: 732d1e723307aec76c975e1744bb9e5754e52c351745d363d1e6f5d3bbc3e0a6 *DEVIATIONS.md
+previous-only: a87520b20dc74838797320ec0407dfdbc8d874b7ec6bb30f68b2c3f4255af433 *logs/Net-F3/node1.log
+previous-only: c337ba0beea150ba6866418e88adfdf597c1fef3ec5eec917610034a5657cea4 *LIMITATIONS.md
+previous-only: dfbd736198d2c93d43f7f7b8e04e569de89db7ac6fc51f6ceb55c5f22ce2dd0a *FINDINGS.md
+previous-only: ecfc43156869441639fc30ba8e50478760a40e58239df212df2109b79fc37847 *README.md
+### paths in both with different hash vs paths only in this package
+removed paths (in previous, not in this package): 0
+added paths (in this package, not in previous): 295

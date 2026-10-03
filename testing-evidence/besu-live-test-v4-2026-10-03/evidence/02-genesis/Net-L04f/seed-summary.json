@@ -1,0 +1,27 @@
+{
+  "NET": "Net-L04f",
+  "FOUNDERS": "G5",
+  "founderAddrs": [
+    "0xbb0ad6351F7566dAeEF259555874053470e195c7",
+    "0xa0bE660791823a493b965C325D02527f2CFBFC6c",
+    "0xeAD76a1d9D569762c57A886BB9b17798dF2Defe1",
+    "0xcdC464346Bf75a910c6C207CA6280E0bA94060B2",
+    "0x23d8cDa291b4914Cb7742FA2A5d724495377b1DF"
+  ],
+  "INCLUDE_C6": false,
+  "genesisTimestamp": 1791050554,
+  "CHAIN_ID": 424511,
+  "GAS_LIMIT": 30000000,
+  "IS_FORK": false,
+  "TRANSITIONS": null,
+  "RATE_HISTORY_SPEC": "",
+  "RATE_HISTORY_ENTRIES": 0,
+  "PAYEES": 0,
+  "TEST_ONLY_SEED": false,
+  "OVERLAY": {
+    "probationPeriod": "300",
+    "recoveryPeriod": "3700",
+    "exitCooldown": "600",
+    "maxEntriesPerWindow": "10"
+  }
+}

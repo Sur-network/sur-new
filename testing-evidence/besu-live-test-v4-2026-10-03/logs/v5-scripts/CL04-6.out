@@ -1,0 +1,33 @@
+PASS S0.1 FoundationDAO untouched: proposalCount()==0 and membershipNonce()==0 (funding transfers do not touch it) | expected 0;0 | actual 0;0
+PASS S0.2 FoundationDAO member count (15-member seed) | expected 15 | actual 15
+PASS S0.3 membershipNonce() | expected 0 | actual 0
+PASS S0.4 all 15 members: isMember and memberSinceNonce == 0 | expected true/true | actual true/true
+PASS S0.5 requiredVotesNow(AddMember) = ceil(2n/3) for n=15 | expected 10 | actual 10
+PASS S0.6 requiredVotesNow(SendETH) = floor(n/2)+1 for n=15 | expected 8 | actual 8
+PASS S0.7 the candidate N is not a member | expected false | actual false
+PASS S1.1 FoundationDAO balance after funding | expected 5 SUR | actual 5.0 SUR
+PASS S2.1 P1 snapshot quorum | expected 8 | actual 8
+PASS S2.2 P1 votes (M1 auto, M2, M3) and still pending | expected 3 / Pending | actual 3 / Pending
+PASS S3.1 after 9 of 10 votes the add proposal is still pending (quorum not yet reached) | expected Pending / 9 | actual Pending / 9
+PASS S3.2 N is now a member; member count 16; membershipNonce 1; memberSinceNonce(N)=1 | expected true;16;1;1 | actual true;16;1;1
+PASS S3.3 the add did NOT void P1: still pending, 3 votes, snapshot quorum still 8 | expected Pending;3;8 | actual Pending;3;8
+PASS S3.4 live quorum moved (n=16): SendETH 9, AddMember 11 — while P1 stays at 8 | expected 9 / 11 | actual 9 / 11
+PASS S4.1 N's vote on P1 (eth_call) is rejected with the exact eligibility message | expected FoundationDAO: not eligible - not a member when this proposal was created | actual FoundationDAO: not eligible - not a member when this proposal was created
+PASS S4.2 the same vote mined: status 0 and P1 votes unchanged | expected status 0; 3 | actual status 0; 3
+PASS S5.1 P2 snapshot quorum at n=16 | expected 9 | actual 9
+PASS S5.2 N (member since nonce 1 <= P2.createdAtNonce 1) could vote on P2: votes M1,M4,M5,N | expected 4 | actual 4
+PASS S6.1 M4 removed: isMember false; count 15; membershipNonce 2; memberSinceNonce(M4) reset to 0 | expected false;15;2;0 | actual false;15;2;0
+PASS S6.2 M4's vote on P2 is KEPT after removal: hasVoted(P2,M4) true; P2 votes still 4 | expected true;4 | actual true;4
+PASS S6.3 P2 still pending with snapshot quorum 9 while the live quorum is now 8 (n=15) | expected Pending;9;8 | actual Pending;9;8
+PASS S6.4 removed M4 cannot vote on P1 (eth_call): caller is not a member | expected FoundationDAO: caller is not a member | actual FoundationDAO: caller is not a member
+PASS S7.1 P2 with 8 votes does NOT execute although the live quorum is 8 (frozen snapshot 9) | expected Pending;8 | actual Pending;8
+PASS S7.2 P2 executes on the 9th vote; DAO balance falls by exactly 1 SUR and the sink received it | expected Executed;-1 SUR;1 SUR | actual Executed;-1.0 SUR;1.0 SUR
+PASS S8.1 M4 re-added: member; count 16; membershipNonce 3; memberSinceNonce(M4)=3 | expected true;16;3;3 | actual true;16;3;3
+PASS S8.2 re-added M4 may NOT vote on the older P1 (it did not vote there; memberSince 3 > createdAtNonce 0) | expected not eligible - not a member when this proposal was created | actual FoundationDAO: not eligible - not a member when this proposal was created
+PASS S8.3 on P2 (already executed) the re-added M4 gets the 'proposal not pending' error — recorded as is | expected (recorded) | actual FoundationDAO: proposal not pending
+PASS S8.4 re-added M4 can vote on P3 created after the re-add | expected votes 2 | actual 2
+PASS S9.1 P1 with 7 votes still pending (snapshot 8) | expected Pending;7 | actual Pending;7
+PASS S9.2 P1 executes at 8 votes although the live SendETH quorum is 9 (n=16): frozen snapshot respected | expected Executed;8;live 9 | actual Executed;8;live 9
+PASS S10.1 final: 16 members, nonce 3, DAO balance 3 SUR (P1 and P2 executed, P3 pending) | expected 16;3;3.0 | actual 16;3;3.0
+{"total":31,"pass":31,"fail":0}
+wrote evidence: Net-L04f-CL04-6.json

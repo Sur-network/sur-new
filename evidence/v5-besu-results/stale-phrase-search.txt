@@ -1,0 +1,23 @@
+# Search for remaining 'not run / not tested' statements about Besu in the ten edited documents (2026-10-03T19:04Z)
+# Remaining hits are (a) historical sections of dated documents, (b) the intended 'not executed' statements for the real-time path L, (c) unrelated topics.
+./economics/sur-tokenomics.md:71:🔶 **اعمال واقعی نرخ روی Besu هنوز خارج از قرارداد است:** پاداش واقعی بلاک را پیکربندی Besu (`transitions
+./offchain-services/sur-reward-router-spec.md:212:| ۵ | **بخشی تأییدشده (دور Besu v4)، بخشی باز:** transition پاداش، لزوم تغییر فایل + ری‌استارت ن
+./sur-besu-live-test-brief-v4.md:3:> ▶️ **وضعیت اجرا (۲۰۲۶-۱۰-۰۳):** این دستور اجرا شد؛ یک مورد اجرانشده: مسیر ترکیبی زمان واقعی L 
+./sur-besu-live-test-brief-v4.md:6:**وضعیت:** دستور اجرا — **اجرا شد (۲۰۲۶-۱۰-۰۲ تا ۰۳، با دستور صریح مالک)**؛ یک مورد اجرانشده و نت
+./sur-besu-live-test-brief-v4.md:247:مسیر L (حدود ۱۴ روز) **مهلت ۱۸۰ روزهٔ تغییر سهم و انقضای ۳۰ روزه را پوشش نمی‌دهد.** این‌ها (رف
+./sur-besu-live-test-brief-v4.md:368:6. نتیجهٔ رفع قفل ۱۸۰ روزه: **اجرانشده؛ علت زمان.**
+./sur-besu-live-test-brief-v4.md:511:- **کنترل‌های زمان‌محور:** مسیر L (≈ ۱۴ روز) فقط ثبت و اجرای نرخ و اثرگذاری آن را می‌پوشاند. *
+./sur-besu-test-status.md:3:> ▶️ **دور چهارم (v4) اجرا شد (۲۰۲۶-۱۰-۰۲ تا ۰۳) روی کد فعلی:** نتایج، تفکیک انواع شاهد و موارد باز در
+./sur-besu-test-status.md:17:> بعد از دور دوم، یک تصمیم تازه (سیاست پرداخت مستقیم پاداش به تولیدکننده‌ی واقعیِ بلاک، صرف‌ن�
+./sur-master-open-items.md:114:| اجرای واقعی ابزار ساخت genesis.json (مشخصات فنی آماده؛ فقط پیاده‌سازی باقی مانده) — ⚠️ **یادآوری 
+./sur-master-open-items.md:325:🔴 کامپایل هر دو زبان تأیید شده. **هنوز آزمون اجرایی روی یه شبکه‌ی Besu واقعی انجام نشده.**
+./sur-master-open-items.md:336:🔴 هر دو زبان کامپایل تأیید شده. **آزمون Besu واقعی هنوز انجام نشده.**
+./sur-master-open-items.md:370:🔴 هر دو زبان کامپایل تأیید شده. آزمون Besu واقعی هنوز انجام نشده. اسناد `sur-tokenomics.md` و `sur-verifier-servic
+./sur-master-open-items.md:450:**اسناد/UI/ارائه (مرجع واحد لازم است):** A01 (مدل خرج خزانه در ۶ سند)، A02 (جدول عددی `ParamKey` بریف داشبور
+./sur-master-open-items.md:454:🔴 هیچ‌چیز از این دور روی Besu واقعی اجرا نشده؛ اصلاح N01 فقط روی Hardhat محلی آزموده شده.
+./sur-master-open-items.md:500:2. **نیازمند تصمیم شما (تفکیک دقیق‌تر، ۲۰۲۶-۰۹-۲۹؛ و تفکیک کلید گم‌شده/سرقت‌شده، همان روز):** `Id
+./sur-master-open-items.md:525:**کد فعلی در دور چهارم روی Besu آزموده شد** (دامنه و تفکیک شواهد: بخش «نتایج آزمون Besu دور v4» در final-s
+./sur-master-open-items.md:545:| اجرای ترکیبی زمان واقعی مسیر L (مرحلهٔ L4) | **اجرا نشده** (≈۱۴ روز؛ دو نیمهٔ آن جدا شاهد دارند)؛ *
+./sur-project-handoff-summary.md:67:   - **دور چهارم (۲ و ۳ اکتبر ۲۰۲۶، کد فعلی):** گروه‌های A تا F روی قراردادهای دست‌نخوردهٔ Plan (یک
+./technical-design/sur-audit-2026-09-30-final-status.md:11:| L05 | بسته در محدودهٔ Hardhat (تصمیم مالک: سقف پاداش بازه‌ای با نرخ مصوب و حکمرانی �
+./technical-design/sur-audit-2026-09-30-final-status.md:73:- **اجرانشده (۱ مورد):** **مسیر ترکیبی زمان واقعی L** — مرحلهٔ L4 در C-L05-4: پیشنهاد → ت

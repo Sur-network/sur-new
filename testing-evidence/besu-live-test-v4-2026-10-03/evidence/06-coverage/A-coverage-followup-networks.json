@@ -1,0 +1,1487 @@
+{
+  "Net-L05a": {
+    "twin": "Net-T-L05",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-L05 ~ Net-L05a",
+    "head": 107,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-L05.json"
+  },
+  "Net-L05b": {
+    "twin": "Net-T-L05",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-L05 ~ Net-L05b",
+    "head": 107,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-L05.json"
+  },
+  "Net-D3": {
+    "twin": "Net-T-D3",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-D3 ~ Net-D3",
+    "head": 664,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-D3.json"
+  },
+  "Net-A14": {
+    "twin": "Net-T-D3",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-D3 ~ Net-A14",
+    "head": 664,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-D3.json"
+  },
+  "Net-F1": {
+    "twin": "Net-T-F1",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F1 ~ Net-F1",
+    "head": 108,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F1.json"
+  },
+  "Net-F2": {
+    "twin": "Net-T-F2",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F2 ~ Net-F2",
+    "head": 105,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F2.json"
+  },
+  "Net-F3": {
+    "twin": "Net-T-F3",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F3 ~ Net-F3",
+    "head": 106,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F3.json"
+  },
+  "Net-F4": {
+    "twin": "Net-T-F4",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F4 ~ Net-F4",
+    "head": 105,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F4.json"
+  },
+  "Net-F5": {
+    "twin": "Net-T-F2",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F2 ~ Net-F5",
+    "head": 105,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F2.json"
+  },
+  "Net-F5b": {
+    "twin": "Net-T-F2",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F2 ~ Net-F5b",
+    "head": 105,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F2.json"
+  },
+  "Net-F6": {
+    "twin": "Net-T-F6",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-F6 ~ Net-F6",
+    "head": 105,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-F6.json"
+  },
+  "Net-E15": {
+    "twin": "Net-T-E15",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-E15 ~ Net-E15",
+    "head": 665,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-E15.json"
+  },
+  "Net-E30": {
+    "twin": "Net-T-E30",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-E30 ~ Net-E30",
+    "head": 666,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-E30.json"
+  },
+  "Net-E60": {
+    "twin": "Net-T-E60",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-T-E60 ~ Net-E60",
+    "head": 104,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "PASS (existing, not repeated)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-T-E60.json"
+  },
+  "Net-L04f": {
+    "twin": "Net-L04f",
+    "genesisEquivalence": "EQUIVALENT",
+    "equivalenceKey": "Net-L04f ~ Net-L05a",
+    "head": 107,
+    "cells": {
+      "A01": "PASS",
+      "A02": "PASS",
+      "A03": "PASS",
+      "A04": "PASS",
+      "A05": "PASS",
+      "A06": "PASS",
+      "A07": "PASS",
+      "A08": "PASS",
+      "A09": "PASS + SPEC-DISCREPANCY",
+      "A10": "PASS",
+      "A11": "PASS",
+      "A12": "PASS",
+      "A13": "PASS",
+      "A14": "n/a (same recipe as Net-L05a; equivalence proven)",
+      "A15": "PASS"
+    },
+    "detail": {
+      "A01": {
+        "checks": 10,
+        "pass": 10,
+        "fail": 0
+      },
+      "A02": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A03": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A04": {
+        "checks": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "A05": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "A06": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A07": {
+        "checks": 5,
+        "pass": 5,
+        "fail": 0
+      },
+      "A08": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A09": {
+        "checks": 3,
+        "pass": 2,
+        "fail": 1
+      },
+      "A10": {
+        "checks": 3,
+        "pass": 3,
+        "fail": 0
+      },
+      "A11": {
+        "checks": 11,
+        "pass": 11,
+        "fail": 0
+      },
+      "A12": {
+        "checks": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "A13": {
+        "checks": 16,
+        "pass": 16,
+        "fail": 0
+      },
+      "A14": {
+        "source": "A14-static-scan.json + A14-live-stateroot.json"
+      },
+      "A15": {
+        "checks": 2,
+        "pass": 2,
+        "fail": 0
+      }
+    },
+    "rawFile": "evidence/04-results/A-live-Net-L04f.json"
+  }
+}

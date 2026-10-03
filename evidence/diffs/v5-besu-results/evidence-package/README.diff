@@ -1,0 +1,32 @@
+--- a/README.md (previous package, Plan commit f4d75c3)
++++ b/README.md (this package)
+@@ -17,12 +17,15 @@
+ 
+ **Second follow-up pass (2026-10-03):** combined F6 test (non-empty blocks across the reward transition with fees, a membership fee and a direct inflow, full §D accounting; F03 mined rejection; F04 simulation), A14 (static scan + live block-0 state-root leg + negative control) and the F07 re-run with the default Besu heap (Net-F5b). New scripts: `hardhat/scripts/testonly-settle-v2.js`, `testonly-f6-activity.js`, `testonly-a14.js`, `testonly-a14-live.js`, `v5-mpt.js`, `testonly-f07b-monitor.js`; `evidence/03-commands/v5-launch-node-nocap.sh`. `nets/Net-F6-attempt1` is a discarded first attempt kept for transparency (DEVIATIONS.md item 19). Each node directory now also contains its `data/static-nodes.json` (only the chain database in `data/` is excluded from the package).
+ 
++**Third follow-up pass (2026-10-03/04):** C-L04-6 on the fresh seeded Net-L04f (31/31), Group A (A01-A15) per network and test for the follow-up networks via fresh twin networks (Net-T-F1/F2/F3/F4/F6/L05/D3/E15/E30/E60) with proven genesis equivalence (15/15), the A09-spec finding (`lastBoardRefreshAt`), and the plan for the real-time path L (`PLAN-path-L-real-time.md`, **not started**). New scripts: `hardhat/scripts/testonly-a-live.js`, `testonly-twin-equivalence.js`, `make-a-coverage.js`, `testonly-cl04-6.js`; `evidence/03-commands/v6-build-twins.sh`; per-network coverage table in `evidence/06-coverage/`; raw results `evidence/04-results/A-live-*.json`, `A-twin-equivalence.json`, `Net-L04f-CL04-6.json`; hashes of the new result files in `evidence/06-coverage/new-results-sha256.txt`.
++
+ ```
+ REPORT.md                    <- full result table + summary
+ FINDINGS.md                  <- unexpected results, raw evidence
+ DEVIATIONS.md                <- deviations from the brief, with reasoning
+ LIMITATIONS.md               <- open items
+ QUESTIONS.md                 <- for the owner
++PLAN-path-L-real-time.md     <- execution plan for the real-time path L (NOT executed; awaits separate authorisation)
+ baseline/                    <- read-only copy of contracts/ + contracts-fa/ as tested
+ hardhat/                     <- baseline-code tooling (testonly-* scripts, compiled artifacts)
+ hardhat-fork/                <- TEST-FORK-only tooling (3 compressed constants, see REPORT.md)
+@@ -32,6 +35,7 @@
+   01-environment/              <- env.json (Besu/Java/Node/solc/OS versions)
+   02-genesis/<network>/         <- genesis.json + seed summary per network
+   04-results/<ID or network>.json <- raw per-scenario evidence
++  06-coverage/                 <- Group A coverage table per network and test (third pass) + hashes of the new result files
+ logs/<network>/<node>.log      <- raw Besu node logs
+ TEST-KEYS-DO-NOT-REUSE.json    <- all test account keys (local dev-chain only, never reused anywhere real)
+ ```
+@@ -40,4 +44,4 @@
+ > آزمون‌ها به‌معنای آمادگی یا عدم آمادگی production نیست. RewardRouter و ابزار genesis production
+ > پیاده‌سازی نشده‌اند و این بسته آن‌ها را آزمون نکرده است. داده‌های گروه E فقط benchmark مصنوعی هزینه‌اند
+ > و gasLimit تولیدی را تعیین نمی‌کنند. gasLimit تولیدی، مسیر رفع «پاداش واقعی بیش از سقف» برای بازهٔ گذشته،
+-> صفحهٔ حکمرانی نرخ در داشبورد، و اجرای زمان‌واقعیِ مسیر L (مرحلهٔ L4) همچنان باز هستند.
++> صفحهٔ حکمرانی نرخ در داشبورد، و اجرای زمان‌واقعیِ مسیر L (مرحلهٔ L4) همچنان باز هستند. C-L04-6 اکنون اجرا و پاس شده؛ A09-spec (lastBoardRefreshAt) شکست ثبت‌شدهٔ ابزار/مشخصات است.
