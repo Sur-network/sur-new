@@ -18,7 +18,7 @@
 
 ## ۳. ورودی‌های لازم — فایل پیکربندی (`genesis-config.json`)
 
-✅ **به‌روزرسانی:** هر چهار آدرس اوراکل زیر (`distributionOracle`, `verifier`, `identityOracle`, `paymentOracle`) نهایی شده و مستقیماً هاردکد شده‌اند — هم در قراردادهای واقعی (`contracts/BlockRewardDistributor.sol`, `ValidatorsRegistry.sol`, `IdentityRegistry.sol`, `SurenSale.sol`)، هم در مثال پیکربندی زیر. هر چهار آدرس با استاندارد چک‌سام EIP-55 (حروف بزرگ/کوچک صحیح) نوشته شده‌اند.
+✅ هر چهار آدرس اوراکل زیر (`distributionOracle`, `verifier`, `identityOracle`, `paymentOracle`) نهایی شده و مستقیماً هاردکد شده‌اند — هم در قراردادهای واقعی (`contracts/BlockRewardDistributor.sol`, `ValidatorsRegistry.sol`, `IdentityRegistry.sol`, `SurenSale.sol`)، هم در مثال پیکربندی زیر. هر چهار آدرس با استاندارد چک‌سام EIP-55 (حروف بزرگ/کوچک صحیح) نوشته شده‌اند.
 
 
 این فایل باید قبل از اجرای ابزار توسط تیم پروژه (نه توسط خودِ ابزار) تکمیل شود. فرمت دقیق:
@@ -83,7 +83,7 @@
 این سه قرارداد فقط مقادیر مقیاسی ساده (address/uint256) دارند که مستقیم در بدنه‌شان مقداردهی شده‌اند (نه mapping/آرایه). برای این‌ها:
 
 1. یک نسخه‌ی موقت از سورس قرارداد بساز که در آن، هر مقدار `🔶 FILL_IN` با مقدار واقعی از فایل پیکربندی جایگزین شده باشد (مثلاً `address public identityOracle = address(0);` بشود `address public identityOracle = 0xABCD...;`).
-2. این سورس را با `solc` کامپایل کن. ⚠️ **تصحیح (N02):** برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. ✅ **به‌روز (L03، ممیزی ۲۰۲۶-۰۹-۳۰):** `BlockRewardDistributor` دیگر immutable ندارد (`deployTime` حذف شد)؛ ابزار باید خالی‌بودن `immutableReferences` آن را assert کند. تنها immutable پروژه `SurenSale.saleStartTime` است (که genesis نیست)؛ اگر روزی قرارداد genesis دارای immutable شود، دو راه زیر الزامی است. مشخصات کامل T02: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶. دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن. راه (الف) همان روشی است که آزمون واقعی Besu استفاده کرد.
+2. این سورس را با `solc` کامپایل کن. ⚠️ برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. ✅ `BlockRewardDistributor` immutable ندارد؛ ابزار باید خالی‌بودن `immutableReferences` آن را assert کند. تنها immutable پروژه `SurenSale.saleStartTime` است (که genesis نیست)؛ اگر روزی قرارداد genesis دارای immutable شود، دو راه زیر الزامی است. مشخصات کامل T02: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶. دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن. راه (الف) همان روشی است که آزمون واقعی Besu استفاده کرد.
 3. با `solc --storage-layout` (یا فیلد `storageLayout` در خروجی JSON استاندارد) شماره‌ی دقیق slot هر متغیر ساده را بگیر.
 4. مقدار واقعی هرکدام را مستقیم در همان slot در بخش `alloc.storage` genesis بنویس.
 
@@ -97,14 +97,14 @@
 - `ValidatorsRegistry_GenesisSeed.sol`
 - `ValidatorsBoard_GenesisSeed.sol`
 
-هرکدام یک `constructor` واقعی دارند که دقیقاً همان منطق seed کردن قرارداد اصلی را پیاده می‌کنند. ⚠️ **تصحیح مهم (بعد از یک بازبینی مستقل):** جمله‌ی «ساختار storage‌شان دقیقاً با قرارداد اصلی یکی است» فقط برای `FoundationDAO_GenesisSeed` و `ValidatorsBoard_GenesisSeed` کاملاً درست است. برای **`ValidatorsRegistry_GenesisSeed` این‌طور نیست** — قرارداد اصلی چند متغیر اسکالر (`paidValidatorCount`, `verifier`, `entryThresholdBase`, `growthFactorPerValidator`, `membershipFeeBps`, و پارامترهای امنیتی) دارد که فایل کمکی یا اصلاً ندارد یا فقط به‌عنوان placeholder برای حفظ ترتیب صحیح slot نگه داشته (بدون این‌که constructor کمکی مقدار واقعی‌شان را بنویسد). یعنی برای `ValidatorsRegistry` به‌تنهایی، **روش ۴.۱ و ۴.۲ باید ترکیب شوند** — به بخش ۴.۲.۱ پایین مراجعه کن.
+هرکدام یک `constructor` واقعی دارند که دقیقاً همان منطق seed کردن قرارداد اصلی را پیاده می‌کنند. ⚠️ **نکته‌ی مهم:** ساختار storage‌شان با قرارداد اصلی یکی است — این فقط برای `FoundationDAO_GenesisSeed` و `ValidatorsBoard_GenesisSeed` برقرار است. برای **`ValidatorsRegistry_GenesisSeed` این‌طور نیست** — قرارداد اصلی چند متغیر اسکالر (`paidValidatorCount`, `verifier`, `entryThresholdBase`, `growthFactorPerValidator`, `membershipFeeBps`, و پارامترهای امنیتی) دارد که فایل کمکی یا اصلاً ندارد یا فقط به‌عنوان placeholder برای حفظ ترتیب صحیح slot نگه داشته (بدون این‌که constructor کمکی مقدار واقعی‌شان را بنویسد). یعنی برای `ValidatorsRegistry` به‌تنهایی، **روش ۴.۱ و ۴.۲ باید ترکیب شوند** — به بخش ۴.۲.۱ پایین مراجعه کن.
 
-**الگوریتم دقیق (به‌روزشده — قراردادهای کمکی دیگر آرگومان constructor نمی‌گیرند):**
+**الگوریتم دقیق (قراردادهای کمکی آرگومان constructor نمی‌گیرند):**
 
-⚠️ تصمیم تازه: هر سه قرارداد `_GenesisSeed` دیگر آرگومان constructor نمی‌گیرند — مقادیر اولیه (لیست اعضا/ولیدیتورها/هیأت) مستقیم و هاردکد داخل خودِ فایل سورس، با علامت `🔶 FILL_IN`، نوشته شده‌اند. این یعنی ابزار genesis باید یک مرحله‌ی «جایگزینی سورس» قبل از کامپایل انجام دهد، نه صرفاً پاس‌دادن آرگومان زمان دیپلوی:
+⚠️ هر سه قرارداد `_GenesisSeed` دیگر آرگومان constructor نمی‌گیرند — مقادیر اولیه (لیست اعضا/ولیدیتورها/هیأت) مستقیم و هاردکد داخل خودِ فایل سورس، با علامت `🔶 FILL_IN`، نوشته شده‌اند. این یعنی ابزار genesis باید یک مرحله‌ی «جایگزینی سورس» قبل از کامپایل انجام دهد، نه صرفاً پاس‌دادن آرگومان زمان دیپلوی:
 
 1. از فایل `genesis-config.json` (بخش ۳ بالا)، مقادیر `foundationDAO.initialMembers`، `validatorsRegistry.initialValidators`، و `validatorsBoard.initialBoardMembers` را بخوان.
-2. برای هرکدام از سه قرارداد `_GenesisSeed.sol`، یک نسخه‌ی «جایگزینی‌شده» از سورس تولید کن: هر placeholder (`"Member N"`, `address(0)`, `genesisTimestamp = 0`) را با مقدار واقعی متناظر از پیکربندی جایگزین کن. ⚠️ **تصحیح‌شده:** اندازه‌ی آرایه‌ی نمونه‌ی فعلی در `ValidatorsRegistry_GenesisSeed.sol` **۷** است (نه ۵ — هم‌راستا با ۷ ولیدیتور مؤسس واقعی پروژه)؛ اگر تعداد ولیدیتورهای اولیه در `genesis-config.json` با این عدد فرق داشت، بدنه‌ی آرایه (هم نوعش هم فهرست مقادیرش) باید متناسب بازتولید شود.
+2. برای هرکدام از سه قرارداد `_GenesisSeed.sol`، یک نسخه‌ی «جایگزینی‌شده» از سورس تولید کن: هر placeholder (`"Member N"`, `address(0)`, `genesisTimestamp = 0`) را با مقدار واقعی متناظر از پیکربندی جایگزین کن. ⚠️ اندازه‌ی آرایه‌ی نمونه‌ی فعلی در `ValidatorsRegistry_GenesisSeed.sol` **۷** است (هم‌راستا با ۷ ولیدیتور مؤسس واقعی پروژه)؛ اگر تعداد ولیدیتورهای اولیه در `genesis-config.json` با این عدد فرق داشت، بدنه‌ی آرایه (هم نوعش هم فهرست مقادیرش) باید متناسب بازتولید شود.
 3. این سورسِ جایگزینی‌شده را کامپایل کن.
 4. روی یک نمونه‌ی Anvil محلی (`anvil --silent`) دیپلویش کن — چون این‌بار `constructor` هیچ آرگومانی نمی‌گیرد، دیپلوی صرفاً ارسال بایت‌کد کامپایل‌شده است، بدون نیاز به ABI-encode کردن هیچ پارامتری.
 5. آدرس دیپلوی‌شده روی Anvil را نگه دار.
@@ -113,14 +113,14 @@
 8. ⚠️ برای `code` این سه قرارداد در genesis نهایی، **از بایت‌کد deploy‌شده‌ی قرارداد اصلی** (`FoundationDAO.sol`, نه `FoundationDAO_GenesisSeed.sol`) استفاده کن — چون قرارداد کمکی فقط برای محاسبه‌ی storage است، نباید خودش روی زنجیره‌ی واقعی برود. بایت‌کد قرارداد اصلی را طبق روش ۴.۱ (کامپایل استاتیک، بدون نیاز به دیپلوی) به دست بیاور.
 9. Anvil را متوقف و state موقتش را کاملاً دور بینداز. نسخه‌ی «جایگزینی‌شده»ی سورس هم (که مقادیر واقعی داخلش هاردکد شده) باید بعد از این مرحله امن نگه‌داری یا دور انداخته شود — بسته به سیاست حفظ اسناد پروژه؛ خودِ فایل اصلی (با placeholderهای `🔶 FILL_IN`) در ریپو دست‌نخورده می‌ماند.
 
-### ✅ ۴.۲.۱ مرحله‌ی تازه — Overlay اسکالرهای `ValidatorsRegistry` (پیدا و اصلاح‌شده بعد از یک بازبینی مستقل)
+### ✅ ۴.۲.۱ مرحله‌ی Overlay اسکالرهای `ValidatorsRegistry`
 
 مراحل ۱ تا ۹ بالا فقط `mapping`/آرایه‌های پیچیده (`validators`, `activeValidators`, `activeIndex`) را از طریق شبیه‌سازی پر می‌کنند. اما `ValidatorsRegistry.sol` واقعی چند متغیر اسکالر مهم هم دارد که در همان محدوده‌ی storage قرار گرفته‌اند و **هیچ‌کدام از این مقادیر توسط `anvil_dumpState` به‌درستی مقداردهی نمی‌شوند** — چون constructor فایل کمکی هرگز آن‌ها را لمس نمی‌کند (به کامنت `paidValidatorCount`/`verifier` در خودِ `ValidatorsRegistry_GenesisSeed.sol` مراجعه کن). این ابزار باید یک مرحله‌ی سوم و جداگانه (بعد از مرحله‌ی ۷، قبل از نوشتن نهایی storage در genesis) اجرا کند:
 
 1. **الگوریتم سه‌مرحله‌ای برای storage نهایی `ValidatorsRegistry`:**
    - **(الف)** بایت‌کد deploy‌شده‌ی قرارداد اصلی — طبق روش ۴.۱.
    - **(ب)** storage پیچیده (mapping/آرایه) از خروجی `anvil_dumpState` روی `ValidatorsRegistry_GenesisSeed` — طبق مراحل ۱ تا ۷ بالا.
-   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب). ⚠️ **فهرست کامل (تصحیح‌شده — نسخه‌ی قبلی این فهرست ناقص بود و فقط پارامترهای اقتصادی را داشت):**
+   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب). ⚠️ **فهرست کامل:**
      - `verifier` (از `genesis-config.json`، آدرس کلید عملیاتی وریفای)
      - `entryThresholdBase` (باید `500000 ether` باشد، مگر تصمیم تازه‌ای گرفته شده باشد)
      - `growthFactorPerValidator` (باید `1017479692102686336` باشد)
@@ -135,7 +135,7 @@
        - `exitCooldown` (۶۰۴۸۰۰ — ۱ هفته)
        - ✅ **`windowStart`** — ⚠️ برخلاف بقیه‌ی این فهرست، این یکی از `genesis-config.json` مقداردهی *نمی‌شود*؛ باید دقیقاً برابر `network.genesisTimestamp` (بخش ۳ همین سند) باشد، چون منطق rate-limiting ورود ولیدیتور (`maxEntriesPerWindow` در هر `entryWindowSeconds`) از همین لحظه شروع به شمارش می‌کند.
    - **مهم:** `paidValidatorCount` را در این مرحله **ننویس** — باید روی مقدار پیش‌فرض Solidity (صفر) بماند؛ نوشتن هر مقداری دیگر، حتی صفر صریح، یک اسلات اضافه‌ی غیرلازم در genesis اضافه می‌کند (بی‌ضرر، ولی غیرضروری).
-2. ✅ **Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند (فهرست تصحیح‌شده — نسخه‌ی قبلی ناقص بود و فقط پارامترهای اقتصادی و مجموعه‌ی ولیدیتورها را داشت):** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
+2. ✅ **Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند:** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند**:
    ```
    ValidatorsRegistry.paidValidatorCount() == 0
    ValidatorsRegistry.getActiveValidatorCount() == (تعداد initialValidators در config)
@@ -160,7 +160,7 @@
    BlockRewardDistributor.INITIAL_REWARD_PER_BLOCK() == 2000000000000000000   # ✅ L05 (ثابت کد، wei)
    BlockRewardDistributor.maxRewardsForRange(1, 1000) == 2000000000000000000000   # ✅ L05: ۲۰۰۰ SUR — بررسی دودویی تا اولین بازه
    # ✅ L05: اسلات‌های ۲۴ تا ۲۸ قرارداد BlockRewardDistributor (rewardRateChanges، rateProposals، rateBoardVoted، rateValidatorVoted، rateProposalCount)
-   # همه صفرند؛ هیچ مقداردهی storage تازه‌ای برای L05 لازم نیست و هیچ overlay جدیدی اضافه نشد.
+   # همه صفرند؛ هیچ مقداردهی storage برای L05 لازم نیست.
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
    ValidatorsRegistry.slashBps() == (مقدار config)
    ValidatorsRegistry.exitCooldown() == (مقدار config)

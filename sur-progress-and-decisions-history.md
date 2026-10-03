@@ -121,6 +121,12 @@
 - **شرط محل نود:** احراز مداوم حضور نود در ایران (IP-geolocation روی `remoteAddress`) به همان چرخه‌ی liveness افزوده شد؛ مسیر پیامد جدا (`reportGeoViolation`) و تعهدنامه‌ی خارج از زنجیره هنوز باز است.
 - **سوزاندن فی:** کارمزد عضویت از سوزاندن ۳۰٪ معاف است (تصحیح B01 در بازبینی نهایی)؛ دو ردیف سال‌های ۱۵ و ۲۰ جدول عرضه که با پایه‌ی قدیمی ۲۰ میلیون محاسبه شده بودند، با پایه‌ی ۳۵٫۵۳ میلیون بازمحاسبه شدند.
 - **کانال بنیاد (ساختار سازمانی):** مسیر بودجه‌ی تضمینی ۱۵٪ برای هزینه‌ی جاری به‌عنوان استثنای محدود بر حذف مسیر «درخواست بودجه» افزوده شد؛ بودجه‌ی کمپین همچنان مسیر رسمی ندارد.
+- **ابزار genesis و قراردادهای کمکی:** قراردادهای `_GenesisSeed` ابتدا آرگومان constructor می‌گرفتند؛ بعد مقادیر اولیه مستقیم در سورس (با علامت `FILL_IN`) نوشته شد و ابزار genesis مرحله‌ی «جایگزینی سورس» گرفت. فهرست overlay اسکالرهای `ValidatorsRegistry` و فهرست post-build assertions در بازبینی مستقل ناقص تشخیص داده شد و کامل شد؛ اندازه‌ی آرایه‌ی نمونه‌ی ولیدیتورها از ۵ به ۷ رسید (هم‌راستا با ۷ مؤسس). `deployTime` حذف شد (L03) و `BlockRewardDistributor` immutable ندارد.
+- **آدرس اوراکل‌ها:** `paymentOracle` از آرگومان constructor به هاردکد مستقیم (مثل سه اوراکل دیگر) تغییر کرد؛ هر چهار آدرس در `SurAddresses.sol` متمرکز و قابل‌چرخش در state معمولی‌اند.
+- **داشبورد حکمرانی:** سند brief فعلی جایگزین `sur-governance-dashboard-spec.md` شد و پنل چهارم (رأی ولیدیتورها روی پارامترهای امنیتی) را افزود که در سند قبلی نبود؛ جدول هشت‌مقداری `ParamKey` منسوخ و با شش‌مقداری جایگزین شد (index ۳ از «تأیید لایوینس» به `RecoveryPeriod` تغییر کرد). getter فقط‌خواندنی `getProposalMeta` برای خواندن نصاب ثبت‌شده‌ی پیشنهاد افزوده شد (D05) چون نگاشت `proposals` در `FoundationDAO` خصوصی است.
+- **وب‌سایت (sitemap):** منوی «مزیت‌ها و خدمات» از زیرمجموعه‌ی «توسعه‌دهندگان» جدا و مستقل شد، چون ۱۰۰ ایده‌ی کسب‌وکاری مخاطب غیرفنی هم دارد.
+- **سپیدنامه:** ادعای «تراکنش محرمانه به‌عنوان مزیت رقابتی اصلی» کنار گذاشته شد (Tessera منسوخ)؛ سپس پنجره‌ی گذار ۴۵روزه بعد از دوره‌ی قیمت ثابت افزوده شد و برچسب‌های «به‌روزشده» از متن برداشته شد.
+- **سند جامع:** بخش «مزیت‌های رقابتی» قبلاً فهرستی از ایده‌های زیرساختی بود؛ تحلیل بعدی آن را به مزیت‌های واقعی پلتفرم تقلیل داد و ایده‌های دپ را به سند جدا برد.
 
 ---
 
@@ -160,3 +166,16 @@
 - استدلال نظری کافی نیست؛ هر ادعای «حل شد» باید با کامپایل یا اجرای واقعی تأیید شود (دو بار ادعای تأییدنشده‌ای اشتباه از آب درآمد: Stack too deep، و عدد گس).
 - آزمون Hardhat جایگزین آزمون Besu نیست و بالعکس؛ شاهد باید بر اساس نوع (baseline، fork، شبیه‌سازی، seed آزمایشی، benchmark مصنوعی) جدا ثبت شود.
 - «سند کامل شد» به معنای «پیاده‌سازی آماده و آزموده‌شده» نیست.
+
+---
+
+## ۶. وضعیت پاک‌سازی اسناد از تاریخچه‌ی طراحی (۴ اکتبر ۲۰۲۶)
+
+«پاک‌شده» یعنی برچسب‌های «تصمیم تازه/اصلاحیه/به‌روزشده/نسخه‌ی قبلی این سند می‌گفت…» و بندهای «قبلاً → اکنون» از متن برداشته شده‌اند. «باقی‌مانده» یعنی هنوز نشانه‌های تاریخچه دارد (شمارش خودکار، بدون تفکیک «تازه = جدید» از «تازه = تغییریافته»).
+
+| وضعیت | اسناد |
+|---|---|
+| پاک‌شده | `technical-design/sur-blockchain-design-doc.md`، `sur-smart-contracts-reference.md`، `sur-contracts-deploy-notes.md`، `sur-contracts-oracles-accounts-report.md`؛ `governance/sur-organizational-structure.md`؛ `economics/sur-tokenomics.md` (۱۶ نشانه‌ی جزئی مانده)؛ `business/sur-whitepaper.md`، `sur-website-sitemap-proposal.md`؛ `sur-comprehensive-project-document.md`؛ `offchain-services/sur-verifier-service-spec.md`، `sur-reward-router-spec.md`، `sur-governance-dashboard-claudecode-brief.md`، `sur-genesis-builder-tool-spec.md`؛ `sur-master-open-items.md` (نسخه‌ی قدیمی در `_archive/`) |
+| مانده (تاریخچه دارد) | `business/sur-dapp-business-ideas.md` (۱۷ نشانه)، `sur-website-content.md`، `sur-marketing-roadmap.md`، `sur-competitive-advantages.md`؛ `offchain-services/sur-validator-app-claudecode-brief.md`، `sur-identity-registry-spec.md`، `sur-suren-sale-spec.md`، `sur-suren-sale-portal-claudecode-brief.md`، `sur-software-inventory.md`، `sur-contracts-ui-review.md`، `sur-zether-confidential-transfers-proposal.md`؛ `economics/sur-validator-yield-analysis.md`؛ `governance/sur-emergency-consensus-recovery.md` |
+| بدون نیاز به پاک‌سازی (نشانه‌ها تاریخچه‌ی طراحی نیستند یا محتوای اجرای اولیه‌ی شبکه است) | `sur-foundation-articles-of-association.md`، `sur-bridge-risk-analysis.md`، `sur-bridge-technical-methods.md`، `sur-security-audit-plan.md`، `sur-product-development-plan.md`، `sur-zether-usage-guide.md`، `sur-node-check-protocol-spec.md`، `sur-ekyc-rfp.md`؛ بخش «تجربه‌ی شبکه‌ی اول» سپیدنامه (فصل ۳) و تمام اسناد مقایسه‌ی شبکه‌ی اول با شبکه‌ی فعلی — این محتوای «اجرای اولیه‌ی بلاک‌چین» است و نگه داشته می‌شود |
+| دست‌نخورده عمداً (اسناد تصمیم و پیشرفت) | `sur-final-decisions-2026-09-28.md`، `sur-project-handoff-summary.md`، `sur-reward-policy-decision-2026-09-29.md`، `sur-reward-claim-mechanism-design.md` (سند طرح ردشده‌ی `claimableRewards` با بنر منسوخ، خودش سند تاریخچه‌ی تصمیم است و اسناد تصمیم به آن ارجاع می‌دهند)، `technical-design/sur-audit-2026-09-30-*.md`، `sur-besu-live-test-brief-v4.md`، `sur-besu-test-status.md`، `README-PACKAGE*.md`، `testing-evidence/`، `evidence/` |
