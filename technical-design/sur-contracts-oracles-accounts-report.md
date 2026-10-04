@@ -15,7 +15,7 @@
 |---|---|---|---|
 | `FOUNDATION_DAO` | `0x1111...1111` | FoundationDAO.sol | حکمرانی بنیاد Sur (۱۵ عضو) |
 | `BLOCK_REWARD_DISTRIBUTOR` | `0x2222...2222` | BlockRewardDistributor.sol | دریافت پاداش بلاک/کارمزد و توزیع بین ولیدیتورها و خزانه |
-| `VALIDATORS_REGISTRY` | `0x3333...3333` | ValidatorsRegistry.sol | منبع حقیقت کنسنسوس (`getValidators`) و واجدشرایطی پرداخت (`isValidator`) |
+| `VALIDATORS_REGISTRY` | `0x3333...3333` | ValidatorsRegistry.sol | منبع حقیقت کنسنسوس (`getValidators`) و وضعیت ولیدیتور (`isValidator` برای فعال‌بودن فعلی؛ `everActivated` برای صلاحیت دریافت پاداش) |
 | `VALIDATORS_BOARD` | `0x4444...4444` | ValidatorsBoard.sol | هیئت‌مدیره‌ی کوچک منتخب ولیدیتورها با اختیارات محدود تفویضی |
 | `VALIDATORS_TREASURY` | `0x5555...5555` | ValidatorsTreasury.sol | خزانه‌ی سهم باقی‌مانده‌ی بلاک‌ریوارد ولیدیتورها از پاداش (پس از کسر ۱۵٪ ثابت بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها) + جریمه‌ی اسلش — کارمزد عضویت دیگر اینجا نمی‌آید |
 | `IDENTITY_REGISTRY` | `0x6666...6666` | IdentityRegistry.sol | منبع حقیقت هویت خوداظهاری و وضعیت احراز (تلفن/تلگرام/KYC) برای همه‌ی کاربران شبکه |
@@ -39,13 +39,13 @@
 
 ### ۲.۱ `distributionOracle` — در BlockRewardDistributor
 - **کاربرد:** تنها فراخوان‌کننده‌ی مجاز تابع `distributeRewards` است؛ لیست ولیدیتورها، تعداد بلاک هر کدام، و مجموع reward/fee هر epoch را گزارش می‌دهد (حداقل فاصله بین دو فراخوانی: ۲۳ ساعت).
-- **اختیارات:** می‌تواند زمان‌بندی و مقدار توزیع را تعیین کند، اما نمی‌تواند به آدرسی که در ValidatorsRegistry واجد شرایط (`isValidator`) نیست پرداخت کند — این بررسی مستقیماً روی زنجیره انجام می‌شود، بدون واسطه.
+- **اختیارات:** می‌تواند زمان‌بندی و مقدار توزیع را تعیین کند، اما نمی‌تواند به آدرسی که هرگز فعال نشده (`everActivated == false`) پرداخت کند — این بررسی مستقیماً روی زنجیره انجام می‌شود. تطابق اینکه هر مینر در لحظه‌ی تولید بلاک واجد شرایط بوده یا نه مسئولیت سرویس RewardRouter است، نه قرارداد.
 - ✅ مقدار `distributionOracle` نهایی و هاردکد شده: `0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6` (چک‌سام‌شده طبق EIP-55).
 - 🔶 **موجودی گس (مشاهدهٔ آزمون Besu v4؛ تصمیم باز):** هزینهٔ یک `distributeRewards` با حداقل gas price آزمایشی (۰٫۰۰۰۱ SUR به‌ازای هر گس) در آزمون‌های واقعی از ≈۹۴ تا ≈۱۳۶ SUR بود و در benchmark مصنوعی ۱۵۰ payee حدود ۲٬۱۹۹ SUR؛ این کارمزد به distributor برمی‌گردد. حساب اوراکل پیش از ارسال باید `gasLimit × gasPrice` موجودی داشته باشد. مقدار و روش تأمین موجودی و هشدار موجودی کم انتخاب نشده است — `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۴.
 
 ### ۲.۲ `verifier` — در ValidatorsRegistry
-- **کاربرد دوگانه:** هم گزارش وضعیت آنلاین/سینک‌بودن نود در دوره Probation/Demoted (recovery)، و هم گزارش تولید واقعی بلاک (فیلد miner/coinbase) برای ولیدیتورهای Active — از طریق تابع `reportLiveness`.
-- **اختیارات:** فقط می‌تواند true/false ثبت کند؛ گزارش منفی صرفاً لاگ (رویداد) می‌شود و شمارنده‌ای را تغییر نمی‌دهد — چون تشخیص غیرفعالی بر پایه‌ی «نبودِ» تأییدهای مثبت در طول زمان است، نه یک پرچم مستقیم.
+- **کاربرد دوگانه:** هم گزارش وضعیت آنلاین/سینک‌بودن نود در دوره Probation/Demoted (recovery)، و هم گزارش تولید واقعی بلاک (فیلد miner/coinbase) برای ولیدیتورهای Active — و نتیجه را فقط هنگام تغییر وضعیت با توابع `recordActivation`/`recordSuspension`/`recordRecovery`/`recordPreExitViolation` (هرکدام با `evidenceHash`) ثبت می‌کند؛ تابع `reportLiveness` در قرارداد وجود ندارد.
+- **اختیارات:** فقط همین چهار تابع ثبت تصمیم را می‌تواند صدا بزند؛ همه‌ی مراحل بعدی (تحویل شواهد، اعتراض، رأی مجمع) با توابع عمومی یا رأی ولیدیتورهاست و اختیار Verifier نیست.
 - کاملاً مستقل از `identityOracle` در IdentityRegistry است — با اینکه هر دو «کلید تأیید» هستند، عمداً از هم جدا نگه داشته شده‌اند.
 - ✅ آدرس نهایی `verifier`: `0x1A5E86f3333291B3332C0f9Eddb04269940566bc` (چک‌سام‌شده طبق EIP-55).
 
@@ -84,7 +84,7 @@
 - **اختیار حکمرانی امنیتی (Full Validator Vote):** `proposeParameterChange`/`voteParameterChange` در ValidatorsRegistry — پارامترهایی مثل نرخ محدودیت ورود، طول دوره probation، دوره بازیابی (باید بلندتر از پنجره‌ی رخداد جمعی بماند)، درصد slash، و cooldown خروج (باید بلندتر از پنجره‌ی ۷۲ساعته‌ی ثبت پرونده‌ی پیش‌ازخروج بماند)، (آستانه‌ی غیرفعالی ۴ساعته دیگر روی زنجیره نیست: پارامتر سرویس Verifier است) فقط با اکثریت کامل ولیدیتورهای فعال قابل تغییرند (نه بنیاد، نه board).
 - **اختیار در ValidatorsTreasury (✅ P06):** فقط `proposeCapChange`/`voteCapChange` برای تغییر دو سقف (`perPaymentCap`=۵۰٬۰۰۰، `periodCap`=۲۰۰٬۰۰۰ سورن) با رأی اکثریت مجمع و **تأخیر ۷ روزه** (`applyPendingCapChange`). مجمع هیچ پرداخت موردی را تصویب نمی‌کند (`proposeExpenditure`/`voteExpenditure`/`proposeSmallBudgetCap` حذف شده‌اند).
 - **اختیار در ValidatorsBoard:** `voteFor`/`unvoteFor` — رأی تأییدی برای عضویت در board (پیش‌نیاز: ثبت هویت خوداظهاری در IdentityRegistry از طریق `registerIdentity`).
-- **دریافت‌کننده‌ی پرداخت در BlockRewardDistributor:** بررسی واجدشرایطی مستقیماً با `REGISTRY.isValidator` انجام می‌شود.
+- **دریافت‌کننده‌ی پرداخت در BlockRewardDistributor:** بررسی صلاحیت دریافت پاداش مستقیماً با `REGISTRY.everActivated` انجام می‌شود.
 - ✅ **وضعیت فعلی (تکمیل این بخش):** فهرست ۷ ولیدیتور مؤسس از قبل در قرارداد کمکی `ValidatorsRegistry_GenesisSeed.sol` هاردکد شده (Alireza Zojaji، Citex Corp. ۱، Citex Corp. ۲، Mahkameh Sharifzad، Mostafa Naghipoorfar، Sepehr Mohammadi، Siavash Tafazzoli) — فقط آدرس‌ها و genesis timestamp هنوز placeholder‌اند.
 
 ### ۳.۳ اعضای ValidatorsBoard (۵ نفر، بدون فرآیند عزل مستقیم)
@@ -113,11 +113,11 @@
 | `identityOracle` | IdentityRegistry، FoundationDAO | تعریف/استفاده در IdentityRegistry؛ چرخش توسط FoundationDAO |
 | `paymentOracle` | SurenSale، FoundationDAO | تعریف/استفاده در SurenSale؛ چرخش توسط FoundationDAO |
 | اعضای FoundationDAO | FoundationDAO، IdentityRegistry، SurenSale | حکمرانی مستقیم در FoundationDAO؛ کنترل اوراکل‌های identityOracle و paymentOracle |
-| ولیدیتورهای فعال | ValidatorsRegistry، BlockRewardDistributor، ValidatorsBoard، ValidatorsTreasury | عضویت/حکمرانی امنیتی در Registry؛ دریافت پرداخت از Distributor؛ رأی عضویت board؛ رأی هزینه‌ی خزانه |
-| اعضای ValidatorsBoard | ValidatorsBoard، BlockRewardDistributor، ValidatorsTreasury، ValidatorsRegistry | حکمرانی داخلی در Board؛ چرخش اوراکل توزیع؛ تصویب بودجه کوچک؛ پارامترهای اقتصادی و چرخش verifier |
+| ولیدیتورهای فعال | ValidatorsRegistry، BlockRewardDistributor، ValidatorsBoard، ValidatorsTreasury | عضویت/حکمرانی امنیتی در Registry؛ دریافت پرداخت از Distributor؛ رأی عضویت board؛ رأی تغییر سقف‌های خزانه |
+| اعضای ValidatorsBoard | ValidatorsBoard، BlockRewardDistributor، ValidatorsTreasury، ValidatorsRegistry | حکمرانی داخلی در Board؛ چرخش اوراکل توزیع؛ تصویب پرداخت موردی از خزانه زیر سقف‌ها؛ پارامترهای اقتصادی و چرخش verifier |
 | `FOUNDATION_DAO` (آدرس) | IdentityRegistry، SurenSale | ثابت `FOUNDATION` در هر دو، برای اعمال modifier `onlyFoundation` |
 | `BLOCK_REWARD_DISTRIBUTOR` (آدرس) | ValidatorsBoard | ثابت `DISTRIBUTOR` برای چرخش اوراکل |
-| `VALIDATORS_REGISTRY` (آدرس) | BlockRewardDistributor، ValidatorsBoard، ValidatorsTreasury | ثابت `REGISTRY` برای بررسی `isValidator`/`getValidators` |
+| `VALIDATORS_REGISTRY` (آدرس) | BlockRewardDistributor، ValidatorsBoard، ValidatorsTreasury | ثابت `REGISTRY` برای بررسی `everActivated`/`isValidator`/`getValidators` |
 | `VALIDATORS_BOARD` (آدرس) | BlockRewardDistributor، ValidatorsRegistry، ValidatorsTreasury | ثابت `BOARD` برای اعمال modifier `onlyBoard` |
 | `VALIDATORS_TREASURY` (آدرس) | BlockRewardDistributor، ValidatorsRegistry، ValidatorsBoard | ثابت `TREASURY`، مقصد سهم پاداش/جریمه/بودجه‌ی تصویب‌شده (کارمزد عضویت دیگر اینجا نمی‌آید — به `BlockRewardDistributor` می‌رود) |
 | `IDENTITY_REGISTRY` (آدرس) | ValidatorsBoard | ثابت `IDENTITY_REGISTRY`، بررسی `hasIdentity` پیش از `voteFor` |
@@ -154,5 +154,5 @@
 - **جداسازی عمدی حکمرانی در ValidatorsRegistry:** پارامترهای اقتصادی ورود (`entryThresholdBase`، `growthFactorPerValidator`، `membershipFeeBps`) فقط زیر کنترل board هستند (چون نیاز به تنظیم مکرر دارند)؛ بقیه‌ی پارامترهای امنیتی فقط با رأی کامل ولیدیتورهای فعال قابل تغییرند.
 - محافظ reentrancy (`nonReentrant`) در BlockRewardDistributor، ValidatorsRegistry و ValidatorsTreasury پیاده‌سازی شده است.
 - IdentityRegistry برای همه‌ی کاربران شبکه است، نه فقط ولیدیتورها — و عمداً از ValidatorsRegistry جدا نگه داشته شده تا یک باگ در منطق ولیدیتورها هرگز روی داده‌ی هویتی کل شبکه اثر نگذارد.
-- BlockRewardDistributor به دلیل محدودیت عمق پشته‌ی EVM (Stack too deep) به سه تابع داخلی (`_sumBlocks`، `_payValidators`/`_payOneValidator`، `_finalizeEpoch`) شکسته شده — بدون تغییر در رفتار یا ترتیب رویدادها — تا نیازی به فعال‌سازی viaIR نباشد (که برخی سرویس‌های verify مانند Blockscout از آن پشتیبانی نمی‌کنند).
+- BlockRewardDistributor به دلیل محدودیت عمق پشته‌ی EVM (Stack too deep) به توابع داخلی شکسته شده (`_settleRange`، `_prepareEpoch`، `_sumBlocks`، `_payValidators`/`_payOneValidator`، `_finalizeEpoch`) — بدون تغییر در رفتار یا ترتیب رویدادها — تا نیازی به فعال‌سازی viaIR نباشد (که برخی سرویس‌های verify مانند Blockscout از آن پشتیبانی نمی‌کنند).
 - SurenSale تنها قراردادی است که constructor واقعی دارد و بعد از genesis، با یک تراکنش معمولی دیپلوی می‌شود؛ ✅ اما `constructor`اش دیگر هیچ پارامتری نمی‌گیرد — `paymentOracle` هم مثل سه اوراکل دیگر مستقیم در سورس هاردکد شده (بند بالا را ببین)، نه آرگومان سازنده.
