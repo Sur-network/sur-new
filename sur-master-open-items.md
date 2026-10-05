@@ -34,8 +34,8 @@
 | مورد | سند مبدأ |
 |---|---|
 | RewardRouter (شامل بازه‌ی P05 و تعیین بازه‌ها) | `offchain-services/sur-reward-router-spec.md` |
-| Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، `syncBoard`/`refreshBoard`) | `offchain-services/sur-verifier-service-spec.md` |
-| ابزار ساخت `genesis.json` تولیدی — T02 (مشخصات کامل؛ اجرا و تست `--verify` روی Besu واقعی وجود ندارد). **شامل الزام موجود P01:** نوشتن `lastBoardRefreshAt` = timestamp genesis وقتی هیأت seed می‌شود و assert آن (مشخصات بند ۴.۲.۱)؛ این تصمیم باز نیست و ابزار آزمایشی همین را انجام داد و در دور چهارم آزمون Besu تأیید شد | `offchain-services/sur-genesis-builder-tool-spec.md`؛ `testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md` مورد ۲۲ |
+| Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، `syncBoard`/`refreshBoard(address[])`) | `offchain-services/sur-verifier-service-spec.md` |
+| ابزار ساخت `genesis.json` تولیدی — T02 (مشخصات کامل؛ اجرا و تست `--verify` روی Besu واقعی وجود ندارد). **شامل الزام موجود:** نوشتن `boardMonthId` = ماه میلادی زمان genesis و `boardVersion` = ۱ وقتی هیأت seed می‌شود، و ترتیب `activationSeq` مؤسسان، و assert آن‌ها (مشخصات بند ۴.۲.۱)؛ این تصمیم باز نیست. دور پنجم Besu روی نسخهٔ ۲.۱.۰ هنوز اجرا نشده و باید این مقدارها را روی شبکهٔ تازه تأیید کند | `offchain-services/sur-genesis-builder-tool-spec.md`؛ `testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md` مورد ۲۲ |
 | Identity Service، PaymentReporter، اپ ولیدیتور، داشبورد حکمرانی، پرتال فروش | `offchain-services/sur-software-inventory.md` |
 | ابزار بازیابی اضطراری | `governance/sur-emergency-consensus-recovery.md` |
 | سرویس همراه نود برای `SUR_NODE_CHECK_V1` (فقط مشخصات) | `offchain-services/sur-node-check-protocol-spec.md` |

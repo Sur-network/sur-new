@@ -88,14 +88,14 @@
 - ✅ **وضعیت فعلی (تکمیل این بخش):** فهرست ۷ ولیدیتور مؤسس از قبل در قرارداد کمکی `ValidatorsRegistry_GenesisSeed.sol` هاردکد شده (Alireza Zojaji، Citex Corp. ۱، Citex Corp. ۲، Mahkameh Sharifzad، Mostafa Naghipoorfar، Sepehr Mohammadi، Siavash Tafazzoli) — فقط آدرس‌ها و genesis timestamp هنوز placeholder‌اند.
 
 ### ۳.۳ اعضای ValidatorsBoard (۵ نفر، بدون فرآیند عزل مستقیم)
-- **قرارداد میزبان:** ValidatorsBoard.sol — عضویت با رأی تأییدی (approval voting) از سوی ولیدیتورهای فعال تعیین می‌شود؛ هر ولیدیتور فعال می‌تواند تا ۵ نامزد را رأی دهد و هر زمان پس بگیرد (رأی همیشه آزاد است)؛ ولی ✅ **ترکیب عادی فقط هر ۳۰ روز** اعمال می‌شود؛ درخواست خروج اختیار عضو را فوراً قطع می‌کند و جانشین بدون انتظار می‌آید (P01/P02).
-- **بازآوری (`refreshBoard`):** permissionless ولی ✅ حداکثر هر ۳۰ روز یک‌بار (هیأت خالی: هر زمان)؛ ۵ نامزد با بیشترین رأیِ فعلاً معتبر (فقط رأی‌دهنده و نامزدِ هر دو فعال) جایگزین ترکیب فعلی می‌شوند — بدون مسیر عزل اضطراری؛ عضو معلق در این نقطه واجد ماندن نیست. **جانشینی** (`syncBoard`/`fillVacancies`) فقط کرسی‌های آزادشده‌ی ناشی از خروج را پر می‌کند.
+- **قرارداد میزبان:** ValidatorsBoard.sol — عضویت با رأی تأییدی (approval voting) از سوی ولیدیتورهای فعال تعیین می‌شود؛ هر ولیدیتور فعال می‌تواند تا ۵ نامزد را رأی دهد و هر زمان پس بگیرد (رأی همیشه آزاد است)؛ ولی ✅ **ترکیب هیأت هر ماه میلادی** با نخستین `refreshBoard` همان ماه عوض می‌شود؛ درخواست خروج اختیار عضو را فوراً قطع می‌کند و جانشین بدون انتظار می‌آید (P01/P02).
+- **بازآوری (`refreshBoard`):** permissionless؛ هیأت هر ماه میلادی (UTC) با نخستین فراخوان همان ماه نشانده می‌شود (هیأت خالی: هر زمان)؛ ۵ ولیدیتور فعال با بیشترین رأی شمرده‌شده (در تساوی ولیدیتور قدیمی‌تر؛ عضو قبلی امتیازی ندارد) جایگزین ترکیب قبلی می‌شوند و هیأت ماه قبل تا آن لحظه اختیاری ندارد — بدون مسیر عزل اضطراری؛ عضو معلق در این نقطه واجد ماندن نیست؛ هماهنگ‌سازی شمارندهٔ رأی‌ها در همان تراکنش (آرگومان `votersToSync`). **جانشینی** (`syncBoard`/`fillVacancies`) فقط کرسی‌های آزادشده‌ی ناشی از خروج را پر می‌کند.
 - **پاک‌سازی رأی‌های راکد (`clearStaleVotes`):** permissionless، وقتی ولیدیتوری بیش از (دوره بازیابی + ۳۰ روز) پیوسته Demoted بماند، هر کسی می‌تواند رأی‌های داده‌شده و دریافتی او را حذف کند.
 - **اختیارات تفویضی board** (نیازمند رأی اکثریت داخلی اعضای board، نه یک نفر):
-  1. `proposeRotateOracle` → چرخش `distributionOracle` در BlockRewardDistributor (برای موارد اضطراری/افشای کلید).
+  1. `proposeRotateOracle` → چرخش `distributionOracle` در BlockRewardDistributor (برای موارد اضطراری/افشای کلید؛ دست‌کم ۳ رأی، بدون تأخیر).
   2. `proposeApproveBudget` → تصویب پرداخت خزانه (حداقل ۳ رأی هیأت) در سقف‌های `perPaymentCap` (✅ تصمیم نهایی: پرداخت می‌تواند دقیقاً برابر سقف هم باشد، `<=`) و `periodCap` (مجموع حدود ۳۰ روز، همین‌طور شامل مقدار مرزی).
   3. `proposeSetEntryThresholdBase` / `proposeSetGrowthFactorPerValidator` / `proposeSetMembershipFeeBps` → تنظیم پارامترهای اقتصادی ورود در ValidatorsRegistry.
-  4. `proposeRotateVerifier` → چرخش `verifier` در ValidatorsRegistry.
+  4. `proposeRotateVerifier` → چرخش `verifier` در ValidatorsRegistry (دست‌کم ۳ رأی، بدون تأخیر).
 - **محدودیت صریح:** board نمی‌تواند پارامترهای امنیتی سطح‌بالاتر (نرخ محدودیت ورود، probation، liveness، slashing، cooldown) یا سقف بودجه‌ی خودش را تغییر دهد؛ آن‌ها فقط با رأی کامل ولیدیتورها ممکن‌اند. board همچنین نمی‌تواند آدرس هیچ قرارداد ساختاری را تغییر دهد (این آدرس‌ها constant در زمان کامپایل‌اند).
 - ✅ **وضعیت فعلی (تکمیل این بخش):** ۵ عضو مؤسس هیأت از قبل در قرارداد کمکی `ValidatorsBoard_GenesisSeed.sol` هاردکد شده (Alireza Zojaji، Citex Corp.، Mahkameh Sharifzad، Sepehr Mohammadi، Siavash Tafazzoli).
 

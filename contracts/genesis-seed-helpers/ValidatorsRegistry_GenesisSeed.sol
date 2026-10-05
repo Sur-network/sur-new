@@ -2,120 +2,67 @@
 pragma solidity ^0.8.24;
 
 // ============================================================================
-// WARNING: GENESIS SEEDING HELPER — TEMPORARY, NEVER DEPLOYED ON THE REAL CHAIN
+// GENESIS SEEDING HELPER: temporary, never deployed on the real chain.
 //
-// This is the TEMPORARY counterpart of: contracts/ValidatorsRegistry.sol
+// Counterpart of contracts/ValidatorsRegistry.sol. The real contract has no constructor (it is injected into the genesis
+// `alloc`), but `validators` (a mapping to a struct), `activeValidators` (a dynamic array) and `activeIndex` (a mapping)
+// cannot be populated with contract-level Solidity syntax. This helper runs that seeding logic in a no-argument
+// constructor (the genesis timestamp and the founding addresses are written directly below), so that running it once on a
+// temporary local chain (Anvil or Hardhat) lets the EVM perform the keccak256 storage-slot arithmetic for each entry.
 //
-// ✅ FIXED (critical bug found in review): this file had fallen out of sync with the real
-// contract in two ways that would have corrupted genesis storage if used as-is:
-//   1. The ValidatorInfo struct here was missing the `isPaidEntrant` field added later to the
-//      real contract.
-//   2. The real contract now declares TWO scalar variables (`paidValidatorCount`, `verifier`)
-//      BETWEEN `validators` and `activeValidators`/`activeIndex` — but this helper previously
-//      declared `activeValidators`/`activeIndex` immediately after `validators`, with nothing
-//      in between. Since a `mapping` or dynamic `array` type occupies exactly one storage slot
-//      for its own "base" (the actual entries live at computed keccak256 offsets from that
-//      base), every variable declared AFTER the mapping/array shifts by exactly one slot for
-//      each scalar inserted before it. Without the two placeholder declarations below in the
-//      SAME relative position, this helper's computed slot for `activeValidators.length` would
-//      have been off by 2 relative to the real contract — meaning naively copying "helper slot
-//      N → real contract slot N" would have written the founding validator *array* data into
-//      what the real contract reads as `paidValidatorCount`/`verifier`, and vice versa.
+// Storage-layout rule: the variable order and types below must match the real ValidatorsRegistry.sol exactly. A mapping or
+// dynamic array occupies one slot for its base, so every variable declared after it depends on the number of slots before
+// it; the placeholders and gaps below reserve the real contract's slots. Whenever the real contract changes, this file
+// must be updated by hand (check with static-checks/check_genesis_helper_layout.js).
 //
-// Purpose: the real ValidatorsRegistry.sol has no constructor (it is injected directly into the
-// genesis alloc). But `validators` (a mapping to a struct), `activeValidators` (a dynamic
-// array), and `activeIndex` (a mapping) cannot be populated with any contract-level Solidity
-// syntax. This helper contract implements that exact seeding logic inside a real, NO-ARGUMENT
-// constructor — the genesis timestamp and initial validator addresses are hardcoded directly
-// below, not passed in as constructor arguments — so that running it once on a temporary local
-// chain (Anvil/Hardhat) lets the EVM itself perform the keccak256 storage-slot math required for
-// each mapping/array entry.
-//
-// How the genesis-building tool should use this file:
-//   1. 🔶 FILL_IN: replace the placeholder genesis timestamp and every placeholder validator
-//      address below with the real, final values before deploying this file anywhere. The
-//      NUMBER OF ENTRIES in the array (currently 7, matching the real founding validator count)
-//      must also be adjusted if that count ever changes — add or remove array entries as
-//      needed, updating every place the array length is written (the type declaration and the
-//      literal list itself).
+// How the genesis tool uses this file:
+//   1. FILL_IN: replace the placeholder genesis timestamp and every placeholder validator address with the final values.
+//      If the number of founders changes, change the array length (type and literal list).
 //   2. Deploy this file (no constructor arguments) on a temporary local chain.
-//   3. Extract its full final storage (via eth_getStorageAt for every touched slot, or a
-//      state-dump tool).
-//   4. Write that storage — together with the REAL ValidatorsRegistry.sol's compiled runtime
-//      bytecode (NOT this file's bytecode) — under address 0x3333...3333 in genesis.json's
-//      `alloc` section. ⚠️ The `paidValidatorCount` and `verifier` placeholder slots below will
-//      extract as 0 / address(0) from THIS helper (their constructor never touches them) — do
-//      NOT copy those two specific slots verbatim from the helper. `paidValidatorCount` should
-//      genuinely be left at 0 (founders don't count toward the paid curve — see the real
-//      contract's own doc comment), which needs no action at all (0 is Solidity's storage
-//      default, so simply omitting that slot from the genesis alloc write already gives the
-//      correct result). `verifier` must instead be set to its real, final operational-key
-//      address directly in the genesis alloc at its own slot (immediately after
-//      `paidValidatorCount`'s slot) — exactly like every other simple scalar (entryThresholdBase,
-//      growthFactorPerValidator, membershipFeeBps, and the rest), none of which need this
-//      helper either, per the real contract's own "GENESIS FILL-IN" comment.
-//
-// WARNING: the field order and types below must exactly match the real ValidatorsRegistry.sol,
-// or the extracted storage slots will not line up with the final contract. Whenever the real
-// ValidatorsRegistry.sol changes, this file must be manually kept in sync.
+//   3. Extract its final storage (eth_getStorageAt for every touched slot, or a state-dump tool).
+//   4. Write that storage, together with the REAL ValidatorsRegistry.sol runtime bytecode (not this file's bytecode),
+//      under address 0x3333...3333 in genesis.json `alloc`. The placeholder slots (`paidValidatorCount`, `verifier`, the
+//      gaps) extract as zero from this helper: do not copy them. `paidValidatorCount` stays 0 (omit the slot).
+//      `verifier` and every other simple scalar (entryThresholdBase, growthFactorPerValidator, membershipFeeBps, the
+//      security parameters, the genesis timestamp) are written directly into `alloc` at their own slots, as described in
+//      the real contract's GENESIS FILL-IN notes.
 // ============================================================================
 contract ValidatorsRegistry_GenesisSeed {
-    // --- Exact copy of the real ValidatorsRegistry.sol, up to the point where mappings/arrays start ---
     enum Status { None, Probation, Active, Demoted, Exiting }
 
+    // Field count and order must match the real struct exactly, or every mapping-entry slot computation breaks.
     struct ValidatorInfo {
         Status status;
         uint256 lockedStake;
         uint256 periodStartedAt;
-        // ✅ CHANGED (off-chain verification architecture redesign): the packed liveness field
-        // that used to live here was removed entirely from the real ValidatorsRegistry.sol —
-        // liveness is checked off-chain now, with only status-change decisions (and their
-        // evidence hashes) recorded on-chain, in a SEPARATE mapping (statusDecisions) that
-        // genesis does not need to seed for founding validators (they start with none). This
-        // struct must keep matching the real one's field count and order exactly, or every
-        // subsequent mapping-entry slot computation breaks — see isPaidEntrant's comment below.
         uint256 pendingSlashEpoch;
         uint256 demotedAt;
-        bool isPaidEntrant; // ✅ ADDED — must match the real struct exactly, or the per-entry
-        // struct size (and therefore every subsequent mapping-entry slot computation) would be
-        // wrong even for the `validators` mapping itself, not just the scalars after it.
+        bool isPaidEntrant;
     }
 
     mapping(address => ValidatorInfo) public validators;
 
-    // ✅ ADDED — placeholder ONLY, to reserve the correct relative slot position (see the
-    // warning above). This helper's constructor deliberately never writes to it — it must stay
-    // at its Solidity storage default (0), which is exactly the correct genesis value for
-    // founding validators (see the real contract's own doc comment on this field).
+    // Placeholder: reserves the real contract's slot. Never written here; founders do not count toward the paid curve.
     uint256 public paidValidatorCount;
 
-    // ✅ ADDED — placeholder ONLY, same reasoning as paidValidatorCount above. The real
-    // verifier address is set directly in the genesis alloc at this slot, NOT via this helper —
-    // this declaration exists purely to occupy the correct slot position so that
-    // `activeValidators`/`activeIndex` below land where the real contract expects them.
+    // Placeholder: reserves the real contract's slot. The real verifier address is written directly into `alloc`.
     address public verifier;
 
     address[] private activeValidators;
     mapping(address => uint256) private activeIndex;
 
-    // ✅ FIXED (found in independent review — a real bug, not just documentation): 14 economic/
-    // timing parameters (entryThresholdBase, growthFactorPerValidator, ..., paramProposalCount)
-    // and the `massFailureChecked` mapping sit between `activeIndex` and `everActivated` in the
-    // real contract (slots 5–19) — this gap reserves that exact span, purely to occupy the
-    // correct slot position, so `everActivated` below lands at the real contract's slot 20. Their
-    // actual values are set by genesis overlay (perPaymentCap-style), not by this constructor.
+    // Slots 5-19 of the real contract: the economic and timing parameters and the `massFailureChecked` mapping. Their values
+    // are set by the genesis overlay, not by this constructor.
     uint256[15] private __gap1;
 
-    // ✅ FIXED (independent review): without this, founders would be genesis-injected as `Active`
-    // (see the constructor below) but with `everActivated == false` — the exact state
-    // `BlockRewardDistributor` now rejects with "address was never a legitimate validator" (see
-    // ValidatorsRegistry.sol's own doc comment on this field). The constructor below DOES write to
-    // this one, unlike the placeholders above — every founder must get `true` here, or the very
-    // first real `distributeRewards()` call reverts the moment it tries to pay a founder.
+    // Written by the constructor: every founder is brought in as Active with everActivated = true, so that the very first
+    // distributeRewards() call can pay a founder.
     mapping(address => bool) public everActivated;
-    // L04: slots 21–35 of the real contract (fields declared after everActivated, up to paramProposalCount) — placeholder only.
-    // statusNonce (slot 36) stays 0 at genesis; every founder gets the checkpoint {nonce: 0, active: true} in activeCheckpoints
-    // (slot 37), so wasActiveAt(founder, n) is true for every proposal created before the founder's first status change.
+
+    // Slots 21-35 of the real contract (the fields declared after everActivated, up to paramProposalCount): placeholder only.
+    // statusNonce (slot 36) stays 0 at genesis; every founder gets the checkpoint {nonce: 0, active: true} in
+    // activeCheckpoints (slot 37), so wasActiveAt(founder, n) is true for every proposal created before the founder's first
+    // status change.
     uint256[15] private __gap2;
     struct ActiveCheckpoint {
         uint64 nonce;
@@ -124,15 +71,19 @@ contract ValidatorsRegistry_GenesisSeed {
     uint256 public statusNonce;
     mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
 
+    // Slots 38 and 39 of the real contract: the order of first activation. Founders are numbered 1..7 in the order listed in
+    // the constructor; the board uses it to break ties between candidates with equal votes (the older validator wins).
+    uint256 public activationCount;
+    mapping(address => uint256) public activationSeq;
+
     // ------------------------------------------------------------------
     // No-argument constructor — the genesis timestamp and initial validator set are hardcoded
     // directly below.
-    // 🔶 FILL_IN: replace the placeholder timestamp (0) and every 0x000...000 address with the
-    // real, final, agreed-upon founding validator set before this file is ever deployed
-    // anywhere.
+    // FILL_IN: replace the placeholder timestamp (0) and every 0x000...000 address with the real, final founding validator
+    // set before this file is deployed anywhere.
     // ------------------------------------------------------------------
     constructor() {
-        uint256 genesisTimestamp = 0; // 🔶 FILL_IN — the real genesis timestamp of the live network
+        uint256 genesisTimestamp = 0; // FILL_IN: the real genesis timestamp of the live network
 
         address[7] memory initialValidators = [
             address(0), // Alireza Zojaji
@@ -159,7 +110,8 @@ contract ValidatorsRegistry_GenesisSeed {
             });
             activeIndex[v] = activeValidators.length + 1;
             activeValidators.push(v);
-            everActivated[v] = true; // ✅ FIXED — see the doc comment on this field's declaration above
+            everActivated[v] = true; // founders must be payable from the first distribution; see everActivated in the real contract
+            activationSeq[v] = ++activationCount;
             activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true})); // L04
         }
         // paidValidatorCount and verifier are deliberately left untouched — see the doc

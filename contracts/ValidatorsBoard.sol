@@ -11,18 +11,19 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
-    // ✅ FIXED / اصلاح‌شده — لایه‌ی دوم دفاع در برابر بازگشتِ اختیار کرسی کهنه؛ ValidatorsRegistry.sol را ببین.
+
+    /// @dev Incremented each time an address exits voluntarily; a seat is valid only while the epoch
+    ///      still equals the value stamped when the seat was taken.
     function membershipEpoch(address who) external view returns (uint256);
-    /// @dev `status` is ValidatorsRegistry.Status's ABI-compatible uint8 encoding:
-    ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting.
-    /// @dev ✅ UPDATED (off-chain verification architecture redesign): the real
-    ///      ValidatorsRegistry.getValidatorInfo() no longer has any liveness-ratio fields at all
-    ///      (they were removed entirely — liveness is checked off-chain now). It returns exactly
-    ///      6 outputs in this order: status, lockedStake, periodStartedAt, demotedAt,
-    ///      pendingSlashEpoch, isPaidEntrant. This interface MUST match that exactly, in the same
-    ///      order — see the real function's own doc comment in ValidatorsRegistry.sol for why a
-    ///      mismatch here caused a real, silent cross-contract bug in an earlier version (fixed
-    ///      then, and worth re-checking any time the real function's signature changes again).
+
+    /// @dev Position of `who` in the order in which addresses were first activated (1 = oldest);
+    ///      0 for an address that was never activated. Used as the tie-break between candidates
+    ///      with equal vote counts: the older validator wins.
+    function activationSeq(address who) external view returns (uint256);
+
+    /// @dev `status` uses ValidatorsRegistry.Status's ABI encoding:
+    ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting. The six outputs must match the
+    ///      real function exactly, in this order.
     function getValidatorInfo(address who) external view returns (
         uint8 status,
         uint256 lockedStake,
@@ -33,9 +34,7 @@ interface IValidatorsRegistry {
     );
 }
 
-/// @dev Architecture note: identity no longer lives inside ValidatorsRegistry — it was moved to
-///      a fully independent, sixth structural contract, `IdentityRegistry.sol` (fixed address
-///      `0x6666...6666`).
+/// @dev Identity lives in the independent `IdentityRegistry` contract (fixed address `0x6666...6666`).
 interface IIdentityRegistry {
     function hasIdentity(address who) external view returns (bool);
 }
@@ -49,225 +48,143 @@ interface IValidatorsTreasury {
 }
 
 /// @title ValidatorsBoard
-/// @notice Deployed at the fixed genesis address SurAddresses.VALIDATORS_BOARD (0x4444...4444).
-///         Referred to as the "validators' board of directors" in the project's
-///         Persian-language documentation.
+/// @notice The validators' board of directors, deployed at `SurAddresses.VALIDATORS_BOARD` (0x4444...4444).
 ///
-///         BOARD MEMBERSHIP — approval voting, fixed 5 seats, no recall (updated design; retires
-///         the earlier one-at-a-time add/remove election model entirely):
-///           - Every active validator may, at any time, vote FOR up to MAX_VOTES_PER_VOTER (5)
-///             other active validators (`voteFor`), and withdraw any of those votes at any time
-///             (`unvoteFor`). No nomination step, no voting window, no quorum requirement.
-///             Voting requires the voter to have first self-attested identity information on
-///             the separate `IdentityRegistry` contract (`registerIdentity` — name and person
-///             type only, self-reported; phone number, Telegram ID, and full KYC documents live
-///             off-chain — `IdentityRegistry` only records whether each was verified, not
-///             required for voting itself, only `hasIdentity` is).
-///           - `refreshBoard()` — permissionless, callable by anyone at any time — recomputes
-///             the board as the BOARD_SIZE (5) validators with the most current votes, counting
-///             only votes cast BY currently-active validators FOR currently-active validators
-///             (both sides are re-checked live against ValidatorsRegistry on every refresh, so a
-///             validator that becomes inactive automatically stops both voting and being
-///             eligible as a candidate, with no separate "recall" step needed).
-///           - Ties are broken in favor of whichever candidate was encountered first while
-///             tallying (validators in ValidatorsRegistry.getValidators() order, each voter's
-///             votes in the order they were cast) — i.e. first-come-first-served among equal
-///             vote counts.
-///           - STALE VOTE CLEANUP: if a validator stays Demoted (inactive) for longer than
-///             `ValidatorsRegistry.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY` (30 days) without
-///             recovering, anyone may call `clearStaleVotes` to purge every vote they cast AND
-///             every vote they received, freeing up the other validators' vote slots. Before
-///             that 30-day mark, their votes simply stop counting in `refreshBoard()` (they are
-///             not active, so they're excluded from both sides of the tally) — no cleanup is
-///             needed for that to take effect, cleanup is only about freeing storage/slots.
+///         BOARD MEMBERSHIP — approval voting, five seats, one board per calendar month:
+///           - Every active validator that has registered an identity may vote FOR up to
+///             MAX_VOTES_PER_VOTER (5) active validators (`voteFor`) and withdraw any vote at any
+///             time (`unvoteFor`). There is no nomination step and no voting window. Votes persist
+///             until the voter changes them.
+///           - The board of a calendar month (UTC) takes office when `refreshBoard` is first
+///             called in that month. Anyone may call it. The five active validators with the most
+///             votes become the board; ties are broken in favour of the validator that was
+///             activated first. Previous membership gives no advantage, and all five seats may
+///             change at once.
+///           - Until `refreshBoard` has been called in a new month, the previous board has no
+///             authority. Within a month, `refreshBoard` succeeds once (an empty board may be
+///             filled at any time).
+///           - Votes are counted incrementally. Each candidate has a running counter that
+///             `voteFor` and `unvoteFor` update. Only votes cast by currently active validators
+///             are included. When a validator's status changes, the registry calls `syncVoter`,
+///             which adds or removes that validator's votes; anyone may also call it to repair
+///             the counters. A candidate's own eligibility is checked live when the board is
+///             selected.
+///           - If a validator stays Demoted for longer than the registry's `recoveryPeriod()` plus
+///             STALE_VOTE_CLEAR_DELAY (30 days), anyone may call `clearStaleVotes` to purge every
+///             vote that validator cast and received.
 ///
-///         The board's delegated powers (unchanged from before, still narrow and explicit):
-///           1. Rotate the `distributionOracle` key on BlockRewardDistributor immediately,
-///              with a transparent on-chain record (for compromised-key emergencies).
-///           2. Approve small, routine treasury budget requests below a fixed cap.
-///           3. Set the three ECONOMIC ENTRY PARAMETERS on ValidatorsRegistry —
-///              entryThresholdBase, growthFactorPerValidator, membershipFeeBps (moved off the
-///              full-validator-vote path because reaching a full-validator majority in practice
-///              gets harder as the validator set grows, and these parameters are expected to
-///              need frequent, timely tuning).
+///         BOARD POWERS (narrow and explicit):
+///           1. Rotate the `distributionOracle` key on BlockRewardDistributor.
+///           2. Rotate the `verifier` key on ValidatorsRegistry.
+///           3. Approve routine treasury payments up to the treasury's caps.
+///           4. Set the three economic entry parameters on ValidatorsRegistry
+///              (entryThresholdBase, growthFactorPerValidator, membershipFeeBps).
+///         Every board action needs an internal vote among the current board members. Key
+///         rotations and budget approvals require at least three votes and take effect as soon as
+///         that many members have voted. The board cannot change the security parameters or any
+///         core contract address.
 ///
-///         The board still CANNOT change the other, higher-trust security parameters (rate
-///         limit, probation length, liveness/inactivity thresholds, recovery period, slashing
-///         bps, exit cooldown) or any core contract address — those always require a full
-///         validator vote via ValidatorsRegistry directly, or (for core contract addresses) a
-///         full genesis redeployment, since those addresses are compile-time constants (see
-///         SurAddresses.sol). Catastrophic/emergency structural actions are explicitly NOT a
-///         board power; they require the higher validator-supermajority paths documented in the
-///         design doc's recovery playbook, not a function on this contract.
-///
-///         Every delegated board action (oracle rotation, budget approval, economic parameter
-///         change) still requires an internal majority vote among current board members — no
-///         single board member can act unilaterally. This is separate from, and unaffected by,
-///         the board-membership voting mechanism described above.
-///
-///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
-///         the genesis `alloc`, so a constructor would never execute on the real chain. The
-///         initial board (exactly BOARD_SIZE = 5 members) is instead seeded via the off-chain
-///         genesis-building tool (see the 🔶 GENESIS FILL-IN note below), instead of a separate
-///         post-deploy election. BlockRewardDistributor, ValidatorsTreasury, and
-///         ValidatorsRegistry addresses are fixed constants (see SurAddresses.sol) rather than a
-///         runtime `wire()` step, because all five structural contracts share a common,
-///         pre-agreed genesis address map.
+///         GENESIS DEPLOYMENT: the contract has no constructor; it is injected into the genesis
+///         `alloc`. The initial five members, `boardVersion`, `boardMonthId` and each member's
+///         `seatMembershipEpoch` are written by the off-chain genesis tool (see
+///         `genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol`). `boardMonthId` must equal the
+///         month of the genesis timestamp, otherwise the founding board has no authority until the
+///         first refresh.
 contract ValidatorsBoard {
-    // ------------------------------------------------------------------
-    // Fixed cross-contract addresses (see SurAddresses.sol)
-    // ------------------------------------------------------------------
     address public constant DISTRIBUTOR = SurAddresses.BLOCK_REWARD_DISTRIBUTOR;
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
     IIdentityRegistry public constant IDENTITY_REGISTRY = IIdentityRegistry(SurAddresses.IDENTITY_REGISTRY);
 
-    /// @notice Fixed board size — always exactly this many seats (fewer only transiently, if
-    ///         fewer than this many candidates have ever received a vote).
+    /// @notice Number of board seats.
     uint256 public constant BOARD_SIZE = 5;
 
-    /// @notice Maximum number of candidates a single validator may vote for at once.
+    /// @notice Maximum number of candidates one validator may vote for at once.
     uint256 public constant MAX_VOTES_PER_VOTER = 5;
 
-    /// @notice How long after a validator's recovery period ends (still without recovering)
-    ///         before anyone may purge their votes (given and received) via clearStaleVotes.
+    /// @notice How long after a validator's recovery period ends (still without recovering) anyone
+    ///         may purge its votes via clearStaleVotes.
     uint256 public constant STALE_VOTE_CLEAR_DELAY = 30 days;
 
+    /// @notice Minimum number of board votes for a key rotation or a budget approval.
+    uint256 public constant MIN_VOTES_SENSITIVE_ACTION = 3;
+
+    /// @notice A board action that has not reached its quorum within this time expires.
+    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
+
     // ------------------------------------------------------------------
-    // Board membership (current snapshot, produced by the last refreshBoard() call)
-    //
-    // 🔶 GENESIS FILL-IN: this contract has no constructor because it is injected directly into
-    // the genesis `alloc` (its constructor would never execute on the real chain). `boardMembers`
-    // is a dynamic array and `isBoardMember` is a mapping — Solidity has no syntax for populating
-    // either of them with a loop outside a function, so this initial state (exactly BOARD_SIZE =
-    // 5 addresses) CANNOT be expressed as a simple state-variable initializer here. The off-chain
-    // genesis-building tool must either (a) simulate this contract's deployment with the real
-    // constructor logic below, on a temporary local chain, and copy the resulting storage into
-    // the final genesis file, or (b) directly compute and write the corresponding storage slots
-    // (array length + each element, and the mapping slot per member — via
-    // keccak256(abi.encode(key, slot)) for the mapping) into the genesis `alloc`. See
-    // "sur-contracts-deploy-notes.md" for the full recipe.
-    //
-    // Reference logic (not live code — for the genesis tool to reproduce, either by simulation
-    // or by direct storage computation):
-    //   for each of the 5 initial board member addresses:
-    //     boardMembers.push(address);
-    //     isBoardMember[address] = true;
+    // Storage. The order of the first variables must match the genesis seed helper.
     // ------------------------------------------------------------------
     address[] private boardMembers;
     mapping(address => bool) public isBoardMember;
 
-    // ------------------------------------------------------------------
-    // Approval-voting state
-    // ------------------------------------------------------------------
-
-    /// @notice Candidates a given voter currently votes for (up to MAX_VOTES_PER_VOTER).
+    /// @notice Candidates a voter currently votes for (up to MAX_VOTES_PER_VOTER).
     mapping(address => address[]) private voterCandidates;
 
-    /// @notice voter => candidate => whether that vote is currently active.
+    /// @notice voter => candidate => whether that vote is currently held.
     mapping(address => mapping(address => bool)) public hasVotedFor;
 
-    /// @notice Reverse index: candidate => list of voters currently voting for them (needed to
-    ///         efficiently purge received votes in clearStaleVotes).
+    /// @notice Voters currently voting for a candidate (used to purge received votes).
     mapping(address => address[]) private candidateVoters;
 
-    /// @notice 1-based index of `voter` within `candidateVoters[candidate]`, for O(1) removal.
+    /// @notice 1-based position of `voter` inside `candidateVoters[candidate]`, for O(1) removal.
     mapping(address => mapping(address => uint256)) private voterIndexInCandidateVoters;
 
-    // ------------------------------------------------------------------
-    // Board-internal actions (oracle rotation, budget approval, economic parameters)
-    // ------------------------------------------------------------------
     enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
 
-    /// @dev ✅ HARDENED (related to the stale-vote bug class found in review, though less
-    ///      severe here since `required` is always derived from the fixed BOARD_SIZE, not a
-    ///      shrinking count): without an expiry, a board action could still sit open long
-    ///      enough that the ORIGINAL board membership shifts (via _recomputeBoard) before
-    ///      enough votes accumulate — meaning votes cast by since-replaced ex-board-members
-    ///      could combine with a current member's vote to reach majority, even though no real
-    ///      5-person board ever agreed on it at the same time. `expiresAt` bounds that window.
-    /// @dev ✅ FIXED (this was only PARTIALLY fixed before — the earlier pass added `expiresAt`
-    ///      but incorrectly reasoned that `required` didn't need snapshotting because it's
-    ///      "always derived from the fixed BOARD_SIZE." That reasoning was wrong: refreshBoard()
-    ///      below fills the board with however many DISTINCT candidates received at least one
-    ///      vote, up to BOARD_SIZE — if fewer than 5 candidates qualify (realistic early in the
-    ///      network's life, or after a wave of validators leave), `boardMembers.length` is
-    ///      genuinely less than 5, and `_voteAction()` computed `required` from that LIVE,
-    ///      shrinkable length, not the constant. This is the exact same stale-vote bug class as
-    ///      every other proposal mechanism in this project: `votes` only ever increases, while
-    ///      `required` could shrink between votes as the board is refreshed. `requiredVotes` is
-    ///      now snapshotted at creation, exactly like BlockRewardDistributor's ShareProposal,
-    ///      ValidatorsRegistry's ParamProposal, ValidatorsTreasury's Expenditure/ParamProposal,
-    ///      and FoundationDAO's Proposal.
+    /// @dev `requiredVotes` is fixed when the action is created and never recomputed. `expiresAt`
+    ///      bounds how long an action stays open. `boardVersionAtCreation` ties the action to the
+    ///      board composition that proposed it: once the composition changes, the action can no
+    ///      longer be voted on.
     struct BoardAction {
         ActionType atype;
-        address target;      // new oracle address, or budget recipient (unused for economic-param actions)
-        uint256 amount;       // budget amount for ApproveBudget, OR the new value for economic-param actions
-        string description;   // only used for ApproveBudget
+        address target;       // new oracle / verifier address, or budget recipient
+        uint256 amount;       // budget amount, or the new value for an economic-parameter action
+        string description;   // used by ApproveBudget only
         uint256 votes;
-        uint256 requiredVotes; // ✅ NEW — snapshotted at creation, never recomputed
+        uint256 requiredVotes;
         uint256 createdAt;
         uint256 expiresAt;
         bool executed;
-        /// @notice ✅ FIXED (bug found in independent review — critical for spending decisions
-        ///         specifically): `votes` used to be a simple counter with no link to WHICH
-        ///         addresses cast them or whether those addresses are still board members. Since
-        ///         `refreshBoard()` below can completely replace the board's membership, a
-        ///         proposal created and partly voted on under the OLD board could still reach its
-        ///         vote threshold using votes from members who have since left — e.g., two former
-        ///         members vote, then refreshBoard() replaces them, then just ONE current member
-        ///         casts the "third" vote, and the action executes with only 1 of its 3 counted
-        ///         votes coming from someone who is currently a board member. Fixed by snapshotting
-        ///         the board's version number here at creation, and invalidating (requiring a
-        ///         fresh proposal for) any action whose version no longer matches the current one
-        ///         — see boardVersion below and _voteAction()'s check.
         uint256 boardVersionAtCreation;
     }
 
-    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
-
-    /// @notice ✅ Increments ONLY when refreshBoard() below installs a membership that genuinely
-    ///         differs (as an order-independent SET) from the previous one. A refresh that
-    ///         reproduces the identical member set does NOT bump it. (An earlier version bumped on
-    ///         every refresh; because refreshBoard() is permissionless with no cooldown, that let
-    ///         anyone keep invalidating open actions at will — an indefinitely repeatable
-    ///         griefing vector, found in independent review and fixed by the set comparison in
-    ///         refreshBoard().) Every open action records the version it was proposed under and
-    ///         becomes invalid once the version moves on — see boardVersionAtCreation.
+    /// @notice Incremented whenever the set of board members really changes.
     uint256 public boardVersion = 1;
 
-    /// @notice P01: an ORDINARY change of board composition (refreshBoard) is applied at most once every 30 days.
-    uint256 public constant BOARD_REFRESH_INTERVAL = 30 days;
-    /// @notice Time of the last ordinary refresh. Genesis must overlay this with the genesis timestamp when the board is
-    ///         seeded (otherwise the first refresh is allowed immediately).
-    uint256 public lastBoardRefreshAt;
-    /// @notice Seats freed by exit-driven loss of authority that have not yet been filled by succession.
+    /// @notice Identifier of the calendar month (UTC, year * 12 + month - 1) the current board serves.
+    uint256 public boardMonthId;
+
+    /// @notice Seats freed by an exit that have not been filled yet.
     uint256 public pendingVacancies;
+
     event BoardMemberAuthorityEnded(address indexed member);
     event BoardSuccession(address indexed newMember);
 
-    /// @notice ✅ FIXED (independent review — closes a real bug: `_hasAuthority` used to treat
-    ///         "has a seat AND status not None/Exiting" as sufficient, so a member who exited,
-    ///         withdrew, and later re-registered under the SAME address could land back in
-    ///         Probation and regain the OLD seat's authority before anyone called syncBoard()).
-    ///         Stamped with `REGISTRY.membershipEpoch(addr)` the moment an address takes a seat
-    ///         (refreshBoard / _fillVacancies); `_hasAuthority` requires this to still match the
-    ///         registry's current value. `ValidatorsRegistry.requestExit()` now also permanently
-    ///         bans the address from ever calling requestMembership() again — the two fixes are
-    ///         independent layers, not alternatives.
+    /// @notice The epoch of an address's registry membership at the moment it took a seat.
     mapping(address => uint256) public seatMembershipEpoch;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
 
-    // ------------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------------
+    /// @notice Running number of counted votes each candidate holds.
+    mapping(address => uint256) public voteCount;
+
+    /// @dev Candidates with voteCount > 0.
+    address[] private candidateList;
+
+    /// @dev 1-based position of a candidate inside candidateList (0 = absent).
+    mapping(address => uint256) private candidateListIndex;
+
+    /// @notice Whether a voter's votes are currently included in `voteCount`.
+    mapping(address => bool) public votesCounted;
+
     event VoteCast(address indexed voter, address indexed candidate);
     event VoteWithdrawn(address indexed voter, address indexed candidate);
-    event BoardRefreshed(address[] newBoard, uint256[] voteCounts);
+    event VoterSynced(address indexed voter, bool counted);
+    event BoardRefreshed(uint256 indexed monthId, address[] newBoard, uint256[] voteCounts);
     event StaleVotesCleared(address indexed validator, uint256 votesGivenCleared, uint256 votesReceivedCleared);
     event ActionProposed(uint256 indexed id, ActionType atype, address indexed target, uint256 amount, address indexed proposer);
     event ActionVoted(uint256 indexed id, address indexed voter, uint256 votes, uint256 required);
@@ -276,51 +193,134 @@ contract ValidatorsBoard {
     event RegistryEconomicParamSet(ActionType indexed atype, uint256 newValue);
     event VerifierRotated(address indexed newVerifier);
 
-    // ------------------------------------------------------------------
-    // Modifiers
-    // ------------------------------------------------------------------
     modifier onlyActiveValidator() {
         require(REGISTRY.isValidator(msg.sender), "ValidatorsBoard: caller is not an active validator");
         _;
     }
 
-    /// @notice P02: board authority = holding a seat AND not having requested voluntary exit. Loses effect the moment an exit is
-    ///         requested (no waiting for the monthly refresh). Suspension (Demoted) alone does NOT cut authority within the period.
-    ///         If any seat holder has requested exit and the seat has not been cleaned up yet, board actions REVERT with a clear
-    ///         message until someone calls the permissionless syncBoard() (a separate transaction, so the cleanup itself is never
-    ///         rolled back). This also means a vote can never silently "succeed" on an invalidated proposal: see voteAction().
+    /// @notice A caller acts as a board member only if (a) the board's month is the current month,
+    ///         (b) it holds a seat and has not requested exit, and (c) no seat holder has requested
+    ///         exit without the seat having been cleaned up yet (anyone may call `syncBoard()` for that).
     modifier onlyBoardMember() {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
         require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
 
     // ------------------------------------------------------------------
-    // Approval voting for board membership
+    // Calendar
     // ------------------------------------------------------------------
 
-    /// @notice Vote for `candidate` to be on the board. Callable by any active validator, for
-    ///         any other active validator (self-votes are allowed — nothing special about them).
-    ///         Takes effect only once someone calls refreshBoard().
+    /// @notice Month identifier (UTC) of a timestamp: year * 12 + (month - 1).
+    function monthIdOf(uint256 timestamp) public pure returns (uint256) {
+        uint256 z = timestamp / 86400 + 719468;
+        uint256 era = z / 146097;
+        uint256 doe = z - era * 146097;
+        uint256 yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        uint256 year = yoe + era * 400;
+        uint256 doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        uint256 mp = (5 * doy + 2) / 153;
+        uint256 month = mp < 10 ? mp + 3 : mp - 9;
+        if (month <= 2) year += 1;
+        return year * 12 + (month - 1);
+    }
+
+    function currentMonthId() public view returns (uint256) {
+        return monthIdOf(block.timestamp);
+    }
+
+    /// @notice True when `refreshBoard` can currently succeed.
+    function refreshDue() public view returns (bool) {
+        return boardMembers.length == 0 || currentMonthId() > boardMonthId;
+    }
+
+    function _boardIsCurrent() private view returns (bool) {
+        return boardMonthId == currentMonthId();
+    }
+
+    // ------------------------------------------------------------------
+    // Approval voting
+    // ------------------------------------------------------------------
+
+    /// @notice Vote for `candidate` to be on the board. Callable by any active validator that has
+    ///         registered an identity, for any active validator (self-votes are allowed). The vote
+    ///         counts at the next `refreshBoard`.
     function voteFor(address candidate) external onlyActiveValidator {
         require(IDENTITY_REGISTRY.hasIdentity(msg.sender), "ValidatorsBoard: register identity before voting");
         require(REGISTRY.isValidator(candidate), "ValidatorsBoard: candidate is not an active validator");
         require(!hasVotedFor[msg.sender][candidate], "ValidatorsBoard: already voted for this candidate");
         require(voterCandidates[msg.sender].length < MAX_VOTES_PER_VOTER, "ValidatorsBoard: max votes already used");
 
+        _syncVoter(msg.sender); // the caller is active, so its existing votes are counted from here on
+
         hasVotedFor[msg.sender][candidate] = true;
         voterCandidates[msg.sender].push(candidate);
 
         candidateVoters[candidate].push(msg.sender);
-        voterIndexInCandidateVoters[candidate][msg.sender] = candidateVoters[candidate].length; // 1-based
+        voterIndexInCandidateVoters[candidate][msg.sender] = candidateVoters[candidate].length;
 
+        _increase(candidate);
         emit VoteCast(msg.sender, candidate);
     }
 
-    /// @notice Withdraw a previously cast vote. Callable any time, no restriction.
+    /// @notice Withdraw a vote. Callable at any time.
     function unvoteFor(address candidate) external {
         require(hasVotedFor[msg.sender][candidate], "ValidatorsBoard: no such active vote");
         _removeVote(msg.sender, candidate);
+    }
+
+    /// @notice Bring the vote counters in line with a validator's current status: its votes are
+    ///         counted while it is active and not counted otherwise. Anyone may call this; it is
+    ///         idempotent. The registry calls it whenever a validator's status changes.
+    function syncVoter(address voter) external {
+        _syncVoter(voter);
+    }
+
+    function syncVoters(address[] calldata voters) external {
+        for (uint256 i = 0; i < voters.length; i++) {
+            _syncVoter(voters[i]);
+        }
+    }
+
+    function _syncVoter(address voter) private {
+        bool active = REGISTRY.isValidator(voter);
+        if (active == votesCounted[voter]) return;
+        address[] storage cands = voterCandidates[voter];
+        uint256 n = cands.length;
+        if (active) {
+            votesCounted[voter] = true;
+            for (uint256 i = 0; i < n; i++) _increase(cands[i]);
+        } else {
+            votesCounted[voter] = false;
+            for (uint256 i = 0; i < n; i++) _decrease(cands[i]);
+        }
+        emit VoterSynced(voter, active);
+    }
+
+    function _increase(address candidate) private {
+        if (voteCount[candidate]++ == 0) {
+            candidateList.push(candidate);
+            candidateListIndex[candidate] = candidateList.length;
+        }
+    }
+
+    /// @dev Never reverts on a bookkeeping mismatch, so a stale counter can never lock voting.
+    function _decrease(address candidate) private {
+        uint256 current = voteCount[candidate];
+        if (current == 0) return;
+        voteCount[candidate] = current - 1;
+        if (current == 1) {
+            uint256 idx = candidateListIndex[candidate]; // 1-based
+            uint256 last = candidateList.length;
+            if (idx != last) {
+                address moved = candidateList[last - 1];
+                candidateList[idx - 1] = moved;
+                candidateListIndex[moved] = idx;
+            }
+            candidateList.pop();
+            delete candidateListIndex[candidate];
+        }
     }
 
     function _removeVote(address voter, address candidate) private {
@@ -336,7 +336,7 @@ contract ValidatorsBoard {
         }
 
         address[] storage cv = candidateVoters[candidate];
-        uint256 idx = voterIndexInCandidateVoters[candidate][voter]; // 1-based
+        uint256 idx = voterIndexInCandidateVoters[candidate][voter];
         uint256 lastIdx = cv.length;
         if (idx != lastIdx) {
             address lastVoter = cv[lastIdx - 1];
@@ -346,198 +346,129 @@ contract ValidatorsBoard {
         cv.pop();
         delete voterIndexInCandidateVoters[candidate][voter];
 
+        if (votesCounted[voter]) _decrease(candidate);
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @dev Bundles the working state of refreshBoard() into one struct so it can be threaded through
-    ///      private helper functions by reference (a single memory pointer = one stack slot) instead of as
-    ///      many separate local variables — refreshBoard()'s logic alone was too many simultaneous locals
-    ///      for the EVM stack (found by the optimizer during review; same class of issue, same fix pattern,
-    ///      as BlockRewardDistributor's EpochPrep struct).
-    struct RefreshCtx {
-        bool[] keep;
-        uint256 keptCount;
-        address[] seen;
-        uint256 seenCount;
-        bool[] takenAsFiller;
-        address[] filler;
-        uint256 fillerCount;
-        address replacedIncumbent;
-        address challenger;
-    }
+    // ------------------------------------------------------------------
+    // Monthly board selection
+    // ------------------------------------------------------------------
 
-    /// @dev Step 1 (see refreshBoard() doc comment): which current incumbents still qualify to
-    ///      automatically keep their seat right now? Clears isBoardMember for the rest immediately.
-    function _dropDisqualified(RefreshCtx memory ctx, uint256 priorCount) private {
-        ctx.keep = new bool[](priorCount);
-        for (uint256 i = 0; i < priorCount; i++) {
-            address m = boardMembers[i];
-            if (_hasAuthority(m)) {
-                (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(m);
-                if (status == 2) { // Active
-                    ctx.keep[i] = true;
-                    ctx.keptCount++;
-                    continue;
-                }
-            }
-            isBoardMember[m] = false;
-        }
-    }
+    /// @notice Seat the board of the current calendar month: the BOARD_SIZE active validators with
+    ///         the most votes, ties broken by earlier activation. Callable by anyone; succeeds once
+    ///         per month (and at any time while the board is empty). Fewer than BOARD_SIZE seats
+    ///         are filled if fewer candidates hold votes.
+    ///
+    ///         `votersToSync` lists validators whose vote counters are brought in line with their
+    ///         current status (see `syncVoter`) before the board is selected, so a repair and the
+    ///         refresh happen in one transaction. The list is normally empty: the registry already
+    ///         calls `syncVoter` on every status change.
+    function refreshBoard(address[] calldata votersToSync) external {
+        uint256 month = currentMonthId();
+        require(boardMembers.length == 0 || month > boardMonthId, "ValidatorsBoard: this month's board is already set");
 
-    /// @dev Step 3: fill vacant seats with the highest-voted eligible outside candidates (must have
-    ///      received at least one vote — guaranteed by ctx.seen). Fewer eligible candidates than
-    ///      vacancies is fine: seats stay vacant.
-    function _pickFillers(RefreshCtx memory ctx, uint256 vacancies) private view {
-        ctx.filler = new address[](vacancies);
-        for (uint256 f = 0; f < vacancies; f++) {
-            uint256 bestVotes = 0;
-            uint256 bestIdx = type(uint256).max;
-            for (uint256 j = 0; j < ctx.seenCount; j++) {
-                if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
-                uint256 v = _voteTally[ctx.seen[j]];
-                if (v > bestVotes) { bestVotes = v; bestIdx = j; }
-            }
-            if (bestIdx == type(uint256).max) break;
-            ctx.filler[ctx.fillerCount] = ctx.seen[bestIdx];
-            ctx.takenAsFiller[bestIdx] = true;
-            ctx.fillerCount++;
+        for (uint256 i = 0; i < votersToSync.length; i++) {
+            _syncVoter(votersToSync[i]);
         }
-    }
-
-    /// @dev Step 4 (see refreshBoard() doc comment): if the board is full after filling vacancies, at
-    ///      most one fresh challenger may unseat the single current lowest-voted incumbent, and only by
-    ///      STRICTLY outvoting it (a tie leaves the incumbent in place).
-    function _tryChallenge(RefreshCtx memory ctx, uint256 priorCount) private view {
-        uint256 weakestVotes = type(uint256).max;
-        uint256 weakestIdx = type(uint256).max;
-        for (uint256 i = 0; i < priorCount; i++) {
-            if (!ctx.keep[i]) continue;
-            uint256 v = _voteTally[boardMembers[i]];
-            if (v < weakestVotes) { weakestVotes = v; weakestIdx = i; }
-        }
-        uint256 bestOutsideVotes = 0;
-        uint256 bestOutsideIdx = type(uint256).max;
-        for (uint256 j = 0; j < ctx.seenCount; j++) {
-            if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
-            uint256 v = _voteTally[ctx.seen[j]];
-            if (v > bestOutsideVotes) { bestOutsideVotes = v; bestOutsideIdx = j; }
-        }
-        if (bestOutsideIdx != type(uint256).max && bestOutsideVotes > weakestVotes) {
-            ctx.replacedIncumbent = boardMembers[weakestIdx];
-            ctx.challenger = ctx.seen[bestOutsideIdx];
-            ctx.keep[weakestIdx] = false;
-            ctx.keptCount--;
-        }
-    }
-
-    /// @notice ✅ FINAL DECISION (P01, redesigned 2026-09-28 — replaces the earlier "fully recompute the
-    ///         top BOARD_SIZE every time" version). A lack of votes must never, by itself, empty the board:
-    ///         a currently-Active incumbent keeps its seat through this monthly re-selection regardless of
-    ///         its vote count. Only two things ever remove an incumbent HERE: (a) it has lost board authority
-    ///         since last time (exited — `_hasAuthority` false; already cut off immediately elsewhere, this
-    ///         just finalizes it here), or (b) it is currently `Demoted` (suspended) — P02 says suspension
-    ///         alone does not cut authority DURING the period, but at this monthly point a suspended member
-    ///         is not re-confirmed. Vacant seats (from drops, or a board smaller than BOARD_SIZE) are filled
-    ///         by the highest-voted eligible outside candidates. If no vacant seat remains, at most one fresh
-    ///         challenger may unseat the single current lowest-voted incumbent, and only by receiving
-    ///         STRICTLY more votes (a tie leaves the incumbent in place) — deliberately minimal churn. Applied
-    ///         at most once every 30 days (an empty board may be filled anytime). Voting stays free at all
-    ///         times; only this re-selection is on a schedule. The immediate exit-driven succession path
-    ///         (syncBoard / _fillVacancies, P02) is separate and unaffected.
-    function refreshBoard() external {
-        require(
-            boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
-            "ValidatorsBoard: ordinary board changes are applied once every 30 days"
-        );
 
         uint256 priorCount = boardMembers.length;
-        RefreshCtx memory ctx;
-        _dropDisqualified(ctx, priorCount);
-        (ctx.seen, ctx.seenCount) = _tallyVotes();
-        ctx.takenAsFiller = new bool[](ctx.seenCount);
-        _pickFillers(ctx, BOARD_SIZE - ctx.keptCount);
-        if (ctx.keptCount + ctx.fillerCount == BOARD_SIZE) {
-            _tryChallenge(ctx, priorCount);
-        }
+        (address[] memory picks, uint256[] memory pickVotes, uint256 n) = _selectTop(BOARD_SIZE, false);
 
-        // assemble the final board and detect whether membership genuinely changed (order-independent set
-        // comparison) BEFORE mutating storage — refreshBoard() is permissionless, so boardVersion (and the
-        // invalidation of open actions it drives) must bump only on a real change, never on a repeated call
-        // that changes nothing.
-        uint256 finalCount = ctx.keptCount + ctx.fillerCount + (ctx.challenger != address(0) ? 1 : 0);
-        address[] memory finalBoard = new address[](finalCount);
-        uint256[] memory finalVotes = new uint256[](finalCount);
-        uint256 w = 0;
+        uint256 kept = 0;
+        for (uint256 i = 0; i < n; i++) {
+            if (isBoardMember[picks[i]]) kept++;
+        }
+        bool changed = (kept != n) || (kept != priorCount);
+
         for (uint256 i = 0; i < priorCount; i++) {
-            if (!ctx.keep[i]) continue;
-            finalBoard[w] = boardMembers[i];
-            finalVotes[w] = _voteTally[boardMembers[i]];
-            w++;
-        }
-        for (uint256 f = 0; f < ctx.fillerCount; f++) {
-            finalBoard[w] = ctx.filler[f];
-            finalVotes[w] = _voteTally[ctx.filler[f]];
-            w++;
-        }
-        if (ctx.challenger != address(0)) {
-            finalBoard[w] = ctx.challenger;
-            finalVotes[w] = _voteTally[ctx.challenger];
-        }
-        bool membershipChanged = (priorCount != finalCount) || ctx.replacedIncumbent != address(0) || ctx.fillerCount > 0;
-
-        // apply: clear the stale flag for a challenge-replaced incumbent (step 1 already cleared dropped
-        // ones; the challenge swap only cleared ctx.keep[], not storage, so do it now), install the new set.
-        if (ctx.replacedIncumbent != address(0)) {
-            isBoardMember[ctx.replacedIncumbent] = false;
+            isBoardMember[boardMembers[i]] = false;
         }
         delete boardMembers;
-        for (uint256 i = 0; i < finalCount; i++) {
-            boardMembers.push(finalBoard[i]);
-            isBoardMember[finalBoard[i]] = true;
-        }
-        for (uint256 f = 0; f < ctx.fillerCount; f++) {
-            seatMembershipEpoch[ctx.filler[f]] = REGISTRY.membershipEpoch(ctx.filler[f]);
-        }
-        if (ctx.challenger != address(0)) {
-            seatMembershipEpoch[ctx.challenger] = REGISTRY.membershipEpoch(ctx.challenger);
-        }
-        if (membershipChanged) {
-            boardVersion++;
+
+        address[] memory finalBoard = new address[](n);
+        uint256[] memory finalVotes = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            boardMembers.push(picks[i]);
+            isBoardMember[picks[i]] = true;
+            seatMembershipEpoch[picks[i]] = REGISTRY.membershipEpoch(picks[i]);
+            finalBoard[i] = picks[i];
+            finalVotes[i] = pickVotes[i];
         }
 
-        lastBoardRefreshAt = block.timestamp;
-        pendingVacancies = 0; // this ordinary re-selection recomputes vacancies fresh; nothing carries over
+        if (changed) boardVersion++;
+        boardMonthId = month;
+        pendingVacancies = 0;
 
-        for (uint256 j = 0; j < ctx.seenCount; j++) {
-            _voteTally[ctx.seen[j]] = 0; // reset the ephemeral tally
-        }
-
-        emit BoardRefreshed(finalBoard, finalVotes);
+        emit BoardRefreshed(month, finalBoard, finalVotes);
     }
 
-    /// @dev Ephemeral per-refreshBoard()-call tally storage. Always 0 between calls — see
-    ///      refreshBoard()'s reset loop. Declared as contract storage (not `memory`) only
-    ///      because Solidity has no mapping type in memory.
-    mapping(address => uint256) private _voteTally;
+    /// @dev The up-to-`k` active candidates with the most votes (ties: lower activationSeq wins).
+    ///      Candidates that cannot enter the top `k` are skipped without any external call.
+    function _selectTop(uint256 k, bool excludeMembers)
+        private
+        view
+        returns (address[] memory picks, uint256[] memory votes, uint256 filled)
+    {
+        picks = new address[](k);
+        votes = new uint256[](k);
+        if (k == 0) return (picks, votes, 0);
+        uint256[] memory seqs = new uint256[](k);
+
+        uint256 len = candidateList.length;
+        for (uint256 i = 0; i < len; i++) {
+            address c = candidateList[i];
+            if (excludeMembers && isBoardMember[c]) continue;
+            uint256 v = voteCount[c];
+
+            uint256 weakest = 0;
+            if (filled == k) {
+                weakest = _weakestIndex(votes, seqs, k);
+                if (v < votes[weakest]) continue;
+            }
+            if (!REGISTRY.isValidator(c)) continue;
+            uint256 s = REGISTRY.activationSeq(c);
+
+            if (filled < k) {
+                picks[filled] = c;
+                votes[filled] = v;
+                seqs[filled] = s;
+                filled++;
+            } else if (v > votes[weakest] || (v == votes[weakest] && s < seqs[weakest])) {
+                picks[weakest] = c;
+                votes[weakest] = v;
+                seqs[weakest] = s;
+            }
+        }
+    }
+
+    /// @dev Index of the entry that would be displaced first: fewest votes, and among equals the
+    ///      one activated last.
+    function _weakestIndex(uint256[] memory votes, uint256[] memory seqs, uint256 k) private pure returns (uint256 w) {
+        for (uint256 i = 1; i < k; i++) {
+            if (votes[i] < votes[w] || (votes[i] == votes[w] && seqs[i] > seqs[w])) w = i;
+        }
+    }
 
     // ------------------------------------------------------------------
-    // Authority, monthly re-selection, and exit-driven succession (final decisions P01/P02)
+    // Authority and exit-driven succession
     // ------------------------------------------------------------------
 
-    /// @dev P02 authority test (see the onlyBoardMember doc comment).
+    /// @dev A seat is valid while the holder has not exited (membership epoch unchanged) and its
+    ///      status is neither None nor Exiting. Suspension (Demoted) alone does not end authority
+    ///      within the month.
     function _hasAuthority(address who) private view returns (bool) {
         if (!isBoardMember[who]) return false;
-        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false; // ✅ FIXED: exited since being seated
+        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false;
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
-        return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
+        return status != 0 && status != 4;
     }
 
+    /// @notice True while `who` may act as a board member: the board's month is the current month
+    ///         and the seat is valid.
     function hasBoardAuthority(address who) external view returns (bool) {
-        return _hasAuthority(who);
+        return _boardIsCurrent() && _hasAuthority(who);
     }
 
-
-    /// @dev True if some seat holder has lost authority (requested exit / withdrew) and syncBoard() has not run yet.
     function _syncNeeded() private view returns (bool) {
         for (uint256 i = 0; i < boardMembers.length; i++) {
             if (!_hasAuthority(boardMembers[i])) return true;
@@ -545,8 +476,10 @@ contract ValidatorsBoard {
         return false;
     }
 
-    /// @notice Permissionless. Drops seats whose holder requested exit (immediate cut-off), then tries succession for those seats.
+    /// @notice Remove seat holders whose authority has ended and fill their seats from the
+    ///         candidates with the most votes. Callable by anyone, within the board's month.
     function syncBoard() external {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         _syncBoard();
     }
 
@@ -570,14 +503,14 @@ contract ValidatorsBoard {
             pendingVacancies += removed;
             if (_fillVacancies()) changed = true;
         }
-        if (changed) boardVersion++; // real composition change: open actions of the old composition become invalid
+        if (changed) boardVersion++;
     }
 
-    /// @notice Permissionless succession for seats freed by exit: the highest-voted ELIGIBLE (currently active, not already seated)
-    ///         candidates by the live tally take the pending vacancies. Fills only exit-freed seats — never an extra ordinary
-    ///         change. If no eligible candidate exists the seat stays vacant (and with fewer than 3 seated members, treasury
-    ///         payments are halted) until one appears or the next monthly refresh.
+    /// @notice Fill seats freed by an exit with the eligible candidates (active, not seated) that
+    ///         hold the most votes. Never creates an extra ordinary change. With fewer than three
+    ///         seated members, treasury payments and key rotations are halted until a seat is filled.
     function fillVacancies() external {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         if (_fillVacancies()) boardVersion++;
     }
 
@@ -585,7 +518,7 @@ contract ValidatorsBoard {
         uint256 room = BOARD_SIZE - boardMembers.length;
         uint256 want = pendingVacancies < room ? pendingVacancies : room;
         if (want == 0) return false;
-        (address[] memory picks, , uint256 n) = _topCandidates(want, true);
+        (address[] memory picks, , uint256 n) = _selectTop(want, true);
         for (uint256 i = 0; i < n; i++) {
             boardMembers.push(picks[i]);
             isBoardMember[picks[i]] = true;
@@ -599,64 +532,15 @@ contract ValidatorsBoard {
         return false;
     }
 
-    /// @dev Live tally: votes cast BY currently active validators FOR currently active candidates (same rule as before).
-    function _tallyVotes() private returns (address[] memory seenCandidates, uint256 seenCount) {
-        address[] memory active = REGISTRY.getValidators();
-        seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
-        for (uint256 i = 0; i < active.length; i++) {
-            address[] storage cands = voterCandidates[active[i]];
-            uint256 n = cands.length;
-            for (uint256 j = 0; j < n; j++) {
-                address c = cands[j];
-                if (!REGISTRY.isValidator(c)) continue; // candidate must currently be active too
-                if (_voteTally[c] == 0) {
-                    seenCandidates[seenCount] = c;
-                    seenCount++;
-                }
-                _voteTally[c]++;
-            }
-        }
-    }
+    // ------------------------------------------------------------------
+    // Stale-vote cleanup
+    // ------------------------------------------------------------------
 
-    /// @dev Top-k candidates by live tally (ties keep the earlier-inserted one). Resets the ephemeral tally before returning.
-    function _topCandidates(uint256 k, bool excludeMembers) private returns (address[] memory picks, uint256[] memory pickVotes, uint256 filled) {
-        (address[] memory seen, uint256 seenCount) = _tallyVotes();
-        picks = new address[](k);
-        pickVotes = new uint256[](k);
-        for (uint256 i = 0; i < seenCount && k > 0; i++) {
-            address c = seen[i];
-            if (excludeMembers && isBoardMember[c]) continue;
-            uint256 v = _voteTally[c];
-            if (filled < k) {
-                picks[filled] = c;
-                pickVotes[filled] = v;
-                filled++;
-            } else {
-                uint256 minIdx = 0;
-                for (uint256 m = 1; m < k; m++) {
-                    if (pickVotes[m] < pickVotes[minIdx]) minIdx = m;
-                }
-                if (v > pickVotes[minIdx]) {
-                    picks[minIdx] = c;
-                    pickVotes[minIdx] = v;
-                }
-            }
-        }
-        for (uint256 i = 0; i < seenCount; i++) {
-            _voteTally[seen[i]] = 0; // reset the ephemeral tally
-        }
-    }
-
-    /// @notice Purge every vote a long-inactive validator cast (as a voter) AND every vote they
-    ///         received (as a candidate), freeing up the other validators' vote slots.
-    ///         Permissionless. Requires the validator to have been continuously Demoted for at
-    ///         least `ValidatorsRegistry.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY` (30 days).
-    ///         Before this point, their votes already don't count in refreshBoard() (see above)
-    ///         — this function only frees storage/vote-slots, it does not itself change who is
-    ///         currently on the board.
+    /// @notice Purge every vote `validator` cast and received once it has been Demoted for longer
+    ///         than `recoveryPeriod() + STALE_VOTE_CLEAR_DELAY`. Callable by anyone.
     function clearStaleVotes(address validator) external {
         (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
-        require(status == 3, "ValidatorsBoard: validator is not currently demoted"); // 3 = Status.Demoted
+        require(status == 3, "ValidatorsBoard: validator is not currently demoted");
         uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
 
@@ -674,20 +558,19 @@ contract ValidatorsBoard {
     }
 
     // ------------------------------------------------------------------
-    // Board-internal actions — majority vote among current board members
+    // Board actions
     // ------------------------------------------------------------------
+
+    /// @notice Rotate the distributionOracle key. Needs at least MIN_VOTES_SENSITIVE_ACTION votes
+    ///         and takes effect as soon as the quorum is reached.
     function proposeRotateOracle(address newOracle) external onlyBoardMember returns (uint256 id) {
         require(newOracle != address(0), "ValidatorsBoard: zero oracle address");
-        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", 0);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key rotation halted");
+        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
-    /// @notice ✅ NEW guarantee (explicit user decision): unlike every other board action, an
-    ///         ApproveBudget proposal requires a HARD MINIMUM of 3 affirmative votes, regardless
-    ///         of how small the current board has shrunk to (e.g., with only 3 members, the
-    ///         plain-majority formula would need just 2 — not enough for a spending decision).
-    ///         If fewer than 3 eligible board members currently exist, spending halts entirely
-    ///         (this function reverts) until the board's composition is repaired back to at
-    ///         least 3 — no smaller quorum can ever approve a payment, no matter how urgent.
+    /// @notice Approve a routine treasury payment below the treasury's caps. Needs at least
+    ///         MIN_VOTES_SENSITIVE_ACTION votes; halted while fewer than three members are seated.
     function proposeApproveBudget(address to, uint256 amount, string calldata description)
         external
         onlyBoardMember
@@ -695,50 +578,39 @@ contract ValidatorsBoard {
     {
         require(to != address(0), "ValidatorsBoard: zero recipient address");
         require(amount > 0, "ValidatorsBoard: zero amount");
-        require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
-        id = _createAction(ActionType.ApproveBudget, to, amount, description, 3);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
+        id = _createAction(ActionType.ApproveBudget, to, amount, description, MIN_VOTES_SENSITIVE_ACTION);
     }
 
-    /// @notice Propose a new entryThresholdBase on ValidatorsRegistry (economic entry
-    ///         parameter — board-governed; see contract-level doc comment).
+    /// @notice Economic entry parameters: majority of the board.
     function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
     }
 
-    /// @notice Propose a new growthFactorPerValidator on ValidatorsRegistry (fixed-point, 18
-    ///         decimals; must be > 1.0, i.e. > 1_000000000000000000).
     function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
         id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
     }
 
-    /// @notice Propose a new membershipFeeBps on ValidatorsRegistry.
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
         id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
     }
 
-    /// @notice Propose rotating the identity-verification key (`verifier`) on
-    ///         ValidatorsRegistry — a routine operational-key rotation, same pattern as
-    ///         proposeRotateOracle.
+    /// @notice Rotate the `verifier` key on ValidatorsRegistry. Needs at least
+    ///         MIN_VOTES_SENSITIVE_ACTION votes and takes effect as soon as the quorum is reached.
     function proposeRotateVerifier(address newVerifier) external onlyBoardMember returns (uint256 id) {
         require(newVerifier != address(0), "ValidatorsBoard: zero verifier address");
-        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", 0);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key rotation halted");
+        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
-        // An action proposed under an older composition is invalid: _voteAction() REVERTS ("board membership changed since this
-        // action was proposed - propose again"). The transaction fails visibly instead of returning as a no-op, so nobody can
-        // mistake a successful receipt for "my vote was recorded".
         _voteAction(id, msg.sender);
     }
 
-    /// @notice ✅ NEW parameter (explicit user decision — ApproveBudget specifically must never
-    ///         execute with fewer than 3 affirmative votes, even if the board has shrunk below
-    ///         its full size of 5). `minRequiredVotes` is 0 for every OTHER action type (meaning
-    ///         "use the plain majority formula, no extra floor") and 3 only for ApproveBudget —
-    ///         see proposeApproveBudget below for why spending specifically needs this stricter
-    ///         floor while routine actions like key rotation do not.
+    /// @dev The required vote count is the board's majority at creation time, raised to
+    ///      `minRequiredVotes` for sensitive actions, and then fixed for the life of the action.
     function _createAction(ActionType atype, address target, uint256 amount, string memory description, uint256 minRequiredVotes) private returns (uint256 id) {
         uint256 majority = (boardMembers.length / 2) + 1;
         actionCount++;
@@ -749,8 +621,7 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
-            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes, // ✅ hard
-            // floor, frozen now from the ACTUAL current board size — see the doc comment above
+            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes,
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false,
@@ -765,13 +636,6 @@ contract ValidatorsBoard {
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
         require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
-        // ✅ FIXED (bug found in independent review — see boardVersionAtCreation's doc comment
-        // in the BoardAction struct above): if the board's membership has changed since this
-        // action was proposed, it is invalidated — voters must propose it again under the
-        // current board. This is what actually prevents stale votes from former members (who
-        // voted before leaving) from ever counting toward a fresh board's decisions; simply
-        // checking `isBoardMember` at vote time (which already existed) was not enough, since it
-        // only validates the CURRENT voter, not the historical votes already tallied.
         require(a.boardVersionAtCreation == boardVersion, "ValidatorsBoard: board membership changed since this action was proposed - propose again");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
@@ -786,14 +650,7 @@ contract ValidatorsBoard {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);
                 emit OracleRotated(a.target);
             } else if (a.atype == ActionType.ApproveBudget) {
-                // ✅ NEW: re-checked at EXECUTION time, not just at proposal time — the user's
-                // decision explicitly said "اعضای فعلی" (CURRENT members), meaning even if this
-                // action already gathered its required votes while the board still had ≥3
-                // members, execution must still be blocked if the board has since shrunk below
-                // 3 before this final vote lands. The whole vote transaction (including this
-                // very vote) reverts in that case, so nothing is silently skipped or partially
-                // recorded — the board's composition must be repaired first.
-                require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
+                require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
             } else if (a.atype == ActionType.SetEntryThresholdBase) {
@@ -813,8 +670,9 @@ contract ValidatorsBoard {
     }
 
     // ------------------------------------------------------------------
-    // View helpers
+    // Views
     // ------------------------------------------------------------------
+
     function getBoardMembers() external view returns (address[] memory) {
         return boardMembers;
     }
@@ -829,5 +687,10 @@ contract ValidatorsBoard {
 
     function getVotersFor(address candidate) external view returns (address[] memory) {
         return candidateVoters[candidate];
+    }
+
+    /// @notice Candidates that currently hold at least one counted vote.
+    function getCandidateList() external view returns (address[] memory) {
+        return candidateList;
     }
 }

@@ -4,28 +4,22 @@ pragma solidity ^0.8.24;
 import "./SurAddresses.sol";
 
 /// @title IdentityRegistry
-/// @notice ششمین قرارداد ساختاری سور (آدرس ثابت `0x6666...6666`) — مرجع واحد هویت برای **کل
-///         کاربران شبکه**، نه فقط ولیدیتورها. الهام‌گرفته از استاندارد قدیمی پروژه SIP001/SIP002
-///         («روش احراز هویت کاربران حقیقی و حقوقی» و «استفاده از خدمات احراز هویت توسط دپ‌ها»)،
-///         با دو اصلاح آگاهانه نسبت به نسخه‌ی اصلی:
+/// @notice قرارداد ساختاری ششم سور (آدرس ثابت `0x6666...6666`): منبع واحد حقیقت برای هویت در میان همهٔ کاربران شبکه، نه فقط
+///         ولیدیتورها. از مدل SIP001/SIP002 پیروی می‌کند (احراز هویت برای کاربران حقیقی و حقوقی و استفادهٔ dAppها از آن) با دو
+///         انتخاب طراحی:
 ///
-///         ۱. **بدون دفترخانه‌ی اسناد رسمی.** SIP001 نیاز به گواهی امضای حضوری در دفترخانه
-///            داشت. اینجا جایگزینش شده با یک فرآیند کاملاً آنلاین: تأیید eKYC (تطبیق چهره +
-///            liveness detection + بررسی اصالت مدرک، توسط یک سرویس‌دهنده‌ی مجاز) + امضای
-///            دیجیتال چالش با همان کلید سوری کاربر (این بخش دوم دقیقاً همان ایده‌ی SIP001 است،
-///            بدون تغییر).
+///         ۱. **بدون دفتر اسناد رسمی.** احراز هویت کاملاً آنلاین است: بررسی eKYC (تطبیق چهره، تشخیص زنده‌بودن و اصالت سند، توسط
+///            ارائه‌دهندهٔ دارای مجوز) به‌علاوهٔ امضای یک challenge با کلید Sur خود کاربر.
 ///
-///         ۲. **بدون داده‌ی خام حساس on-chain.** SIP001 پیشنهاد می‌داد کد ملی/نام/شناسنامه در
-///            یک «قرارداد هوشمند محرمانه» ذخیره شود. این از نظر فنی ممکن نیست: هیچ storage
-///            روی یک بلاک‌چین عمومی واقعاً محرمانه نمی‌ماند (`eth_getStorageAt` همیشه در
-///            دسترس است)، و برای داده‌ی کم‌آنتروپی مثل کد ملی (۱۰ رقم)، حتی هش‌کردن هم بدون یک
-///            salt مخفی محافظت واقعی نمی‌دهد. راه‌حل: داده‌ی خام هرگز وارد این قرارداد نمی‌شود؛
-///            فقط یک وضعیت وریفای (bool) و یک commitment (برای اثبات عدم‌دستکاری در دعاوی
-///            حقوقی آینده، نه برای پاسخ به کوئری) on-chain می‌مانند. خودِ عملیات «تطبیق»
-///            (بخش ۶ SIP002) باید یک فراخوانی API آف‌چین باشد، نه یک تراکنش on-chain — چون
-///            حتی اگر قرارداد پاسخ را فاش نکند، **پارامتر ورودی خودِ تراکنش** (مقداری که
-///            دارد با آن مقایسه می‌شود) در calldata عمومی و همیشه قابل‌مشاهده است. جزئیات
-///            کامل در `sur-identity-registry-spec.md`.
+///         ۲. **بدون داده‌ی خام حساس روی زنجیره.** هیچ storage روی بلاک‌چین عمومی محرمانه نیست (`eth_getStorageAt` همیشه
+///            هست) و برای دادهٔ کم‌آنتروپی مثل کد ملی ۱۰رقمی حتی هش هم بدون salt محرمانه حفاظتی نمی‌دهد. پس داده‌ی خام
+///            هرگز وارد این قرارداد نمی‌شود: فقط پرچم‌های احراز (bool) و یک commitment نگه داشته می‌شود (که صرفاً برای اثبات
+///            دست‌نخوردگی در یک اختلاف حقوقی احتمالی است و هرگز برای پاسخ به پرس‌وجو به کار نمی‌رود). عمل «تطبیق» (بخش ۶
+///            SIP002) باید فراخوان API آف‌چین باشد، نه تراکنش روی زنجیره، چون ورودیِ خودِ تراکنش (مقداری که مقایسه می‌شود) در
+///            calldata عمومی دیده می‌شود. جزئیات در `sur-identity-registry-spec.md` است.
+///
+///         آدرس منتقل‌شده سوخته است: `hasIdentity` و `getVerificationStatus` برایش چیزی گزارش نمی‌کنند و نه مالک و نه oracle
+///         دیگر نمی‌توانند آن را ثبت یا احراز کنند.
 contract IdentityRegistry {
     // ------------------------------------------------------------------
     // آدرس ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
@@ -33,8 +27,7 @@ contract IdentityRegistry {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // هویت خوداظهاری (لایه‌ی اول SIP001) — بدون تغییر نسبت به طراحی قبلی خودمان، فقط
-    // منتقل‌شده از ValidatorsRegistry.
+    // هویت خوداظهار (لایهٔ اول SIP001)
     // ------------------------------------------------------------------
     enum PersonType { Individual, Legal }
 
@@ -42,11 +35,11 @@ contract IdentityRegistry {
         bool registered;
         PersonType personType;
         string name;
-        bool phoneVerified;      // موبایل واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
-        bool telegramVerified;   // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
-        bool kycVerified;        // تازه — نتیجه‌ی eKYC کامل (تصویر+کارت‌ملی+تطبیق چهره)
-        bytes32 kycCommitment;   // تازه — فقط برای اثبات عدم‌دستکاری در دعاوی، نه matching
-        address migratedTo;      // تازه — غیرصفر یعنی این آدرس «سوخته» و هویتش به آدرس جدید منتقل شده (بخش ۳.۴ سند فنی؛ معادل بخش ۷/۸ SIP001)
+        bool phoneVerified;  // موبایل واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
+        bool telegramVerified;  // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
+        bool kycVerified;  // نتیجهٔ بررسی کامل eKYC (عکس + کد ملی + تطبیق چهره)
+        bytes32 kycCommitment;  // فقط برای اثبات دست‌نخوردگی در اختلاف‌ها نگه داشته می‌شود، هرگز برای تطبیق
+        address migratedTo;  // ناصفر: این آدرس سوخته است و هویتش به آن آدرس منتقل شده (بخش ۳.۴ مشخصات)
     }
 
     mapping(address => Identity) public identities;
@@ -69,22 +62,22 @@ contract IdentityRegistry {
         _;
     }
 
+    modifier notMigrated(address who) {
+        require(identities[who].migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
+        _;
+    }
+
     modifier onlyIdentityOracle() {
         require(msg.sender == identityOracle, "IdentityRegistry: caller is not the identity oracle");
         _;
     }
 
     // ------------------------------------------------------------------
-    // 🔶 پرکردنِ genesis — این قرارداد constructor ندارد چون مستقیم در alloc بلاک genesis
-    // تزریق می‌شود (constructorش هرگز روی زنجیره‌ی واقعی اجرا نمی‌شود). ابزار genesis آف‌چین
-    // باید دیپلوی این قرارداد را (با آرگومان واقعی، روی یک زنجیره‌ی محلی موقت) شبیه‌سازی کند
-    // و storage نتیجه را در فایل نهایی genesis کپی کند — این سورس دقیقاً همین‌طور که هست
-    // دیپلوی نشود با این فرض که مقدار placeholder پایین روی زنجیره اثر دارد؛ این مقدار فقط
-    // یک علامت مستندسازی/ابزاری است.
+    // GENESIS FILL-IN: این قرارداد constructor ندارد چون در `alloc` بلاک genesis تزریق می‌شود. ابزار genesis استقرارش را روی یک
+    // زنجیرهٔ محلی موقت شبیه‌سازی می‌کند و storage حاصل را در فایل نهایی genesis می‌گذارد؛ مقدار اولیهٔ زیر نشانگر مستندات و ابزار است.
     // ------------------------------------------------------------------
 
-    /// @dev ✅ پرشده: آدرس اولیه‌ی identityOracle، خوانده‌شده از SurAddresses.sol (منبع واحد
-    ///      صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین).
+    /// @dev آدرس اولیهٔ identityOracle که از SurAddresses.sol خوانده می‌شود (منبع واحد همهٔ آدرس‌های oracle).
     address public identityOracle = SurAddresses.IDENTITY_ORACLE;
 
     // ------------------------------------------------------------------
@@ -97,6 +90,7 @@ contract IdentityRegistry {
         require(bytes(name).length > 0, "IdentityRegistry: empty name");
 
         Identity storage id_ = identities[msg.sender];
+        require(id_.migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
         id_.registered = true;
         id_.personType = personType;
         id_.name = name;
@@ -104,9 +98,8 @@ contract IdentityRegistry {
         emit IdentityRegistered(msg.sender, personType, name);
     }
 
-    /// @notice چک سطح صفر (دسترسی آزاد، بدون نیاز به ثبت‌نام دپ) — دقیقاً معادل بخش ۶-۱ SIP002:
-    ///         «آیا این آدرس اصلاً هویتش را ثبت کرده؟» بدون افشای هیچ داده‌ی دیگری. آدرس‌های
-    ///         مهاجرت‌کرده (`migratedTo != 0`) دیگر `true` برنمی‌گردانند — طبق بخش ۳.۴ سند فنی.
+    /// @notice بررسی سطح صفر (دسترسی آزاد، بدون ثبت‌نام dApp)، معادل بخش ۶-۱ SIP002: «آیا این آدرس اصلاً هویتی ثبت کرده؟»،
+    ///         بدون افشای چیز دیگر. آدرس منتقل‌شده (`migratedTo != 0`) false برمی‌گرداند.
     function hasIdentity(address who) external view returns (bool) {
         Identity storage id_ = identities[who];
         return id_.registered && id_.migratedTo == address(0);
@@ -120,31 +113,30 @@ contract IdentityRegistry {
         returns (bool registered, bool phoneVerified, bool telegramVerified, bool kycVerified)
     {
         Identity storage id_ = identities[who];
+        if (id_.migratedTo != address(0)) return (false, false, false, false);
         return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.kycVerified);
     }
 
     // ------------------------------------------------------------------
-    // وریفای — فقط identityOracle (سرویس آف‌چین Identity Service، جزئیات در
+    // احراز — فقط identityOracle (سرویس هویت آف‌چین؛ جزئیات در
     // sur-identity-registry-spec.md)
     // ------------------------------------------------------------------
 
-    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle {
+    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
         identities[who].phoneVerified = verified;
         emit PhoneVerificationUpdated(who, verified);
     }
 
-    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle {
+    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
         identities[who].telegramVerified = verified;
         emit TelegramVerificationUpdated(who, verified);
     }
 
-    /// @notice ثبت نتیجه‌ی eKYC کامل (تصویر شخص + کارت ملی + مشخصات شناسنامه‌ای + تطبیق چهره).
-    ///         `commitment` یک هش نمکین (salted hash) از داده‌ی کامل تأییدشده است — **فقط**
-    ///         برای اثبات عدم‌دستکاری در دعاوی حقوقی احتمالی آینده نگه‌داری می‌شود؛ هیچ تابع
-    ///         on-chain‌ای هرگز از آن برای پاسخ به کوئری «تطبیق» استفاده نمی‌کند (آن عملیات
-    ///         همیشه از طریق API آف‌چین Identity Service انجام می‌شود — بخش ۵،
-    ///         sur-identity-registry-spec.md).
-    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle {
+    /// @notice نتیجهٔ بررسی کامل eKYC را ثبت می‌کند (عکس شخصی + کارت ملی + جزئیات در سطح شناسنامه + تطبیق چهره).
+    ///         `commitment` هش دارای salt کل مجموعه‌دادهٔ احرازشده است — **فقط** برای اثبات دست‌نخوردگی در یک اختلاف حقوقی
+    ///         احتمالی نگه داشته می‌شود؛ هیچ تابع روی زنجیره‌ای هرگز آن را برای پاسخ به پرس‌وجوی «تطبیق» به کار نمی‌برد (آن
+    ///         عمل همیشه از API سرویس هویت آف‌چین می‌گذرد — بخش ۵ `sur-identity-registry-spec.md` را ببینید).
+    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) {
         Identity storage id_ = identities[who];
         id_.kycVerified = verified;
         id_.kycCommitment = verified ? commitment : bytes32(0);
@@ -152,17 +144,19 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // بازیابی هویت — جایگزین آنلاین بخش ۷/۸ SIP001 (گم‌شدن کلید / سوزاندن آدرس). فراخوانی این
-    // تابع همیشه باید بعد از یک فرآیند احراز آف‌چین مستقل باشد (بخش ۳.۴ سند فنی): برای
-    // کاربران فقط-موبایل/تلگرام، تکرار OTP کافی است؛ برای کاربران KYC‌شده، باید سرویس‌دهنده‌ی
-    // eKYC تأیید کند سلفی جدید با بیومتریک قبلی همان کد ملی تطبیق دارد — نه یک ثبت‌نام تازه.
+    // بازیابی هویت: جایگزین آنلاین بخش‌های ۷ و ۸ SIP001 (کلید گم‌شده / آدرس سوخته). هر فراخوان باید همیشه پس از یک
+    // راستی‌آزمایی آف‌چین مستقل باشد (بخش ۳.۴ مشخصات): برای کاربران فقط‌ تلفن/تلگرام تکرار فرایند OTP کافی است؛ برای
+    // کاربران KYC‌شده ارائه‌دهندهٔ eKYC باید تأیید کند سلفی جدید با داده‌های بیومتریک پیشتر ذخیره‌شده برای همان کد ملی
+    // می‌خواند. این یک بازیابی است، نه ثبت‌نام تازه.
     // ------------------------------------------------------------------
 
-    /// @notice انتقال کامل وضعیت هویت از یک آدرس قدیمی (گم‌شده/لو‌رفته) به یک آدرس جدید.
-    ///         آدرس قدیمی برای همیشه «سوخته» می‌شود (`hasIdentity` برایش دیگر true برنمی‌گرداند)
-    ///         ولی رکوردش (و مسئولیتش برای اقدامات قبلی) پاک نمی‌شود — فقط دیگر قابل‌استفاده نیست.
+    /// @notice کل وضعیت هویت را از یک آدرس قدیمی (گم‌شده یا لورفته) به آدرس جدید منتقل می‌کند. آدرس قدیمی سوخته می‌شود:
+    ///         `hasIdentity` و `getVerificationStatus` برایش چیزی گزارش نمی‌کنند و دیگر نمی‌شود آن را ثبت یا احراز کرد، ولی
+    ///         رکورد و مسئولیتش برای کارهای گذشته پاک نمی‌شود. آدرس جدید باید آدرسی متفاوت باشد که خودش منتقل نشده باشد.
     function migrateIdentity(address oldAddr, address newAddr) external onlyIdentityOracle {
         require(newAddr != address(0), "IdentityRegistry: zero new address");
+        require(newAddr != oldAddr, "IdentityRegistry: new address equals old address");
+        require(identities[newAddr].migratedTo == address(0), "IdentityRegistry: new address was itself migrated");
         Identity storage oldId = identities[oldAddr];
         require(oldId.registered, "IdentityRegistry: old address has no identity");
         require(oldId.migratedTo == address(0), "IdentityRegistry: old address already migrated");

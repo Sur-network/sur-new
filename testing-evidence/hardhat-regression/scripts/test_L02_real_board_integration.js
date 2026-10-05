@@ -12,11 +12,13 @@ function ok(n, c, x = "") { results.push(c === true); console.log((c === true ? 
 const msgOf = e => { const m = e.reason || e.shortMessage || e.message || ""; const r = m.match(/reason string '([^']*)'/); return r ? r[1] : m; };
 async function reverts(fn, expected) { try { await (await fn()).wait(); return "did NOT revert"; } catch (e) { return msgOf(e).includes(expected) ? true : "wrong reason: " + msgOf(e).slice(0, 200); } }
 const inc = async (s) => { await hre.network.provider.send("evm_increaseTime", [s]); await hre.network.provider.send("evm_mine"); };
+const nextMonthStart = async () => { const b0 = await hre.ethers.provider.getBlock("latest"); const d = new Date(b0.timestamp * 1000); return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1, 0, 0, 5) / 1000); };
+const warpTo = async (ts) => { await hre.network.provider.send("evm_setNextBlockTimestamp", [ts]); await hre.network.provider.send("evm_mine"); };
 const slot = (art, n) => hre.ethers.toBeHex(BigInt(art.layout.storage.find(s => s.label === n).slot));
 const setS = (addr, sl, v) => hre.network.provider.send("hardhat_setStorageAt", [addr, sl, hre.ethers.zeroPadValue(hre.ethers.toBeHex(v), 32)]);
 const MOCK = `pragma solidity ^0.8.24;
-contract MockRegistry { address[] public vals; mapping(address=>bool) public active; mapping(address=>uint8) public st; mapping(address=>bool) public ever;
- function setActive(address a, bool on) external { if (on && !active[a]) { active[a]=true; ever[a]=true; vals.push(a); _cp(a,true);} else if (!on && active[a]) { active[a]=false; _cp(a,false); for (uint i=0;i<vals.length;i++) if (vals[i]==a) { vals[i]=vals[vals.length-1]; vals.pop(); break; } } }
+contract MockRegistry { address[] public vals; mapping(address=>bool) public active; mapping(address=>uint8) public st; mapping(address=>bool) public ever; mapping(address=>uint256) public activationSeq; uint256 public activationCount;
+ function setActive(address a, bool on) external { if (on && !active[a]) { active[a]=true; if (!ever[a]) { ever[a]=true; activationSeq[a]=++activationCount; } vals.push(a); _cp(a,true);} else if (!on && active[a]) { active[a]=false; _cp(a,false); for (uint i=0;i<vals.length;i++) if (vals[i]==a) { vals[i]=vals[vals.length-1]; vals.pop(); break; } } }
   uint256 public statusNonce; struct Cp { uint256 n; bool a; } mapping(address=>Cp[]) cps;
   function _cp(address x, bool on) internal { statusNonce++; cps[x].push(Cp(statusNonce, on)); }
   function wasActiveAt(address x, uint256 n) external view returns (bool) { Cp[] storage c=cps[x]; bool r=false; for (uint i=0;i<c.length;i++){ if (c[i].n<=n) r=c[i].a; else break; } return r; }
@@ -45,7 +47,7 @@ contract MockIdentity { function hasIdentity(address) external pure returns (boo
   // each voter may back at most 5 candidates: A0..A5 back A0..A4; A6..A9 back A0..A3 and A5
   // -> tallies A0..A3 = 10, A4 = 6, A5 = 4: A0..A4 are seated, A5 is the eligible successor after an exit
   for (let v = 0; v < 10; v++) for (const c of (v < 6 ? [0, 1, 2, 3, 4] : [0, 1, 2, 3, 5])) await (await board.connect(A[v]).voteFor(A[c].address)).wait();
-  await (await board.refreshBoard()).wait(); // seats A0..A4, boardVersion 1 -> 2 (real change)
+  await (await board.refreshBoard([])).wait(); // seats A0..A4, boardVersion 1 -> 2 (real change)
   ok("R0) هیأت واقعی با A0..A4 تشکیل شد؛ boardVersion=2", (await board.boardVersion()) === 2n && (await board.getBoardMembers()).length === 5);
   const d = (who) => new hre.ethers.Contract(DIST, dArt.abi, who);
   const share = async () => await d(deployer).validatorDirectShareBps();
@@ -78,14 +80,14 @@ contract MockIdentity { function hasIdentity(address) external pure returns (boo
   await fresh();
   { const P = await propose(5500);
     for (let i = 0; i < 2; i++) await (await bv(i, P)).wait();
-    await inc(30 * 86400 + 1); const v0 = await board.boardVersion(); await (await board.refreshBoard()).wait();
-    ok("R4a) refresh ماهانه‌ی واقعی بدون تغییر ترکیب، boardVersion را تغییر نداد", (await board.boardVersion()) === v0);
+    await warpTo(await nextMonthStart()); const v0 = await board.boardVersion(); await (await board.refreshBoard([])).wait();
+    ok("R4a) refresh of the next calendar month without a composition change does not change boardVersion", (await board.boardVersion()) === v0);
     // the proposal is still inside its 30-day expiry? created before inc(30d+1) -> expired. Re-run inside expiry:
   }
   await fresh();
-  { await inc(29 * 86400); const P = await propose(5500); // proposal created just before the monthly point
+  { const nm = await nextMonthStart(); await warpTo(nm - 86400); const P = await propose(5500); // proposal created just before the month boundary
     for (let i = 0; i < 2; i++) await (await bv(i, P)).wait();
-    await inc(1 * 86400 + 1); const v0 = await board.boardVersion(); await (await board.refreshBoard()).wait();
+    await warpTo(nm); const v0 = await board.boardVersion(); await (await board.refreshBoard([])).wait();
     const same = (await board.boardVersion()) === v0;
     await (await bv(2, P)).wait(); for (let i = 0; i < 7; i++) await (await vv(i, P)).wait();
     ok("R4b) پس از refresh بدون تغییر واقعی، همان پیشنهاد معتبر ماند و اجرا شد", same && (await share()) === 5500n); }

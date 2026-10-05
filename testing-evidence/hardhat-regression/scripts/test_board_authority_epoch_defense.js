@@ -28,7 +28,7 @@ const inc = async (s) => { await hre.network.provider.send("evm_increaseTime", [
   for (const v of A) await join(v);
   for (const v of A) await activate(v);
   for (const v of A) for (const c of A.slice(0, 5)) await (await board.connect(v).voteFor(c.address)).wait();
-  await (await board.refreshBoard()).wait();
+  await (await board.refreshBoard([])).wait();
   const v2 = A[2];
   console.log("v2 عضو هیأت، اپوک ثبت‌شده روی کرسی:", await board.seatMembershipEpoch(v2.address));
 

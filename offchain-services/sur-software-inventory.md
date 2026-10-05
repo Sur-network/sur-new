@@ -47,7 +47,7 @@
 
 ## ۳. سرویس Verifier
 
-**چه‌کار می‌کند:** احراز موبایل/تلگرام ولیدیتورها؛ بررسی آف‌چین liveness هر یک ساعت (آستانه‌ی تعلیق ۴ ساعتِ تأییدشده، هشدارها) و ثبت **فقط تصمیم‌های تغییر وضعیت** روی زنجیره (`recordActivation` / `recordSuspension` / `recordRecovery` / `recordPreExitViolation`)؛ و کارهای دوره‌ای بدون‌مجوز: `resolveMassFailureCheck`، `syncBoard`، `fillVacancies`، `refreshBoard` (هر ۳۰ روز). یک Verifier کافی است (تصمیم نهایی).
+**چه‌کار می‌کند:** احراز موبایل/تلگرام ولیدیتورها؛ بررسی آف‌چین liveness هر یک ساعت (آستانه‌ی تعلیق ۴ ساعتِ تأییدشده، هشدارها) و ثبت **فقط تصمیم‌های تغییر وضعیت** روی زنجیره (`recordActivation` / `recordSuspension` / `recordRecovery` / `recordPreExitViolation`)؛ و کارهای دوره‌ای بدون‌مجوز: `resolveMassFailureCheck`، `syncBoard`، `fillVacancies`، `refreshBoard(address[])` (در هر ماه میلادی یک‌بار). یک Verifier کافی است (تصمیم نهایی).
 
 📄 جزئیات کامل: `sur-verifier-service-spec.md`.
 

@@ -4,31 +4,24 @@ pragma solidity ^0.8.24;
 import "./SurAddresses.sol";
 
 /// @title IdentityRegistry
-/// @notice Sur's sixth structural contract (fixed address `0x6666...6666`) — the single source
-///         of truth for identity across **all network users**, not just validators. Inspired by
-///         the project's earlier standards SIP001/SIP002 ("Identity verification method for
-///         individual and legal-entity users" and "Use of identity verification services by
-///         dApps"), with two deliberate changes from the original:
+/// @notice Sur's sixth structural contract (fixed address `0x6666...6666`): the single source of truth for identity across
+///         all network users, not only validators. It follows the SIP001/SIP002 model (identity verification for individual
+///         and legal-entity users, and use of that verification by dApps) with two design choices:
 ///
-///         1. **No notary office.** SIP001 required an in-person notarized signature. Here it is
-///            replaced with a fully online process: eKYC verification (face matching + liveness
-///            detection + document authenticity check, performed by a licensed provider) +
-///            digitally signing a challenge with the user's own Sur key (this second step is
-///            exactly SIP001's original idea, unchanged).
+///         1. **No notary office.** Verification is fully online: an eKYC check (face matching, liveness detection and
+///            document authenticity, performed by a licensed provider) plus a signature of a challenge with the user's own
+///            Sur key.
 ///
-///         2. **No sensitive raw data on-chain.** SIP001 proposed storing national ID / name /
-///            birth-certificate data in a "confidential smart contract." This is not technically
-///            possible: no storage on a public blockchain is ever truly confidential
-///            (`eth_getStorageAt` is always available), and for low-entropy data such as a
-///            10-digit national ID, even hashing provides no real protection without a secret
-///            salt. Solution: raw data never enters this contract; only a verification status
-///            (bool) and a commitment (kept solely to prove non-tampering in a possible future
-///            legal dispute, never used to answer a query) live on-chain. The "matching"
-///            operation itself (SIP002 section 6) must be an off-chain API call, never an
-///            on-chain transaction — because even if the contract never reveals the answer, the
-///            **transaction's own input parameter** (the value being compared against) is
-///            always visible in public calldata. Full details in
-///            `sur-identity-registry-spec.md`.
+///         2. **No sensitive raw data on-chain.** No storage on a public blockchain is confidential (`eth_getStorageAt` is
+///            always available), and for low-entropy data such as a 10-digit national ID even hashing gives no protection
+///            without a secret salt. Raw data therefore never enters this contract: only verification flags (bool) and a
+///            commitment (kept solely to prove non-tampering in a possible legal dispute, never used to answer a query) are
+///            stored. The "matching" operation (SIP002 section 6) must be an off-chain API call, never an on-chain
+///            transaction, because the transaction's own input (the value being compared) is visible in public calldata.
+///            Details are in `sur-identity-registry-spec.md`.
+///
+///         A migrated address is burned: `hasIdentity` and `getVerificationStatus` report nothing for it, and neither the
+///         owner nor the oracle can register or verify it again.
 contract IdentityRegistry {
     // ------------------------------------------------------------------
     // Fixed cross-contract address (see SurAddresses.sol)
@@ -36,8 +29,7 @@ contract IdentityRegistry {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // Self-attested identity (SIP001's first layer) — unchanged from our earlier design, just
-    // relocated out of ValidatorsRegistry.
+    // Self-attested identity (SIP001's first layer)
     // ------------------------------------------------------------------
     enum PersonType { Individual, Legal }
 
@@ -47,9 +39,9 @@ contract IdentityRegistry {
         string name;
         bool phoneVerified;      // the actual phone number is never stored here — only this flag
         bool telegramVerified;   // the actual Telegram ID is never stored here — only this flag
-        bool kycVerified;        // new — result of full eKYC (photo + national ID + face match)
-        bytes32 kycCommitment;   // new — kept only to prove non-tampering in disputes, never for matching
-        address migratedTo;      // new — non-zero means this address is "burned" and its identity has been migrated to a new address (see spec section 3.4; equivalent to SIP001 sections 7/8)
+        bool kycVerified;        // result of the full eKYC check (photo + national ID + face match)
+        bytes32 kycCommitment;   // kept only to prove non-tampering in disputes, never for matching
+        address migratedTo;      // non-zero: this address is burned and its identity was migrated to that address (spec section 3.4)
     }
 
     mapping(address => Identity) public identities;
@@ -73,22 +65,23 @@ contract IdentityRegistry {
         _;
     }
 
+    modifier notMigrated(address who) {
+        require(identities[who].migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
+        _;
+    }
+
     modifier onlyIdentityOracle() {
         require(msg.sender == identityOracle, "IdentityRegistry: caller is not the identity oracle");
         _;
     }
 
     // ------------------------------------------------------------------
-    // 🔶 GENESIS FILL-IN — this contract has no constructor because it is injected directly
-    // into the genesis `alloc` (its constructor would never execute on the real chain). The
-    // off-chain genesis-building tool must simulate this contract's deployment (with the real
-    // constructor argument, on a temporary local chain) and copy the resulting storage into the
-    // final genesis file — do NOT just deploy this exact source as-is expecting the placeholder
-    // below to matter on-chain; it exists purely as a documentation/tooling marker.
+    // GENESIS FILL-IN: this contract has no constructor because it is injected into the genesis `alloc`. The genesis tool
+    // simulates its deployment on a temporary local chain and copies the resulting storage into the final genesis file; the
+    // initial value below is a documentation and tooling marker.
     // ------------------------------------------------------------------
 
-    /// @dev ✅ FILLED: initial identityOracle address, read from SurAddresses.sol (single
-    ///      source of truth for all four oracle addresses — see that file for rationale).
+    /// @dev Initial identityOracle address, read from SurAddresses.sol (the single source for all oracle addresses).
     address public identityOracle = SurAddresses.IDENTITY_ORACLE;
 
     // ------------------------------------------------------------------
@@ -101,6 +94,7 @@ contract IdentityRegistry {
         require(bytes(name).length > 0, "IdentityRegistry: empty name");
 
         Identity storage id_ = identities[msg.sender];
+        require(id_.migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
         id_.registered = true;
         id_.personType = personType;
         id_.name = name;
@@ -108,10 +102,9 @@ contract IdentityRegistry {
         emit IdentityRegistered(msg.sender, personType, name);
     }
 
-    /// @notice Tier-zero check (open access, no dApp registration required) — exactly equivalent
-    ///         to SIP002 section 6-1: "has this address registered an identity at all?", without
-    ///         revealing any other data. Migrated addresses (`migratedTo != 0`) no longer return
-    ///         `true` — see spec section 3.4.
+    /// @notice Tier-zero check (open access, no dApp registration required), equivalent to SIP002 section 6-1: "has this
+    ///         address registered an identity at all?", revealing nothing else. A migrated address (`migratedTo != 0`)
+    ///         returns false.
     function hasIdentity(address who) external view returns (bool) {
         Identity storage id_ = identities[who];
         return id_.registered && id_.migratedTo == address(0);
@@ -125,6 +118,7 @@ contract IdentityRegistry {
         returns (bool registered, bool phoneVerified, bool telegramVerified, bool kycVerified)
     {
         Identity storage id_ = identities[who];
+        if (id_.migratedTo != address(0)) return (false, false, false, false);
         return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.kycVerified);
     }
 
@@ -133,12 +127,12 @@ contract IdentityRegistry {
     // sur-identity-registry-spec.md for details)
     // ------------------------------------------------------------------
 
-    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle {
+    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
         identities[who].phoneVerified = verified;
         emit PhoneVerificationUpdated(who, verified);
     }
 
-    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle {
+    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
         identities[who].telegramVerified = verified;
         emit TelegramVerificationUpdated(who, verified);
     }
@@ -149,7 +143,7 @@ contract IdentityRegistry {
     ///         future legal dispute; no on-chain function ever uses it to answer a "matching"
     ///         query (that operation always goes through the off-chain Identity Service API —
     ///         see section 5 of `sur-identity-registry-spec.md`).
-    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle {
+    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) {
         Identity storage id_ = identities[who];
         id_.kycVerified = verified;
         id_.kycCommitment = verified ? commitment : bytes32(0);
@@ -157,20 +151,20 @@ contract IdentityRegistry {
     }
 
     // ------------------------------------------------------------------
-    // Identity recovery — the online replacement for SIP001 sections 7/8 (lost key / burned
-    // address). Calling this function must always follow an independent off-chain verification
-    // process (see spec section 3.4): for phone/Telegram-only users, repeating the OTP flow is
-    // enough; for KYC-verified users, the eKYC provider must confirm the new selfie matches the
-    // previously stored biometric data for the same national ID — this is a recovery, not a
-    // fresh registration.
+    // Identity recovery: the online replacement for SIP001 sections 7/8 (lost key / burned address). A call must always
+    // follow an independent off-chain verification (spec section 3.4): for phone/Telegram-only users, repeating the OTP
+    // flow is enough; for KYC-verified users, the eKYC provider must confirm that the new selfie matches the previously
+    // stored biometric data for the same national ID. This is a recovery, not a fresh registration.
     // ------------------------------------------------------------------
 
-    /// @notice Migrates the full identity status from an old (lost/compromised) address to a new
-    ///         one. The old address is permanently "burned" (`hasIdentity` no longer returns true
-    ///         for it), but its record — and its liability for past actions — is not erased, it
-    ///         simply can no longer be used.
+    /// @notice Migrates the full identity status from an old (lost or compromised) address to a new one. The old address
+    ///         is burned: `hasIdentity` and `getVerificationStatus` report nothing for it and it can no longer be registered
+    ///         or verified, but its record, and its liability for past actions, is not erased. The new address must be a
+    ///         different address that has not itself been migrated.
     function migrateIdentity(address oldAddr, address newAddr) external onlyIdentityOracle {
         require(newAddr != address(0), "IdentityRegistry: zero new address");
+        require(newAddr != oldAddr, "IdentityRegistry: new address equals old address");
+        require(identities[newAddr].migratedTo == address(0), "IdentityRegistry: new address was itself migrated");
         Identity storage oldId = identities[oldAddr];
         require(oldId.registered, "IdentityRegistry: old address has no identity");
         require(oldId.migratedTo == address(0), "IdentityRegistry: old address already migrated");

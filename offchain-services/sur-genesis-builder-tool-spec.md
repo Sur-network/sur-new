@@ -87,7 +87,7 @@
 3. با `solc --storage-layout` (یا فیلد `storageLayout` در خروجی JSON استاندارد) شماره‌ی دقیق slot هر متغیر ساده را بگیر.
 4. مقدار واقعی هرکدام را مستقیم در همان slot در بخش `alloc.storage` genesis بنویس.
 
-⚠️ نکته‌ی فنی حیاتی: بایت‌کد deploy‌شده (runtime) هرگز شامل منطق «مقداردهی اولیه» نیست — آن منطق فقط بخشی از creation bytecode است. برای همین **هر** scalar غیرconstant با مقدار غیرپیش‌فرض (آدرس اوراکل‌ها، سقف‌ها، پارامترهای زمانی، `boardVersion` اگر بخواهیم ۱ باشد…) باید با overlay صریح slot نوشته شود — نوشتن نشدنش یعنی مقدار صفر. حذف constructor صریح از سورس به‌معنای بی‌نیازی از این مرحله نیست. و طبق تصحیح بالا، immutableها را جداگانه مدیریت کن.
+⚠️ نکته‌ی فنی حیاتی: بایت‌کد deploy‌شده (runtime) هرگز شامل منطق «مقداردهی اولیه» نیست — آن منطق فقط بخشی از creation bytecode است. برای همین **هر** scalar غیرconstant با مقدار غیرپیش‌فرض (آدرس اوراکل‌ها، سقف‌ها، پارامترهای زمانی، `boardVersion` و `boardMonthId`…) باید با overlay صریح slot نوشته شود — نوشتن نشدنش یعنی مقدار صفر. حذف constructor صریح از سورس به‌معنای بی‌نیازی از این مرحله نیست. و طبق تصحیح بالا، immutableها را جداگانه مدیریت کن.
 
 ### ۴.۲ روش شبیه‌سازی (نیازمند زنجیره‌ی محلی موقت) — برای `FoundationDAO`, `ValidatorsRegistry`, `ValidatorsBoard`
 
@@ -150,9 +150,10 @@
    ValidatorsTreasury.periodCap() == (مقدار config)
    BlockRewardDistributor: immutableReferences == {}   # ✅ L03: هیچ immutable؛ getterهای deployTime() و MIN_BLOCK_PERIOD_SECONDS() دیگر وجود ندارند و نباید صدا زده شوند
    BlockRewardDistributor.validatorDirectShareBps() == (مقدار config، پیش‌فرض 5000)   # overlay، مقداردهی سورس هنگام تزریق اجرا نمی‌شود
-   ValidatorsBoard.boardVersion() == (مقدار overlay‌شده؛ ۱ اگر نوشته شود، ۰ اگر نه — هر دو کار می‌کنند، ولی assert کن که همان چیزی است که ابزار قصد کرده)
-   ValidatorsBoard.lastBoardRefreshAt() == network.genesisTimestamp   # ✅ P01: اگر هیأت seed می‌شود؛ وگرنه اولین بازتعیین فوراً مجاز است
-   # ⚠️ دور سوم آزمون Besu v4: ابزار آزمایشی ساخت این مقدار را ننوشت (۰ روی ۳۳ شبکه؛ A09-spec شکست). **دور چهارم: ابزار آزمایشی اصلاح و تأیید شد** (getter = timestamp genesis؛ `refreshBoard()` پیش از ۳۰ روز با «ordinary board changes are applied once every 30 days» رد می‌شود؛ FINDINGS بستهٔ v4 مورد ۲۲). این بند الزام موجود پروژه (P01) است و تغییر نمی‌کند؛ نوشتن و assert کردن آن در ابزار production بخشی از پیاده‌سازی باقی‌ماندهٔ T02 است و تصمیم باز نیست.
+   ValidatorsBoard.boardVersion() == 1
+   ValidatorsBoard.boardMonthId() == monthIdOf(network.genesisTimestamp)   # بدون آن، هیأت مؤسس تا نخستین refreshBoard بی‌اختیار است
+   ValidatorsRegistry.activationCount() == 7   و   activationSeq(founder_i) == i + 1   # ترتیب genesis، برای شکستن تساوی هیأت
+   # الزام: نوشتن و assert کردن `boardMonthId` در ابزار production بخشی از پیاده‌سازی T02 است و تصمیم باز نیست.
    ValidatorsTreasury.perPaymentCap() == 50000 ether ; periodCap() == 200000 ether   # ✅ P06 (overlay اجباری — مقداردهی‌ها هنگام تزریق اجرا نمی‌شوند)
    BlockRewardDistributor.lastSettledBlock() == 0   # ✅ P05: اولین بازه باید از بلاک ۱ شروع شود
    BlockRewardDistributor.rewardRateChangeCount() == 0   # ✅ L05: تاریخچهٔ نرخ مصوب خالی است؛ نرخ اولیه (۲ SUR) ثابت در کد است و در storage نیست

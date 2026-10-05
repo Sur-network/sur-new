@@ -11,18 +11,17 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
-    // ✅ FIXED / اصلاح‌شده — لایه‌ی دوم دفاع در برابر بازگشتِ اختیار کرسی کهنه؛ ValidatorsRegistry.sol را ببین.
+
+    /// @dev هر بار آدرسی داوطلبانه خارج شود یک واحد زیاد می‌شود؛ کرسی فقط تا وقتی معتبر است که epoch هنوز برابر مقداری باشد
+    ///      که هنگام گرفتن کرسی ثبت شد.
     function membershipEpoch(address who) external view returns (uint256);
-    /// @dev `status` معادل ABI-سازگار enum ValidatorsRegistry.Status به صورت uint8 است:
-    ///      ۰=None، ۱=Probation، ۲=Active، ۳=Demoted، ۴=Exiting.
-    /// @dev ✅ به‌روزشده (بازطراحی معماری راستی‌آزمایی آف‌چین): تابع واقعی
-    ///      ValidatorsRegistry.getValidatorInfo() دیگه اصلاً هیچ فیلد نسبت liveness ای نداره
-    ///      (کاملاً حذف شدن — liveness الان آف‌چین چک می‌شه). دقیقاً ۶ خروجی به همین ترتیب
-    ///      برمی‌گردونه: status، lockedStake، periodStartedAt، demotedAt، pendingSlashEpoch،
-    ///      isPaidEntrant. این اینترفیس باید دقیقاً همینو، با همون ترتیب، منعکس کنه — به
-    ///      کامنت خودِ تابع واقعی توی ValidatorsRegistry.sol مراجعه کن که چرا یه ناهماهنگی
-    ///      اینجا توی یه نسخه‌ی قبلی یه باگ واقعی و بی‌صدای بین‌قراردادی ساخت (اصلاح‌شده
-    ///      اون‌موقع، ولی ارزش داره هر بار که امضای تابع واقعی دوباره عوض می‌شه، دوباره چک بشه).
+
+    /// @dev جایگاه `who` در ترتیبی که آدرس‌ها نخستین‌بار فعال شدند (۱ = قدیمی‌ترین)؛ ۰ برای آدرسی که هرگز فعال نشده.
+    ///      برای شکستن تساوی بین نامزدهای هم‌رأی به کار می‌رود: ولیدیتور قدیمی‌تر برنده است.
+    function activationSeq(address who) external view returns (uint256);
+
+    /// @dev `status` از رمزگذاری ABI در ValidatorsRegistry.Status استفاده می‌کند:
+    ///      ۰=None، ۱=Probation، ۲=Active، ۳=Demoted، ۴=Exiting. شش خروجی باید دقیقاً با تابع واقعی و با همین ترتیب بخواند.
     function getValidatorInfo(address who) external view returns (
         uint8 status,
         uint256 lockedStake,
@@ -33,8 +32,7 @@ interface IValidatorsRegistry {
     );
 }
 
-/// @dev یادداشت معماری: هویت دیگر داخل ValidatorsRegistry نیست — به یک قرارداد ساختاری ششم و
-///      کاملاً مستقل، `IdentityRegistry.sol` (آدرس ثابت `0x6666...6666`)، منتقل شده است.
+/// @dev هویت در قرارداد مستقل `IdentityRegistry` (آدرس ثابت `0x6666...6666`) است.
 interface IIdentityRegistry {
     function hasIdentity(address who) external view returns (bool);
 }
@@ -48,221 +46,131 @@ interface IValidatorsTreasury {
 }
 
 /// @title ValidatorsBoard
-/// @notice دیپلوی‌شده در آدرس ثابت genesis، یعنی SurAddresses.VALIDATORS_BOARD (0x4444...4444).
-///         در مستندات فارسی پروژه «هیأت‌مدیره‌ی ولیدیتورها» نامیده می‌شود.
+/// @notice هیأت‌مدیرهٔ ولیدیتورها، مستقر در `SurAddresses.VALIDATORS_BOARD` (‏0x4444...4444).
 ///
-///         عضویت هیأت — رأی‌گیری تأییدی، ۵ کرسی ثابت، بدون عزل (طراحی به‌روزشده؛ کاملاً
-///         جایگزین مدل قدیمی انتخاباتِ افزودن/حذف یکی‌یکی):
-///           - هر ولیدیتور فعال می‌تواند، هر زمان، تا MAX_VOTES_PER_VOTER (۵) ولیدیتور فعال
-///             دیگر را رأی موافق بدهد (`voteFor`)، و هرکدام از این رأی‌ها را هر زمان پس بگیرد
-///             (`unvoteFor`). بدون مرحله‌ی نامزدی، بدون بازه‌ی رأی‌گیری، بدون نصاب حداقلی.
-///             رأی‌دادن نیاز دارد که رأی‌دهنده اول هویتش را خوداظهاری کرده باشد، روی قرارداد
-///             جدای `IdentityRegistry` (`registerIdentity` — فقط نام و نوع شخصیت، خوداظهاری؛
-///             شماره‌موبایل، آیدی تلگرام، و مدارک کامل KYC آف‌چین می‌مانند — `IdentityRegistry`
-///             فقط ثبت می‌کند کدام‌یک وریفای شده، نه این‌که خودشان شرط رأی‌دادن باشند، فقط
-///             `hasIdentity` هست).
-///           - `refreshBoard()` — بدون نیاز به مجوز، توسط هرکسی، هر زمان قابل‌فراخوانی —
-///             هیأت را از نو به‌عنوان BOARD_SIZE (۵) ولیدیتوری که بیشترین رأی جاری را دارند
-///             محاسبه می‌کند، فقط با شمردن رأی‌هایی که توسط ولیدیتورهای فعلاً فعال، به
-///             ولیدیتورهای فعلاً فعال داده شده‌اند (هر دو طرف در هر refresh مستقیم و زنده در
-///             برابر ValidatorsRegistry دوباره چک می‌شوند، پس یک ولیدیتوری که غیرفعال می‌شود
-///             خودکار هم از رأی‌دادن هم از واجدشرایط‌بودن به‌عنوان کاندید باز می‌ماند، بدون
-///             نیاز به مرحله‌ی جدای «عزل»).
-///           - در صورت تساوی، اولویت با کاندیدی است که زودتر در شمارش دیده شده (ولیدیتورها به
-///             ترتیب ValidatorsRegistry.getValidators()، رأی‌های هر رأی‌دهنده به ترتیب ثبتشان)
-///             — یعنی در تساوی، اولی که رسیده برنده است.
-///           - پاک‌سازی رأی‌های کهنه: اگر یک ولیدیتور بیشتر از
-///             `ValidatorsRegistry.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY` (۳۰ روز) بدون
-///             بازگشت، در وضعیت Demoted (غیرفعال) بماند، هرکسی می‌تواند `clearStaleVotes` را
-///             فراخوانی کند تا هر رأیی که او داده و هر رأیی که او گرفته پاک شود، و جای رأی
-///             بقیه‌ی ولیدیتورها آزاد شود. قبل از آن نقطه‌ی ۳۰روزه، رأی‌های او در
-///             `refreshBoard()` صرفاً دیگر شمرده نمی‌شوند (چون فعال نیست، از هر دو طرف شمارش
-///             کنار گذاشته می‌شود) — برای این‌که این اثر بگذارد نیازی به پاک‌سازی نیست،
-///             پاک‌سازی فقط برای آزادکردن storage/جای رأی است.
+///         عضویت هیأت — رأی تأییدی (approval voting)، پنج کرسی، یک هیأت برای هر ماه میلادی:
+///           - هر ولیدیتور فعالی که هویت ثبت کرده باشد می‌تواند به حداکثر MAX_VOTES_PER_VOTER (۵) ولیدیتور فعال رأی بدهد
+///             (`voteFor`) و هر رأی را هر زمان پس بگیرد (`unvoteFor`). مرحلهٔ نامزدی و پنجرهٔ رأی‌گیری وجود ندارد.
+///             رأی‌ها تا وقتی رأی‌دهنده تغییرشان ندهد می‌مانند.
+///           - هیأتِ یک ماه میلادی (UTC) با نخستین فراخوان `refreshBoard` در آن ماه کار را شروع می‌کند. هر کسی می‌تواند
+///             صدایش بزند. پنج ولیدیتور فعال با بیشترین رأی هیأت می‌شوند؛ در تساوی، ولیدیتوری که زودتر فعال شده
+///             برنده است. عضویت قبلی هیچ برتری‌ای نمی‌دهد و هر پنج کرسی می‌توانند هم‌زمان عوض شوند.
+///           - تا وقتی در ماه جدید `refreshBoard` صدا زده نشده، هیأت قبلی هیچ اختیاری ندارد. در یک ماه `refreshBoard` یک‌بار
+///             موفق می‌شود (هیأت خالی را می‌شود هر زمان پر کرد).
+///           - رأی‌ها افزایشی شمرده می‌شوند. هر نامزد یک شمارندهٔ جاری دارد که `voteFor` و `unvoteFor` به‌روزش می‌کنند.
+///             فقط رأی ولیدیتورهای فعال در آن می‌آید. وقتی وضعیت ولیدیتوری عوض شود، Registry `syncVoter` را صدا می‌زند که
+///             رأی‌های آن ولیدیتور را اضافه یا کم می‌کند؛ هر کسی هم می‌تواند برای ترمیم شمارنده‌ها آن را صدا بزند.
+///             صلاحیت خودِ نامزد هنگام انتخاب هیأت زنده بررسی می‌شود.
+///           - اگر ولیدیتوری بیش از `recoveryPeriod()` Registry به‌علاوهٔ STALE_VOTE_CLEAR_DELAY (۳۰ روز) Demoted بماند،
+///             هر کسی می‌تواند `clearStaleVotes` را صدا بزند تا همهٔ رأی‌هایی که آن ولیدیتور داده و گرفته پاک شود.
 ///
-///         اختیارات تفویضی هیأت (بدون تغییر نسبت به قبل، همچنان محدود و صریح):
-///           ۱. چرخش فوری کلید `distributionOracle` روی BlockRewardDistributor، با یک ثبت
-///              شفاف on-chain (برای شرایط اضطراری کلید هک‌شده).
-///           ۲. تصویب درخواست‌های روتین و کوچک بودجه‌ی خزانه، زیر یک سقف ثابت.
-///           ۳. تنظیم سه پارامتر اقتصادی ورود روی ValidatorsRegistry — entryThresholdBase،
-///              growthFactorPerValidator، membershipFeeBps (از مسیر رأی کامل ولیدیتورها خارج
-///              شده چون رسیدن به اکثریت کامل ولیدیتورها در عمل با رشد جمعیت ولیدیتورها
-///              سخت‌تر می‌شود، و انتظار می‌رود این پارامترها نیاز به تنظیم مکرر و به‌موقع
-///              داشته باشند).
+///         اختیارات هیأت (محدود و صریح):
+///           ۱. چرخاندن کلید `distributionOracle` در BlockRewardDistributor.
+///           ۲. چرخاندن کلید `verifier` در ValidatorsRegistry.
+///           ۳. تأیید پرداخت‌های معمول خزانه تا سقف‌های خزانه.
+///           ۴. تعیین سه پارامتر اقتصادی ورود در ValidatorsRegistry
+///              (entryThresholdBase، growthFactorPerValidator، membershipFeeBps).
+///         هر اقدام هیأت رأی داخلی اعضای فعلی را می‌خواهد. چرخش کلیدها و تأیید بودجه دست‌کم سه رأی می‌خواهند و به‌محض
+///         رسیدن به آن تعداد اجرا می‌شوند. هیأت نمی‌تواند پارامترهای امنیتی یا آدرس قراردادهای هسته را عوض کند.
 ///
-///         هیأت همچنان **نمی‌تواند** پارامترهای امنیتی دیگر و با اعتماد بالاتر (نرخ محدودیت
-///         ورود، طول probation، آستانه‌ی لایوینس/غیرفعالی، دوره‌ی بازگشت، درصد اسلش، cooldown
-///         خروج) یا هیچ آدرس قرارداد اصلی را تغییر دهد — این‌ها همیشه نیازمند رأی کامل
-///         ولیدیتورها مستقیماً از طریق ValidatorsRegistry هستند، یا (برای آدرس قراردادهای
-///         اصلی) یک دیپلوی مجدد کامل genesis، چون آن آدرس‌ها ثابت‌های compile-time هستند (به
-///         SurAddresses.sol مراجعه کن). اقدامات فاجعه‌بار/اضطراری ساختاری صراحتاً **جزو
-///         اختیارات هیأت نیستند**؛ نیازمند مسیرهای نصاب-بالاتر ولیدیتوری‌اند که در دفترچه‌ی
-///         بازیابی سند طراحی مستند شده‌اند، نه یک تابع روی این قرارداد.
-///
-///         هر اقدام تفویضی هیأت (چرخش اوراکل، تصویب بودجه، تغییر پارامتر اقتصادی) همچنان
-///         نیازمند رأی اکثریت داخلی بین اعضای فعلی هیأت است — هیچ عضو منفرد هیأتی نمی‌تواند
-///         یک‌طرفه عمل کند. این کاملاً جدا از، و بی‌اثر از، مکانیزم رأی‌گیری عضویت هیأت
-///         بالاست.
-///
-///         دیپلوی genesis: این قرارداد constructor ندارد — مستقیم در alloc genesis تزریق
-///         می‌شود، پس constructor هرگز روی زنجیره‌ی واقعی اجرا نمی‌شود. هیأت اولیه (دقیقاً
-///         BOARD_SIZE = ۵ عضو) به‌جایش با ابزار genesis آف‌چین seed می‌شود (یادداشت 🔶
-///         پرکردنِ genesis پایین را ببین)، به‌جای یک انتخابات جدای بعد از دیپلوی. آدرس‌های
-///         BlockRewardDistributor، ValidatorsTreasury، و ValidatorsRegistry ثابت هستند (به
-///         SurAddresses.sol مراجعه کن)، نه یک مرحله‌ی اجرایی `wire()`، چون هر پنج قرارداد
-///         ساختاری یک نقشه‌ی آدرس مشترک و از‌پیش‌توافق‌شده در genesis دارند.
+///         استقرار در GENESIS: قرارداد constructor ندارد؛ در `alloc` بلاک genesis تزریق می‌شود. پنج عضو اولیه،
+///         `boardVersion`، `boardMonthId` و `seatMembershipEpoch` هر عضو را ابزار ساخت genesis می‌نویسد
+///         (`genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol` را ببینید). `boardMonthId` باید برابر ماه زمان genesis
+///         باشد، وگرنه هیأت مؤسس تا نخستین refresh اختیاری ندارد.
 contract ValidatorsBoard {
-    // ------------------------------------------------------------------
-    // آدرس‌های ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
-    // ------------------------------------------------------------------
     address public constant DISTRIBUTOR = SurAddresses.BLOCK_REWARD_DISTRIBUTOR;
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
     IIdentityRegistry public constant IDENTITY_REGISTRY = IIdentityRegistry(SurAddresses.IDENTITY_REGISTRY);
 
-    /// @notice اندازه‌ی ثابت هیأت — همیشه دقیقاً همین تعداد کرسی (فقط به‌طور گذرا کمتر، اگر
-    ///         تا الان کمتر از این تعداد کاندید اصلاً رأیی گرفته باشند).
+    /// @notice تعداد کرسی‌های هیأت.
     uint256 public constant BOARD_SIZE = 5;
 
-    /// @notice حداکثر تعداد کاندیدی که یک ولیدیتور می‌تواند هم‌زمان رأی بدهد.
+    /// @notice حداکثر تعداد نامزدهایی که یک ولیدیتور هم‌زمان می‌تواند به آن‌ها رأی بدهد.
     uint256 public constant MAX_VOTES_PER_VOTER = 5;
 
-    /// @notice چقدر بعد از پایان دوره‌ی بازگشت یک ولیدیتور (همچنان بدون بازگشت)، هرکسی می‌تواند
-    ///         رأی‌های او (داده‌شده و گرفته‌شده) را از طریق clearStaleVotes پاک کند.
+    /// @notice مدتی پس از پایان دورهٔ بازگشت یک ولیدیتور (بدون بازگشت) که پس از آن هر کسی می‌تواند با clearStaleVotes
+    ///         رأی‌هایش را پاک کند.
     uint256 public constant STALE_VOTE_CLEAR_DELAY = 30 days;
 
+    /// @notice حداقل تعداد رأی هیأت برای چرخش کلید یا تأیید بودجه.
+    uint256 public constant MIN_VOTES_SENSITIVE_ACTION = 3;
+
+    /// @notice اقدام هیأت که در این مدت به نصاب نرسد منقضی می‌شود.
+    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
+
     // ------------------------------------------------------------------
-    // عضویت هیأت (تصویر لحظه‌ای فعلی، تولیدشده توسط آخرین فراخوانی refreshBoard())
-    //
-    // 🔶 پرکردنِ genesis: این قرارداد constructor ندارد چون مستقیم در alloc بلاک genesis تزریق
-    // می‌شود (constructorش هرگز روی زنجیره‌ی واقعی اجرا نمی‌شود). `boardMembers` یک آرایه‌ی
-    // پویاست و `isBoardMember` یک mapping است — Solidity هیچ syntax ای برای پرکردن هیچ‌کدام با
-    // یک حلقه خارج از تابع ندارد، پس این state اولیه (دقیقاً BOARD_SIZE = ۵ آدرس) اینجا
-    // **نمی‌تواند** به‌صورت یک مقداردهی ساده‌ی متغیر state بیان شود. ابزار genesis آف‌چین
-    // باید یا (الف) دیپلوی این قرارداد را با منطق constructor واقعی پایین، روی یک زنجیره‌ی
-    // محلی موقت شبیه‌سازی کند و storage نتیجه را در فایل نهایی genesis کپی کند، یا (ب) مستقیم
-    // storage slot های متناظر (طول آرایه + هر عنصر، و slot mapping هر عضو — از طریق
-    // keccak256(abi.encode(key, slot)) برای mapping) را در alloc genesis محاسبه و بنویسد. برای
-    // دستورالعمل کامل به "sur-contracts-deploy-notes.md" مراجعه کن.
-    //
-    // منطق مرجع (کد زنده نیست — برای این‌که ابزار genesis آن را، چه با شبیه‌سازی چه با
-    // محاسبه‌ی مستقیم storage، بازتولید کند) — برای هرکدام از ۵ آدرس عضو اولیه‌ی هیأت:
-    //   boardMembers.push(address);
-    //   isBoardMember[address] = true;
+    // storage. ترتیب چند متغیر اول باید با کمک‌کنندهٔ seed genesis یکی باشد.
     // ------------------------------------------------------------------
     address[] private boardMembers;
     mapping(address => bool) public isBoardMember;
 
-    // ------------------------------------------------------------------
-    // وضعیت رأی‌گیری تأییدی
-    // ------------------------------------------------------------------
-
-    /// @notice کاندیدهایی که یک رأی‌دهنده‌ی مشخص الان بهشان رأی می‌دهد (حداکثر MAX_VOTES_PER_VOTER).
+    /// @notice نامزدهایی که یک رأی‌دهنده اکنون به آن‌ها رأی داده (تا MAX_VOTES_PER_VOTER).
     mapping(address => address[]) private voterCandidates;
 
-    /// @notice رأی‌دهنده => کاندید => آیا آن رأی الان فعال است.
+    /// @notice رأی‌دهنده => نامزد => آیا آن رأی اکنون برقرار است.
     mapping(address => mapping(address => bool)) public hasVotedFor;
 
-    /// @notice اندیس معکوس: کاندید => لیست رأی‌دهندگانی که الان بهش رأی می‌دهند (لازم برای
-    ///         پاک‌سازی کارآمد رأی‌های گرفته‌شده در clearStaleVotes).
+    /// @notice رأی‌دهندگانی که اکنون به یک نامزد رأی داده‌اند (برای پاک‌کردن رأی‌های دریافتی).
     mapping(address => address[]) private candidateVoters;
 
-    /// @notice اندیس یک‌مبنایی `voter` داخل `candidateVoters[candidate]`، برای حذف O(1).
+    /// @notice جایگاه ۱-پایهٔ `voter` درون `candidateVoters[candidate]` برای حذف O(1).
     mapping(address => mapping(address => uint256)) private voterIndexInCandidateVoters;
 
-    // ------------------------------------------------------------------
-    // اقدامات داخلی هیأت (چرخش اوراکل، تصویب بودجه، پارامترهای اقتصادی)
-    // ------------------------------------------------------------------
     enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
 
-    /// @dev ✅ تقویت‌شده (مرتبط با کلاس باگ رأی مانده‌شده‌ی پیداشده در بازبینی، هرچند اینجا
-    ///      خفیف‌تره چون `required` همیشه از BOARD_SIZE ثابت میاد، نه یه تعداد کوچیک‌شونده):
-    ///      بدون یه مهلت انقضا، یه اقدام هیأت‌مدیره می‌تونست به‌اندازه‌ای باز بمونه که ترکیب
-    ///      هیأت‌مدیره‌ی اصلی (از طریق _recomputeBoard) قبل از رسیدن رأی کافی عوض بشه — یعنی
-    ///      رأی‌های ثبت‌شده توسط اعضای سابقِ عوض‌شده می‌تونستن با رأی یه عضو فعلی ترکیب بشن و
-    ///      به اکثریت برسن، حتی اگه هیچ‌وقت یه هیأت‌مدیره‌ی واقعی ۵نفره هم‌زمان روش توافق
-    ///      نکرده باشه. `expiresAt` این پنجره رو محدود می‌کنه.
-    /// @dev ✅ اصلاح‌شده (این قبلاً فقط نیمه‌کاره اصلاح شده بود — دور قبلی فقط `expiresAt`
-    ///      اضافه کرد، ولی این استدلال غلط رو داشت که «نیازی به snapshot نداره چون همیشه از
-    ///      BOARD_SIZE ثابت میاد». اون استدلال غلط بود: refreshBoard() پایین هیأت‌مدیره رو با
-    ///      هرچقدر کاندیدای *مجزا* که حداقل یک رأی گرفته باشن پر می‌کنه، تا سقف BOARD_SIZE —
-    ///      اگه کمتر از ۵ کاندیدا واجد شرایط باشن (واقع‌بینانه در اوایل عمر شبکه، یا بعد از
-    ///      یه موج خروج ولیدیتور)، `boardMembers.length` واقعاً کمتر از ۵ است، و
-    ///      `_voteAction()` مقدار `required` رو از همین طول زنده و کوچیک‌شونده حساب می‌کرد،
-    ///      نه از ثابت. این دقیقاً همون کلاس باگ رأی-مانده‌شده‌ی بقیه‌ی مکانیزم‌های پیشنهاد
-    ///      این پروژه‌ست: `votes` فقط زیاد می‌شه، درحالی‌که `required` می‌تونست بین دو رأی،
-    ///      با رفرش هیأت‌مدیره، کوچیک بشه. `requiredVotes` حالا در لحظه‌ی ثبت snapshot می‌شه،
-    ///      دقیقاً مثل ShareProposal در BlockRewardDistributor، ParamProposal در
-    ///      ValidatorsRegistry، Expenditure/ParamProposal در ValidatorsTreasury، و Proposal در
-    ///      FoundationDAO.
+    /// @dev `requiredVotes` هنگام ساخت اقدام ثابت می‌شود و هرگز بازمحاسبه نمی‌شود. `expiresAt` مدت باز‌ماندن اقدام را
+    ///      محدود می‌کند. `boardVersionAtCreation` اقدام را به ترکیب هیأتی می‌بندد که آن را پیشنهاد داد: وقتی ترکیب عوض شود
+    ///      دیگر نمی‌شود به آن اقدام رأی داد.
     struct BoardAction {
         ActionType atype;
-        address target;      // آدرس اوراکل جدید، یا گیرنده‌ی بودجه (برای اقدامات پارامتر اقتصادی استفاده نمی‌شود)
-        uint256 amount;       // مبلغ بودجه برای ApproveBudget، یا مقدار جدید برای اقدامات پارامتر اقتصادی
-        string description;   // فقط برای ApproveBudget استفاده می‌شود
+        address target;  // آدرس تازهٔ oracle / verifier یا گیرندهٔ بودجه
+        uint256 amount;  // مبلغ بودجه، یا مقدار جدید برای اقدام پارامتر اقتصادی
+        string description;  // فقط برای ApproveBudget
         uint256 votes;
-        uint256 requiredVotes; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره حساب نمی‌شه
+        uint256 requiredVotes;
         uint256 createdAt;
         uint256 expiresAt;
         bool executed;
-        /// @notice ✅ اصلاح‌شده (باگی پیداشده در بازبینی مستقل — حیاتی مخصوصاً برای تصمیمات
-        ///         خرج): `votes` قبلاً یه شمارنده‌ی ساده بود، بدون هیچ ارتباطی با این‌که کدوم
-        ///         آدرس‌ها این رأی‌ها رو زدن یا آیا اون آدرس‌ها هنوز عضو هیأت‌مدیره‌ان یا نه.
-        ///         چون refreshBoard() پایین می‌تونه کل عضویت هیأت‌مدیره رو کاملاً عوض کنه، یه
-        ///         پیشنهاد ساخته‌شده و نیمه‌رأی‌گرفته زیر هیأت‌مدیره‌ی **قدیمی** همچنان می‌تونست
-        ///         به نصابش برسه با استفاده از رأی‌های اعضایی که از اون‌موقع خارج شدن — مثلاً
-        ///         دو عضو سابق رأی می‌دن، بعد refreshBoard() جایگزینشون می‌کنه، بعد فقط **یه**
-        ///         عضو فعلی رأی «سوم» رو می‌زنه، و اقدام با فقط ۱ رأی از ۳ رأی شمرده‌شده که واقعاً
-        ///         از یه عضو *فعلی* هیأت‌مدیره اومده، اجرا می‌شه. اصلاح شد با snapshot‌کردن
-        ///         شماره‌ی نسخه‌ی هیأت‌مدیره اینجا در لحظه‌ی ثبت، و باطل‌کردن (نیاز به پیشنهاد
-        ///         تازه برای) هر اقدامی که نسخه‌اش دیگه با نسخه‌ی فعلی یکی نیست — boardVersion
-        ///         پایین و چک _voteAction() را ببین.
         uint256 boardVersionAtCreation;
     }
 
-    uint256 public constant BOARD_ACTION_EXPIRY = 14 days;
-
-    /// @notice ✅ **فقط** وقتی افزایش پیدا می‌کنه که refreshBoard() پایین عضویتی نصب کنه که
-    ///         (به‌عنوان یک **مجموعه**، مستقل از ترتیب) واقعاً با قبلی فرق داشته باشه. refreshBoard
-    ///         ای که دقیقاً همون مجموعه‌ی اعضا را دوباره تولید کنه، آن را افزایش **نمی‌دهد**. (یه
-    ///         نسخه‌ی قبلی روی هر refresh افزایش می‌داد؛ چون refreshBoard() بدون نیاز به مجوز و
-    ///         بدون cooldown است، این به هرکسی اجازه می‌داد اقدامات باز را هر زمان بخواهد باطل
-    ///         کند — یه بردار آزار بی‌پایان و تکرارپذیر، پیداشده در بازبینی مستقل و با مقایسه‌ی
-    ///         مجموعه در refreshBoard() اصلاح‌شده.) هر اقدام باز نسخه‌ای را که تحتش پیشنهاد شده
-    ///         ثبت می‌کند و وقتی نسخه جلو برود باطل می‌شود — boardVersionAtCreation را ببینید.
+    /// @notice هر بار مجموعهٔ اعضای هیأت واقعاً عوض شود یک واحد زیاد می‌شود.
     uint256 public boardVersion = 1;
 
-    /// @notice P01: تغییر **عادی** ترکیب هیأت (refreshBoard) حداکثر هر ۳۰ روز یک‌بار اعمال می‌شود.
-    uint256 public constant BOARD_REFRESH_INTERVAL = 30 days;
-    /// @notice زمان آخرین بازتعیین عادی. اگر هیأت در genesis seed شود، genesis باید این را با timestamp genesis overlay کند
-    ///         (وگرنه اولین refresh فوراً مجاز است).
-    uint256 public lastBoardRefreshAt;
-    /// @notice کرسی‌های آزادشده به‌علت قطع اختیار ناشی از خروج که هنوز با جانشینی پر نشده‌اند.
+    /// @notice شناسهٔ ماه میلادی (UTC، سال * ۱۲ + ماه - ۱) که هیأت فعلی در آن خدمت می‌کند.
+    uint256 public boardMonthId;
+
+    /// @notice کرسی‌های آزادشده با خروج که هنوز پر نشده‌اند.
     uint256 public pendingVacancies;
+
     event BoardMemberAuthorityEnded(address indexed member);
     event BoardSuccession(address indexed newMember);
 
-    /// @notice ✅ اصلاح‌شده (بازبینی مستقل — یک باگ واقعی را می‌بندد: `_hasAuthority` قبلاً «داشتن کرسی
-    ///         و وضعیتِ غیر از None/Exiting» را کافی می‌دانست، پس عضوی که خروج داده، برداشت کرده و بعداً
-    ///         با **همان آدرس** دوباره ثبت‌نام کرده بود می‌توانست به Probation برسد و پیش از این‌که کسی
-    ///         syncBoard() بزند اختیار کرسی **قدیمی** را دوباره به‌دست بیاورد). در لحظه‌ی نشستن یک آدرس روی
-    ///         کرسی (refreshBoard / _fillVacancies) با `REGISTRY.membershipEpoch(addr)` مهر می‌خورد؛
-    ///         `_hasAuthority` می‌خواهد این هنوز با مقدار جاری Registry یکی باشد. `ValidatorsRegistry.
-    ///         requestExit()` الان همان آدرس را برای همیشه از فراخوانی دوباره‌ی requestMembership() هم
-    ///         منع می‌کند — این دو اصلاح دو لایه‌ی مستقل‌اند، نه جایگزین هم.
+    /// @notice epoch عضویت آدرس در Registry در لحظه‌ای که کرسی گرفت.
     mapping(address => uint256) public seatMembershipEpoch;
 
     mapping(uint256 => BoardAction) public actions;
     mapping(uint256 => mapping(address => bool)) private actionHasVoted;
     uint256 public actionCount;
 
-    // ------------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------------
+    /// @notice تعداد جاری رأی‌های شمرده‌شده‌ای که هر نامزد دارد.
+    mapping(address => uint256) public voteCount;
+
+    /// @dev نامزدهایی که voteCount > 0 دارند.
+    address[] private candidateList;
+
+    /// @dev جایگاه ۱-پایهٔ یک نامزد درون candidateList (۰ = نبودن).
+    mapping(address => uint256) private candidateListIndex;
+
+    /// @notice آیا رأی‌های یک رأی‌دهنده اکنون در `voteCount` شمرده شده‌اند.
+    mapping(address => bool) public votesCounted;
+
     event VoteCast(address indexed voter, address indexed candidate);
     event VoteWithdrawn(address indexed voter, address indexed candidate);
-    event BoardRefreshed(address[] newBoard, uint256[] voteCounts);
+    event VoterSynced(address indexed voter, bool counted);
+    event BoardRefreshed(uint256 indexed monthId, address[] newBoard, uint256[] voteCounts);
     event StaleVotesCleared(address indexed validator, uint256 votesGivenCleared, uint256 votesReceivedCleared);
     event ActionProposed(uint256 indexed id, ActionType atype, address indexed target, uint256 amount, address indexed proposer);
     event ActionVoted(uint256 indexed id, address indexed voter, uint256 votes, uint256 required);
@@ -271,51 +179,132 @@ contract ValidatorsBoard {
     event RegistryEconomicParamSet(ActionType indexed atype, uint256 newValue);
     event VerifierRotated(address indexed newVerifier);
 
-    // ------------------------------------------------------------------
-    // Modifiers
-    // ------------------------------------------------------------------
     modifier onlyActiveValidator() {
         require(REGISTRY.isValidator(msg.sender), "ValidatorsBoard: caller is not an active validator");
         _;
     }
 
-    /// @notice P02: اختیار هیأت = داشتن کرسی **و** درخواست‌نکردنِ خروج اختیاری. لحظه‌ی ثبت درخواست خروج قطع می‌شود (منتظر
-    ///         بازتعیین ماهانه نمی‌ماند). تعلیق (Demoted) به‌تنهایی اختیار را در طول دوره قطع **نمی‌کند**. اگر دارنده‌ی یک کرسی
-    ///         درخواست خروج داده و کرسی هنوز پاک‌سازی نشده، اقدامات هیأت با پیام روشن **revert** می‌شوند تا کسی
-    ///         `syncBoard()` (بدون نیاز به مجوز، تراکنش جدا — پس خودِ پاک‌سازی هرگز برگردانده نمی‌شود) را صدا بزند. یعنی رأی هرگز
-    ///         روی پیشنهاد باطل‌شده «بی‌صدا موفق» نمی‌شود: voteAction() را ببینید.
+    /// @notice فراخواننده فقط وقتی به‌عنوان عضو هیأت عمل می‌کند که (الف) ماهِ هیأت همین ماه باشد، (ب) کرسی داشته باشد و
+    ///         درخواست خروج نداده باشد، و (ج) هیچ دارندهٔ کرسی بدون پاک‌شدن کرسی درخواست خروج نداده باشد
+    ///         (هر کسی می‌تواند برای آن `syncBoard()` را صدا بزند).
     modifier onlyBoardMember() {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
         require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
 
     // ------------------------------------------------------------------
-    // رأی‌گیری تأییدی برای عضویت هیأت
+    // تقویم
     // ------------------------------------------------------------------
 
-    /// @notice رأی موافق به `candidate` برای عضویت در هیأت. توسط هر ولیدیتور فعالی، برای هر
-    ///         ولیدیتور فعال دیگری قابل‌فراخوانی است (خودرأیی مجاز است — هیچ چیز خاصی درباره‌ش
-    ///         نیست). فقط وقتی کسی refreshBoard() را فراخوانی کند اثر می‌گذارد.
+    /// @notice شناسهٔ ماه (UTC) یک timestamp: سال * ۱۲ + (ماه - ۱).
+    function monthIdOf(uint256 timestamp) public pure returns (uint256) {
+        uint256 z = timestamp / 86400 + 719468;
+        uint256 era = z / 146097;
+        uint256 doe = z - era * 146097;
+        uint256 yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        uint256 year = yoe + era * 400;
+        uint256 doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        uint256 mp = (5 * doy + 2) / 153;
+        uint256 month = mp < 10 ? mp + 3 : mp - 9;
+        if (month <= 2) year += 1;
+        return year * 12 + (month - 1);
+    }
+
+    function currentMonthId() public view returns (uint256) {
+        return monthIdOf(block.timestamp);
+    }
+
+    /// @notice وقتی `refreshBoard` اکنون می‌تواند موفق شود true است.
+    function refreshDue() public view returns (bool) {
+        return boardMembers.length == 0 || currentMonthId() > boardMonthId;
+    }
+
+    function _boardIsCurrent() private view returns (bool) {
+        return boardMonthId == currentMonthId();
+    }
+
+    // ------------------------------------------------------------------
+    // رأی تأییدی
+    // ------------------------------------------------------------------
+
+    /// @notice رأی به `candidate` برای هیأت‌شدن. هر ولیدیتور فعالی که هویت ثبت کرده می‌تواند برای هر ولیدیتور فعال
+    ///         رأی بدهد (رأی به خود مجاز است). رأی در `refreshBoard` بعدی شمرده می‌شود.
     function voteFor(address candidate) external onlyActiveValidator {
         require(IDENTITY_REGISTRY.hasIdentity(msg.sender), "ValidatorsBoard: register identity before voting");
         require(REGISTRY.isValidator(candidate), "ValidatorsBoard: candidate is not an active validator");
         require(!hasVotedFor[msg.sender][candidate], "ValidatorsBoard: already voted for this candidate");
         require(voterCandidates[msg.sender].length < MAX_VOTES_PER_VOTER, "ValidatorsBoard: max votes already used");
 
+        _syncVoter(msg.sender);  // فراخواننده فعال است، پس رأی‌های موجودش از اینجا به بعد شمرده می‌شوند
+
         hasVotedFor[msg.sender][candidate] = true;
         voterCandidates[msg.sender].push(candidate);
 
         candidateVoters[candidate].push(msg.sender);
-        voterIndexInCandidateVoters[candidate][msg.sender] = candidateVoters[candidate].length; // یک‌مبنایی
+        voterIndexInCandidateVoters[candidate][msg.sender] = candidateVoters[candidate].length;
 
+        _increase(candidate);
         emit VoteCast(msg.sender, candidate);
     }
 
-    /// @notice پس‌گرفتن یک رأی قبلاً داده‌شده. هر زمان، بدون محدودیت قابل‌فراخوانی است.
+    /// @notice پس‌گرفتن رأی. هر زمان قابل‌فراخوانی است.
     function unvoteFor(address candidate) external {
         require(hasVotedFor[msg.sender][candidate], "ValidatorsBoard: no such active vote");
         _removeVote(msg.sender, candidate);
+    }
+
+    /// @notice شمارنده‌های رأی را با وضعیت فعلی یک ولیدیتور هماهنگ می‌کند: رأی‌هایش تا وقتی فعال است شمرده می‌شود و
+    ///         وگرنه نه. هر کسی می‌تواند صدایش بزند؛ ایدمپوتنت است. Registry هر بار وضعیت ولیدیتوری عوض شود آن را صدا می‌زند.
+    function syncVoter(address voter) external {
+        _syncVoter(voter);
+    }
+
+    function syncVoters(address[] calldata voters) external {
+        for (uint256 i = 0; i < voters.length; i++) {
+            _syncVoter(voters[i]);
+        }
+    }
+
+    function _syncVoter(address voter) private {
+        bool active = REGISTRY.isValidator(voter);
+        if (active == votesCounted[voter]) return;
+        address[] storage cands = voterCandidates[voter];
+        uint256 n = cands.length;
+        if (active) {
+            votesCounted[voter] = true;
+            for (uint256 i = 0; i < n; i++) _increase(cands[i]);
+        } else {
+            votesCounted[voter] = false;
+            for (uint256 i = 0; i < n; i++) _decrease(cands[i]);
+        }
+        emit VoterSynced(voter, active);
+    }
+
+    function _increase(address candidate) private {
+        if (voteCount[candidate]++ == 0) {
+            candidateList.push(candidate);
+            candidateListIndex[candidate] = candidateList.length;
+        }
+    }
+
+    /// @dev هرگز بر اثر ناهماهنگی دفتری revert نمی‌کند، پس شمارندهٔ کهنه هرگز رأی‌دادن را قفل نمی‌کند.
+    function _decrease(address candidate) private {
+        uint256 current = voteCount[candidate];
+        if (current == 0) return;
+        voteCount[candidate] = current - 1;
+        if (current == 1) {
+            uint256 idx = candidateListIndex[candidate];  // ۱-پایه
+            uint256 last = candidateList.length;
+            if (idx != last) {
+                address moved = candidateList[last - 1];
+                candidateList[idx - 1] = moved;
+                candidateListIndex[moved] = idx;
+            }
+            candidateList.pop();
+            delete candidateListIndex[candidate];
+        }
     }
 
     function _removeVote(address voter, address candidate) private {
@@ -331,7 +320,7 @@ contract ValidatorsBoard {
         }
 
         address[] storage cv = candidateVoters[candidate];
-        uint256 idx = voterIndexInCandidateVoters[candidate][voter]; // یک‌مبنایی
+        uint256 idx = voterIndexInCandidateVoters[candidate][voter];
         uint256 lastIdx = cv.length;
         if (idx != lastIdx) {
             address lastVoter = cv[lastIdx - 1];
@@ -341,194 +330,124 @@ contract ValidatorsBoard {
         cv.pop();
         delete voterIndexInCandidateVoters[candidate][voter];
 
+        if (votesCounted[voter]) _decrease(candidate);
         emit VoteWithdrawn(voter, candidate);
     }
 
-    /// @dev وضعیت کاریِ refreshBoard() را در یک struct بسته‌بندی می‌کند تا با ارجاع (یک اشاره‌گر memory =
-    ///      یک اسلات استک) بین توابع کمکی خصوصی رد‌وبدل شود، نه به‌شکل چندین متغیر محلی جدا — خودِ منطق
-    ///      refreshBoard() به‌تنهایی متغیرهای هم‌زمانِ بیش از حد برای استک EVM داشت (در بازبینی با optimizer
-    ///      پیدا شد؛ همان رده‌ی مشکل و همان الگوی اصلاح، مثل struct EpochPrep در BlockRewardDistributor).
-    struct RefreshCtx {
-        bool[] keep;
-        uint256 keptCount;
-        address[] seen;
-        uint256 seenCount;
-        bool[] takenAsFiller;
-        address[] filler;
-        uint256 fillerCount;
-        address replacedIncumbent;
-        address challenger;
-    }
+    // ------------------------------------------------------------------
+    // انتخاب ماهانهٔ هیأت
+    // ------------------------------------------------------------------
 
-    /// @dev گام ۱ (کامنت مستند refreshBoard() را ببین): کدام اعضای فعلی هنوز همین الان واجد شرایط
-    ///      ماندن‌اند؟ isBoardMember بقیه را همین الان پاک می‌کند.
-    function _dropDisqualified(RefreshCtx memory ctx, uint256 priorCount) private {
-        ctx.keep = new bool[](priorCount);
-        for (uint256 i = 0; i < priorCount; i++) {
-            address m = boardMembers[i];
-            if (_hasAuthority(m)) {
-                (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(m);
-                if (status == 2) { // Active
-                    ctx.keep[i] = true;
-                    ctx.keptCount++;
-                    continue;
-                }
-            }
-            isBoardMember[m] = false;
-        }
-    }
+    /// @notice هیأت ماه میلادی جاری را می‌نشاند: BOARD_SIZE ولیدیتور فعال با بیشترین رأی، در تساوی زودتر فعال‌شده.
+    ///         هر کسی می‌تواند صدایش بزند؛ در هر ماه یک‌بار موفق می‌شود (و تا وقتی هیأت خالی است در هر زمان). اگر
+    ///         کمتر از BOARD_SIZE نامزد رأی داشته باشد کرسی‌های کمتری پر می‌شود.
+    ///
+    ///         `votersToSync` فهرست ولیدیتورهایی است که شمارندهٔ رأی‌هایشان پیش از انتخاب هیأت با وضعیت فعلی‌شان هماهنگ
+    ///         می‌شود (`syncVoter` را ببینید)، تا ترمیم و refresh در یک تراکنش انجام شود. فهرست معمولاً خالی است: Registry
+    ///         در هر تغییر وضعیت خودش `syncVoter` را صدا می‌زند.
+    function refreshBoard(address[] calldata votersToSync) external {
+        uint256 month = currentMonthId();
+        require(boardMembers.length == 0 || month > boardMonthId, "ValidatorsBoard: this month's board is already set");
 
-    /// @dev گام ۳: کرسی‌های خالی با بالاترین‌رأی‌ترین کاندیداهای واجدِ بیرونی (باید حداقل یک رأی گرفته
-    ///      باشند — ctx.seen این را تضمین می‌کند) پر می‌شود. کاندیدای واجدِ کمتر از جای خالی مشکلی ندارد:
-    ///      کرسی خالی می‌ماند.
-    function _pickFillers(RefreshCtx memory ctx, uint256 vacancies) private view {
-        ctx.filler = new address[](vacancies);
-        for (uint256 f = 0; f < vacancies; f++) {
-            uint256 bestVotes = 0;
-            uint256 bestIdx = type(uint256).max;
-            for (uint256 j = 0; j < ctx.seenCount; j++) {
-                if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
-                uint256 v = _voteTally[ctx.seen[j]];
-                if (v > bestVotes) { bestVotes = v; bestIdx = j; }
-            }
-            if (bestIdx == type(uint256).max) break;
-            ctx.filler[ctx.fillerCount] = ctx.seen[bestIdx];
-            ctx.takenAsFiller[bestIdx] = true;
-            ctx.fillerCount++;
+        for (uint256 i = 0; i < votersToSync.length; i++) {
+            _syncVoter(votersToSync[i]);
         }
-    }
-
-    /// @dev گام ۴ (کامنت مستند refreshBoard() را ببین): اگر هیأت بعد از پرکردن جای خالی پر باشد، حداکثر یک
-    ///      نامزد تازه می‌تواند جای تنها عضو دارای کمترین رأیِ فعلی را بگیرد، فقط با رأی اکیداً بیشتر
-    ///      (تساوی عضو فعلی را سرجایش نگه می‌دارد).
-    function _tryChallenge(RefreshCtx memory ctx, uint256 priorCount) private view {
-        uint256 weakestVotes = type(uint256).max;
-        uint256 weakestIdx = type(uint256).max;
-        for (uint256 i = 0; i < priorCount; i++) {
-            if (!ctx.keep[i]) continue;
-            uint256 v = _voteTally[boardMembers[i]];
-            if (v < weakestVotes) { weakestVotes = v; weakestIdx = i; }
-        }
-        uint256 bestOutsideVotes = 0;
-        uint256 bestOutsideIdx = type(uint256).max;
-        for (uint256 j = 0; j < ctx.seenCount; j++) {
-            if (ctx.takenAsFiller[j] || isBoardMember[ctx.seen[j]]) continue;
-            uint256 v = _voteTally[ctx.seen[j]];
-            if (v > bestOutsideVotes) { bestOutsideVotes = v; bestOutsideIdx = j; }
-        }
-        if (bestOutsideIdx != type(uint256).max && bestOutsideVotes > weakestVotes) {
-            ctx.replacedIncumbent = boardMembers[weakestIdx];
-            ctx.challenger = ctx.seen[bestOutsideIdx];
-            ctx.keep[weakestIdx] = false;
-            ctx.keptCount--;
-        }
-    }
-
-    /// @notice ✅ تصمیم نهایی (P01، بازطراحی ۲۰۲۶-۰۹-۲۸ — جایگزین نسخه‌ی قبلیِ «هر بار کل BOARD_SIZE از نو
-    ///         محاسبه شود»). نبود رأی هرگز به‌تنهایی نباید هیأت را خالی کند: عضو فعلی که **Active** است،
-    ///         صرف‌نظر از تعداد رأیش، کرسی خود را در این بازتعیین ماهانه حفظ می‌کند. اینجا فقط دو چیز یک
-    ///         عضو فعلی را حذف می‌کند: (الف) اختیارش را از دست داده (خروج‌کرده — `_hasAuthority` نادرست؛
-    ///         قبلاً جای دیگر فوراً قطع شده، اینجا فقط نهایی می‌شود)، یا (ب) الان **Demoted** (معلق) است —
-    ///         P02 می‌گوید تعلیق به‌تنهایی اختیار را **در طول دوره** قطع نمی‌کند، ولی در همین نقطه‌ی ماهانه
-    ///         عضو معلق دوباره تأیید نمی‌شود. کرسی‌های خالی (از حذف‌ها، یا هیأتی کوچک‌تر از BOARD_SIZE) با
-    ///         بالاترین‌رأی‌ترین کاندیداهای واجدِ بیرونی پر می‌شود. اگر کرسی خالی نماند، حداکثر یک نامزد
-    ///         تازه می‌تواند جای تنها عضو دارای کمترین رأیِ فعلی را بگیرد، فقط با رأی اکیداً بیشتر (تساوی
-    ///         عضو فعلی را سرجایش نگه می‌دارد) — عمداً حداقلیِ آشوب. حداکثر هر ۳۰ روز یک‌بار اعمال می‌شود
-    ///         (هیأت خالی: هر زمان). رأی همیشه آزاد است؛ فقط همین بازتعیین زمان‌بندی‌شده. مسیر جانشینی
-    ///         فوریِ ناشیِ از خروج (syncBoard / _fillVacancies، P02) جدا و بی‌اثرمانده است.
-    function refreshBoard() external {
-        require(
-            boardMembers.length == 0 || block.timestamp >= lastBoardRefreshAt + BOARD_REFRESH_INTERVAL,
-            "ValidatorsBoard: ordinary board changes are applied once every 30 days"
-        );
 
         uint256 priorCount = boardMembers.length;
-        RefreshCtx memory ctx;
-        _dropDisqualified(ctx, priorCount);
-        (ctx.seen, ctx.seenCount) = _tallyVotes();
-        ctx.takenAsFiller = new bool[](ctx.seenCount);
-        _pickFillers(ctx, BOARD_SIZE - ctx.keptCount);
-        if (ctx.keptCount + ctx.fillerCount == BOARD_SIZE) {
-            _tryChallenge(ctx, priorCount);
-        }
+        (address[] memory picks, uint256[] memory pickVotes, uint256 n) = _selectTop(BOARD_SIZE, false);
 
-        // هیأت نهایی را بساز و پیش از دست‌کاری storage، تغییر واقعیِ عضویت را (مقایسه‌ی مجموعه، مستقل از
-        // ترتیب) تشخیص بده — چون refreshBoard() بدون مجوز است، boardVersion فقط با تغییر واقعی باید بالا
-        // برود، نه با فراخوان تکراریِ بی‌اثر.
-        uint256 finalCount = ctx.keptCount + ctx.fillerCount + (ctx.challenger != address(0) ? 1 : 0);
-        address[] memory finalBoard = new address[](finalCount);
-        uint256[] memory finalVotes = new uint256[](finalCount);
-        uint256 w = 0;
+        uint256 kept = 0;
+        for (uint256 i = 0; i < n; i++) {
+            if (isBoardMember[picks[i]]) kept++;
+        }
+        bool changed = (kept != n) || (kept != priorCount);
+
         for (uint256 i = 0; i < priorCount; i++) {
-            if (!ctx.keep[i]) continue;
-            finalBoard[w] = boardMembers[i];
-            finalVotes[w] = _voteTally[boardMembers[i]];
-            w++;
-        }
-        for (uint256 f = 0; f < ctx.fillerCount; f++) {
-            finalBoard[w] = ctx.filler[f];
-            finalVotes[w] = _voteTally[ctx.filler[f]];
-            w++;
-        }
-        if (ctx.challenger != address(0)) {
-            finalBoard[w] = ctx.challenger;
-            finalVotes[w] = _voteTally[ctx.challenger];
-        }
-        bool membershipChanged = (priorCount != finalCount) || ctx.replacedIncumbent != address(0) || ctx.fillerCount > 0;
-
-        // اعمال: پرچم کهنه‌ی عضو جابه‌جاشده با چالش را پاک کن (گام ۱ قبلاً حذف‌شده‌ها را پاک کرد؛ جابه‌جاییِ
-        // چالش فقط ctx.keep[] را پاک کرد، نه storage را؛ همین الان انجامش بده)، مجموعه‌ی تازه را بنشان.
-        if (ctx.replacedIncumbent != address(0)) {
-            isBoardMember[ctx.replacedIncumbent] = false;
+            isBoardMember[boardMembers[i]] = false;
         }
         delete boardMembers;
-        for (uint256 i = 0; i < finalCount; i++) {
-            boardMembers.push(finalBoard[i]);
-            isBoardMember[finalBoard[i]] = true;
-        }
-        for (uint256 f = 0; f < ctx.fillerCount; f++) {
-            seatMembershipEpoch[ctx.filler[f]] = REGISTRY.membershipEpoch(ctx.filler[f]);
-        }
-        if (ctx.challenger != address(0)) {
-            seatMembershipEpoch[ctx.challenger] = REGISTRY.membershipEpoch(ctx.challenger);
-        }
-        if (membershipChanged) {
-            boardVersion++;
+
+        address[] memory finalBoard = new address[](n);
+        uint256[] memory finalVotes = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            boardMembers.push(picks[i]);
+            isBoardMember[picks[i]] = true;
+            seatMembershipEpoch[picks[i]] = REGISTRY.membershipEpoch(picks[i]);
+            finalBoard[i] = picks[i];
+            finalVotes[i] = pickVotes[i];
         }
 
-        lastBoardRefreshAt = block.timestamp;
-        pendingVacancies = 0; // این بازتعیین عادی جای خالی‌ها را از نو محاسبه می‌کند؛ چیزی منتقل نمی‌شود
+        if (changed) boardVersion++;
+        boardMonthId = month;
+        pendingVacancies = 0;
 
-        for (uint256 j = 0; j < ctx.seenCount; j++) {
-            _voteTally[ctx.seen[j]] = 0; // ریست شمارش زودگذر
-        }
-
-        emit BoardRefreshed(finalBoard, finalVotes);
+        emit BoardRefreshed(month, finalBoard, finalVotes);
     }
 
-    /// @dev storage شمارش گذرای مخصوص هر فراخوانی refreshBoard(). همیشه بین فراخوانی‌ها صفر
-    ///      است — حلقه‌ی ریست refreshBoard() را ببین. به‌عنوان storage قرارداد (نه `memory`)
-    ///      اعلان شده، فقط چون Solidity هیچ نوع mapping در memory ندارد.
-    mapping(address => uint256) private _voteTally;
+    /// @dev حداکثر `k` نامزد فعال با بیشترین رأی (در تساوی activationSeq کمتر برنده است). نامزدهایی که نمی‌توانند به
+    ///      `k` نفر برتر برسند بدون هیچ فراخوان خارجی کنار گذاشته می‌شوند.
+    function _selectTop(uint256 k, bool excludeMembers)
+        private
+        view
+        returns (address[] memory picks, uint256[] memory votes, uint256 filled)
+    {
+        picks = new address[](k);
+        votes = new uint256[](k);
+        if (k == 0) return (picks, votes, 0);
+        uint256[] memory seqs = new uint256[](k);
+
+        uint256 len = candidateList.length;
+        for (uint256 i = 0; i < len; i++) {
+            address c = candidateList[i];
+            if (excludeMembers && isBoardMember[c]) continue;
+            uint256 v = voteCount[c];
+
+            uint256 weakest = 0;
+            if (filled == k) {
+                weakest = _weakestIndex(votes, seqs, k);
+                if (v < votes[weakest]) continue;
+            }
+            if (!REGISTRY.isValidator(c)) continue;
+            uint256 s = REGISTRY.activationSeq(c);
+
+            if (filled < k) {
+                picks[filled] = c;
+                votes[filled] = v;
+                seqs[filled] = s;
+                filled++;
+            } else if (v > votes[weakest] || (v == votes[weakest] && s < seqs[weakest])) {
+                picks[weakest] = c;
+                votes[weakest] = v;
+                seqs[weakest] = s;
+            }
+        }
+    }
+
+    /// @dev اندیس ورودی که اول جابه‌جا می‌شود: کمترین رأی، و میان هم‌رأی‌ها آن که دیرتر فعال شده.
+    function _weakestIndex(uint256[] memory votes, uint256[] memory seqs, uint256 k) private pure returns (uint256 w) {
+        for (uint256 i = 1; i < k; i++) {
+            if (votes[i] < votes[w] || (votes[i] == votes[w] && seqs[i] > seqs[w])) w = i;
+        }
+    }
 
     // ------------------------------------------------------------------
-    // Authority, monthly re-selection, and exit-driven succession (final decisions P01/P02)
+    // اختیار و جانشینی ناشی از خروج
     // ------------------------------------------------------------------
 
-    /// @dev آزمون اختیار P02 (کامنت مودیفایر onlyBoardMember را ببینید).
+    /// @dev کرسی تا وقتی معتبر است که دارنده خروج نداده باشد (epoch عضویت بدون تغییر) و وضعیتش نه None باشد نه Exiting.
+    ///      تعلیق (Demoted) به‌تنهایی اختیار را در طول همان ماه قطع نمی‌کند.
     function _hasAuthority(address who) private view returns (bool) {
         if (!isBoardMember[who]) return false;
-        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false; // ✅ اصلاح‌شده: از زمان نشستن روی کرسی خروج داده
+        if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false;
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
-        return status != 0 && status != 4; // not None (withdrawn / never a validator), not Exiting
+        return status != 0 && status != 4;
     }
 
+    /// @notice تا وقتی `who` می‌تواند به‌عنوان عضو هیأت عمل کند true است: ماهِ هیأت همین ماه است و کرسی معتبر است.
     function hasBoardAuthority(address who) external view returns (bool) {
-        return _hasAuthority(who);
+        return _boardIsCurrent() && _hasAuthority(who);
     }
 
-
-    /// @dev اگر دارنده‌ی یک کرسی اختیار را از دست داده (درخواست خروج داده / برداشت کرده) و syncBoard() هنوز اجرا نشده، true.
     function _syncNeeded() private view returns (bool) {
         for (uint256 i = 0; i < boardMembers.length; i++) {
             if (!_hasAuthority(boardMembers[i])) return true;
@@ -536,8 +455,10 @@ contract ValidatorsBoard {
         return false;
     }
 
-    /// @notice بدون نیاز به مجوز. کرسی‌هایی را که دارنده‌شان درخواست خروج داده رها می‌کند (قطع فوری اختیار) و برای آن کرسی‌ها جانشینی را تلاش می‌کند.
+    /// @notice دارندگان کرسی‌ای را که اختیارشان پایان یافته حذف می‌کند و کرسی‌هایشان را از نامزدهای پررأی‌تر پر می‌کند.
+    ///         هر کسی می‌تواند در طول ماه هیأت صدایش بزند.
     function syncBoard() external {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         _syncBoard();
     }
 
@@ -561,14 +482,14 @@ contract ValidatorsBoard {
             pendingVacancies += removed;
             if (_fillVacancies()) changed = true;
         }
-        if (changed) boardVersion++; // real composition change: open actions of the old composition become invalid
+        if (changed) boardVersion++;
     }
 
-    /// @notice جانشینیِ بدون نیاز به مجوز برای کرسی‌های آزادشده به‌علت خروج: بالاترین‌رأی‌ترین کاندیداهای **واجد شرایط** (فعلاً فعال،
-    ///         هنوز عضو نبوده) بر اساس شمارش زنده جای خالی‌های معلق را می‌گیرند. فقط کرسی‌های آزادشده به‌علت خروج را پر می‌کند —
-    ///         هرگز یک تغییر عادی اضافه نیست. اگر کاندیدای واجد شرایطی نباشد کرسی خالی می‌ماند (و با کمتر از ۳ عضو دارای اختیار،
-    ///         پرداخت خزانه متوقف است) تا کاندیدایی پیدا شود یا بازتعیین ماهانه برسد.
+    /// @notice کرسی‌های آزادشده با خروج را با نامزدهای واجد شرایط (فعال و بدون کرسی) که بیشترین رأی را دارند پر می‌کند.
+    ///         هرگز تغییر عادی اضافه نمی‌سازد. با کمتر از سه عضو نشسته، پرداخت خزانه و چرخش کلید تا پرشدن یک کرسی
+    ///         متوقف است.
     function fillVacancies() external {
+        require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
         if (_fillVacancies()) boardVersion++;
     }
 
@@ -576,7 +497,7 @@ contract ValidatorsBoard {
         uint256 room = BOARD_SIZE - boardMembers.length;
         uint256 want = pendingVacancies < room ? pendingVacancies : room;
         if (want == 0) return false;
-        (address[] memory picks, , uint256 n) = _topCandidates(want, true);
+        (address[] memory picks, , uint256 n) = _selectTop(want, true);
         for (uint256 i = 0; i < n; i++) {
             boardMembers.push(picks[i]);
             isBoardMember[picks[i]] = true;
@@ -590,64 +511,15 @@ contract ValidatorsBoard {
         return false;
     }
 
-    /// @dev Live tally: votes cast BY currently active validators FOR currently active candidates (same rule as before).
-    function _tallyVotes() private returns (address[] memory seenCandidates, uint256 seenCount) {
-        address[] memory active = REGISTRY.getValidators();
-        seenCandidates = new address[](active.length * MAX_VOTES_PER_VOTER);
-        for (uint256 i = 0; i < active.length; i++) {
-            address[] storage cands = voterCandidates[active[i]];
-            uint256 n = cands.length;
-            for (uint256 j = 0; j < n; j++) {
-                address c = cands[j];
-                if (!REGISTRY.isValidator(c)) continue; // candidate must currently be active too
-                if (_voteTally[c] == 0) {
-                    seenCandidates[seenCount] = c;
-                    seenCount++;
-                }
-                _voteTally[c]++;
-            }
-        }
-    }
+    // ------------------------------------------------------------------
+    // پاک‌سازی رأی‌های کهنه
+    // ------------------------------------------------------------------
 
-    /// @dev Top-k candidates by live tally (ties keep the earlier-inserted one). Resets the ephemeral tally before returning.
-    function _topCandidates(uint256 k, bool excludeMembers) private returns (address[] memory picks, uint256[] memory pickVotes, uint256 filled) {
-        (address[] memory seen, uint256 seenCount) = _tallyVotes();
-        picks = new address[](k);
-        pickVotes = new uint256[](k);
-        for (uint256 i = 0; i < seenCount && k > 0; i++) {
-            address c = seen[i];
-            if (excludeMembers && isBoardMember[c]) continue;
-            uint256 v = _voteTally[c];
-            if (filled < k) {
-                picks[filled] = c;
-                pickVotes[filled] = v;
-                filled++;
-            } else {
-                uint256 minIdx = 0;
-                for (uint256 m = 1; m < k; m++) {
-                    if (pickVotes[m] < pickVotes[minIdx]) minIdx = m;
-                }
-                if (v > pickVotes[minIdx]) {
-                    picks[minIdx] = c;
-                    pickVotes[minIdx] = v;
-                }
-            }
-        }
-        for (uint256 i = 0; i < seenCount; i++) {
-            _voteTally[seen[i]] = 0; // reset the ephemeral tally
-        }
-    }
-
-    /// @notice پاک‌کردن هر رأیی که یک ولیدیتور طولانی‌مدت‌غیرفعال داده (به‌عنوان رأی‌دهنده) و
-    ///         هر رأیی که گرفته (به‌عنوان کاندید)، تا جای رأی بقیه‌ی ولیدیتورها آزاد شود. بدون
-    ///         نیاز به مجوز. نیاز دارد ولیدیتور حداقل به مدت
-    ///         `ValidatorsRegistry.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY` (۳۰ روز) پیوسته
-    ///         در وضعیت Demoted مانده باشد. قبل از این نقطه، رأی‌های او از قبل در
-    ///         refreshBoard() شمرده نمی‌شوند (بالا را ببین) — این تابع فقط storage/جای رأی را
-    ///         آزاد می‌کند، خودش تغییری در ترکیب فعلی هیأت نمی‌دهد.
+    /// @notice همهٔ رأی‌هایی را که `validator` داده و گرفته پاک می‌کند، وقتی بیش از `recoveryPeriod() + STALE_VOTE_CLEAR_DELAY`
+    ///         Demoted مانده باشد. هر کسی می‌تواند صدایش بزند.
     function clearStaleVotes(address validator) external {
         (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
-        require(status == 3, "ValidatorsBoard: validator is not currently demoted"); // ۳ = Status.Demoted
+        require(status == 3, "ValidatorsBoard: validator is not currently demoted");
         uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
 
@@ -665,20 +537,19 @@ contract ValidatorsBoard {
     }
 
     // ------------------------------------------------------------------
-    // اقدامات داخلی هیأت — رأی اکثریت بین اعضای فعلی هیأت
+    // اقدام‌های هیأت
     // ------------------------------------------------------------------
+
+    /// @notice چرخاندن کلید distributionOracle. دست‌کم MIN_VOTES_SENSITIVE_ACTION رأی می‌خواهد و به‌محض رسیدن به
+    ///         نصاب اجرا می‌شود.
     function proposeRotateOracle(address newOracle) external onlyBoardMember returns (uint256 id) {
         require(newOracle != address(0), "ValidatorsBoard: zero oracle address");
-        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", 0);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key rotation halted");
+        id = _createAction(ActionType.RotateOracle, newOracle, 0, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
-    /// @notice ✅ تضمین تازه (تصمیم صریح کاربر): برخلاف هر اقدام دیگه‌ی هیأت‌مدیره، یه پیشنهاد
-    ///         ApproveBudget نیاز به یه **حداقل سخت ۳ رأی موافق** داره، صرف‌نظر از این‌که
-    ///         هیأت‌مدیره‌ی فعلی چقدر کوچیک شده باشه (مثلاً با فقط ۳ عضو، فرمول اکثریت ساده
-    ///         فقط ۲ تا لازم داشت — کافی نیست برای یه تصمیم خرج). اگه کمتر از ۳ عضو واجد شرایط
-    ///         هیأت‌مدیره الان وجود داشته باشه، خرج کاملاً متوقف می‌شه (این تابع revert می‌کنه)
-    ///         تا ترکیب هیأت‌مدیره حداقل به ۳ برگرده — هیچ نصاب کوچیک‌تری هرگز نمی‌تونه یه
-    ///         پرداخت رو تصویب کنه، هرچقدرم فوری باشه.
+    /// @notice تأیید یک پرداخت معمول خزانه زیر سقف‌های خزانه. دست‌کم MIN_VOTES_SENSITIVE_ACTION رأی می‌خواهد؛ تا وقتی
+    ///         کمتر از سه عضو نشسته‌اند متوقف است.
     function proposeApproveBudget(address to, uint256 amount, string calldata description)
         external
         onlyBoardMember
@@ -686,49 +557,39 @@ contract ValidatorsBoard {
     {
         require(to != address(0), "ValidatorsBoard: zero recipient address");
         require(amount > 0, "ValidatorsBoard: zero amount");
-        require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
-        id = _createAction(ActionType.ApproveBudget, to, amount, description, 3);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
+        id = _createAction(ActionType.ApproveBudget, to, amount, description, MIN_VOTES_SENSITIVE_ACTION);
     }
 
-    /// @notice پیشنهاد یک entryThresholdBase تازه روی ValidatorsRegistry (پارامتر اقتصادی
-    ///         ورود — تحت حکمرانی هیأت؛ کامنت مستندات سطح قرارداد را ببین).
+    /// @notice پارامترهای اقتصادی ورود: اکثریت هیأت.
     function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
     }
 
-    /// @notice پیشنهاد یک growthFactorPerValidator تازه روی ValidatorsRegistry (fixed-point، ۱۸
-    ///         رقم اعشار؛ باید > ۱.۰ باشد، یعنی > 1_000000000000000000).
     function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
         id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
     }
 
-    /// @notice پیشنهاد یک membershipFeeBps تازه روی ValidatorsRegistry.
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
         id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
     }
 
-    /// @notice پیشنهاد چرخش کلید احراز هویت (`verifier`) روی ValidatorsRegistry — یک چرخش
-    ///         روتین کلید عملیاتی، دقیقاً همان الگوی proposeRotateOracle.
+    /// @notice چرخاندن کلید `verifier` در ValidatorsRegistry. دست‌کم MIN_VOTES_SENSITIVE_ACTION رأی می‌خواهد و
+    ///         به‌محض رسیدن به نصاب اجرا می‌شود.
     function proposeRotateVerifier(address newVerifier) external onlyBoardMember returns (uint256 id) {
         require(newVerifier != address(0), "ValidatorsBoard: zero verifier address");
-        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", 0);
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key rotation halted");
+        id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     function voteAction(uint256 id) external onlyBoardMember {
-        // اقدامی که زیر ترکیب قدیمی‌تر پیشنهاد شده باطل است: _voteAction() **revert** می‌کند («board membership changed since this
-        // action was proposed - propose again»). تراکنش آشکارا شکست می‌خورد و به‌صورت no-op برنمی‌گردد، تا هیچ‌کس رسید موفق را
-        // با «رأی من ثبت شد» اشتباه نگیرد.
         _voteAction(id, msg.sender);
     }
 
-    /// @notice ✅ پارامتر تازه (تصمیم صریح کاربر — ApproveBudget به‌طور خاص هرگز نباید با
-    ///         کمتر از ۳ رأی موافق اجرا بشه، حتی اگه هیأت‌مدیره از اندازه‌ی کاملش (۵ نفر)
-    ///         کوچیک‌تر شده باشه). `minRequiredVotes` برای هر نوع اقدام *دیگه* صفره (یعنی «از
-    ///         فرمول اکثریت ساده استفاده کن، بدون حداقل اضافه») و فقط برای ApproveBudget ۳ه —
-    ///         به proposeApproveBudget پایین مراجعه کن که چرا خرج به‌طور خاص به این حداقل
-    ///         سخت‌گیرانه‌تر نیاز داره درحالی‌که اقدامات روتینی مثل چرخش کلید نیازی ندارن.
+    /// @dev تعداد رأی لازم برابر اکثریت هیأت در لحظهٔ ساخت است که برای اقدام‌های حساس تا `minRequiredVotes` بالا می‌رود
+    ///      و سپس در تمام عمر اقدام ثابت می‌ماند.
     function _createAction(ActionType atype, address target, uint256 amount, string memory description, uint256 minRequiredVotes) private returns (uint256 id) {
         uint256 majority = (boardMembers.length / 2) + 1;
         actionCount++;
@@ -739,8 +600,7 @@ contract ValidatorsBoard {
             amount: amount,
             description: description,
             votes: 0,
-            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes, // ✅ حداقل
-            // سخت، همین لحظه از اندازه‌ی *واقعی* فعلی هیأت‌مدیره ثابت‌شده — به کامنت بالا مراجعه کن
+            requiredVotes: majority > minRequiredVotes ? majority : minRequiredVotes,
             createdAt: block.timestamp,
             expiresAt: block.timestamp + BOARD_ACTION_EXPIRY,
             executed: false,
@@ -755,13 +615,6 @@ contract ValidatorsBoard {
         require(a.createdAt != 0, "ValidatorsBoard: action not found");
         require(!a.executed, "ValidatorsBoard: already executed");
         require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
-        // ✅ اصلاح‌شده (باگ پیداشده در بازبینی مستقل — به کامنت boardVersionAtCreation توی
-        // struct BoardAction بالا مراجعه کن): اگه عضویت هیأت‌مدیره از وقتی این اقدام پیشنهاد
-        // شده عوض شده باشه، باطل می‌شه — رأی‌دهنده‌ها باید دوباره زیر هیأت‌مدیره‌ی فعلی
-        // پیشنهادش بدن. این دقیقاً همون چیزیه که واقعاً جلوی شمرده‌شدن رأی‌های مانده از اعضای
-        // سابق (که قبل از خروج رأی داده بودن) توی تصمیمات یه هیأت‌مدیره‌ی تازه رو می‌گیره؛
-        // فقط چک‌کردن `isBoardMember` در لحظه‌ی رأی (که از قبل بود) کافی نبود، چون فقط
-        // رأی‌دهنده‌ی *فعلی* رو معتبر می‌کنه، نه رأی‌های تاریخی‌ای که قبلاً شمرده شدن.
         require(a.boardVersionAtCreation == boardVersion, "ValidatorsBoard: board membership changed since this action was proposed - propose again");
         require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
 
@@ -776,13 +629,7 @@ contract ValidatorsBoard {
                 IBlockRewardDistributor(DISTRIBUTOR).setDistributionOracle(a.target);
                 emit OracleRotated(a.target);
             } else if (a.atype == ActionType.ApproveBudget) {
-                // ✅ تازه: دوباره در لحظه‌ی *اجرا* چک می‌شه، نه فقط لحظه‌ی پیشنهاد — تصمیم
-                // کاربر صریحاً «اعضای فعلی» رو گفته، یعنی حتی اگه این اقدام از قبل، وقتی
-                // هیأت‌مدیره هنوز ≥۳ عضو داشت، رأی لازمش رو جمع کرده باشه، اجرا باید همچنان
-                // متوقف بشه اگه هیأت‌مدیره از اون‌موقع تا این رأی نهایی به کمتر از ۳ رسیده
-                // باشه. کل تراکنش رأی (شامل همین رأی) در این حالت revert می‌شه، پس هیچ‌چیزی
-                // بی‌صدا رد یا ناقص ثبت نمی‌شه — اول باید ترکیب هیأت‌مدیره درست بشه.
-                require(boardMembers.length >= 3, "ValidatorsBoard: fewer than 3 board members - spending halted");
+                require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
             } else if (a.atype == ActionType.SetEntryThresholdBase) {
@@ -802,8 +649,9 @@ contract ValidatorsBoard {
     }
 
     // ------------------------------------------------------------------
-    // توابع کمکی view
+    // نمایش
     // ------------------------------------------------------------------
+
     function getBoardMembers() external view returns (address[] memory) {
         return boardMembers;
     }
@@ -818,5 +666,10 @@ contract ValidatorsBoard {
 
     function getVotersFor(address candidate) external view returns (address[] memory) {
         return candidateVoters[candidate];
+    }
+
+    /// @notice نامزدهایی که اکنون دست‌کم یک رأی شمرده‌شده دارند.
+    function getCandidateList() external view returns (address[] memory) {
+        return candidateList;
     }
 }

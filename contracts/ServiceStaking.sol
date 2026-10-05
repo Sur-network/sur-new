@@ -3,9 +3,8 @@ pragma solidity ^0.8.24;
 
 /// @title ServiceStaking
 /// @notice A generic, reusable "stake for service access" ledger — see sur-tokenomics.md
-///         section 10 for the full decision table this implements. This is a first-draft
-///         skeleton (like SurZether.sol), not a hardened, audited contract — it is explicitly
-///         flagged as still needing design review before any real deployment.
+///         section 10 for the full decision table this implements. Status: draft skeleton, not a hardened or audited
+///         contract; it needs design review before any real deployment.
 ///
 ///         PURPOSE: several planned dapps/services (naming, timestamping, credential issuance,
 ///         business registry, Zether higher limits, a reputation layer) each need users or
@@ -35,7 +34,7 @@ pragma solidity ^0.8.24;
 ///         this contract does not know or enforce which services are "mandatory"; that
 ///         enforcement lives in each consuming contract's own logic.
 ///
-///         🔶 OPEN DESIGN QUESTIONS (not yet decided, listed here rather than guessed at):
+///         OPEN DESIGN QUESTIONS:
 ///           - Exact minimum stake AMOUNTS per service (this contract only enforces cooldowns
 ///             and the Reputation minimum-lock DURATION — not minimum stake sizes; those are a
 ///             separate, still-open economic decision, likely to differ per service and
@@ -48,6 +47,11 @@ pragma solidity ^0.8.24;
 ///             address) or deployed normally like SurenSale. This draft assumes the SurenSale
 ///             pattern (normal deploy, real constructor, no genesis `alloc` entry) since it is
 ///             an optional ecosystem convenience, not core network infrastructure.
+///
+///         POINT-IN-TIME GUARANTEE: for a service with a zero cooldown (Naming, Timestamping) a stake can be added and
+///         withdrawn in one transaction, so `hasMinimumStake` proves only that the caller holds the stake at this moment.
+///         A consuming contract that needs a continuous guarantee must use a service with a non-zero cooldown or add its
+///         own holding rule. A stake with a pending withdrawal request is not counted by `hasMinimumStake`.
 contract ServiceStaking {
     enum ServiceId {
         Naming,           // mandatory, no fixed term, instant withdrawal
@@ -94,17 +98,9 @@ contract ServiceStaking {
         require(msg.value > 0, "ServiceStaking: zero stake amount");
 
         Stake storage s = stakes[msg.sender][service];
-        // ✅ FIXED (critical exploit found in review): previously `stakedAt` was only set on
-        // the FIRST stake (when s.amount == 0), meaning a top-up after the original 90-day
-        // Reputation lock had already elapsed did NOT reset the clock — so a user could stake a
-        // trivial amount, wait 90 days, then top up with a large amount and withdraw it all
-        // immediately, since the lock check only ever looked at the original (tiny) stake's
-        // timestamp. Fix: for Reputation specifically, EVERY stake() call (top-up or first)
-        // resets stakedAt to now, restarting the 90-day lock for the full new balance — since
-        // Reputation's whole design intent is "the weight/lock reflects your CURRENT staked
-        // amount," a top-up must not inherit an already-expired lock from a much smaller
-        // earlier stake. Other services don't use stakedAt for anything (their cooldown is
-        // computed from withdrawalRequestedAt instead), so this change is a no-op for them.
+        // Reputation: every stake() call (first or top-up) restarts the 90-day lock for the full new balance, because the
+        // weight and lock reflect the CURRENT staked amount; a top-up must not inherit an expired lock from a smaller earlier
+        // stake. The other services do not use stakedAt (their cooldown runs from withdrawalRequestedAt).
         if (service == ServiceId.Reputation) {
             s.stakedAt = block.timestamp;
         } else if (s.amount == 0) {
@@ -171,11 +167,13 @@ contract ServiceStaking {
     }
 
     /// @notice Convenience check for a consuming contract's own "is this address allowed to
-    ///         use my service" gate — e.g. `require(serviceStaking.hasMinimumStake(msg.sender,
+    ///         use my service" gate (false while a withdrawal request is pending) — e.g. `require(serviceStaking.hasMinimumStake(msg.sender,
     ///         ServiceId.BusinessRegistry, MIN_REGISTRANT_STAKE), ...)`. This contract does not
     ///         define what `minAmount` should be for any service — that is each consuming
     ///         contract's own decision (see the open design questions in the header comment).
     function hasMinimumStake(address user, ServiceId service, uint256 minAmount) external view returns (bool) {
-        return stakes[user][service].amount >= minAmount;
+        Stake storage s = stakes[user][service];
+        if (s.withdrawalRequestedAt != 0) return false; // a stake that is being withdrawn no longer counts
+        return s.amount >= minAmount;
     }
 }
