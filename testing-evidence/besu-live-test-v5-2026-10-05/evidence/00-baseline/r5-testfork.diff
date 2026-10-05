@@ -1,0 +1,52 @@
+diff -ru -x testonly-genesis-seed contracts-baseline/ValidatorsBoard.sol testfork/ValidatorsBoard.sol
+--- contracts-baseline/ValidatorsBoard.sol	2026-10-05 15:08:03.684307200 +0330
++++ testfork/ValidatorsBoard.sol	2026-10-05 18:14:16.064093100 +0330
+@@ -214,6 +214,7 @@
+ 
+     /// @notice Month identifier (UTC) of a timestamp: year * 12 + (month - 1).
+     function monthIdOf(uint256 timestamp) public pure returns (uint256) {
++        if (timestamp != 0) return timestamp / 900; // TEST-FORK: a 'month' is 900 s (the calendar algorithm below is unreachable)
+         uint256 z = timestamp / 86400 + 719468;
+         uint256 era = z / 146097;
+         uint256 doe = z - era * 146097;
+diff -ru -x testonly-genesis-seed contracts-baseline/ValidatorsRegistry.sol testfork/ValidatorsRegistry.sol
+--- contracts-baseline/ValidatorsRegistry.sol	2026-10-05 15:08:03.711681100 +0330
++++ testfork/ValidatorsRegistry.sol	2026-10-05 18:12:02.793197800 +0330
+@@ -233,7 +233,7 @@
+     mapping(uint256 => DemotionEpoch) public demotionEpochs;
+     uint256 public currentDemotionEpochId; // 0 means "no epoch opened yet"
+ 
+-    uint256 public constant MASS_DEMOTION_WINDOW = 1 hours;
++    uint256 public constant MASS_DEMOTION_WINDOW = 60 seconds; // TEST-FORK (real: 1 hours)
+     uint256 public constant MASS_DEMOTION_SLASH_PAUSE_BPS = 2000; // 20% — see resolveMassFailureCheck()
+ 
+     uint256 private constant BPS_DENOMINATOR = 10000;
+@@ -369,12 +369,12 @@
+     mapping(uint256 => DeliveryDispute) public deliveryDisputes; // keyed by decisionId
+     mapping(uint256 => mapping(address => bool)) private hasVotedOnDelivery;
+ 
+-    uint256 public constant APPEAL_FILING_WINDOW = 72 hours;
+-    uint256 public constant APPEAL_VOTING_PERIOD = 7 days;
++    uint256 public constant APPEAL_FILING_WINDOW = 150 seconds; // TEST-FORK (real: 72 hours)
++    uint256 public constant APPEAL_VOTING_PERIOD = 420 seconds; // TEST-FORK (real: 7 days)
+     /// @dev How long a validator has to confirm delivery itself before anyone may force the question to a
+     ///      delivery-dispute vote (7 days). It determines how long a case can stay unresolved.
+-    uint256 public constant DELIVERY_DISPUTE_GRACE_PERIOD = 7 days;
+-    uint256 public constant DELIVERY_DISPUTE_VOTING_PERIOD = 7 days;
++    uint256 public constant DELIVERY_DISPUTE_GRACE_PERIOD = 90 seconds; // TEST-FORK (real: 7 days)
++    uint256 public constant DELIVERY_DISPUTE_VOTING_PERIOD = 240 seconds; // TEST-FORK (real: 7 days)
+ 
+     // ------------------------------------------------------------------
+     // Events for the off-chain verification architecture
+diff -ru -x testonly-genesis-seed contracts-baseline/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol testfork/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol
+--- contracts-baseline/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol	2026-10-05 15:08:03.757683900 +0330
++++ testfork/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol	2026-10-05 18:14:16.418998400 +0330
+@@ -71,6 +71,7 @@
+ 
+     /// @dev Same civil-calendar algorithm as ValidatorsBoard.monthIdOf: year * 12 + (month - 1), UTC.
+     function _monthIdOf(uint256 timestamp) internal pure returns (uint256) {
++        if (timestamp != 0) return timestamp / 900; // TEST-FORK: same compressed month as the fork's ValidatorsBoard.monthIdOf
+         uint256 z = timestamp / 86400 + 719468;
+         uint256 era = z / 146097;
+         uint256 doe = z - era * 146097;
+Only in contracts-baseline: reference-dapps

@@ -1,0 +1,13 @@
+f04faa5
+ M contracts-fa/IdentityRegistry.sol
+ M contracts-fa/ServiceStaking.sol
+ M contracts-fa/ValidatorsBoard.sol
+ M contracts-fa/ValidatorsRegistry.sol
+ M contracts-fa/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol
+ M contracts-fa/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol
+ M contracts/IdentityRegistry.sol
+ M contracts/ServiceStaking.sol
+ M contracts/ValidatorsBoard.sol
+ M contracts/ValidatorsRegistry.sol
+ M contracts/genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol
+ M contracts/genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol
