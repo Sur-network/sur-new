@@ -5,21 +5,21 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
-    function statusNonce() external view returns (uint256); // L04
-    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
-    function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
-    function getActiveValidatorCount() external view returns (uint256); // ✅ NEW: needed for the 2/3-of-assembly threshold in the bicameral share-change vote below.
+    function statusNonce() external view returns (uint256);
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool);
+    function everActivated(address who) external view returns (bool); // permanent flag: true once the address was ever legitimately activated
+    function getActiveValidatorCount() external view returns (uint256); // used for the two-thirds-of-assembly threshold of the share-change vote
 }
 
-/// @notice ✅ NEW: minimal interface onto ValidatorsBoard, needed only to check board
-///         membership for the bicameral share-change vote below (see proposeShareChange).
+/// @notice Minimal interface onto ValidatorsBoard, used to check board authority for the bicameral votes below
+///         (see proposeShareChange and proposeRateChange).
 interface IValidatorsBoard {
     function isBoardMember(address who) external view returns (bool);
-    /// @dev L02 (audit 2026-09-30): LIVE authority — false immediately after requestExit(), even while the raw seat flag
-    ///      isBoardMember is still true until syncBoard(). A suspended (Demoted) member keeps authority until the monthly
-    ///      point (P02). The Distributor relies on this exact definition instead of re-implementing it.
+    /// @dev LIVE authority — false immediately after requestExit(), even while the raw seat flag
+    ///      isBoardMember is still true until syncBoard(). A suspended (Demoted) member keeps authority until the end of the
+    ///      board's month. The Distributor relies on this exact definition instead of re-implementing it.
     function hasBoardAuthority(address who) external view returns (bool);
-    /// @dev L02: incremented by ValidatorsBoard ONLY on a real composition change (refresh/sync/succession), never by a
+    /// @dev Incremented by ValidatorsBoard ONLY on a real composition change (refresh/sync/succession), never by a
     ///      refresh that leaves the composition unchanged.
     function boardVersion() external view returns (uint256);
 }
@@ -33,99 +33,86 @@ interface IValidatorsBoard {
 ///         Experiment 1) and periodically distributes them, based on data reported by an
 ///         authorized oracle, between validators and ValidatorsTreasury.
 ///
-///         Distribution rules (✅ updated again — see sur-tokenomics.md section 6.5/6/11 for
-///         the full economic and governance reasoning behind each piece below):
-///           - From total REWARDS: FoundationDAO's 15% (FOUNDATION_SHARE_BPS) is now taken
-///             DIRECTLY off the top of total rewards — fixed forever, automatic, no vote, and
-///             deliberately NOT computed as a percentage of anything else (earlier drafts of
-///             this contract computed it as 15% of a 50% "treasury cut," which meant Foundation
-///             income would have silently moved whenever the treasury/validator split below was
-///             later made governable — exactly the entanglement the fixed-15%-of-total design
-///             avoids).
-///           - Of the REMAINING 85%, the split between validators (direct, block-share-based)
-///             and ValidatorsTreasury is governed by `validatorDirectShareBps` — ✅ NEW:
-///             changeable via a bicameral vote (see proposeShareChange/boardVoteShareChange/
-///             validatorVoteShareChange below), bounded to [40%, 65%] of TOTAL rewards, with a
-///             mandatory 6-month cooldown between successful changes. Both chambers — a simple
-///             majority of ValidatorsBoard AND a two-thirds majority of the full active
-///             validator assembly — must independently approve the same proposal before it
-///             takes effect. This deliberately uses the two chambers' opposing incentives (rank-
-///             and-file validators are pulled toward a bigger direct share; the board is pulled
-///             toward a bigger treasury, since a bigger treasury means more discretionary
-///             spending under its own small-expenditure approval power) as a built-in check
+///         Distribution rules (see sur-tokenomics.md sections 6.5, 6 and 11 for the economic and
+///         governance reasoning behind each piece below):
+///           - From total REWARDS: FoundationDAO's 15% (FOUNDATION_SHARE_BPS) is taken DIRECTLY off
+///             the top of total rewards — fixed, automatic, no vote, and deliberately not computed
+///             as a percentage of anything else, so Foundation income does not move when the
+///             treasury/validator split below is changed.
+///           - Of the REMAINING 85%, the split between validators (direct, block-share-based) and
+///             ValidatorsTreasury is governed by `validatorDirectShareBps`: changeable via a
+///             bicameral vote (proposeShareChange/boardVoteShareChange/validatorVoteShareChange),
+///             bounded to [40%, 65%] of TOTAL rewards, with a mandatory 6-month cooldown between
+///             successful changes. Both chambers — a simple majority of ValidatorsBoard AND a
+///             two-thirds majority of the full active validator assembly — must independently
+///             approve the same proposal before it takes effect. This uses the two chambers'
+///             opposing incentives (rank-and-file validators are pulled toward a bigger direct
+///             share; the board is pulled toward a bigger treasury, since a bigger treasury means
+///             more discretionary spending under its own approval power) as a built-in check
 ///             against either chamber unilaterally draining the other's share over time.
-///           - From total ORDINARY FEES (not membership fees — see below): ✅ NEW — a fixed
-///             30% (FEE_BURN_BPS) is now permanently burned (sent to BURN_ADDRESS =
-///             address(0)) every epoch; the remaining 70% is split among validators
-///             proportionally to blocks mined exactly as before (still no treasury or
-///             foundation cut on the distributed portion). See FEE_BURN_BPS's own doc comment
-///             and sur-tokenomics.md section 7 for why fees (not rewards) were chosen as the
-///             burn target, and why 30% specifically.
-///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() no longer sends
-///             the membership fee to ValidatorsTreasury. Instead it forwards it here via
-///             receiveMembershipFee(), where it accumulates in `pendingMembershipFees` and is
-///             folded into the *next* epoch's fee pool — ✅ UPDATED: fully exempt from the 30%
-///             burn above (100% of it reaches validators, unlike ordinary fees), but otherwise
-///             the same 100%-pro-rata-by-blocks treatment as ordinary transaction fees — see
-///             sur-tokenomics.md section 6 for why: this gives existing validators a direct,
-///             traceable cash incentive tied to every new validator that joins). This means a
-///             new member's fee is not paid out in the same
-///             block as their registration — it is paid out at the next distributionOracle
-///             epoch (~23 hours later), exactly like ordinary fees already are.
-///           - Each validator receives exactly one payment per call (a single combined
-///             transfer of reward share + fee share, where "fee share" now includes any
-///             pending membership fees folded in for that epoch).
+///           - From total ORDINARY FEES (not membership fees — see below): a fixed 30%
+///             (FEE_BURN_BPS) is permanently burned (sent to BURN_ADDRESS = address(0)) every
+///             epoch; the remaining 70% is split among validators proportionally to blocks mined
+///             (no treasury or foundation cut on the distributed portion). See FEE_BURN_BPS's
+///             doc comment and sur-tokenomics.md section 7 for why fees (not rewards) are the
+///             burn target, and why 30%.
+///           - PENDING MEMBERSHIP FEES: ValidatorsRegistry.requestMembership() forwards the
+///             membership fee here via receiveMembershipFee(), where it accumulates in
+///             `pendingMembershipFees` and is folded into the *next* epoch's fee pool: fully
+///             exempt from the 30% burn (100% of it reaches validators) and otherwise paid
+///             pro-rata by blocks like ordinary fees — see sur-tokenomics.md section 6: this gives
+///             existing validators a direct, traceable cash incentive tied to every new validator
+///             that joins. A new member's fee is therefore not paid out in the block of their
+///             registration but at the next distributionOracle epoch (~23 hours later).
+///           - Each validator receives exactly one payment per call (a single combined transfer
+///             of reward share + fee share, where "fee share" includes any pending membership
+///             fees folded in for that epoch).
 ///
 ///         Validator eligibility is checked directly, on-chain, against ValidatorsRegistry —
-///         there is no internal whitelist and no second "validatorSyncOracle" (that design was
-///         retired once contract-mode validator selection made ValidatorsRegistry itself the
-///         single source of truth for both consensus and payment; see design doc section 5).
+///         there is no internal whitelist and no separate sync oracle: ValidatorsRegistry is the
+///         single source of truth for both consensus and payment.
 ///
 ///         GENESIS DEPLOYMENT: this contract has no constructor — it is injected directly into
 ///         the genesis `alloc`, so a constructor would never execute on the real chain.
 ///         ValidatorsRegistry, ValidatorsTreasury, and ValidatorsBoard addresses are fixed
 ///         constants (see SurAddresses.sol), because all six structural contracts share a
 ///         common, pre-agreed genesis address map. The initial distributionOracle key (a
-///         genuinely rotatable operational credential, not a structural contract) and the real
-///         genesis timestamp are instead seeded via the off-chain genesis-building tool (see the
-///         🔶 GENESIS FILL-IN notes below, and "sur-contracts-deploy-notes.md" for why the real
-///         genesis timestamp can't just be read as `block.timestamp` from a simulated
-///         environment).
+///         genuinely rotatable operational credential, not a structural contract) is instead
+///         seeded via the off-chain genesis-building tool (see the GENESIS FILL-IN note below
+///         and "sur-contracts-deploy-notes.md").
 contract BlockRewardDistributor {
     // ------------------------------------------------------------------
     // Constants and configuration
     // ------------------------------------------------------------------
 
     /// @notice Foundation's share of TOTAL rewards (not of any sub-cut) — basis points out of
-    ///         10000 = 100%. ✅ CHANGED: fixed forever, applied directly to totalRewards, and
-    ///         deliberately independent of validatorDirectShareBps below — see sur-tokenomics.md
-    ///         section 6.5 and the contract-level doc comment above for why this must stay
-    ///         decoupled from the governable treasury/validator split.
+    ///         10000 = 100%. Fixed, applied directly to totalRewards, and deliberately independent
+    ///         of validatorDirectShareBps below — see sur-tokenomics.md section 6.5 and the
+    ///         contract-level doc comment above for why this stays decoupled from the governable
+    ///         treasury/validator split.
     uint256 public constant FOUNDATION_SHARE_BPS = 1500; // 15% of total rewards, always
 
-    /// @notice ✅ NEW (replaces the old constant TREASURY_SHARE_BPS): validators' direct,
-    ///         block-share-based cut of TOTAL rewards — basis points out of 10000. Starts at the
-    ///         same 50% the old fixed constant used, but is now a governable STATE variable,
-    ///         changeable only via the bicameral vote below (proposeShareChange /
+    /// @notice Validators' direct, block-share-based cut of TOTAL rewards — basis points out of 10000. Starts at 50% and is
+    ///         a governable state variable, changeable only via the bicameral vote below (proposeShareChange /
     ///         boardVoteShareChange / validatorVoteShareChange), bounded to
     ///         [VALIDATOR_SHARE_MIN_BPS, VALIDATOR_SHARE_MAX_BPS]. ValidatorsTreasury receives
     ///         whatever remains after Foundation's fixed 15% and this share are both taken out:
     ///         treasuryShare = 10000 - FOUNDATION_SHARE_BPS - validatorDirectShareBps.
-    uint256 public validatorDirectShareBps = 5000; // 50% initially — same starting point as before
+    uint256 public validatorDirectShareBps = 5000; // 50% initially
 
     uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // 40% floor
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // 65% ceiling
     uint256 private constant BPS_DENOMINATOR = 10000;
 
-    /// @notice ✅ NEW: fixed fraction of ordinary transaction fees (NOT membership fees — see
+    /// @notice Fixed fraction of ordinary transaction fees (NOT membership fees — see
     /// distributeRewards()'s comment for why they are deliberately exempt) that is permanently
     /// burned every epoch, before the remaining 70% is distributed 100%-pro-rata-by-blocks to
-    /// validators exactly as before. See sur-tokenomics.md section 7 for the full reasoning:
-    /// rewards (not fees) are the dominant source of Suren inflation, so burning fees alone
-    /// cannot offset it, but it creates a usage-linked scarcity mechanism that grows in effect
-    /// as real network activity grows — the closest analogue this project's fixed-gasPrice
-    /// design allows to Ethereum's EIP-1559 base-fee burn, without adopting a dynamic gas price
-    /// (which would break the "predictable Suren-denominated cost" design goal).
+    /// validators. See sur-tokenomics.md section 7 for the full reasoning: rewards (not fees)
+    /// are the dominant source of Suren inflation, so burning fees alone cannot offset it, but
+    /// it creates a usage-linked scarcity mechanism that grows in effect as real network
+    /// activity grows — the closest analogue this project's fixed-gasPrice design allows to
+    /// Ethereum's EIP-1559 base-fee burn, without adopting a dynamic gas price (which would
+    /// break the "predictable Suren-denominated cost" design goal).
     uint256 public constant FEE_BURN_BPS = 3000; // 30%
 
     /// @notice Burning native Suren means sending it to the zero address — no private key
@@ -141,8 +128,7 @@ contract BlockRewardDistributor {
     /// @notice Minimum allowed interval between two consecutive distribution calls.
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
 
-    // L03 (audit 2026-09-30): MIN_BLOCK_PERIOD_SECONDS and the time-based "physical maximum" check were REMOVED — see
-    // the design note above _settleRange. The block count is bounded by the P05 range control, not by elapsed time.
+    // The block count of a distribution is bounded by the range control in _settleRange, not by elapsed time.
 
     // ------------------------------------------------------------------
     // Fixed cross-contract addresses (see SurAddresses.sol)
@@ -150,7 +136,7 @@ contract BlockRewardDistributor {
 
     /// @notice ValidatorsTreasury — receives whatever remains of the reward pool after
     ///         Foundation's fixed 15% and validators' governable direct share are both
-    ///         removed (no longer a fixed "50% reward cut" — see validatorDirectShareBps).
+    ///         removed (see validatorDirectShareBps).
     address public constant TREASURY = SurAddresses.VALIDATORS_TREASURY;
 
     /// @notice FoundationDAO — receives the automatic 15% share of TOTAL rewards every epoch
@@ -172,15 +158,14 @@ contract BlockRewardDistributor {
     ///         directly on every payout, no intermediary oracle.
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
-    /// @notice ✅ NEW: read-only view onto ValidatorsBoard, used only to check board membership
-    ///         for the bicameral share-change vote below.
+    /// @notice Read-only view onto ValidatorsBoard, used to check board authority for the bicameral votes below.
     IValidatorsBoard public constant BOARD_CONTRACT = IValidatorsBoard(SurAddresses.VALIDATORS_BOARD);
 
     /// @notice Mirrors ValidatorsBoard.BOARD_SIZE — the board is always exactly this many
     ///         members, so a simple majority is BOARD_SIZE/2 + 1 (i.e. 3 of 5).
     uint256 public constant BOARD_SIZE = 5;
 
-    /// @notice ✅ NEW: minimum time between two successful validatorDirectShareBps changes —
+    /// @notice Minimum time between two successful validatorDirectShareBps changes —
     ///         deliberately slow (~6 months) so this parameter cannot be nudged repeatedly in
     ///         quick succession by either chamber. See sur-tokenomics.md section 11 for why.
     uint256 public constant SHARE_CHANGE_MIN_INTERVAL = 180 days;
@@ -189,17 +174,16 @@ contract BlockRewardDistributor {
     /// @notice Address of the oracle authorized to call the periodic distribution function.
     ///         Its only job is to report block counts and reward/fee totals; it cannot pay out
     ///         to any address that ValidatorsRegistry does not currently recognize as active.
-    /// @dev ✅ FILLED: initial distributionOracle address, read from SurAddresses.sol (single
+    /// @dev Initial distributionOracle address, read from SurAddresses.sol (single
     ///      source of truth for all four oracle addresses — see that file for rationale).
     address public distributionOracle = SurAddresses.DISTRIBUTION_ORACLE;
 
-    // L03 (audit 2026-09-30): the immutable `deployTime` was REMOVED together with the time-based cap — no code read it
-    // except that cap. This contract therefore has no immutable left for the genesis builder to patch.
+    // This contract has no immutable, so the genesis builder has nothing to patch in the bytecode.
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
     // ------------------------------------------------------------------
-    // P05 (final decision): every distribution declares the REAL block range it settles; the contract keeps the last settled
+    // Range control: every distribution declares the REAL block range it settles; the contract keeps the last settled
     // block and accepts only a range that starts exactly after it. An increasing epoch counter alone is not enough — the
     // control is tied to the actual block numbers, so duplicate, overlapping and unexplained-gap ranges are rejected.
     // ------------------------------------------------------------------
@@ -255,44 +239,36 @@ contract BlockRewardDistributor {
     ///         Reset to zero at the end of every distributeRewards() call.
     uint256 public pendingMembershipFees;
 
-    /// @notice ✅ NEW: a bicameral proposal to change validatorDirectShareBps. Requires
+    /// @notice A bicameral proposal to change validatorDirectShareBps. Requires
     ///         independent approval from BOTH a simple majority of ValidatorsBoard AND a
     ///         two-thirds majority of the full active validator assembly before it applies —
     ///         see proposeShareChange/boardVoteShareChange/validatorVoteShareChange below.
-    /// @dev ✅ FIXED (critical stale-vote bug found in review): `requiredValidatorApprovals` is
-    ///      now snapshotted ONCE at proposal creation (from the active-validator count at that
-    ///      moment), not recomputed live on every vote. Previously, `validatorApprovals` was a
-    ///      simple counter that only ever increased (never decremented when a voting validator
-    ///      later exited), while `required` was recalculated from the CURRENT active count on
-    ///      every call. This meant a proposal that failed to reach quorum at a large validator
-    ///      count could later become executable with ZERO new votes, purely because the
-    ///      network's active count shrank enough that the live-recomputed threshold fell below
-    ///      the old, frozen vote tally — a classic stale/replay governance bug. Snapshotting the
-    ///      requirement at creation time closes this: the bar a given proposal must clear is
-    ///      fixed the moment it's proposed, exactly like a share price is fixed the moment an
-    ///      order is placed. Combined with `expiresAt` below (also new), a proposal that doesn't
-    ///      reach ITS OWN frozen bar within a bounded window simply dies, rather than being able
-    ///      to sit indefinitely waiting for the electorate to shrink.
+    /// @dev `requiredValidatorApprovals` is snapshotted ONCE at proposal creation (from the
+    ///      active-validator count at that moment), not recomputed on every vote. The bar a
+    ///      given proposal must clear is therefore fixed the moment it is proposed: a proposal
+    ///      that fails to reach quorum cannot later become executable with no new votes merely
+    ///      because the active count shrank. Together with `expiresAt`, a proposal that does not
+    ///      reach its own frozen bar within a bounded window simply expires.
     struct ShareProposal {
         uint256 newValidatorShareBps;
         uint256 createdAt;
-        uint256 expiresAt; // ✅ NEW — proposal can no longer be voted on or executed after this
-        uint256 requiredValidatorApprovals; // ✅ NEW — snapshotted at creation, never recomputed
+        uint256 expiresAt; // proposal can no longer be voted on or executed after this
+        uint256 requiredValidatorApprovals; // snapshotted at creation, never recomputed
         uint256 boardApprovals;
         uint256 validatorApprovals;
         bool boardPassed;
         bool validatorPassed;
         bool executed;
-        /// @dev L02 (audit 2026-09-30): ValidatorsBoard.boardVersion() when the proposal was created. Board votes and the
+        /// @dev ValidatorsBoard.boardVersion() when the proposal was created. Board votes and the
         ///      final execution are accepted only while the board composition is still this one — the same rule
         ///      ValidatorsBoard applies to its own actions (boardVersionAtCreation). A real composition change voids the
-        ///      proposal; it must be proposed again. Appended as the LAST field: mapping-value layout, fresh genesis state.
+        ///      proposal; it must be proposed again.
         uint256 boardVersionAtCreation;
-        // L04 (owner decision): ValidatorsRegistry.statusNonce at creation; voters must have been Active at exactly that point.
+        // ValidatorsRegistry.statusNonce at creation; voters must have been Active at exactly that point.
         uint256 validatorNonceAtCreation;
     }
 
-    /// @notice ✅ NEW: how long a proposal remains votable/executable after creation. Chosen to
+    /// @notice How long a proposal remains votable/executable after creation. Chosen to
     ///         be comfortably shorter than SHARE_CHANGE_MIN_INTERVAL (180 days) — a proposal
     ///         that can't gather the required votes within 30 days should be re-proposed fresh
     ///         (with a fresh electorate snapshot) rather than left open indefinitely.
@@ -303,25 +279,39 @@ contract BlockRewardDistributor {
     mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
     uint256 public shareProposalCount;
 
-    // L05 (owner decision, audit 2026-09-30): approved block-reward rate history, used to cap totalRewards per settled range.
-    // Initial rate INITIAL_REWARD_PER_BLOCK applies from block 1 until the first entry. Entries are append-only, with strictly
-    // ascending startBlock, and take effect only from a FUTURE height; past effective history is never rewritten.
-    // TRUST BOUNDARY: this contract does not read Besu's actual block reward. The approved rates must be kept in line with the
-    // network's genesis transitions operationally; the cap does not prove fee correctness, block attribution, or that the
-    // recorded rate equals Besu's. It only bounds the gross reward the oracle can report for a range.
-    // Governance (implemented below): proposals need 3 of the 5 board members (live authority + board-composition guard, as in L02)
-    // AND two thirds of the validators eligible when the proposal was created (L04 policy). The 30-day voting expiry applies to the
-    // voting phase only; once both chambers have completed, a 7-day delay starts, and execution re-checks everything (see
-    // executeRateChange). The distribution oracle has no power over this history.
+    // Approved block-reward rate history, used to cap totalRewards per settled range.
+    // The initial rate INITIAL_REWARD_PER_BLOCK applies from block 1 until the first entry. Entries are append-only and take effect
+    // only from a FUTURE point; past effective history is never rewritten.
+    //
+    // Each entry is created from a proposal that names the moment the change takes effect as a UNIX TIMESTAMP (`activationTime`,
+    // the same value operators write into `transitions.qbft` of the Besu genesis; on a Shanghai/Cancun genesis that field is a
+    // timestamp, not a block number) together with an ESTIMATED start block. The first block whose timestamp is at or after
+    // `activationTime` is not known in advance, so the entry is PROVISIONAL until the distribution oracle certifies the actual start
+    // block with certifyRateStart. A certified block must lie within RATE_START_TOLERANCE_BLOCKS of the estimate.
+    // While an entry is provisional, blocks inside [estimate - tolerance, estimate + tolerance) are capped at the LARGER of the old and
+    // the new rate; blocks before that window use the old rate and blocks from its end use the new rate. After certification the
+    // change is exact at the certified block. The cap of a range therefore never rejects a correctly configured network, and the oracle's
+    // influence is bounded by tolerance x |new rate - old rate| for each change.
+    // TRUST BOUNDARY: this contract does not read Besu's actual block reward or block times. The approved rates and activation times
+    // must be kept in line with the network's genesis transitions operationally; the cap does not prove fee correctness, block
+    // attribution, or that the recorded rate equals Besu's. It only bounds the gross reward the oracle can report for a range.
+    // If operators configure a transition whose real start block falls outside the tolerance window, the certification is rejected and
+    // ranges containing blocks whose real reward exceeds the approved rate cannot be distributed.
+    // Governance: proposals need 3 of the 5 board members (live authority + board-composition guard) AND two thirds of the validators
+    // eligible when the proposal was created. The 30-day voting expiry applies to the voting phase only; once both chambers have
+    // completed, a 7-day delay starts, and execution re-checks everything (see executeRateChange). The distribution oracle cannot add,
+    // change or remove a rate; it can only certify the start block of an approved entry within the tolerance window.
     uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
     struct RewardRateChange {
-        uint128 startBlock; // first block at which ratePerBlock applies
+        uint128 startBlock; // estimated first block of the new rate until certified; the actual first block afterwards
         uint128 ratePerBlock; // wei per block
+        uint64 activationTime; // unix seconds; the moment configured in the Besu transition
+        bool certified; // true once the oracle has certified the actual start block
     }
     RewardRateChange[] private rewardRateChanges;
 
     // ------------------------------------------------------------------
-    // L05 governance — approved reward-rate changes (owner decision, audit 2026-09-30)
+    // Governance — approved reward-rate changes
     // ------------------------------------------------------------------
     /// @notice Board approvals needed: 3 of the 5-member board (== BOARD_SIZE / 2 + 1).
     uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 3;
@@ -329,13 +319,17 @@ contract BlockRewardDistributor {
     uint256 public constant RATE_VOTING_EXPIRY = 30 days;
     /// @notice Starts when BOTH chambers have completed.
     uint256 public constant RATE_CHANGE_DELAY = 7 days;
-    /// @notice Minimum distance, in BLOCKS, between the block that executes the change and its startBlock. Roughly 7 days only at the
-    ///         nominal 3 s cadence; it is a block count, not a time, and is independent of RATE_CHANGE_DELAY.
-    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 201_600;
+    /// @notice Minimum distance in SECONDS between the executing block and a change's activation time. It is a time, independent of
+    ///         RATE_CHANGE_DELAY, and gives every operator a week to update the genesis of every node.
+    uint256 public constant MIN_RATE_CHANGE_LEAD_SECONDS = 7 days;
+    /// @notice Half-width, in blocks, of the window around the estimated start block in which the larger of the two rates is
+    ///         allowed until the start block is certified, and the largest distance between a certified start block and its estimate.
+    uint256 public constant RATE_START_TOLERANCE_BLOCKS = 10_000;
 
     struct RateProposal {
-        uint128 startBlock;
+        uint128 startBlock; // estimated first block of the new rate
         uint128 ratePerBlock;
+        uint64 activationTime; // unix seconds
         uint256 createdAt;
         uint256 votingExpiresAt;
         uint256 requiredValidatorApprovals; // ceil(2/3) of the validators active at creation, frozen
@@ -343,19 +337,20 @@ contract BlockRewardDistributor {
         uint256 validatorApprovals;
         uint256 approvedAt; // 0 until both chambers have completed
         bool executed;
-        uint256 boardVersionAtCreation; // L02 guard: a real change of board composition voids the proposal
-        uint256 validatorNonceAtCreation; // L04 snapshot of the validator electorate
+        uint256 boardVersionAtCreation; // a real change of board composition voids the proposal
+        uint256 validatorNonceAtCreation; // snapshot of the validator electorate
     }
     mapping(uint256 => RateProposal) public rateProposals;
     mapping(uint256 => mapping(address => bool)) private rateBoardVoted;
     mapping(uint256 => mapping(address => bool)) private rateValidatorVoted;
     uint256 public rateProposalCount;
 
-    event RateChangeProposed(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock, address indexed proposer);
+    event RateChangeProposed(uint256 indexed id, uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock, address indexed proposer);
     event RateChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
     event RateChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
     event RateChangeApproved(uint256 indexed id, uint256 approvedAt, uint256 executableAt);
-    event RateChangeExecuted(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock);
+    event RateChangeExecuted(uint256 indexed id, uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock);
+    event RateStartCertified(uint256 indexed index, uint256 activationTime, uint256 actualStartBlock);
 
     // ------------------------------------------------------------------
     // Events
@@ -444,7 +439,7 @@ contract BlockRewardDistributor {
     }
 
     // ------------------------------------------------------------------
-    // ✅ NEW: bicameral governance for validatorDirectShareBps (the validator-vs-treasury
+    // Bicameral governance for validatorDirectShareBps (the validator-vs-treasury
     // split — see the contract-level doc comment and sur-tokenomics.md section 11 for the full
     // reasoning). Any active validator may propose; a simple majority of ValidatorsBoard AND a
     // two-thirds majority of the full active validator assembly must BOTH independently approve
@@ -488,8 +483,8 @@ contract BlockRewardDistributor {
     /// @notice One of the two required votes — the ValidatorsBoard chamber. Simple majority of
     ///         the fixed BOARD_SIZE (5), i.e. 3 votes.
     function boardVoteShareChange(uint256 id) external {
-        // L02 (audit 2026-09-30): live authority, not the raw seat flag — a member who requested exit loses the right to
-        // vote immediately (P02), even before syncBoard() clears the seat.
+        // Live authority, not the raw seat flag — a member who requested exit loses the right to
+        // vote immediately, even before syncBoard() clears the seat.
         require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
@@ -513,10 +508,9 @@ contract BlockRewardDistributor {
         _tryExecuteShareChange(id);
     }
 
-    /// @notice The other required vote — the full validator assembly chamber. ✅ FIXED: now
-    ///         checked against `requiredValidatorApprovals`, snapshotted once at proposal
-    ///         creation — see the ShareProposal struct's doc comment for why recomputing this
-    ///         live (the previous behavior) was a stale-vote vulnerability.
+    /// @notice The other required vote — the full validator assembly chamber. Checked against
+    ///         `requiredValidatorApprovals`, snapshotted once at proposal creation — see the
+    ///         ShareProposal struct's doc comment.
     function validatorVoteShareChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         ShareProposal storage p = shareProposals[id];
@@ -524,7 +518,7 @@ contract BlockRewardDistributor {
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
-        // L04: the voter must have been Active when the proposal was created (electorate snapshot) AND be Active now (onlyActiveValidator).
+        // The voter must have been Active when the proposal was created (electorate snapshot) AND be Active now (onlyActiveValidator).
         // A temporary suspension does not remove the voter from the original electorate; it only blocks voting while suspended.
         require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
 
@@ -544,16 +538,15 @@ contract BlockRewardDistributor {
     function _tryExecuteShareChange(uint256 id) private {
         ShareProposal storage p = shareProposals[id];
         if (p.boardPassed && p.validatorPassed && !p.executed) {
-            // L02: a board chamber that passed under an older composition cannot be completed later by the validator
+            // A board chamber that passed under an older composition cannot be completed later by the validator
             // chamber — the composition is checked again at execution, not only at the board vote.
             require(
                 p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
                 "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
             );
-            // L01 (audit 2026-09-30): the minimum interval between SUCCESSFUL changes is enforced here, where the change is
-            // applied. Checking it only in proposeShareChange let two proposals built in the same open window both
-            // execute seconds apart. The vote that would complete a too-early proposal reverts; since PROPOSAL_EXPIRY
-            // (30 days) < SHARE_CHANGE_MIN_INTERVAL (180 days), such a proposal can never execute and simply expires.
+            // The minimum interval between SUCCESSFUL changes is enforced here, where the change is applied. The vote that
+            // would complete a too-early proposal reverts; since PROPOSAL_EXPIRY (30 days) < SHARE_CHANGE_MIN_INTERVAL
+            // (180 days), such a proposal can never execute and simply expires.
             require(
                 block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
                 "BlockRewardDistributor: too soon since the last successful share change"
@@ -568,21 +561,14 @@ contract BlockRewardDistributor {
     // ------------------------------------------------------------------
     // Main periodic distribution function — callable only by the distribution oracle
     //
-    // ✅ Refactored (no longer needs viaIR to compile): the original single large function had
-    // too many simultaneously-live local variables for the EVM's 16-slot stack-manipulation
-    // window under the legacy (non-IR) codegen pipeline — a real "Stack too deep" compiler
-    // error, confirmed identical in both the English and Persian versions of this file. Rather
-    // than requiring viaIR (which many verification services, including Blockscout, cannot
-    // verify against — see sur-contracts-deploy-notes.md), the logic is split into three
-    // functions, each with its own independent stack frame and therefore far fewer
-    // simultaneously-live locals. Behavior, event order, and every require() condition are
-    // unchanged from the original single-function version.
+    // The logic is split into three functions, each with its own stack frame, so the contract compiles without viaIR
+    // (which many verification services cannot verify against — see sur-contracts-deploy-notes.md).
     // ------------------------------------------------------------------
     /// @param validators list of validator addresses (no duplicates)
     /// @param blocksMined number of blocks each validator mined since the last call (same order as validators)
     /// @param totalRewards total reward amount (in wei) for this epoch — computed off-chain by the oracle, from trace_block "reward" entries
     /// @param totalFees total transaction fee amount (in wei) for this epoch — computed off-chain by the oracle, from eth_getTransactionReceipt.gasUsed * effectiveGasPrice per tx (never from trace_* output, which reports gasUsed=0 for simple transfers)
-    /// @notice P05: `range` is the inclusive block range this distribution settles. It must start exactly at
+    /// @notice `range` is the inclusive block range this distribution settles. It must start exactly at
     ///         lastSettledBlock + 1 (no duplicate, no overlap, no gap — an outage is covered by the NEXT, larger range, never
     ///         skipped), must end before the current block, and the reported per-validator block counts (after the daemon's
     ///         filtering of blocks whose producer is no longer valid) cannot exceed its size.
@@ -604,20 +590,11 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: too soon since last distribution"
         );
 
-        // ✅ FIXED (real bug found during live Besu/QBFT execution testing — this contradicted an
-        // earlier, incorrect claim that this file already compiled clean without viaIR): the
-        // pre-computation block that used to sit directly here (membership-fee folding, fee-burn
-        // math, block-count sum check; the time-based physical-maximum check was removed by L03) hit a genuine "Stack too deep" compiler
-        // error at the _payValidators call further down, under the optimizer — too many
-        // simultaneously-live local variables in this function's own stack frame. Extracted into
-        // _prepareEpoch() below, which bundles the 4 result values into ONE memory struct
-        // (`prep`) instead of 4 separate live locals — this is what actually fixes the stack
-        // depth, not merely reformatting. Not a viaIR workaround (this project deliberately
-        // avoids viaIR) — same require()s, same order, same math, just computed inside a helper
-        // instead of inline.
+        // The pre-computation is kept in _prepareEpoch() so this function's own stack frame stays small: its 4 result
+        // values are bundled into one memory struct (`prep`) instead of 4 live locals.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
-        _settleRange(range, prep.totalBlocks); // P05
-        // L05: totalRewards may not exceed the approved reward of the blocks in this (already validated, contiguous) range.
+        _settleRange(range, prep.totalBlocks);
+        // totalRewards may not exceed the approved reward of the blocks in this (already validated, contiguous) range.
         // Fees and membership fees are outside this cap; split and burn rules are unchanged.
         require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
 
@@ -626,13 +603,8 @@ contract BlockRewardDistributor {
         epochBlockRanges[epochId] = range;
         emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
 
-        // ✅ FIXED (same stack-too-deep fix as above): foundationAmount/treasuryAmount are
-        // computed AFTER the _payValidators call now, not before — they don't feed into that
-        // call and _payValidators doesn't depend on them, so this reordering is fully
-        // behavior-preserving. It exists purely to reduce how many locals are simultaneously
-        // live at the _payValidators call site, not to change what gets computed or when its
-        // effects become visible (both still happen within the same transaction, before
-        // _finalizeEpoch below).
+        // foundationAmount/treasuryAmount are computed AFTER the _payValidators call (they do not feed into it), which
+        // keeps fewer locals live at that call site.
         // validatorDirectShareBps is governable (bicameral vote, [40%, 65%]) — see the
         // contract-level doc comment. ValidatorsTreasury receives whatever remains of the
         // reward pool after Foundation's fixed share and this governable share are both
@@ -651,7 +623,7 @@ contract BlockRewardDistributor {
                 })
             );
 
-        // ✅ CHANGED: Foundation's cut is a fixed 15% of TOTAL rewards, taken independently off
+        // Foundation's cut is a fixed 15% of TOTAL rewards, taken independently off
         // the top — never affected by validatorDirectShareBps above. Only REWARDS are split this
         // way; FEES are never touched by any of these three shares.
         uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
@@ -671,27 +643,28 @@ contract BlockRewardDistributor {
         );
     }
 
-    /// @dev ✅ NEW (added purely to fix the "Stack too deep" error above distributeRewards —
-    ///      bundles the pre-computation phase's 4 result scalars into one memory struct pointer
-    ///      instead of 4 separate live stack locals).
-
-    /// @notice Propose an approved-rate change effective from `startBlock`. Only an active validator may propose.
-    ///         Early rejection only: every start-block condition is checked again at execution. Proposals are independent; several
+    /// @notice Propose an approved-rate change taking effect at `activationTime` (unix seconds, the Besu transition time), with the
+    ///         proposer's estimate of the first block at or after that time. Only an active validator may propose.
+    ///         Early rejection only: every condition is checked again at execution. Proposals are independent; several
     ///         may be open at once, and whichever is executed first can make another one unexecutable (it is then left as it is).
-    function proposeRateChange(uint256 startBlock, uint256 ratePerBlock) external returns (uint256 id) {
+    function proposeRateChange(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) external returns (uint256 id) {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
-        require(startBlock <= type(uint128).max && ratePerBlock <= type(uint128).max, "BlockRewardDistributor: value does not fit uint128");
-        _requireRateStartOk(startBlock);
+        require(
+            activationTime <= type(uint64).max && estimatedStartBlock <= type(uint128).max && ratePerBlock <= type(uint128).max,
+            "BlockRewardDistributor: value does not fit its type"
+        );
+        _requireRateStartOk(activationTime, estimatedStartBlock);
         id = ++rateProposalCount;
         RateProposal storage p = rateProposals[id];
-        p.startBlock = uint128(startBlock);
+        p.startBlock = uint128(estimatedStartBlock);
         p.ratePerBlock = uint128(ratePerBlock);
+        p.activationTime = uint64(activationTime);
         p.createdAt = block.timestamp;
         p.votingExpiresAt = block.timestamp + RATE_VOTING_EXPIRY;
         p.requiredValidatorApprovals = (REGISTRY.getActiveValidatorCount() * 2 + 2) / 3; // ceil(2/3), frozen now
         p.boardVersionAtCreation = BOARD_CONTRACT.boardVersion();
         p.validatorNonceAtCreation = REGISTRY.statusNonce();
-        emit RateChangeProposed(id, startBlock, ratePerBlock, msg.sender);
+        emit RateChangeProposed(id, activationTime, estimatedStartBlock, ratePerBlock, msg.sender);
     }
 
     /// @notice Board chamber: needs live board authority; the proposal must still belong to the current board composition.
@@ -711,7 +684,7 @@ contract BlockRewardDistributor {
         _markRateApprovedIfComplete(id, p);
     }
 
-    /// @notice Validator chamber: eligible = Active when the proposal was created (L04) and Active now.
+    /// @notice Validator chamber: eligible = Active when the proposal was created and Active now.
     function validatorVoteRateChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         RateProposal storage p = rateProposals[id];
@@ -726,8 +699,10 @@ contract BlockRewardDistributor {
     }
 
     /// @notice Anyone may execute once both chambers have completed and RATE_CHANGE_DELAY has passed since that moment.
-    ///         Re-checks: board composition, start block still in the future, MIN_RATE_CHANGE_LEAD_BLOCKS, and strictly ascending
-    ///         history. If any check fails the proposal stays exactly as it is: no time or height is ever moved automatically.
+    ///         Re-checks: board composition, activation time still at least MIN_RATE_CHANGE_LEAD_SECONDS away, the estimated start block
+    ///         still in the future, and strictly ascending history with non-overlapping tolerance windows. If any check fails the
+    ///         proposal stays exactly as it is: no time or height is ever moved automatically. The new entry is provisional until
+    ///         certifyRateStart.
     function executeRateChange(uint256 id) external {
         RateProposal storage p = rateProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
@@ -738,24 +713,45 @@ contract BlockRewardDistributor {
             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
-        _requireRateStartOk(p.startBlock);
+        _requireRateStartOk(p.activationTime, p.startBlock);
         p.executed = true;
-        rewardRateChanges.push(RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock}));
-        emit RateChangeExecuted(id, p.startBlock, p.ratePerBlock);
+        rewardRateChanges.push(
+            RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock, activationTime: p.activationTime, certified: false})
+        );
+        emit RateChangeExecuted(id, p.activationTime, p.startBlock, p.ratePerBlock);
+    }
+
+    /// @notice The distribution oracle certifies the first block whose timestamp is at or after the entry's activation time. Possible
+    ///         only once that time has been reached, only once per entry, and only within RATE_START_TOLERANCE_BLOCKS of the estimate.
+    ///         The contract cannot read old block timestamps, so the value is trusted within that window; certification only tightens
+    ///         the cap from "larger of both rates inside the window" to "exact at the certified block".
+    function certifyRateStart(uint256 index, uint256 actualStartBlock) external onlyDistributionOracle {
+        require(index < rewardRateChanges.length, "BlockRewardDistributor: no such rate change");
+        RewardRateChange storage c = rewardRateChanges[index];
+        require(!c.certified, "BlockRewardDistributor: start block already certified");
+        require(block.timestamp >= c.activationTime, "BlockRewardDistributor: activation time has not been reached");
+        require(actualStartBlock <= block.number, "BlockRewardDistributor: start block is in the future");
+        uint256 estimate = c.startBlock;
+        uint256 distance = actualStartBlock > estimate ? actualStartBlock - estimate : estimate - actualStartBlock;
+        require(distance <= RATE_START_TOLERANCE_BLOCKS, "BlockRewardDistributor: start block is outside the tolerance window");
+        c.startBlock = uint128(actualStartBlock);
+        c.certified = true;
+        emit RateStartCertified(index, c.activationTime, actualStartBlock);
     }
 
     /// @notice Status as of the latest block. status: 0 not found, 1 voting, 2 voting expired (never approved), 3 executed,
     ///         4 approved and waiting for the delay, 5 executable now, 6 approved but currently unexecutable,
     ///         7 not yet approved and unable to continue (voting can no longer lead to an executable change).
-    ///         problem (status 6 or 7): 1 board composition changed, 2 start block not in the future, 3 closer than
-    ///         MIN_RATE_CHANGE_LEAD_BLOCKS, 4 not after the last approved change. Every problem is permanent (block numbers only grow, the
-    ///         history only grows, a board change cannot be undone for a proposal), so status 7 never goes back to 1.
+    ///         problem (status 6 or 7): 1 board composition changed, 2 activation time not in the future, 3 activation time closer than
+    ///         MIN_RATE_CHANGE_LEAD_SECONDS, 4 not after the last approved change (time, or tolerance windows would overlap), 5 estimated
+    ///         start block not in the future. Every problem is permanent (time and block numbers only grow, the history only grows, a
+    ///         board change cannot be undone for a proposal), so status 7 never goes back to 1.
     ///         Execution happens in a later block, so this is advisory.
     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
         RateProposal storage p = rateProposals[id];
         if (p.createdAt == 0) return (0, 0);
         if (p.executed) return (3, 0);
-        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
+        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.activationTime, p.startBlock);
         if (p.approvedAt == 0) {
             if (block.timestamp > p.votingExpiresAt) return (2, 0);
             if (problem != 0) return (7, problem);
@@ -773,7 +769,7 @@ contract BlockRewardDistributor {
 
     function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
         if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
-            // L05: both chambers count as complete only if the proposal still belongs to the CURRENT board composition. The board vote
+            // Both chambers count as complete only if the proposal still belongs to the CURRENT board composition. The board vote
             // checks this itself; a completing validator vote must not register approval (nor emit RateChangeApproved) for a proposal
             // whose board has since changed - execution would refuse it anyway. The vote is not recorded; the proposal can no longer succeed.
             require(
@@ -785,84 +781,111 @@ contract BlockRewardDistributor {
         }
     }
 
-    function _rateStartProblem(uint256 startBlock) private view returns (uint8) {
-        if (startBlock <= block.number) return 2;
-        if (startBlock < block.number + MIN_RATE_CHANGE_LEAD_BLOCKS) return 3;
+    function _rateStartProblem(uint256 activationTime, uint256 estimatedStartBlock) private view returns (uint8) {
+        if (activationTime <= block.timestamp) return 2;
+        if (activationTime < block.timestamp + MIN_RATE_CHANGE_LEAD_SECONDS) return 3;
+        if (estimatedStartBlock <= block.number) return 5;
         uint256 n = rewardRateChanges.length;
-        if (n > 0 && startBlock <= rewardRateChanges[n - 1].startBlock) return 4;
+        if (n > 0) {
+            RewardRateChange storage last = rewardRateChanges[n - 1];
+            if (activationTime <= last.activationTime) return 4;
+            uint256 lastEnd = last.certified ? last.startBlock : uint256(last.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+            if (estimatedStartBlock <= lastEnd + RATE_START_TOLERANCE_BLOCKS) return 4;
+        }
         return 0;
     }
 
-    function _requireRateStartOk(uint256 startBlock) private view {
-        uint8 r = _rateStartProblem(startBlock);
-        require(r != 2, "BlockRewardDistributor: start block is not in the future");
-        require(r != 3, "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS");
-        require(r != 4, "BlockRewardDistributor: start block must be after the last approved rate change");
+    function _requireRateStartOk(uint256 activationTime, uint256 estimatedStartBlock) private view {
+        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+        require(r != 2, "BlockRewardDistributor: activation time is not in the future");
+        require(r != 3, "BlockRewardDistributor: activation time is closer than MIN_RATE_CHANGE_LEAD_SECONDS");
+        require(r != 5, "BlockRewardDistributor: estimated start block is not in the future");
+        require(r != 4, "BlockRewardDistributor: activation time and start block must be after the last approved rate change");
     }
 
-    /// @dev Binary search: number of history entries whose startBlock <= blockNumber (history is strictly ascending).
-    function _rateEntriesUpTo(uint256 blockNumber) private view returns (uint256 lo) {
+    /// @dev Binary search: number of history entries whose effect has ended by `blockNumber`. An entry's effect ends at its certified
+    ///      start block, or at estimate + tolerance while it is provisional. Ends are strictly ascending.
+    function _rateEntriesEnded(uint256 blockNumber) private view returns (uint256 lo) {
         uint256 hi = rewardRateChanges.length;
         while (lo < hi) {
             uint256 mid = (lo + hi) / 2;
-            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
+            RewardRateChange storage c = rewardRateChanges[mid];
+            uint256 end = c.certified ? c.startBlock : uint256(c.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+            if (end <= blockNumber) lo = mid + 1;
             else hi = mid;
         }
     }
 
-    /// @notice L05: approved gross block reward for blocks [fromBlock, toBlock], summed segment by segment over the rate history.
-    ///         Cost = O(log n) to find the rate at fromBlock + one step per rate change INSIDE the range; it depends neither on the
-    ///         number of blocks nor on how many older changes the history holds.
+    /// @notice Approved gross block reward for blocks [fromBlock, toBlock], summed segment by segment over the rate history. Inside the
+    ///         tolerance window of a provisional entry the larger of the old and the new rate applies; a certified entry is exact.
+    ///         Cost = O(log n) to find the rate at fromBlock + a constant number of steps per rate change INSIDE the range; it
+    ///         depends neither on the number of blocks nor on how many older changes the history holds.
     function maxRewardsForRange(uint256 fromBlock, uint256 toBlock) public view returns (uint256 total) {
         require(fromBlock <= toBlock, "BlockRewardDistributor: invalid range");
         uint256 n = rewardRateChanges.length;
-        uint256 i = _rateEntriesUpTo(fromBlock);
+        uint256 i = _rateEntriesEnded(fromBlock);
         uint256 rate = i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
         uint256 cursor = fromBlock;
         for (; i < n; i++) {
             RewardRateChange memory c = rewardRateChanges[i];
-            if (c.startBlock > toBlock) break;
-            total += (c.startBlock - cursor) * rate; // blocks cursor .. startBlock-1
-            cursor = c.startBlock;
-            rate = c.ratePerBlock;
+            if (c.certified) {
+                if (c.startBlock > toBlock) break;
+                if (c.startBlock > cursor) {
+                    total += (c.startBlock - cursor) * rate;
+                    cursor = c.startBlock;
+                }
+                rate = c.ratePerBlock;
+            } else {
+                uint256 windowStart = c.startBlock > RATE_START_TOLERANCE_BLOCKS ? c.startBlock - RATE_START_TOLERANCE_BLOCKS : 0;
+                uint256 windowEnd = uint256(c.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+                if (windowStart > toBlock) break;
+                if (windowStart > cursor) {
+                    total += (windowStart - cursor) * rate;
+                    cursor = windowStart;
+                }
+                if (c.ratePerBlock > rate) rate = c.ratePerBlock; // inside the window: the larger of the two rates
+                if (windowEnd > toBlock) break;
+                total += (windowEnd - cursor) * rate;
+                cursor = windowEnd;
+                rate = c.ratePerBlock;
+            }
         }
         total += (toBlock - cursor + 1) * rate;
     }
 
-    /// @notice L05: approved reward per block at `blockNumber`.
+    /// @notice Largest approved reward per block that may apply at `blockNumber` (inside the tolerance window of a provisional entry
+    ///         this is the larger of the old and the new rate).
     function rewardRateAt(uint256 blockNumber) external view returns (uint256) {
-        uint256 i = _rateEntriesUpTo(blockNumber);
-        return i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
+        return maxRewardsForRange(blockNumber, blockNumber);
     }
 
-    /// @notice L05: number of approved rate changes and one entry, for dashboards and audits.
+    /// @notice Number of approved rate changes and one entry, for dashboards and audits.
     function rewardRateChangeCount() external view returns (uint256) {
         return rewardRateChanges.length;
     }
 
-    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock) {
+    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock, uint256 activationTime, bool certified) {
         RewardRateChange memory c = rewardRateChanges[index];
-        return (c.startBlock, c.ratePerBlock);
+        return (c.startBlock, c.ratePerBlock, c.activationTime, c.certified);
     }
 
-    /// @dev P05 range control (see the BlockRange comment). Kept in its own stack frame.
+    /// @dev Range control (see the BlockRange comment). Kept in its own stack frame.
     ///
-    ///      L03 DESIGN NOTE (audit 2026-09-30) — why there is no time-based cap any more.
-    ///      The removed check required totalBlocks <= (block.timestamp - lastDistributionTime) / 3. Its two sides measure
-    ///      different things: the block count belongs to the range after lastSettledBlock, while lastDistributionTime is
-    ///      when the previous distribution TRANSACTION ran, which may have settled only up to an earlier block. Any
-    ///      settlement behind head (normal oracle lag) or any block cadence faster than 3 s made correct payments revert,
-    ///      and once one cycle reverted every later, longer range reverted too (reproduced: test_L03_settlement_backlog.js).
+    ///      Why there is no time-based cap: a check of the form totalBlocks <= (block.timestamp - lastDistributionTime) / 3
+    ///      would compare two things that measure different things — the block count belongs to the range after
+    ///      lastSettledBlock, while lastDistributionTime is when the previous distribution TRANSACTION ran, which may have
+    ///      settled only up to an earlier block. Any settlement behind head (normal oracle lag) or any block cadence faster
+    ///      than 3 s would make correct payments revert, and once one cycle reverted every later, longer range would too.
     ///      What bounds the count instead, entirely on-chain and exactly:
     ///        (1) continuity   fromBlock == lastSettledBlock + 1           -> no gap, no overlap, no duplicate range;
     ///        (2) past only    toBlock < block.number                      -> never settles the current or a future block;
     ///        (3) size         sum(blocksMined) <= toBlock - fromBlock + 1 -> never more blocks than really exist in it.
-    ///      (3) is an upper bound, not an equality. Per the current decision (sur-reward-router-spec.md section 3), the sum
+    ///      (3) is an upper bound, not an equality. Per sur-reward-router-spec.md section 3, the sum
     ///      should NORMALLY equal the range length; a producer's later exit/suspension is never a reason to omit its blocks
     ///      (everActivated policy). NOTE: payouts divide by sum(blocksMined), not by the range length, so whether the
     ///      reward/fee of an omitted block stays in this contract or is redistributed to the listed producers depends only
     ///      on the totalRewards/totalFees the oracle reports — the contract enforces neither. Once lastSettledBlock moves
-    ///      past an omitted block, there is no on-chain path to pay that block to its producer (open finding L08).
+    ///      past an omitted block, there is no on-chain path to pay that block to its producer.
     ///      TRUST BOUNDARY — these checks do NOT prove attribution. The contract cannot read historical block headers or
     ///      historical Registry state, so the distribution oracle alone is trusted for: which address mined each block;
     ///      that the miner was Active at height N-1; the per-validator split; the totalRewards/totalFees split (bounded
@@ -885,10 +908,8 @@ contract BlockRewardDistributor {
         uint256 totalBlocks;
     }
 
-    /// @dev ✅ NEW helper extracted from distributeRewards()'s original inline body — same
-    ///      require()s, same order, same math, just isolated into its own stack frame so that
-    ///      distributeRewards() itself has fewer simultaneously-live locals at the
-    ///      _payValidators call site. See the fix note on distributeRewards() above.
+    /// @dev Pre-computation helper for distributeRewards(): isolated in its own stack frame so distributeRewards() has
+    ///      fewer simultaneously-live locals at the _payValidators call site.
     function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
         private
         returns (EpochPrep memory prep)
@@ -904,7 +925,7 @@ contract BlockRewardDistributor {
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        // ✅ NEW: burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
+        // Burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
         // deliberately NOT of membershipFeesThisEpoch. Rationale (see sur-tokenomics.md
         // section 6): the membership fee is not a general network fee at all — it is a
         // targeted, one-time dilution-compensation payment to existing validators, triggered
@@ -950,9 +971,9 @@ contract BlockRewardDistributor {
         EpochContext memory ctx
     ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
         for (uint256 i = 0; i < validators.length; i++) {
-            // L07 (audit 2026-09-30, owner decision): addresses must be STRICTLY ascending. This rejects duplicates
-            // (which previously overwrote the per-epoch records while paying every entry) and unsorted lists. The
-            // RewardRouter must aggregate blocks per miner and sort by address before submitting.
+            // Addresses must be STRICTLY ascending. This rejects duplicates (which would overwrite the per-epoch records
+            // while paying every entry) and unsorted lists. The RewardRouter must aggregate blocks per miner and sort by
+            // address before submitting.
             if (i > 0) {
                 require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
             }
@@ -960,12 +981,9 @@ contract BlockRewardDistributor {
 
             address validator = validators[i];
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            // ✅ FINAL DECISION (reward-policy simplification, 2026-09-29 — replaces the
-            // earlier claimableRewards design, which was fully drafted with a numeric proof but
-            // never implemented): past legitimate work is always paid, regardless of the
-            // validator's CURRENT status. `isValidator()` would incorrectly reject a validator
-            // that has since exited or been suspended, even for blocks it mined while genuinely
-            // Active — this is exactly the bug the policy fixes. `everActivated()` is a
+            // Past legitimate work is always paid, regardless of the validator's CURRENT status.
+            // `isValidator()` would incorrectly reject a validator that has since exited or been
+            // suspended, even for blocks it mined while genuinely Active. `everActivated()` is a
             // permanent, append-only Registry flag that survives `withdrawStake()`'s deletion; it
             // proves only "was legitimately activated at least once," not "was Active when this
             // specific block was mined" — that timing verification is NOT and CANNOT be done
@@ -1044,10 +1062,9 @@ contract BlockRewardDistributor {
         // that level), what's left over here is exactly validatorDirectAmount - distributedRewards
         // — the integer-division remainder from splitting validatorDirectAmount by block share.
         uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        // ✅ CHANGED: totalFees here is the FULL pre-burn fee pool (for the epoch record/event's
-        // transparency — see distributeRewards). feeDust must therefore subtract feeBurnAmount
-        // as well as distributedFees, or the burned 30% would be silently miscounted as
-        // "rounding dust" and sent to the treasury a second time on top of already being burned.
+        // totalFees here is the FULL pre-burn fee pool (for the epoch record/event's transparency — see
+        // distributeRewards). feeDust must therefore subtract feeBurnAmount as well as distributedFees, or the
+        // burned 30% would be silently miscounted as "rounding dust" and sent to the treasury a second time.
         uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
@@ -1062,7 +1079,7 @@ contract BlockRewardDistributor {
             emit FoundationFunded(epochId, foundationAmount);
         }
 
-        // ✅ NEW: actually burn the fee-burn portion — sent last, after the treasury/foundation
+        // Burn the fee-burn portion — sent last, after the treasury/foundation
         // transfers, purely for a consistent call ordering; the amount was already carved out
         // of feesToDistribute before _payValidators ran, so this is simply moving Suren that
         // was never paid to anyone into permanent, verifiable non-circulation.

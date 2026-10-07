@@ -5,21 +5,21 @@ import "./SurAddresses.sol";
 
 interface IValidatorsRegistry {
     function isValidator(address who) external view returns (bool);
-    function statusNonce() external view returns (uint256); // L04
-    function wasActiveAt(address who, uint256 nonce) external view returns (bool); // L04
-    function everActivated(address who) external view returns (bool); // ✅ FINAL DECISION — see ValidatorsRegistry.sol doc comment
-    function getActiveValidatorCount() external view returns (uint256); // ✅ تازه: برای آستانه‌ی ۲/۳ رأی‌گیری دومجلسی پایین لازم است.
+    function statusNonce() external view returns (uint256);
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool);
+    function everActivated(address who) external view returns (bool); // پرچم دائمی: درست است اگر آدرس هرگز به‌طور مشروع فعال شده باشد
+    function getActiveValidatorCount() external view returns (uint256); // برای آستانه‌ی دوسوم مجمع در رأی‌گیری تغییر سهم
 }
 
-/// @notice ✅ تازه: اینترفیس حداقلی روی ValidatorsBoard، فقط برای چک عضویت هیأت‌مدیره در
-///         رأی‌گیری دومجلسی پایین لازم است.
+/// @notice اینترفیس حداقلی روی ValidatorsBoard برای چک اختیار هیأت‌مدیره در رأی‌گیری‌های دومجلسی پایین
+///         (به proposeShareChange و proposeRateChange مراجعه کنید).
 interface IValidatorsBoard {
     function isBoardMember(address who) external view returns (bool);
-    /// @dev L02 (ممیزی ۲۰۲۶-۰۹-۳۰): اختیار «زنده» — بلافاصله پس از requestExit() نادرست می‌شود، حتی وقتی پرچم خام
-    ///      کرسی (isBoardMember) تا اجرای syncBoard() هنوز درست است. عضو معلق (Demoted) تا موعد ماهانه اختیارش را حفظ
-    ///      می‌کند (P02). Distributor دقیقاً به همین تعریف تکیه می‌کند و آن را دوباره پیاده نمی‌کند.
+    /// @dev اختیار «زنده» — بلافاصله پس از requestExit() نادرست می‌شود، حتی وقتی پرچم خام
+    ///      کرسی (isBoardMember) تا اجرای syncBoard() هنوز درست است. عضو معلق (Demoted) تا پایان ماهِ هیأت اختیارش را حفظ
+    ///      می‌کند. Distributor دقیقاً به همین تعریف تکیه می‌کند و آن را دوباره پیاده نمی‌کند.
     function hasBoardAuthority(address who) external view returns (bool);
-    /// @dev L02: ValidatorsBoard این عدد را فقط با تغییر واقعی ترکیب (refresh/sync/جانشینی) بالا می‌برد، نه با refreshی
+    /// @dev ValidatorsBoard این عدد را فقط با تغییر واقعی ترکیب (refresh/sync/جانشینی) بالا می‌برد، نه با refreshی
     ///      که ترکیب را تغییر نمی‌دهد.
     function boardVersion() external view returns (uint256);
 }
@@ -33,92 +33,78 @@ interface IValidatorsBoard {
 ///         آزمایش ۱ مراجعه کن) و به‌صورت دوره‌ای، بر اساس داده‌ی گزارش‌شده توسط یک اوراکل
 ///         مجاز، بین ولیدیتورها و ValidatorsTreasury توزیع می‌کند.
 ///
-///         قواعد توزیع (✅ دوباره به‌روزشده — به sur-tokenomics.md بخش ۶.۵/۶/۱۱ برای استدلال
-///         کامل اقتصادی و حکمرانی هر بخش مراجعه کنید):
-///           - از کل ریوارد: سهم ۱۵٪ بنیاد (FOUNDATION_SHARE_BPS) اکنون مستقیم از بالای کل
-///             ریوارد کسر می‌شود — برای همیشه ثابت، خودکار، بدون رأی‌گیری، و عمداً به‌عنوان
-///             درصدی از هیچ‌چیز دیگری محاسبه **نمی‌شود** (نسخه‌های قبلی این قرارداد آن را
-///             ۱۵٪ از یک «سهم خزانه‌ی ۵۰٪» حساب می‌کردند، یعنی درآمد بنیاد بی‌سروصدا با هر
-///             تغییر آینده‌ی نسبت خزانه/ولیدیتور پایین جابه‌جا می‌شد — دقیقاً همان گره‌خوردگی‌ای
-///             که طراحی ۱۵٪-ثابت-از-کل ازش جلوگیری می‌کند).
+///         قواعد توزیع (به sur-tokenomics.md بخش‌های ۶.۵، ۶ و ۱۱ برای استدلال اقتصادی و حکمرانی
+///         هر بخش مراجعه کنید):
+///           - از کل ریوارد: سهم ۱۵٪ بنیاد (FOUNDATION_SHARE_BPS) مستقیم از بالای کل ریوارد کسر
+///             می‌شود — ثابت، خودکار، بدون رأی‌گیری، و عمداً به‌عنوان درصدی از هیچ‌چیز دیگری
+///             محاسبه نمی‌شود تا درآمد بنیاد با تغییر نسبت خزانه/ولیدیتور پایین جابه‌جا نشود.
 ///           - از ۸۵٪ باقی‌مانده، تقسیم بین ولیدیتورها (مستقیم، به‌نسبت بلاک) و
-///             ValidatorsTreasury توسط `validatorDirectShareBps` حکمرانی می‌شود — ✅ تازه:
-///             قابل‌تغییر فقط از طریق یک رأی‌گیری دومجلسی (به proposeShareChange/
-///             boardVoteShareChange/validatorVoteShareChange پایین مراجعه کنید)، محدود به
-///             بازه‌ی [۴۰٪, ۶۵٪] از کل ریوارد، با یک دوره‌ی خنک‌سازی اجباری ۶ماهه بین
-///             تغییرات موفق متوالی. هر دو مجلس — اکثریت ساده‌ی ValidatorsBoard **و** اکثریت
-///             دوسوم کل مجمع ولیدیتورهای فعال — باید مستقلاً همان یک پیشنهاد را تصویب کنند
-///             تا اجرا شود. این عمداً از انگیزه‌های متضاد این دو مجلس (ولیدیتورهای عادی به
-///             سمت سهم مستقیم بزرگ‌تر کشیده می‌شوند؛ هیأت‌مدیره به سمت خزانه‌ی بزرگ‌تر، چون
-///             خزانه‌ی بزرگ‌تر یعنی اختیار خرج صلاحدیدی بیشتر زیر قدرت تصویب هزینه‌ی کوچک
-///             خودش) به‌عنوان یک بازدارنده‌ی داخلی در برابر تخلیه‌ی یک‌طرفه‌ی سهم دیگری توسط
-///             هرکدام از این دو مجلس در طول زمان استفاده می‌کند.
-///           - از کل فی: ✅ تازه — یک ۳۰٪ ثابت (FEE_BURN_BPS) اکنون هر epoch برای همیشه
-///             سوزانده می‌شود (به BURN_ADDRESS = address(0) فرستاده می‌شود)؛ ۷۰٪ باقی‌مانده
-///             دقیقاً مثل قبل به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (همچنان بدون
-///             سهم خزانه یا بنیاد از بخش توزیع‌شده). به کامنت خودِ FEE_BURN_BPS و
-///             sur-tokenomics.md بخش ۷ مراجعه کن که چرا فی (نه ریوارد) به‌عنوان هدف سوزاندن
-///             انتخاب شد، و چرا دقیقاً ۳۰٪.
-///           - کارمزد عضویت معلق: ValidatorsRegistry.requestMembership() دیگر کارمزد عضویت
-///             را به ValidatorsTreasury نمی‌فرستد. به‌جایش آن را از طریق
-///             receiveMembershipFee() به همین قرارداد می‌فرستد، جایی که در
-///             `pendingMembershipFees` انباشته و در *epoch بعدی* به استخر فی همان epoch اضافه
-///             می‌شود — ✅ کاملاً از سوزاندن ۳۰٪ بالا معاف (۱۰۰٪ آن به ولیدیتورها می‌رسد،
-///             برخلاف فی معمولی)، ولی از نظر نحوه‌ی تقسیم بین ولیدیتورها همان رفتار
-///             ۱۰۰٪-به‌نسبت-بلاک فی‌های معمولی را دارد — به sur-tokenomics.md بخش
-///             ۶ مراجعه کنید که چرا: این یک انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به ولیدیتورهای
-///             موجود برای هر ولیدیتور تازه‌ای که می‌پیوندد می‌دهد). یعنی کارمزد عضو تازه در
-///             همان بلاک ثبت‌نامش پرداخت نمی‌شود — در epoch بعدی distributionOracle (~۲۳
-///             ساعت بعد) پرداخت می‌شود، دقیقاً مثل فی‌های معمولی.
+///             ValidatorsTreasury توسط `validatorDirectShareBps` حکمرانی می‌شود: قابل‌تغییر فقط از
+///             طریق رأی‌گیری دومجلسی (proposeShareChange/boardVoteShareChange/
+///             validatorVoteShareChange)، محدود به بازه‌ی [۴۰٪, ۶۵٪] از کل ریوارد، با دوره‌ی
+///             خنک‌سازی اجباری ۶ماهه بین تغییرات موفق. هر دو مجلس — اکثریت ساده‌ی ValidatorsBoard
+///             **و** اکثریت دوسوم کل مجمع ولیدیتورهای فعال — باید مستقلاً همان یک پیشنهاد را
+///             تصویب کنند تا اجرا شود. این از انگیزه‌های متضاد دو مجلس (ولیدیتورهای عادی به سمت
+///             سهم مستقیم بزرگ‌تر کشیده می‌شوند؛ هیأت‌مدیره به سمت خزانه‌ی بزرگ‌تر، چون خزانه‌ی
+///             بزرگ‌تر یعنی اختیار خرج صلاحدیدی بیشتر) به‌عنوان بازدارنده‌ی داخلی در برابر
+///             تخلیه‌ی یک‌طرفه‌ی سهم دیگری در طول زمان استفاده می‌کند.
+///           - از کل فی معمولی (نه کارمزد عضویت — پایین را ببینید): یک ۳۰٪ ثابت (FEE_BURN_BPS)
+///             هر epoch برای همیشه سوزانده می‌شود (به BURN_ADDRESS = address(0) فرستاده می‌شود)؛
+///             ۷۰٪ باقی‌مانده به نسبت بلاک تولیدی بین ولیدیتورها تقسیم می‌شود (بدون سهم خزانه
+///             یا بنیاد از بخش توزیع‌شده). به کامنت FEE_BURN_BPS و sur-tokenomics.md بخش ۷
+///             مراجعه کنید که چرا فی (نه ریوارد) هدف سوزاندن است و چرا ۳۰٪.
+///           - کارمزد عضویت معلق: ValidatorsRegistry.requestMembership() کارمزد عضویت را از طریق
+///             receiveMembershipFee() به همین قرارداد می‌فرستد، جایی که در `pendingMembershipFees`
+///             انباشته و در *epoch بعدی* به استخر فی اضافه می‌شود: کاملاً از سوزاندن ۳۰٪ معاف
+///             (۱۰۰٪ آن به ولیدیتورها می‌رسد) و از نظر تقسیم مثل فی معمولی به‌نسبت بلاک
+///             پرداخت می‌شود — به sur-tokenomics.md بخش ۶ مراجعه کنید: این یک انگیزه‌ی نقدی
+///             مستقیم و قابل‌ردیابی به ولیدیتورهای موجود برای هر ولیدیتور تازه‌ای که می‌پیوندد
+///             می‌دهد. پس کارمزد عضو تازه در همان بلاک ثبت‌نامش پرداخت نمی‌شود، بلکه در epoch
+///             بعدی distributionOracle (~۲۳ ساعت بعد) پرداخت می‌شود.
 ///           - هر ولیدیتور دقیقاً یک پرداخت در هر فراخوانی دریافت می‌کند (یک انتقال ترکیبی
-///             از سهم ریوارد + سهم فی، که «سهم فی» اکنون شامل هر کارمزد عضویت معلق تجمیع‌شده
-///             در همان epoch هم می‌شود).
+///             از سهم ریوارد + سهم فی، که «سهم فی» شامل هر کارمزد عضویت معلقِ تجمیع‌شده در
+///             همان epoch هم می‌شود).
 ///
 ///         صلاحیت ولیدیتور مستقیم و on-chain در برابر ValidatorsRegistry چک می‌شود — هیچ
-///         لیست سفید داخلی و هیچ «اوراکل همگام‌سازی ولیدیتور» دومی وجود ندارد (آن طراحی وقتی
-///         انتخاب ولیدیتور به حالت contract-mode رفت و خودِ ValidatorsRegistry مرجع واحد هم
-///         برای اجماع هم برای پرداخت شد، کنار گذاشته شد؛ بخش ۵ سند طراحی را ببین).
+///         لیست سفید داخلی و هیچ اوراکل همگام‌سازی جداگانه‌ای وجود ندارد: ValidatorsRegistry
+///         مرجع واحد هم برای اجماع هم برای پرداخت است.
 ///
 ///         دیپلوی genesis: این قرارداد constructor ندارد — مستقیم در alloc genesis تزریق
 ///         می‌شود، پس constructor هرگز روی زنجیره‌ی واقعی اجرا نمی‌شود. آدرس‌های
 ///         ValidatorsRegistry، ValidatorsTreasury، و ValidatorsBoard ثابت (constant) هستند
 ///         (به SurAddresses.sol مراجعه کن)، چون هر شش قرارداد ساختاری یک نقشه‌ی آدرس مشترک و
 ///         از‌پیش‌توافق‌شده در genesis دارند. کلید اولیه‌ی distributionOracle (یک اعتبارنامه‌ی
-///         عملیاتی واقعاً قابل‌چرخش، نه یک قرارداد ساختاری) و genesis timestamp واقعی، به‌جایش
-///         با ابزار genesis آف‌چین پر می‌شوند (یادداشت‌های 🔶 پرکردنِ genesis پایین را ببین، و
-///         "sur-contracts-deploy-notes.md" را برای این‌که چرا genesis timestamp واقعی را
-///         نمی‌شود مستقیم از `block.timestamp` یک محیط شبیه‌سازی‌شده خواند).
+///         عملیاتی واقعاً قابل‌چرخش، نه یک قرارداد ساختاری) به‌جایش با ابزار genesis آف‌چین پر
+///         می‌شود (یادداشت پرکردنِ genesis پایین را ببین، و "sur-contracts-deploy-notes.md").
 contract BlockRewardDistributor {
     // ------------------------------------------------------------------
     // ثابت‌ها و تنظیمات
     // ------------------------------------------------------------------
 
     /// @notice سهم بنیاد از کل ریوارد (نه از هیچ زیرمجموعه‌ای) — بیسیس‌پوینت از ۱۰۰۰۰ = ۱۰۰٪.
-    ///         ✅ تغییر کرد: برای همیشه ثابت، مستقیم روی totalRewards اعمال می‌شود، و عمداً
+    ///         برای همیشه ثابت، مستقیم روی totalRewards اعمال می‌شود، و عمداً
     ///         مستقل از validatorDirectShareBps پایین — به sur-tokenomics.md بخش ۶.۵ و کامنت
     ///         سطح قرارداد بالا مراجعه کنید که چرا این باید از نسبت حکمرانی‌شونده‌ی
     ///         خزانه/ولیدیتور جدا بماند.
     uint256 public constant FOUNDATION_SHARE_BPS = 1500; // ۱۵٪ از کل ریوارد، همیشه
 
-    /// @notice ✅ تازه (جایگزین ثابت قدیمی TREASURY_SHARE_BPS): سهم مستقیم و به‌نسبت‌بلاک
-    ///         ولیدیتورها از کل ریوارد — بیسیس‌پوینت از ۱۰۰۰۰. با همون ۵۰٪ ثابت قدیمی شروع
-    ///         می‌شود، ولی اکنون یک متغیر state حکمرانی‌شونده است، فقط از طریق رأی‌گیری
-    ///         دومجلسی پایین (proposeShareChange / boardVoteShareChange /
-    ///         validatorVoteShareChange) قابل‌تغییر، محدود به [VALIDATOR_SHARE_MIN_BPS,
-    ///         VALIDATOR_SHARE_MAX_BPS]. ValidatorsTreasury هرچه بعد از سهم ثابت ۱۵٪ بنیاد و
-    ///         این سهم باقی بماند را دریافت می‌کند:
+    /// @notice سهم مستقیم و به‌نسبت‌بلاک ولیدیتورها از کل ریوارد — بیسیس‌پوینت از ۱۰۰۰۰. از ۵۰٪ شروع
+    ///         می‌شود و یک متغیر state حکمرانی‌شونده است، فقط از طریق رأی‌گیری دومجلسی پایین
+    ///         (proposeShareChange / boardVoteShareChange / validatorVoteShareChange) قابل‌تغییر،
+    ///         محدود به [VALIDATOR_SHARE_MIN_BPS, VALIDATOR_SHARE_MAX_BPS]. ValidatorsTreasury هرچه بعد
+    ///         از سهم ثابت ۱۵٪ بنیاد و این سهم باقی بماند را دریافت می‌کند:
     ///         treasuryShare = 10000 - FOUNDATION_SHARE_BPS - validatorDirectShareBps.
-    uint256 public validatorDirectShareBps = 5000; // ۵۰٪ در ابتدا — همون نقطه‌ی شروع قبلی
+    uint256 public validatorDirectShareBps = 5000; // ۵۰٪ در ابتدا
 
     uint256 public constant VALIDATOR_SHARE_MIN_BPS = 4000; // کف ۴۰٪
     uint256 public constant VALIDATOR_SHARE_MAX_BPS = 6500; // سقف ۶۵٪
     uint256 private constant BPS_DENOMINATOR = 10000;
 
-    /// @notice ✅ تازه: بخش ثابتی از **فی معمولی تراکنش** (نه کارمزد عضویت — به کامنت
-    ///         distributeRewards() مراجعه کن که چرا عمداً معافه) که هر epoch، قبل از توزیع
-    ///         ۷۰٪ باقی‌مانده دقیقاً مثل قبل بین ولیدیتورها، برای همیشه سوزانده می‌شود. به
+    /// @notice بخش ثابتی از **فی معمولی تراکنش** (نه کارمزد عضویت — به کامنت
+    ///         distributeRewards() مراجعه کن که چرا عمداً معاف است) که هر epoch، قبل از توزیع
+    ///         ۷۰٪ باقی‌مانده بین ولیدیتورها، برای همیشه سوزانده می‌شود. به
     ///         sur-tokenomics.md بخش ۷ برای استدلال کامل مراجعه کن: چون
-    ///         منبع غالب تورم سورن خودِ ریوارده نه فی، سوزاندن فی به‌تنهایی تورم را خنثی
+    ///         منبع غالب تورم سورن خودِ ریوارد است نه فی، سوزاندن فی به‌تنهایی تورم را خنثی
     ///         نمی‌کند، ولی یک مکانیزم کمیابی مرتبط با کاربرد واقعی می‌سازد — نزدیک‌ترین
     ///         معادلی که طراحی `gasPrice` ثابت این پروژه (نه پویا مثل EIP-1559) اجازه می‌دهد،
     ///         بدون قربانی‌کردن هدف «هزینه‌ی قابل‌پیش‌بینی به سورن».
@@ -137,8 +123,7 @@ contract BlockRewardDistributor {
     /// @notice حداقل فاصله‌ی مجاز بین دو فراخوانی متوالی توزیع.
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
 
-    // L03 (ممیزی ۲۰۲۶-۰۹-۳۰): MIN_BLOCK_PERIOD_SECONDS و کنترل «حداکثر فیزیکی» زمان‌محور حذف شدند — یادداشت طراحی
-    // بالای _settleRange را ببینید. تعداد بلاک با کنترل بازه‌ی P05 محدود می‌شود، نه با زمان سپری‌شده.
+    // تعداد بلاک هر توزیع با کنترل بازه‌ی _settleRange محدود می‌شود، نه با زمان سپری‌شده.
 
     // ------------------------------------------------------------------
     // آدرس‌های ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
@@ -168,15 +153,14 @@ contract BlockRewardDistributor {
     ///         بدون اوراکل واسط.
     IValidatorsRegistry public constant REGISTRY = IValidatorsRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
-    /// @notice ✅ تازه: نمای فقط‌خواندنی روی ValidatorsBoard، فقط برای چک عضویت هیأت‌مدیره در
-    ///         رأی‌گیری دومجلسی پایین لازم است.
+    /// @notice نمای فقط‌خواندنی روی ValidatorsBoard برای چک اختیار هیأت‌مدیره در رأی‌گیری‌های دومجلسی پایین.
     IValidatorsBoard public constant BOARD_CONTRACT = IValidatorsBoard(SurAddresses.VALIDATORS_BOARD);
 
     /// @notice معادل ValidatorsBoard.BOARD_SIZE — هیأت‌مدیره همیشه دقیقاً همین تعداد عضو
     ///         دارد، پس اکثریت ساده یعنی BOARD_SIZE/2 + 1 (یعنی ۳ از ۵).
     uint256 public constant BOARD_SIZE = 5;
 
-    /// @notice ✅ تازه: حداقل فاصله‌ی زمانی بین دو تغییر موفق متوالی validatorDirectShareBps —
+    /// @notice حداقل فاصله‌ی زمانی بین دو تغییر موفق متوالی validatorDirectShareBps —
     ///         عمداً کند (~۶ ماه) تا این پارامتر نتواند به‌سرعت و پشت‌سرهم توسط هیچ‌کدام از دو
     ///         مجلس تکان بخورد. به sur-tokenomics.md بخش ۱۱ مراجعه کنید که چرا.
     uint256 public constant SHARE_CHANGE_MIN_INTERVAL = 180 days;
@@ -186,17 +170,16 @@ contract BlockRewardDistributor {
     /// @notice آدرس اوراکلی که مجاز به فراخوانی تابع توزیع دوره‌ای است. تنها وظیفه‌اش گزارش
     ///         تعداد بلاک و مجموع ریوارد/فی است؛ نمی‌تواند به هیچ آدرسی که ValidatorsRegistry
     ///         الان به‌عنوان فعال نمی‌شناسد پرداخت کند.
-    /// @dev ✅ پرشده: آدرس اولیه‌ی distributionOracle، خوانده‌شده از SurAddresses.sol (منبع
+    /// @dev آدرس اولیه‌ی distributionOracle، خوانده‌شده از SurAddresses.sol (منبع
     ///      واحد صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین).
     address public distributionOracle = SurAddresses.DISTRIBUTION_ORACLE;
 
-    // L03 (ممیزی ۲۰۲۶-۰۹-۳۰): immutable `deployTime` همراه با سقف زمانی حذف شد — هیچ کدی جز همان سقف آن را نمی‌خواند.
-    // بنابراین این قرارداد دیگر هیچ immutableی ندارد که سازنده‌ی genesis لازم باشد patch کند.
+    // این قرارداد هیچ immutableی ندارد؛ پس سازنده‌ی genesis چیزی برای patch در بایت‌کد ندارد.
     uint256 public lastDistributionTime;
     uint256 public epochCount;
 
     // ------------------------------------------------------------------
-    // P05 (تصمیم نهایی): هر توزیع، بازه‌ی **واقعی** بلاک‌هایی را که تسویه می‌کند اعلام می‌کند؛ قرارداد آخرین بلاک تسویه‌شده
+    // کنترل بازه: هر توزیع، بازه‌ی **واقعی** بلاک‌هایی را که تسویه می‌کند اعلام می‌کند؛ قرارداد آخرین بلاک تسویه‌شده
     // را نگه می‌دارد و فقط بازه‌ای را می‌پذیرد که دقیقاً بعد از آن شروع شود. شماره‌ی افزایشی دوره به‌تنهایی کافی نیست —
     // کنترل به شماره‌ی واقعی بلاک‌ها متصل است، پس بازه‌ی تکراری، هم‌پوشان و دارای فاصله‌ی توضیح‌نداده‌شده رد می‌شود.
     // ------------------------------------------------------------------
@@ -251,41 +234,34 @@ contract BlockRewardDistributor {
     ///         فراخوانی distributeRewards() صفر می‌شود.
     uint256 public pendingMembershipFees;
 
-    /// @notice ✅ تازه: یک پیشنهاد دومجلسی برای تغییر validatorDirectShareBps. نیازمند تأیید
+    /// @notice یک پیشنهاد دومجلسی برای تغییر validatorDirectShareBps. نیازمند تأیید
     ///         مستقل از **هردو**: اکثریت ساده‌ی ValidatorsBoard **و** اکثریت دوسوم کل مجمع
     ///         ولیدیتورهای فعال، پیش از اجرا شدن — به proposeShareChange/boardVoteShareChange/
     ///         validatorVoteShareChange پایین مراجعه کنید.
-    /// @dev ✅ اصلاح‌شده (باگ بحرانی رأی مانده‌شده‌ی پیداشده در بازبینی): `requiredValidatorApprovals`
-    ///      حالا فقط یک‌بار در لحظه‌ی ثبت پیشنهاد snapshot می‌شه (از تعداد ولیدیتور فعال همون
-    ///      لحظه)، نه این‌که هر بار رأی زنده دوباره محاسبه بشه. قبلاً `validatorApprovals` یه
-    ///      شمارنده‌ی ساده بود که فقط زیاد می‌شد (هرگز کم نمی‌شد وقتی یه ولیدیتورِ رأی‌داده بعداً
-    ///      خارج می‌شد)، درحالی‌که `required` هر بار از تعداد فعال *فعلی* دوباره حساب می‌شد. این
-    ///      یعنی یه پیشنهاد که به نصاب نرسیده بود، می‌تونست بعداً، بدون هیچ رأی تازه‌ای، فقط
-    ///      به‌خاطر کوچیک‌شدن شبکه، خودبه‌خود قابل‌اجرا بشه — یه باگ کلاسیک حکمرانی. snapshot
-    ///      گرفتن آستانه در لحظه‌ی ثبت، این رو می‌بنده: سقفی که یه پیشنهاد باید ازش رد بشه،
-    ///      همون لحظه‌ی ثبتش قفل می‌شه. همراه با `expiresAt` پایین (که اونم تازه‌ست)، یه
-    ///      پیشنهاد که نتونه توی یه پنجره‌ی محدود به آستانه‌ی *خودش* برسه، ساده منقضی می‌شه،
-    ///      نه این‌که بی‌نهایت باز بمونه و منتظر کوچیک‌شدن جمعیت رأی‌دهنده باشه.
+    /// @dev `requiredValidatorApprovals` فقط یک‌بار در لحظه‌ی ثبت پیشنهاد snapshot می‌شود (از
+    ///      تعداد ولیدیتور فعال همان لحظه)، نه این‌که با هر رأی دوباره محاسبه شود. پس آستانه‌ای
+    ///      که یک پیشنهاد باید از آن رد شود همان لحظه‌ی ثبتش قفل می‌شود: پیشنهادی که به نصاب
+    ///      نرسیده بدون هیچ رأی تازه‌ای صرفاً به‌خاطر کوچک‌شدن شبکه قابل‌اجرا نمی‌شود. همراه با
+    ///      `expiresAt`، پیشنهادی که در یک پنجره‌ی محدود به آستانه‌ی خودش نرسد منقضی می‌شود.
     struct ShareProposal {
         uint256 newValidatorShareBps;
         uint256 createdAt;
-        uint256 expiresAt; // ✅ تازه — بعد از این، دیگه قابل‌رأی یا اجرا نیست
-        uint256 requiredValidatorApprovals; // ✅ تازه — در لحظه‌ی ثبت snapshot می‌شه، هرگز دوباره محاسبه نمی‌شه
+        uint256 expiresAt; // بعد از این، دیگر قابل‌رأی یا اجرا نیست
+        uint256 requiredValidatorApprovals; // در لحظه‌ی ثبت snapshot می‌شود، هرگز دوباره محاسبه نمی‌شود
         uint256 boardApprovals;
         uint256 validatorApprovals;
         bool boardPassed;
         bool validatorPassed;
         bool executed;
-        /// @dev L02 (ممیزی ۲۰۲۶-۰۹-۳۰): مقدار ValidatorsBoard.boardVersion() هنگام ساخت پیشنهاد. رأی هیأت و اجرای نهایی
+        /// @dev مقدار ValidatorsBoard.boardVersion() هنگام ساخت پیشنهاد. رأی هیأت و اجرای نهایی
         ///      فقط تا وقتی پذیرفته می‌شوند که ترکیب هیأت همان باشد — همان قاعده‌ای که ValidatorsBoard برای اقدام‌های خودش
-        ///      دارد (boardVersionAtCreation). تغییر واقعی ترکیب، پیشنهاد را باطل می‌کند و باید دوباره پیشنهاد شود. به‌عنوان
-        ///      آخرین فیلد اضافه شده: چیدمان مقدار mapping، state تازه‌ی genesis.
+        ///      دارد (boardVersionAtCreation). تغییر واقعی ترکیب، پیشنهاد را باطل می‌کند و باید دوباره پیشنهاد شود.
         uint256 boardVersionAtCreation;
-        // L04 (تصمیم مالک): مقدار statusNonce در ValidatorsRegistry هنگام ساخت؛ رأی‌دهنده باید دقیقاً در همان نقطه Active بوده باشد.
+        // مقدار statusNonce در ValidatorsRegistry هنگام ساخت؛ رأی‌دهنده باید دقیقاً در همان نقطه Active بوده باشد.
         uint256 validatorNonceAtCreation;
     }
 
-    /// @notice ✅ تازه: مدت زمانی که یه پیشنهاد بعد از ثبت هنوز قابل‌رأی/اجراست. عمداً به‌وضوح
+    /// @notice مدت زمانی که یه پیشنهاد بعد از ثبت هنوز قابل‌رأی/اجراست. عمداً به‌وضوح
     ///         کوتاه‌تر از SHARE_CHANGE_MIN_INTERVAL (۱۸۰ روز) — پیشنهادی که ظرف ۳۰ روز نتونه
     ///         رأی لازم رو جمع کنه، باید دوباره از نو (با یه snapshot تازه از جمعیت) ثبت بشه،
     ///         نه این‌که بی‌نهایت باز بمونه.
@@ -296,25 +272,38 @@ contract BlockRewardDistributor {
     mapping(uint256 => mapping(address => bool)) private shareValidatorVoted;
     uint256 public shareProposalCount;
 
-    // L05 (تصمیم مالک، ممیزی ۲۰۲۶-۰۹-۳۰): تاریخچه‌ی نرخ مصوب پاداش بلاک، برای سقف totalRewards هر بازه‌ی تسویه.
-    // نرخ اولیه‌ی INITIAL_REWARD_PER_BLOCK از بلاک ۱ تا اولین ورودی اعمال می‌شود. ورودی‌ها فقط‌افزودنی‌اند، با startBlock اکیداً
-    // صعودی، و فقط از ارتفاعی «آینده» اثر می‌گذارند؛ تاریخچه‌ی مؤثر گذشته هرگز بازنویسی نمی‌شود.
-    // مرز اعتماد: این قرارداد پاداش واقعی بلاک در Besu را نمی‌خواند. نرخ‌های مصوب باید از نظر عملیاتی با transitionهای genesis
-    // شبکه هماهنگ نگه داشته شوند؛ این سقف صحت کارمزد، انتساب بلاک یا برابری نرخ ثبت‌شده با Besu را اثبات نمی‌کند و فقط
-    // پاداش ناخالصی را که اوراکل می‌تواند برای یک بازه گزارش کند محدود می‌کند.
-    // حکمرانی (در ادامه پیاده شده): پیشنهاد به ۳ رأی از ۵ عضو هیأت (اختیار زنده + محافظ نسخه‌ی ترکیب هیأت مثل L02) و همچنین
-    // دوسوم ولیدیتورهای واجد هنگام ساخت پیشنهاد (سیاست L04) نیاز دارد. انقضای ۳۰روزه فقط برای مرحله‌ی رأی‌گیری است؛ پس از تکمیل
-    // هر دو مجلس تأخیر ۷روزه شروع می‌شود و اجرا همه‌چیز را دوباره بررسی می‌کند (executeRateChange را ببینید). اوراکل توزیع
-    // هیچ اختیاری روی این تاریخچه ندارد.
+    // تاریخچه‌ی نرخ مصوب پاداش بلاک، برای سقف totalRewards هر بازه‌ی تسویه.
+    // نرخ اولیه‌ی INITIAL_REWARD_PER_BLOCK از بلاک ۱ تا اولین ورودی اعمال می‌شود. ورودی‌ها فقط‌افزودنی‌اند و فقط از نقطه‌ای «آینده»
+    // اثر می‌گذارند؛ تاریخچه‌ی مؤثر گذشته هرگز بازنویسی نمی‌شود.
+    //
+    // هر ورودی از یک پیشنهاد ساخته می‌شود که لحظه‌ی اثر تغییر را به‌صورت یک TIMESTAMP یونیکس (`activationTime`؛ همان مقداری که
+    // اپراتورها در `transitions.qbft` در genesis Besu می‌نویسند، و در genesis حالت Shanghai/Cancun آن فیلد timestamp است نه شماره
+    // بلاک) همراه با یک ارتفاع شروع «برآوردی» می‌نامد. اولین بلاکی که timestamp آن برابر یا بیشتر از `activationTime` باشد از پیش
+    // معلوم نیست؛ پس ورودی «موقت» است تا اوراکل توزیع ارتفاع واقعی شروع را با certifyRateStart گواهی کند. ارتفاع گواهی‌شده باید در
+    // RATE_START_TOLERANCE_BLOCKS بلاکِ برآورد باشد.
+    // تا وقتی ورودی موقت است، بلاک‌های داخل [برآورد − تحمل، برآورد + تحمل) با «بزرگ‌تر» از نرخ قدیم و جدید سقف می‌خورند؛ بلاک‌های
+    // پیش از این پنجره نرخ قدیم و بلاک‌های از انتهای آن نرخ جدید را می‌گیرند. پس از گواهی، تغییر دقیقاً در بلاک گواهی‌شده است. بنابراین
+    // سقف بازه هرگز شبکه‌ی درست‌پیکربندی‌شده را رد نمی‌کند و اثر اوراکل برای هر تغییر از تحمل × |نرخ جدید − نرخ قدیم| بیشتر نیست.
+    // مرز اعتماد: این قرارداد نه پاداش واقعی بلاک در Besu را می‌خواند و نه زمان بلاک‌ها را. نرخ‌های مصوب و زمان‌های اثر باید از نظر
+    // عملیاتی با transitionهای genesis شبکه هماهنگ نگه داشته شوند؛ این سقف صحت کارمزد، انتساب بلاک یا برابری نرخ ثبت‌شده با Besu را
+    // اثبات نمی‌کند و فقط پاداش ناخالصی را که اوراکل می‌تواند برای یک بازه گزارش کند محدود می‌کند.
+    // اگر اپراتورها transitionی تنظیم کنند که ارتفاع واقعی شروع آن بیرون از پنجره‌ی تحمل بیفتد، گواهی رد می‌شود و بازه‌هایی که
+    // پاداش واقعی بلاک‌هایشان از نرخ مصوب بیشتر است قابل‌توزیع نیستند.
+    // حکمرانی: پیشنهاد به ۳ رأی از ۵ عضو هیأت (اختیار زنده + محافظ نسخه‌ی ترکیب هیأت) و همچنین دوسوم ولیدیتورهای واجد هنگام ساخت
+    // پیشنهاد نیاز دارد. انقضای ۳۰روزه فقط برای مرحله‌ی رأی‌گیری است؛ پس از تکمیل هر دو مجلس تأخیر ۷روزه شروع می‌شود و اجرا
+    // همه‌چیز را دوباره بررسی می‌کند (executeRateChange را ببینید). اوراکل توزیع نمی‌تواند نرخی اضافه، عوض یا حذف کند؛ فقط می‌تواند
+    // ارتفاع شروع یک ورودی مصوب را در پنجره‌ی تحمل گواهی کند.
     uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
     struct RewardRateChange {
-        uint128 startBlock; // اولین بلاکی که ratePerBlock از آن اعمال می‌شود
+        uint128 startBlock; // تا پیش از گواهی: ارتفاع برآوردی اولین بلاک نرخ جدید؛ پس از آن: ارتفاع واقعی
         uint128 ratePerBlock; // wei به‌ازای هر بلاک
+        uint64 activationTime; // ثانیه‌ی یونیکس؛ لحظه‌ای که در transition ی Besu تنظیم شده
+        bool certified; // پس از گواهی ارتفاع واقعی شروع توسط اوراکل true است
     }
     RewardRateChange[] private rewardRateChanges;
 
     // ------------------------------------------------------------------
-    // حکمرانی L05 — تغییر نرخ مصوب پاداش (تصمیم مالک، ممیزی ۲۰۲۶-۰۹-۳۰)
+    // حکمرانی — تغییر نرخ مصوب پاداش
     // ------------------------------------------------------------------
     /// @notice تعداد تأیید لازم از هیأت: ۳ از ۵ عضو (برابر BOARD_SIZE / 2 + 1).
     uint256 public constant RATE_CHANGE_BOARD_APPROVALS = 3;
@@ -322,13 +311,17 @@ contract BlockRewardDistributor {
     uint256 public constant RATE_VOTING_EXPIRY = 30 days;
     /// @notice از لحظه‌ای شروع می‌شود که «هر دو» مجلس تکمیل شده باشند.
     uint256 public constant RATE_CHANGE_DELAY = 7 days;
-    /// @notice حداقل فاصله، به «بلاک»، بین بلاکی که تغییر را اجرا می‌کند و startBlock آن. فقط در آهنگ اسمی ۳ ثانیه‌ای تقریباً ۷ روز
-    ///         است؛ یک شمار بلاک است نه زمان، و از RATE_CHANGE_DELAY جداست.
-    uint256 public constant MIN_RATE_CHANGE_LEAD_BLOCKS = 201_600;
+    /// @notice حداقل فاصله، به «ثانیه»، بین بلاکی که تغییر را اجرا می‌کند و زمان اثر آن. یک زمان است، از RATE_CHANGE_DELAY جداست،
+    ///         و به هر اپراتور یک هفته وقت می‌دهد genesis همه‌ی نودها را به‌روز کند.
+    uint256 public constant MIN_RATE_CHANGE_LEAD_SECONDS = 7 days;
+    /// @notice نیم‌پهنای پنجره، به بلاک، دور ارتفاع برآوردی شروع که تا گواهی‌شدن ارتفاع شروع، «بزرگ‌تر» از دو نرخ در آن مجاز است؛
+    ///         و بیشترین فاصله‌ی ارتفاع گواهی‌شده از برآورد.
+    uint256 public constant RATE_START_TOLERANCE_BLOCKS = 10_000;
 
     struct RateProposal {
-        uint128 startBlock;
+        uint128 startBlock; // ارتفاع برآوردی اولین بلاک نرخ جدید
         uint128 ratePerBlock;
+        uint64 activationTime; // ثانیه‌ی یونیکس
         uint256 createdAt;
         uint256 votingExpiresAt;
         uint256 requiredValidatorApprovals; // ceil(2/3) ولیدیتورهای فعال هنگام ساخت، ثابت‌شده
@@ -336,19 +329,20 @@ contract BlockRewardDistributor {
         uint256 validatorApprovals;
         uint256 approvedAt; // تا تکمیل هر دو مجلس صفر است
         bool executed;
-        uint256 boardVersionAtCreation; // محافظ L02: تغییر واقعی ترکیب هیأت پیشنهاد را باطل می‌کند
-        uint256 validatorNonceAtCreation; // snapshot واجدان ولیدیتور (L04)
+        uint256 boardVersionAtCreation; // تغییر واقعی ترکیب هیأت پیشنهاد را باطل می‌کند
+        uint256 validatorNonceAtCreation; // snapshot واجدان ولیدیتور
     }
     mapping(uint256 => RateProposal) public rateProposals;
     mapping(uint256 => mapping(address => bool)) private rateBoardVoted;
     mapping(uint256 => mapping(address => bool)) private rateValidatorVoted;
     uint256 public rateProposalCount;
 
-    event RateChangeProposed(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock, address indexed proposer);
+    event RateChangeProposed(uint256 indexed id, uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock, address indexed proposer);
     event RateChangeBoardVoted(uint256 indexed id, address indexed boardMember, uint256 approvals, uint256 required);
     event RateChangeValidatorVoted(uint256 indexed id, address indexed validator, uint256 approvals, uint256 required);
     event RateChangeApproved(uint256 indexed id, uint256 approvedAt, uint256 executableAt);
-    event RateChangeExecuted(uint256 indexed id, uint256 startBlock, uint256 ratePerBlock);
+    event RateChangeExecuted(uint256 indexed id, uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock);
+    event RateStartCertified(uint256 indexed index, uint256 activationTime, uint256 actualStartBlock);
 
     // ------------------------------------------------------------------
     // Events
@@ -420,15 +414,14 @@ contract BlockRewardDistributor {
     }
 
     /// @notice توسط ValidatorsRegistry.requestMembership() فراخوانی می‌شود تا کارمزد عضویت
-    ///         ولیدیتور تازه را اینجا بفرستد، به‌جای مستقیم به ValidatorsTreasury (رفتار
-    ///         قبلی). مبلغ صرفاً انباشته می‌شود تا فراخوانی distributeRewards() بعدی، جایی که
-    ///         به استخر فی همان epoch اضافه می‌شود — ✅ کاملاً از سوزاندن ۳۰٪ معاف (برخلاف فی
-    ///         معمولی)، ولی از نظر نحوه‌ی تقسیم بین ولیدیتورها دقیقاً ۱۰۰٪-به‌نسبت-بلاک
-    ///         پرداخت می‌شود — به sur-tokenomics.md بخش ۶ مراجعه کنید که چرا این طراحی (یک
-    ///         انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به‌ازای هر عضویت تازه) به‌جای پرداخت فوری
-    ///         همان‌لحظه انتخاب شد — پرداخت فوری نیازمند یک حلقه‌ی نامحدود روی همه‌ی
-    ///         ولیدیتورهای فعال درون خودِ requestMembership() می‌بود؛ یک ریسک واقعی سقف گس/DoS
-    ///         با رشد جمعیت ولیدیتور، و تکرار منطقی که همین‌جا از قبل درست پیاده شده.
+    ///         ولیدیتور تازه را اینجا بفرستد. مبلغ صرفاً انباشته می‌شود تا فراخوانی
+    ///         distributeRewards() بعدی، جایی که به استخر فی همان epoch اضافه می‌شود —
+    ///         کاملاً از سوزاندن ۳۰٪ معاف (برخلاف فی معمولی)، ولی از نظر نحوه‌ی تقسیم بین
+    ///         ولیدیتورها ۱۰۰٪-به‌نسبت-بلاک پرداخت می‌شود — به sur-tokenomics.md بخش ۶ مراجعه
+    ///         کنید که چرا این طراحی (یک انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به‌ازای هر عضویت
+    ///         تازه) به‌جای پرداخت فوری انتخاب شد — پرداخت فوری نیازمند یک حلقه‌ی نامحدود روی
+    ///         همه‌ی ولیدیتورهای فعال درون خودِ requestMembership() است؛ یک ریسک واقعی سقف
+    ///         گس/DoS با رشد جمعیت ولیدیتور.
     function receiveMembershipFee() external payable {
         require(msg.sender == REGISTRY_ADDRESS, "BlockRewardDistributor: only ValidatorsRegistry may forward membership fees");
         pendingMembershipFees += msg.value;
@@ -436,7 +429,7 @@ contract BlockRewardDistributor {
     }
 
     // ------------------------------------------------------------------
-    // ✅ تازه: حکمرانی دومجلسی برای validatorDirectShareBps (نسبت خزانه در برابر ولیدیتور —
+    // حکمرانی دومجلسی برای validatorDirectShareBps (نسبت خزانه در برابر ولیدیتور —
     // کامنت سطح قرارداد بالا و sur-tokenomics.md بخش ۱۱ را برای استدلال کامل ببینید). هر
     // ولیدیتور فعالی می‌تواند پیشنهاد بدهد؛ اکثریت ساده‌ی ValidatorsBoard **و** اکثریت دوسوم
     // کل مجمع ولیدیتورهای فعال باید هردو، مستقلاً، دقیقاً همان یک پیشنهاد را تصویب کنند تا
@@ -480,8 +473,8 @@ contract BlockRewardDistributor {
     /// @notice یکی از دو رأی لازم — مجلس ValidatorsBoard. اکثریت ساده از BOARD_SIZE ثابت
     ///         (۵)، یعنی ۳ رأی.
     function boardVoteShareChange(uint256 id) external {
-        // L02 (ممیزی ۲۰۲۶-۰۹-۳۰): اختیار زنده، نه پرچم خام کرسی — عضوی که درخواست خروج داده، حق رأی را فوراً از دست
-        // می‌دهد (P02)، حتی پیش از آن‌که syncBoard() کرسی را پاک کند.
+        // اختیار زنده، نه پرچم خام کرسی — عضوی که درخواست خروج داده، حق رأی را فوراً از دست
+        // می‌دهد، حتی پیش از آن‌که syncBoard() کرسی را پاک کند.
         require(BOARD_CONTRACT.hasBoardAuthority(msg.sender), "BlockRewardDistributor: caller has no live board authority");
         ShareProposal storage p = shareProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: proposal not found");
@@ -505,10 +498,9 @@ contract BlockRewardDistributor {
         _tryExecuteShareChange(id);
     }
 
-    /// @notice رأی لازم دیگر — مجلس کل مجمع ولیدیتورها. ✅ اصلاح‌شده: حالا در برابر
-    ///         `requiredValidatorApprovals` چک می‌شه که یک‌بار در لحظه‌ی ثبت پیشنهاد
-    ///         snapshot شده — به کامنت struct ShareProposal مراجعه کن که چرا محاسبه‌ی زنده
-    ///         (رفتار قبلی) یه آسیب‌پذیری رأی-مانده‌شده بود.
+    /// @notice رأی لازم دیگر — مجلس کل مجمع ولیدیتورها. در برابر
+    ///         `requiredValidatorApprovals` چک می‌شود که یک‌بار در لحظه‌ی ثبت پیشنهاد
+    ///         snapshot شده — به کامنت struct ShareProposal مراجعه کن.
     function validatorVoteShareChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         ShareProposal storage p = shareProposals[id];
@@ -516,7 +508,7 @@ contract BlockRewardDistributor {
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
         require(!shareValidatorVoted[id][msg.sender], "BlockRewardDistributor: validator already voted");
-        // L04: رأی‌دهنده باید هنگام ساخت پیشنهاد Active بوده باشد (snapshot واجدان) و اکنون هم Active باشد (onlyActiveValidator).
+        // رأی‌دهنده باید هنگام ساخت پیشنهاد Active بوده باشد (snapshot واجدان) و اکنون هم Active باشد (onlyActiveValidator).
         // تعلیق موقت او را از مجموعه‌ی اولیه حذف نمی‌کند؛ فقط در دوره‌ی تعلیق مانع رأی است.
         require(REGISTRY.wasActiveAt(msg.sender, p.validatorNonceAtCreation), "BlockRewardDistributor: not eligible - not Active when this proposal was created");
 
@@ -536,15 +528,14 @@ contract BlockRewardDistributor {
     function _tryExecuteShareChange(uint256 id) private {
         ShareProposal storage p = shareProposals[id];
         if (p.boardPassed && p.validatorPassed && !p.executed) {
-            // L02: مجلس هیأتی که با ترکیب قدیمی پاس شده، بعداً با رأی مجلس ولیدیتورها کامل نمی‌شود — ترکیب هنگام اجرا هم
+            // مجلس هیأتی که با ترکیب قدیمی پاس شده، بعداً با رأی مجلس ولیدیتورها کامل نمی‌شود — ترکیب هنگام اجرا هم
             // دوباره بررسی می‌شود، نه فقط هنگام رأی هیأت.
             require(
                 p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
                 "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
             );
-            // L01 (ممیزی ۲۰۲۶-۰۹-۳۰): حداقل فاصله‌ی بین تغییرهای موفق همین‌جا، در نقطه‌ی اعمال تغییر، اجرا می‌شود. کنترل آن
-            // فقط در proposeShareChange اجازه می‌داد دو پیشنهادِ ساخته‌شده در یک پنجره‌ی باز، با چند ثانیه فاصله هر دو اجرا
-            // شوند. رأیی که پیشنهاد زودهنگام را کامل کند revert می‌شود؛ چون PROPOSAL_EXPIRY (۳۰ روز) کوتاه‌تر از
+            // حداقل فاصله‌ی بین تغییرهای موفق همین‌جا، در نقطه‌ی اعمال تغییر، اجرا می‌شود. رأیی که پیشنهاد
+            // زودهنگام را کامل کند revert می‌شود؛ چون PROPOSAL_EXPIRY (۳۰ روز) کوتاه‌تر از
             // SHARE_CHANGE_MIN_INTERVAL (۱۸۰ روز) است، چنین پیشنهادی هرگز اجرا نمی‌شود و فقط منقضی می‌شود.
             require(
                 block.timestamp >= lastShareChangeTime + SHARE_CHANGE_MIN_INTERVAL,
@@ -559,20 +550,14 @@ contract BlockRewardDistributor {
 
     // تابع اصلی توزیع دوره‌ای — فقط توسط اوراکل توزیع قابل‌فراخوانی است
     //
-    // ✅ بازنویسی‌شده (دیگر نیازی به viaIR برای کامپایل ندارد): نسخه‌ی اولیه‌ی این تابع
-    // (یک تابع بزرگ و یکپارچه) هم‌زمان متغیر محلی بیشتری از پنجره‌ی ۱۶لایه‌ای دستکاری استک
-    // EVM در پایپ‌لاین کدسازی قدیمی (غیر-IR) داشت — یک خطای واقعی کامپایلر «Stack too deep»،
-    // که دقیقاً یکسان هم در نسخه‌ی انگلیسی هم در نسخه‌ی فارسی این فایل تأیید شد. به‌جای نیاز
-    // به viaIR (که خیلی از سرویس‌های وریفای، از جمله Blockscout، نمی‌توانند در برابرش وریفای
-    // کنند — sur-contracts-deploy-notes.md را ببین)، منطق به سه تابع تقسیم شده، هرکدام با
-    // stack frame مستقل خودشان و در نتیجه متغیر هم‌زمان بسیار کمتر. رفتار، ترتیب event، و هر
-    // شرط require() نسبت به نسخه‌ی تک‌تابعی اصلی بدون تغییر است.
+    // منطق به سه تابع تقسیم شده، هرکدام با stack frame مستقل خودشان، تا قرارداد بدون viaIR کامپایل شود
+    // (که خیلی از سرویس‌های وریفای نمی‌توانند در برابرش وریفای کنند — sur-contracts-deploy-notes.md را ببین).
     // ------------------------------------------------------------------
     /// @param validators لیست آدرس ولیدیتورها (بدون تکرار)
     /// @param blocksMined تعداد بلاک تولیدشده توسط هر ولیدیتور از آخرین فراخوانی به بعد (همون ترتیب validators)
     /// @param totalRewards مجموع ریوارد این epoch (به wei) — آف‌چین توسط اوراکل، از ورودی‌های «reward» تابع trace_block محاسبه می‌شود
     /// @param totalFees مجموع فی تراکنش‌های این epoch (به wei) — آف‌چین توسط اوراکل، از eth_getTransactionReceipt.gasUsed ضرب‌در effectiveGasPrice برای هر تراکنش محاسبه می‌شود (هرگز از خروجی trace_*، که برای انتقال‌های ساده gasUsed=0 گزارش می‌کند)
-    /// @notice P05: `range` بازه‌ی شامل (inclusive) بلاک‌هایی است که این توزیع تسویه می‌کند. باید دقیقاً از lastSettledBlock + 1
+    /// @notice `range` بازه‌ی شامل (inclusive) بلاک‌هایی است که این توزیع تسویه می‌کند. باید دقیقاً از lastSettledBlock + 1
     ///         شروع شود (نه تکرار، نه هم‌پوشانی، نه فاصله — قطعی سرویس با بازه‌ی **بعدی‌ِ بزرگ‌تر** پوشش داده می‌شود، هرگز
     ///         رد نمی‌شود)، باید قبل از بلاک جاری تمام شود، و تعداد بلاک‌های گزارش‌شده‌ی هر ولیدیتور (بعد از فیلتر سرویس روی
     ///         بلاک‌هایی که تولیدکننده‌شان دیگر معتبر نیست) نمی‌تواند از اندازه‌ی آن بیشتر باشد.
@@ -594,19 +579,11 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: too soon since last distribution"
         );
 
-        // ✅ اصلاح‌شده (باگ واقعی پیداشده حین آزمون اجرایی زنده روی Besu/QBFT — این با یه ادعای
-        // قبلیِ نادرست که این فایل از قبل بدون viaIR تمیز کامپایل می‌شه در تناقض بود): بلوک
-        // پیش‌محاسبه‌ای که قبلاً مستقیم اینجا بود (تاخوردن کارمزد عضویت، محاسبه‌ی سوزاندن فی،
-        // چک جمع تعداد بلاک؛ چک زمان‌محور «حداکثر فیزیکی» با L03 حذف شد) به یه خطای واقعی «Stack too deep» توی فراخوان
-        // _payValidators پایین‌تر برخورد می‌کرد، زیر optimizer — تعداد زیاد متغیرهای local
-        // هم‌زمان زنده توی stack frame خودِ این تابع. استخراج شد به _prepareEpoch() پایین، که
-        // ۴ مقدار نتیجه رو توی یه struct حافظه (`prep`) جمع می‌کنه به‌جای ۴ متغیر local جدا —
-        // این چیزیه که واقعاً عمق stack رو حل می‌کنه، نه صرفاً بازآرایی ظاهری. یه راه‌حل viaIR
-        // نیست (این پروژه عمداً از viaIR دوری می‌کنه) — همون require ها، همون ترتیب، همون
-        // ریاضی، فقط داخل یه تابع کمکی محاسبه می‌شه به‌جای inline.
+        // پیش‌محاسبه در _prepareEpoch() نگه داشته شده تا stack frame خودِ این تابع کوچک بماند:
+        // ۴ مقدار نتیجه در یک struct حافظه (`prep`) جمع می‌شوند، نه ۴ متغیر local جدا.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
-        _settleRange(range, prep.totalBlocks); // P05
-        // L05: totalRewards نباید از پاداش مصوب بلاک‌های این بازه (که پیش‌تر پیوستگی‌اش تأیید شده) بیشتر باشد.
+        _settleRange(range, prep.totalBlocks);
+        // totalRewards نباید از پاداش مصوب بلاک‌های این بازه (که پیوستگی‌اش تأیید شده) بیشتر باشد.
         // کارمزد عادی و کارمزد عضویت خارج از این سقف‌اند؛ قواعد تقسیم و سوزاندن بدون تغییر است.
         require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
 
@@ -615,12 +592,8 @@ contract BlockRewardDistributor {
         epochBlockRanges[epochId] = range;
         emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
 
-        // ✅ اصلاح‌شده (همون اصلاح stack-too-deep بالا): foundationAmount/treasuryAmount الان
-        // *بعد* از فراخوان _payValidators محاسبه می‌شن، نه قبلش — به اون فراخوان وابسته نیستن
-        // و _payValidators هم به این‌ها وابسته نیست، پس این بازآرایی کاملاً رفتار رو حفظ
-        // می‌کنه. فقط برای کاهش تعداد متغیرهای local هم‌زمان زنده در لحظه‌ی فراخوان
-        // _payValidators هست، نه برای تغییر این‌که چی محاسبه می‌شه یا کِی اثرش دیده می‌شه
-        // (هردو همچنان توی همون تراکنش، قبل از _finalizeEpoch پایین، اتفاق می‌افتن).
+        // foundationAmount/treasuryAmount *بعد* از فراخوان _payValidators محاسبه می‌شوند (به آن وابسته نیستند)، که تعداد
+        // متغیرهای local زنده در آن فراخوان را کم می‌کند.
         // validatorDirectShareBps حکمرانی‌شونده است (رأی دومجلسی، [۴۰٪, ۶۵٪]) — کامنت سطح
         // قرارداد بالا را ببینید. ValidatorsTreasury هرچه بعد از سهم ثابت بنیاد و این سهم
         // حکمرانی‌شونده باقی بماند را دریافت می‌کند.
@@ -638,7 +611,7 @@ contract BlockRewardDistributor {
                 })
             );
 
-        // ✅ تغییر کرد: سهم بنیاد اکنون ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
+        // سهم بنیاد ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
         // می‌شود — هرگز تحت‌تأثیر validatorDirectShareBps بالا نیست. فقط ریوارد این‌طور
         // تقسیم می‌شود؛ فی هرگز توسط هیچ‌کدام از این سه سهم لمس نمی‌شود.
         uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
@@ -658,27 +631,28 @@ contract BlockRewardDistributor {
         );
     }
 
-    /// @dev ✅ تازه (فقط برای رفع خطای «Stack too deep» بالای distributeRewards اضافه شد —
-    ///      ۴ مقدار نتیجه‌ی فاز پیش‌محاسبه رو توی یه اشاره‌گر struct حافظه جمع می‌کنه به‌جای
-    ///      ۴ متغیر local جدا و هم‌زمان زنده).
-
-    /// @notice پیشنهاد تغییر نرخ مصوب از `startBlock`. فقط ولیدیتور فعال می‌تواند پیشنهاد دهد. این فقط ردِ زودهنگام است: همه‌ی
-    ///         شرط‌های ارتفاع شروع هنگام اجرا دوباره بررسی می‌شوند. پیشنهادها مستقل‌اند؛ چند پیشنهاد می‌توانند هم‌زمان باز باشند و
-    ///         هرکدام زودتر اجرا شود ممکن است دیگری را غیرقابل‌اجرا کند (آن‌گاه همان‌طور که هست می‌ماند).
-    function proposeRateChange(uint256 startBlock, uint256 ratePerBlock) external returns (uint256 id) {
+    /// @notice پیشنهاد تغییر نرخ مصوب که در `activationTime` (ثانیه‌ی یونیکس، زمان transition ی Besu) اثر می‌کند، همراه با برآورد
+    ///         پیشنهاددهنده از اولین بلاکِ برابر یا بعد از آن زمان. فقط ولیدیتور فعال می‌تواند پیشنهاد دهد. این فقط ردِ زودهنگام است:
+    ///         همه‌ی شرط‌ها هنگام اجرا دوباره بررسی می‌شوند. پیشنهادها مستقل‌اند؛ چند پیشنهاد می‌توانند هم‌زمان باز باشند و هرکدام
+    ///         زودتر اجرا شود ممکن است دیگری را غیرقابل‌اجرا کند (آن‌گاه همان‌طور که هست می‌ماند).
+    function proposeRateChange(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) external returns (uint256 id) {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
-        require(startBlock <= type(uint128).max && ratePerBlock <= type(uint128).max, "BlockRewardDistributor: value does not fit uint128");
-        _requireRateStartOk(startBlock);
+        require(
+            activationTime <= type(uint64).max && estimatedStartBlock <= type(uint128).max && ratePerBlock <= type(uint128).max,
+            "BlockRewardDistributor: value does not fit its type"
+        );
+        _requireRateStartOk(activationTime, estimatedStartBlock);
         id = ++rateProposalCount;
         RateProposal storage p = rateProposals[id];
-        p.startBlock = uint128(startBlock);
+        p.startBlock = uint128(estimatedStartBlock);
         p.ratePerBlock = uint128(ratePerBlock);
+        p.activationTime = uint64(activationTime);
         p.createdAt = block.timestamp;
         p.votingExpiresAt = block.timestamp + RATE_VOTING_EXPIRY;
         p.requiredValidatorApprovals = (REGISTRY.getActiveValidatorCount() * 2 + 2) / 3; // ceil(2/3), frozen now
         p.boardVersionAtCreation = BOARD_CONTRACT.boardVersion();
         p.validatorNonceAtCreation = REGISTRY.statusNonce();
-        emit RateChangeProposed(id, startBlock, ratePerBlock, msg.sender);
+        emit RateChangeProposed(id, activationTime, estimatedStartBlock, ratePerBlock, msg.sender);
     }
 
     /// @notice مجلس هیأت: اختیار زنده لازم است؛ پیشنهاد باید هنوز متعلق به ترکیب فعلی هیأت باشد.
@@ -698,7 +672,7 @@ contract BlockRewardDistributor {
         _markRateApprovedIfComplete(id, p);
     }
 
-    /// @notice مجلس ولیدیتورها: واجد = هنگام ساخت پیشنهاد Active بوده (L04) و اکنون هم Active است.
+    /// @notice مجلس ولیدیتورها: واجد = هنگام ساخت پیشنهاد Active بوده و اکنون هم Active است.
     function validatorVoteRateChange(uint256 id) external {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: caller is not an active validator");
         RateProposal storage p = rateProposals[id];
@@ -713,8 +687,9 @@ contract BlockRewardDistributor {
     }
 
     /// @notice هرکس می‌تواند اجرا کند، پس از تکمیل هر دو مجلس و گذشتن RATE_CHANGE_DELAY از آن لحظه. دوباره بررسی می‌شود: ترکیب
-    ///         هیأت، آینده‌بودن ارتفاع شروع، MIN_RATE_CHANGE_LEAD_BLOCKS، و ترتیب اکیداً صعودی تاریخچه. اگر هر بررسی شکست بخورد پیشنهاد
-    ///         دقیقاً همان‌طور که هست می‌ماند: هیچ زمان یا ارتفاعی خودکار جابه‌جا نمی‌شود.
+    ///         هیأت، دست‌کم MIN_RATE_CHANGE_LEAD_SECONDS فاصله‌ی زمان اثر، آینده‌بودن ارتفاع برآوردی شروع، و تاریخچه‌ی اکیداً
+    ///         صعودی با پنجره‌های تحمل بدون هم‌پوشانی. اگر هر بررسی شکست بخورد پیشنهاد دقیقاً همان‌طور که هست می‌ماند: هیچ زمان یا
+    ///         ارتفاعی خودکار جابه‌جا نمی‌شود. ورودی تازه تا certifyRateStart موقت است.
     function executeRateChange(uint256 id) external {
         RateProposal storage p = rateProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
@@ -725,23 +700,44 @@ contract BlockRewardDistributor {
             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
-        _requireRateStartOk(p.startBlock);
+        _requireRateStartOk(p.activationTime, p.startBlock);
         p.executed = true;
-        rewardRateChanges.push(RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock}));
-        emit RateChangeExecuted(id, p.startBlock, p.ratePerBlock);
+        rewardRateChanges.push(
+            RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock, activationTime: p.activationTime, certified: false})
+        );
+        emit RateChangeExecuted(id, p.activationTime, p.startBlock, p.ratePerBlock);
+    }
+
+    /// @notice اوراکل توزیع، اولین بلاکی را که timestamp آن برابر یا بیشتر از زمان اثر ورودی است گواهی می‌کند. فقط پس از رسیدن به
+    ///         آن زمان، فقط یک‌بار برای هر ورودی، و فقط در RATE_START_TOLERANCE_BLOCKS بلاکِ برآورد ممکن است. قرارداد نمی‌تواند
+    ///         زمان بلاک‌های قدیمی را بخواند؛ پس مقدار در همین پنجره قابل اعتماد است. گواهی فقط سقف را از «بزرگ‌تر از هر دو نرخ در
+    ///         پنجره» به «دقیق در ارتفاع گواهی‌شده» تنگ می‌کند.
+    function certifyRateStart(uint256 index, uint256 actualStartBlock) external onlyDistributionOracle {
+        require(index < rewardRateChanges.length, "BlockRewardDistributor: no such rate change");
+        RewardRateChange storage c = rewardRateChanges[index];
+        require(!c.certified, "BlockRewardDistributor: start block already certified");
+        require(block.timestamp >= c.activationTime, "BlockRewardDistributor: activation time has not been reached");
+        require(actualStartBlock <= block.number, "BlockRewardDistributor: start block is in the future");
+        uint256 estimate = c.startBlock;
+        uint256 distance = actualStartBlock > estimate ? actualStartBlock - estimate : estimate - actualStartBlock;
+        require(distance <= RATE_START_TOLERANCE_BLOCKS, "BlockRewardDistributor: start block is outside the tolerance window");
+        c.startBlock = uint128(actualStartBlock);
+        c.certified = true;
+        emit RateStartCertified(index, c.activationTime, actualStartBlock);
     }
 
     /// @notice وضعیت در آخرین بلاک. status: ۰ یافت نشد، ۱ در حال رأی‌گیری، ۲ رأی‌گیری منقضی (هرگز تصویب نشد)، ۳ اجراشده،
     ///         ۴ تصویب‌شده و منتظر تأخیر، ۵ اکنون قابل اجرا، ۶ تصویب‌شده ولی فعلاً غیرقابل‌اجرا،
     ///         ۷ هنوز تصویب‌نشده و غیرقابل‌ادامه (رأی‌گیری دیگر به تغییر قابل‌اجرا نمی‌رسد).
-    ///         problem (برای status ۶ یا ۷): ۱ ترکیب هیأت تغییر کرده، ۲ ارتفاع شروع در آینده نیست، ۳ نزدیک‌تر از MIN_RATE_CHANGE_LEAD_BLOCKS،
-    ///         ۴ پس از آخرین تغییر مصوب نیست. هر مشکل دائمی است (شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت برای
-    ///         یک پیشنهاد برگشت‌پذیر نیست)؛ پس status ۷ هرگز به ۱ برنمی‌گردد. اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
+    ///         problem (برای status ۶ یا ۷): ۱ ترکیب هیأت تغییر کرده، ۲ زمان اثر در آینده نیست، ۳ زمان اثر نزدیک‌تر از
+    ///         MIN_RATE_CHANGE_LEAD_SECONDS، ۴ پس از آخرین تغییر مصوب نیست (زمان، یا پنجره‌های تحمل هم‌پوشانی پیدا می‌کنند)، ۵ ارتفاع
+    ///         برآوردی شروع در آینده نیست. هر مشکل دائمی است (زمان و شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت
+    ///         برای یک پیشنهاد برگشت‌پذیر نیست)؛ پس status ۷ هرگز به ۱ برنمی‌گردد. اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
         RateProposal storage p = rateProposals[id];
         if (p.createdAt == 0) return (0, 0);
         if (p.executed) return (3, 0);
-        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.startBlock);
+        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.activationTime, p.startBlock);
         if (p.approvedAt == 0) {
             if (block.timestamp > p.votingExpiresAt) return (2, 0);
             if (problem != 0) return (7, problem);
@@ -759,7 +755,7 @@ contract BlockRewardDistributor {
 
     function _markRateApprovedIfComplete(uint256 id, RateProposal storage p) private {
         if (p.boardApprovals >= RATE_CHANGE_BOARD_APPROVALS && p.validatorApprovals >= p.requiredValidatorApprovals) {
-            // L05: تکمیل هر دو مجلس فقط وقتی معتبر است که پیشنهاد هنوز متعلق به ترکیب «فعلی» هیأت باشد. رأی هیأت خودش این را بررسی
+            // تکمیل هر دو مجلس فقط وقتی معتبر است که پیشنهاد هنوز متعلق به ترکیب «فعلی» هیأت باشد. رأی هیأت خودش این را بررسی
             // می‌کند؛ رأی تکمیل‌کننده‌ی ولیدیتورها نباید برای پیشنهادی که هیأتش از آن پس تغییر کرده تصویب (و رویداد RateChangeApproved) ثبت
             // کند — اجرا هم به هر حال آن را رد می‌کند. این رأی ثبت نمی‌شود؛ پیشنهاد دیگر نمی‌تواند موفق شود.
             require(
@@ -771,83 +767,110 @@ contract BlockRewardDistributor {
         }
     }
 
-    function _rateStartProblem(uint256 startBlock) private view returns (uint8) {
-        if (startBlock <= block.number) return 2;
-        if (startBlock < block.number + MIN_RATE_CHANGE_LEAD_BLOCKS) return 3;
+    function _rateStartProblem(uint256 activationTime, uint256 estimatedStartBlock) private view returns (uint8) {
+        if (activationTime <= block.timestamp) return 2;
+        if (activationTime < block.timestamp + MIN_RATE_CHANGE_LEAD_SECONDS) return 3;
+        if (estimatedStartBlock <= block.number) return 5;
         uint256 n = rewardRateChanges.length;
-        if (n > 0 && startBlock <= rewardRateChanges[n - 1].startBlock) return 4;
+        if (n > 0) {
+            RewardRateChange storage last = rewardRateChanges[n - 1];
+            if (activationTime <= last.activationTime) return 4;
+            uint256 lastEnd = last.certified ? last.startBlock : uint256(last.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+            if (estimatedStartBlock <= lastEnd + RATE_START_TOLERANCE_BLOCKS) return 4;
+        }
         return 0;
     }
 
-    function _requireRateStartOk(uint256 startBlock) private view {
-        uint8 r = _rateStartProblem(startBlock);
-        require(r != 2, "BlockRewardDistributor: start block is not in the future");
-        require(r != 3, "BlockRewardDistributor: start block is closer than MIN_RATE_CHANGE_LEAD_BLOCKS");
-        require(r != 4, "BlockRewardDistributor: start block must be after the last approved rate change");
+    function _requireRateStartOk(uint256 activationTime, uint256 estimatedStartBlock) private view {
+        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+        require(r != 2, "BlockRewardDistributor: activation time is not in the future");
+        require(r != 3, "BlockRewardDistributor: activation time is closer than MIN_RATE_CHANGE_LEAD_SECONDS");
+        require(r != 5, "BlockRewardDistributor: estimated start block is not in the future");
+        require(r != 4, "BlockRewardDistributor: activation time and start block must be after the last approved rate change");
     }
 
-    /// @dev جست‌وجوی دودویی: تعداد ورودی‌های تاریخچه با startBlock <= blockNumber (تاریخچه اکیداً صعودی است).
-    function _rateEntriesUpTo(uint256 blockNumber) private view returns (uint256 lo) {
+    /// @dev جست‌وجوی دودویی: تعداد ورودی‌های تاریخچه که اثرشان تا `blockNumber` تمام شده است. اثر یک ورودی در ارتفاع گواهی‌شده‌ی
+    ///      شروع آن، یا تا وقتی موقت است در برآورد + تحمل تمام می‌شود. انتهای اثرها اکیداً صعودی است.
+    function _rateEntriesEnded(uint256 blockNumber) private view returns (uint256 lo) {
         uint256 hi = rewardRateChanges.length;
         while (lo < hi) {
             uint256 mid = (lo + hi) / 2;
-            if (rewardRateChanges[mid].startBlock <= blockNumber) lo = mid + 1;
+            RewardRateChange storage c = rewardRateChanges[mid];
+            uint256 end = c.certified ? c.startBlock : uint256(c.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+            if (end <= blockNumber) lo = mid + 1;
             else hi = mid;
         }
     }
 
-    /// @notice L05: پاداش ناخالص مصوب برای بلاک‌های [fromBlock, toBlock]، جمع بخش‌به‌بخش روی تاریخچه‌ی نرخ. هزینه = O(log n) برای
-    ///         یافتن نرخ در fromBlock + یک گام برای هر تغییر نرخ «داخل» بازه؛ نه به تعداد بلاک‌ها بستگی دارد و نه به تعداد تغییرهای قدیمی‌تر.
+    /// @notice پاداش ناخالص مصوب بلاک‌های [fromBlock, toBlock]، قطعه‌به‌قطعه روی تاریخچه‌ی نرخ جمع‌شده. داخل پنجره‌ی تحمل یک ورودی
+    ///         موقت، «بزرگ‌تر» از نرخ قدیم و جدید اعمال می‌شود؛ ورودی گواهی‌شده دقیق است. هزینه = O(log n) برای پیداکردن نرخ در
+    ///         fromBlock + تعداد ثابتی گام برای هر تغییر نرخ «داخل» بازه؛ نه به شمار بلاک‌ها بستگی دارد و نه به تعداد تغییرهای قدیمی‌تر.
     function maxRewardsForRange(uint256 fromBlock, uint256 toBlock) public view returns (uint256 total) {
         require(fromBlock <= toBlock, "BlockRewardDistributor: invalid range");
         uint256 n = rewardRateChanges.length;
-        uint256 i = _rateEntriesUpTo(fromBlock);
+        uint256 i = _rateEntriesEnded(fromBlock);
         uint256 rate = i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
         uint256 cursor = fromBlock;
         for (; i < n; i++) {
             RewardRateChange memory c = rewardRateChanges[i];
-            if (c.startBlock > toBlock) break;
-            total += (c.startBlock - cursor) * rate; // blocks cursor .. startBlock-1
-            cursor = c.startBlock;
-            rate = c.ratePerBlock;
+            if (c.certified) {
+                if (c.startBlock > toBlock) break;
+                if (c.startBlock > cursor) {
+                    total += (c.startBlock - cursor) * rate;
+                    cursor = c.startBlock;
+                }
+                rate = c.ratePerBlock;
+            } else {
+                uint256 windowStart = c.startBlock > RATE_START_TOLERANCE_BLOCKS ? c.startBlock - RATE_START_TOLERANCE_BLOCKS : 0;
+                uint256 windowEnd = uint256(c.startBlock) + RATE_START_TOLERANCE_BLOCKS;
+                if (windowStart > toBlock) break;
+                if (windowStart > cursor) {
+                    total += (windowStart - cursor) * rate;
+                    cursor = windowStart;
+                }
+                if (c.ratePerBlock > rate) rate = c.ratePerBlock; // inside the window: the larger of the two rates
+                if (windowEnd > toBlock) break;
+                total += (windowEnd - cursor) * rate;
+                cursor = windowEnd;
+                rate = c.ratePerBlock;
+            }
         }
         total += (toBlock - cursor + 1) * rate;
     }
 
-    /// @notice L05: پاداش مصوب هر بلاک در ارتفاع `blockNumber`.
+    /// @notice بیشترین پاداش مصوب به‌ازای هر بلاک که در `blockNumber` می‌تواند اعمال شود (داخل پنجره‌ی تحمل یک ورودی موقت،
+    ///         «بزرگ‌تر» از نرخ قدیم و جدید است).
     function rewardRateAt(uint256 blockNumber) external view returns (uint256) {
-        uint256 i = _rateEntriesUpTo(blockNumber);
-        return i == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[i - 1].ratePerBlock;
+        return maxRewardsForRange(blockNumber, blockNumber);
     }
 
-    /// @notice L05: تعداد تغییرهای نرخ مصوب و یک ورودی، برای داشبوردها و حسابرسی.
+    /// @notice تعداد تغییرهای نرخ مصوب و یک ورودی، برای داشبوردها و حسابرسی.
     function rewardRateChangeCount() external view returns (uint256) {
         return rewardRateChanges.length;
     }
 
-    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock) {
+    function rewardRateChange(uint256 index) external view returns (uint256 startBlock, uint256 ratePerBlock, uint256 activationTime, bool certified) {
         RewardRateChange memory c = rewardRateChanges[index];
-        return (c.startBlock, c.ratePerBlock);
+        return (c.startBlock, c.ratePerBlock, c.activationTime, c.certified);
     }
 
-    /// @dev کنترل بازه‌ی P05 (کامنت BlockRange را ببینید). در stack frame جدای خودش نگه داشته شده.
+    /// @dev کنترل بازه (کامنت BlockRange را ببینید). در stack frame جدای خودش نگه داشته شده.
     ///
-    ///      یادداشت طراحی L03 (ممیزی ۲۰۲۶-۰۹-۳۰) — چرا دیگر سقف زمان‌محور وجود ندارد.
-    ///      کنترل حذف‌شده totalBlocks <= (block.timestamp - lastDistributionTime) / 3 را الزام می‌کرد. دو طرف آن دو چیز متفاوت
-    ///      را می‌سنجند: تعداد بلاک مربوط به بازه‌ی بعد از lastSettledBlock است، ولی lastDistributionTime زمان اجرای «تراکنش»
-    ///      توزیع قبلی است که ممکن است فقط تا بلاکی عقب‌تر تسویه کرده باشد. هر تسویه‌ی عقب‌تر از head (تأخیر عادی اوراکل) یا
-    ///      هر آهنگ سریع‌تر از ۳ ثانیه، پرداخت درست را revert می‌کرد، و پس از رد یک چرخه، همه‌ی بازه‌های بعدیِ بلندتر هم رد
-    ///      می‌شدند (بازتولیدشده: test_L03_settlement_backlog.js).
+    ///      چرا سقف زمان‌محور وجود ندارد: کنترلی به شکل totalBlocks <= (block.timestamp - lastDistributionTime) / 3
+    ///      دو چیز متفاوت را مقایسه می‌کرد: تعداد بلاک مربوط به بازه‌ی بعد از lastSettledBlock است، ولی lastDistributionTime
+    ///      زمان اجرای «تراکنش» توزیع قبلی است که ممکن است فقط تا بلاکی عقب‌تر تسویه کرده باشد. هر تسویه‌ی عقب‌تر از head
+    ///      (تأخیر عادی اوراکل) یا هر آهنگ سریع‌تر از ۳ ثانیه، پرداخت درست را revert می‌کرد، و پس از رد یک چرخه، همه‌ی
+    ///      بازه‌های بعدیِ بلندتر هم رد می‌شدند.
     ///      آنچه به‌جای آن تعداد را کاملاً on-chain و دقیق محدود می‌کند:
     ///        (۱) پیوستگی   fromBlock == lastSettledBlock + 1           -> بدون فاصله، هم‌پوشانی یا بازه‌ی تکراری؛
     ///        (۲) فقط گذشته  toBlock < block.number                      -> هرگز بلاک جاری یا آینده تسویه نمی‌شود؛
     ///        (۳) اندازه    sum(blocksMined) <= toBlock - fromBlock + 1 -> هرگز بیش از بلاک‌های واقعی بازه.
-    ///      (۳) حد بالاست، نه تساوی. طبق تصمیم جاری (sur-reward-router-spec.md بخش ۳) این مجموع باید «معمولاً» برابر طول بازه
+    ///      (۳) حد بالاست، نه تساوی. طبق sur-reward-router-spec.md بخش ۳ این مجموع باید «معمولاً» برابر طول بازه
     ///      باشد؛ خروج/تعلیقِ بعدیِ تولیدکننده هرگز دلیل حذف بلاک‌هایش نیست (سیاست everActivated). توجه: تقسیم بر
     ///      sum(blocksMined) انجام می‌شود، نه طول بازه؛ پس این‌که پاداش/کارمزد بلاک حذف‌شده در این قرارداد بماند یا بین
     ///      تولیدکنندگان فهرست‌شده بازتوزیع شود، فقط به totalRewards/totalFees گزارش‌شده‌ی اوراکل بستگی دارد — قرارداد هیچ‌کدام
     ///      را الزام نمی‌کند. وقتی lastSettledBlock از بلاک حذف‌شده عبور کند، هیچ مسیر on-chainی برای پرداخت آن بلاک به
-    ///      تولیدکننده‌اش نمی‌ماند (یافته‌ی باز L08).
+    ///      تولیدکننده‌اش نمی‌ماند.
     ///      مرز اعتماد — این کنترل‌ها انتساب را اثبات نمی‌کنند. قرارداد به هدر بلاک‌های تاریخی و state تاریخی Registry دسترسی
     ///      ندارد؛ پس فقط اوراکل توزیع برای این موارد مورد اعتماد است: این‌که کدام آدرس هر بلاک را تولید کرده؛ فعال‌بودن
     ///      تولیدکننده در ارتفاع N-1؛ تقسیم بین ولیدیتورها؛ تفکیک totalRewards/totalFees (که این‌جا فقط به موجودی همین قرارداد
@@ -869,17 +892,16 @@ contract BlockRewardDistributor {
         uint256 totalBlocks;
     }
 
-    /// @dev ✅ تابع کمکی تازه، استخراج‌شده از بدنه‌ی inline اصلی distributeRewards() — همون
-    ///      require ها، همون ترتیب، همون ریاضی، فقط توی stack frame جدای خودش ایزوله شده تا
-    ///      خودِ distributeRewards() متغیرهای local هم‌زمان زنده‌ی کمتری در لحظه‌ی فراخوان
-    ///      _payValidators داشته باشه. به یادداشت اصلاح روی distributeRewards() بالا مراجعه کن.
+    /// @dev تابع کمکی پیش‌محاسبه‌ی distributeRewards(): در stack frame جدای خودش ایزوله شده تا
+    ///      distributeRewards() متغیرهای local هم‌زمان زنده‌ی کمتری در لحظه‌ی فراخوان
+    ///      _payValidators داشته باشد.
     function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
         private
         returns (EpochPrep memory prep)
     {
         // هر کارمزد عضویتی که از epoch قبلی ValidatorsRegistry فرستاده به استخر فی همین epoch
         // اضافه می‌شود — از قبل در موجودی این قرارداد هست (از طریق receiveMembershipFee()
-        // دریافت شده). ✅ این کارمزد عضویت با فی معمولی یکی نیست: کاملاً از سوزاندن ۳۰٪ زیر
+        // دریافت شده). این کارمزد عضویت با فی معمولی یکی نیست: کاملاً از سوزاندن ۳۰٪ زیر
         // معاف است (فقط totalFees معمولی سوزانده می‌شود، نه membershipFeesThisEpoch) — فقط
         // از نظر نحوه‌ی تقسیم نهایی بین ولیدیتورها همان رفتار ۱۰۰٪-به‌نسبت-بلاک را می‌گیرد.
         // به sur-tokenomics.md بخش ۶ مراجعه کنید.
@@ -890,7 +912,7 @@ contract BlockRewardDistributor {
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
         require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
 
-        // ✅ تازه: ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
+        // ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
         // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
         // اصلاً یه فی عمومی شبکه نیست — یه پرداخت هدفمند و یک‌باره‌ی جبران رقیق‌شدن به
         // ولیدیتورهای موجوده، که با ورود ولیدیتور تازه فعال می‌شه. سوزوندن بخشی ازش، این
@@ -904,9 +926,8 @@ contract BlockRewardDistributor {
         require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
     }
 
-    /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. فقط برای کوچک‌نگه‌داشتن stack frame خودِ
-    ///      distributeRewards از آن جدا شده (یادداشت بازنویسی بالا را ببین) — بدون تغییر
-    ///      رفتار نسبت به حلقه‌ی inline اصلی.
+    /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. برای کوچک‌نگه‌داشتن stack frame خودِ
+    ///      distributeRewards از آن جدا شده.
     function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
         for (uint256 i = 0; i < blocksMined.length; i++) {
             totalBlocks += blocksMined[i];
@@ -915,8 +936,7 @@ contract BlockRewardDistributor {
 
     /// @dev بسته‌بندی چهار ورودی مقیاسی موردنیاز `_payValidators` در یک struct در memory —
     ///      یک struct با یک اشاره‌گر (یک slot استک) پاس داده می‌شود، نه چهار slot جدا؛ همین
-    ///      چیزی است که اجازه داد stack frame خودِ این تابع زیر سقف ۱۶لایه جا بگیرد (یادداشت
-    ///      بازنویسی بالای distributeRewards را ببین).
+    ///      باعث می‌شود stack frame خودِ این تابع زیر سقف ۱۶لایه جا بگیرد.
     struct EpochContext {
         uint256 epochId;
         uint256 remainingRewards;
@@ -935,9 +955,9 @@ contract BlockRewardDistributor {
         EpochContext memory ctx
     ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
         for (uint256 i = 0; i < validators.length; i++) {
-            // L07 (ممیزی ۲۰۲۶-۰۹-۳۰، تصمیم مالک): آدرس‌ها باید اکیداً صعودی باشند. این شرط آدرس تکراری (که پیش‌تر رکوردهای
-            // هر-epoch را بازنویسی می‌کرد در حالی که همه‌ی ورودی‌ها پرداخت می‌شدند) و فهرست نامرتب را رد می‌کند. RewardRouter
-            // باید بلاک‌ها را برای هر تولیدکننده تجمیع و پیش از ارسال بر اساس آدرس مرتب کند.
+            // آدرس‌ها باید اکیداً صعودی باشند. این شرط آدرس تکراری (که رکوردهای هر-epoch را بازنویسی می‌کرد در حالی که
+            // همه‌ی ورودی‌ها پرداخت می‌شدند) و فهرست نامرتب را رد می‌کند. RewardRouter باید بلاک‌ها را برای هر تولیدکننده
+            // تجمیع و پیش از ارسال بر اساس آدرس مرتب کند.
             if (i > 0) {
                 require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
             }
@@ -945,12 +965,9 @@ contract BlockRewardDistributor {
 
             address validator = validators[i];
             require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            // ✅ تصمیم نهایی (ساده‌سازی سیاست پاداش، ۲۰۲۶-۰۹-۲۹ — جایگزین طرح قبلیِ
-            // claimableRewards که کامل طراحی و با اثبات عددی مستند شد ولی هرگز پیاده نشد): کار
-            // مشروع گذشته همیشه پرداخت می‌شود، صرف‌نظر از وضعیت **فعلی** ولیدیتور. `isValidator()`
-            // به‌اشتباه ولیدیتوری را که از آن‌موقع خروج داده یا معلق شده رد می‌کرد، حتی برای
-            // بلاک‌هایی که واقعاً در دوره‌ی Active تولید کرده — دقیقاً همان باگی که این سیاست حل
-            // می‌کند. `everActivated()` یک پرچم دائمی و فقط-اضافه‌شونده‌ی Registry است که از
+            // کار مشروع گذشته همیشه پرداخت می‌شود، صرف‌نظر از وضعیت **فعلی** ولیدیتور. `isValidator()`
+            // ولیدیتوری را که از آن‌موقع خروج داده یا معلق شده رد می‌کرد، حتی برای بلاک‌هایی که
+            // واقعاً در دوره‌ی Active تولید کرده. `everActivated()` یک پرچم دائمی و فقط-اضافه‌شونده‌ی Registry است که از
             // پاک‌شدن در `withdrawStake()` جان سالم به‌در می‌برد؛ فقط «حداقل یک‌بار به‌طور مشروع
             // فعال شده» را ثابت می‌کند، نه «دقیقاً هنگام تولید همین بلاک فعال بوده» — آن
             // راستی‌آزمایی زمانی نه ممکن است و نه روی زنجیره انجام می‌شود (Solidity به تاریخچه‌ی
@@ -1005,9 +1022,8 @@ contract BlockRewardDistributor {
     }
 
     /// @dev رند کردن خرده‌ریز به خزانه، انتقال سهم خزانه، به‌روزرسانی مجموع‌های تاریخی، ثبت
-    ///      epoch، و emit کردن event نهایی — دقیقاً همان دنباله‌ی inline اصلی
-    ///      distributeRewards، فقط به‌خاطر عمق استک به تابع جدا منتقل شده (یادداشت بازنویسی
-    ///      بالا را ببین). بدون تغییر رفتار، event، یا ترتیب.
+    ///      epoch، و emit کردن event نهایی — دنباله‌ی پایانی distributeRewards، که فقط به‌خاطر عمق
+    ///      استک به تابع جدا منتقل شده است.
     function _finalizeEpoch(
         uint256 epochId,
         uint256 totalRewards,
@@ -1028,10 +1044,9 @@ contract BlockRewardDistributor {
         // اینجا باقی می‌ماند دقیقاً validatorDirectAmount - distributedRewards است — باقی‌مانده‌ی
         // تقسیم صحیح‌عددی هنگام تقسیم به نسبت بلاک.
         uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        // ✅ تغییر کرد: totalFees اینجا کل استخر فی *قبل از سوزاندن* است (برای شفافیت رکورد
-        // epoch/رویداد — به distributeRewards مراجعه کن). پس feeDust باید هم feeBurnAmount هم
-        // distributedFees را کم کند، وگرنه ۳۰٪ سوزانده‌شده به‌اشتباه «خرده‌ریز» حساب و یک بار
-        // دیگر (روی سوزاندن قبلی‌اش) به خزانه فرستاده می‌شد.
+        // totalFees اینجا کل استخر فی *قبل از سوزاندن* است (برای شفافیت رکورد epoch/رویداد — به
+        // distributeRewards مراجعه کن). پس feeDust باید هم feeBurnAmount هم distributedFees را کم کند، وگرنه ۳۰٪
+        // سوزانده‌شده به‌اشتباه «خرده‌ریز» حساب و یک بار دیگر به خزانه فرستاده می‌شد.
         uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
 
@@ -1046,7 +1061,7 @@ contract BlockRewardDistributor {
             emit FoundationFunded(epochId, foundationAmount);
         }
 
-        // ✅ تازه: بخش سوزاندنی فی را واقعاً بسوزان — بعد از انتقال‌های خزانه/بنیاد، صرفاً
+        // بخش سوزاندنی فی را بسوزان — بعد از انتقال‌های خزانه/بنیاد، صرفاً
         // برای ترتیب فراخوانی یکدست؛ این مبلغ از قبل، پیش از اجرای _payValidators، از
         // feesToDistribute کنار گذاشته شده بود، پس اینجا فقط سورنی را که هرگز به کسی پرداخت
         // نشده به یک عدم‌گردش دائمی و قابل‌راستی‌آزمایی منتقل می‌کنیم.

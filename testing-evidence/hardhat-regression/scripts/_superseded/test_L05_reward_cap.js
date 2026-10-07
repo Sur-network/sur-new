@@ -1,9 +1,7 @@
-// Reward cap — totalRewards <= sum of the approved per-block reward rate over the settled range, now with provisional rate changes:
-// a change is created with an activation TIMESTAMP and an ESTIMATED start block; until the oracle certifies the actual start block,
-// blocks within RATE_START_TOLERANCE_BLOCKS of the estimate are capped at the larger of the old and the new rate.
-// Rate history entries are written directly into storage here (the governance path is tested in test_L05_rate_governance.js).
-// Hardhat, not Besu. The contract is compiled from the Plan's contracts/ folder.
-const hre = require("hardhat"); const fs = require("fs"); const solc = require("solc"); const { compile } = require("./_compile.js");
+// L05 (owner decision 2026-09-30) — totalRewards <= sum of the approved per-block reward rate over the settled range.
+// Rate history entries are written directly into storage here (the governance path that appends them is pending the owner's
+// decision on delay/lead time and is NOT part of this test). Hardhat, not Besu.
+const hre = require("hardhat"); const fs = require("fs"); const solc = require("solc");
 const DIST = "0x2222222222222222222222222222222222222222", FOUND = "0x1111111111111111111111111111111111111111",
       REG = "0x3333333333333333333333333333333333333333", TRES = "0x5555555555555555555555555555555555555555";
 let results = [];
@@ -20,16 +18,15 @@ contract Sink { receive() external payable {} }`;
   const put = async (addr, abi, bc) => { const t = await new hre.ethers.ContractFactory(abi, bc, deployer).deploy(); await t.waitForDeployment(); await hre.network.provider.send("hardhat_setCode", [addr, await hre.network.provider.send("eth_getCode", [await t.getAddress(), "latest"])]); };
   const M = out.contracts["M.sol"];
   await put(REG, M.AllValid.abi, "0x" + M.AllValid.evm.bytecode.object); await put(FOUND, M.Sink.abi, "0x" + M.Sink.evm.bytecode.object); await put(TRES, M.Sink.abi, "0x" + M.Sink.evm.bytecode.object);
-  const art = compile("BlockRewardDistributor.sol", "BlockRewardDistributor"); await put(DIST, art.abi, art.bytecode);
+  const art = JSON.parse(fs.readFileSync("distributor_artifact.json")); await put(DIST, art.abi, art.bytecode);
   const L = art.layout.storage; const slot = n => BigInt(L.find(x => x.label === n).slot);
   const setU = (s, v) => hre.network.provider.send("hardhat_setStorageAt", [DIST, hre.ethers.toBeHex(s), hre.ethers.zeroPadValue(hre.ethers.toBeHex(v), 32)]);
   await setU(slot("distributionOracle"), BigInt(oracle.address)); await setU(slot("validatorDirectShareBps"), 5000n);
   await hre.network.provider.send("hardhat_setBalance", [DIST, "0x" + (10n ** 27n).toString(16)]);
-  await hre.network.provider.send("hardhat_mine", ["0x" + (41000).toString(16)]);
+  await hre.network.provider.send("hardhat_mine", ["0x" + (5000).toString(16)]);
   const d = new hre.ethers.Contract(DIST, art.abi, oracle);
   const RS = slot("rewardRateChanges"), base = BigInt(hre.ethers.keccak256(hre.ethers.zeroPadValue(hre.ethers.toBeHex(RS), 32)));
-  // element = 2 storage slots: [startBlock | ratePerBlock << 128] and [activationTime (uint64) | certified (bool) << 64]; entries without a flag are certified
-  const setSchedule = async entries => { await setU(RS, BigInt(entries.length)); for (let i = 0; i < entries.length; i++) { const cert = entries[i][2] === false ? 0n : 1n; const act = BigInt(entries[i][3] || 1000); await setU(base + BigInt(2 * i), BigInt(entries[i][0]) + (entries[i][1] << 128n)); await setU(base + BigInt(2 * i + 1), act + (cert << 64n)); } };
+  const setSchedule = async entries => { await setU(RS, BigInt(entries.length)); for (let i = 0; i < entries.length; i++) await setU(base + BigInt(i), BigInt(entries[i][0]) + (entries[i][1] << 128n)); };
   const brute = (sched, a, b) => { let t = 0n; for (let h = a; h <= b; h++) { let r = E("2"); for (const [s, rr] of sched) if (s <= h) r = rr; t += r; } return t; };
   // Hardhat snapshots are single-use: re-take one after every revert so each section starts from the same clean state
   let snap = await hre.network.provider.send("evm_snapshot");
@@ -68,8 +65,8 @@ contract Sink { receive() external payable {} }`;
   for (let i = 0; i < 25; i++) { const a = 1 + Math.floor(Math.random() * 1400), b = a + Math.floor(Math.random() * 600); cases++; const got = await d.maxRewardsForRange(a, b), exp = brute(S3, a, b); if (got !== exp) allMatch = `[${a},${b}] got ${got} exp ${exp}`; }
   ok(`B5) four changes (incl. a 0-reward segment): contract equals per-block brute force on ${cases} ranges`, allMatch);
   ok("B6) rewardRateAt at each boundary", (await d.rewardRateAt(100)) === E("2") && (await d.rewardRateAt(101)) === E("1") && (await d.rewardRateAt(201)) === 0n && (await d.rewardRateAt(300)) === 0n && (await d.rewardRateAt(301)) === E("5") && (await d.rewardRateAt(1001)) === E("4"));
-  { const exp = brute(S3, 1, 350); // late settlement long after the changes, at head ~41000: historical rates of THESE blocks apply
-    ok("B7) late settlement of [1,350] at head ≈41000 uses the historical rates of those blocks (exact cap accepted)", (await (await d.distributeRewards({ fromBlock: 1, toBlock: 350 }, [v1.address], [350], exp, 0)).wait()).status === 1, `cap=${hre.ethers.formatEther(exp)} SUR`); }
+  { const exp = brute(S3, 1, 350); // late settlement long after the changes, at head ~5000: historical rates of THESE blocks apply
+    ok("B7) late settlement of [1,350] at head ≈5000 uses the historical rates of those blocks (exact cap accepted)", (await (await d.distributeRewards({ fromBlock: 1, toBlock: 350 }, [v1.address], [350], exp, 0)).wait()).status === 1, `cap=${hre.ethers.formatEther(exp)} SUR`); }
   ok("B8) a change starting after toBlock does not affect the range ([1,1000] ignores the change at 1001)", (await d.maxRewardsForRange(1, 1000)) === brute(S3, 1, 1000));
   ok("B9) invalid range (from > to) rejected by the view", await (async () => { try { await d.maxRewardsForRange(10, 9); return "did NOT revert"; } catch (e) { return msgOf(e).includes("invalid range") ? true : msgOf(e); } })());
 
@@ -110,46 +107,5 @@ contract Sink { receive() external payable {} }`;
   { await setSchedule(hist.slice(0, 40)); const g40 = await d.maxRewardsForRange.estimateGas(100, 100 + 39 * 10 + 5);
     await setSchedule(hist); const g400 = await d.maxRewardsForRange.estimateGas(100 + (NH - 1 - 39) * 10, lastStart + 5); const df = g400 > g40 ? g400 - g40 : g40 - g400;
     ok("E3) same k = 39: a 40-entry vs a 400-entry history differ by ≤ 12% (only the log n search differs)", df * 100n <= g40 * 12n, `n=40:${g40} n=400:${g400}`); }
-
-  console.log("\n=== F — provisional rate changes (activation time + estimated start block) and certification ===");
-  const W = 10000n; ok("F0) RATE_START_TOLERANCE_BLOCKS = 10,000 and MIN_RATE_CHANGE_LEAD_SECONDS = 7 days", (await d.RATE_START_TOLERANCE_BLOCKS()) === W && (await d.MIN_RATE_CHANGE_LEAD_SECONDS()) === 7n * 86400n);
-  // reference: per-block rate with provisional windows. entries: [start, rate, certified]
-  const refRate = (sched, h) => { let r = E("2"); for (const [s, rr, cert] of sched) { const c = cert !== false; if (c) { if (BigInt(h) >= s) r = rr; } else { const lo = s > W ? s - W : 0n, hi = s + W; if (BigInt(h) >= hi) r = rr; else if (BigInt(h) >= lo) r = rr > r ? rr : r; } } return r; };
-  const refSum = (sched, a, b) => { let t_ = 0n; for (let h = a; h <= b; h++) t_ += refRate(sched, h); return t_; };
-  // previous rate for the window comparison is the rate in force just before the window, i.e. refRate evaluated before lo; the helper above matches the contract for non-overlapping windows
-  await fresh(); const P1 = [[20000n, E("3"), false]]; await setSchedule(P1);
-  ok("F1) increase 2 -> 3, estimate 20,000, provisional: blocks before 10,000 use 2, blocks 10,000..29,999 use 3 (larger), blocks from 30,000 use 3",
-    (await d.maxRewardsForRange(1, 9999)) === E("2") * 9999n && (await d.maxRewardsForRange(10000, 29999)) === E("3") * 20000n && (await d.maxRewardsForRange(30000, 40000)) === E("3") * 10001n);
-  ok("F2) rewardRateAt returns the larger rate inside the window and the exact rate outside", (await d.rewardRateAt(9999)) === E("2") && (await d.rewardRateAt(10000)) === E("3") && (await d.rewardRateAt(29999)) === E("3") && (await d.rewardRateAt(30000)) === E("3"));
-  await fresh(); const P2 = [[20000n, E("1"), false]]; await setSchedule(P2);
-  ok("F3) decrease 2 -> 1, provisional: the larger (old) rate 2 holds through the whole window, the new rate 1 from 30,000",
-    (await d.maxRewardsForRange(10000, 29999)) === E("2") * 20000n && (await d.maxRewardsForRange(30000, 30009)) === E("1") * 10n && (await d.maxRewardsForRange(29995, 30004)) === E("2") * 5n + E("1") * 5n);
-  { let all = true, n = 0; const sch = [[20000n, E("3"), false]]; await setSchedule(sch);
-    for (const [a, b] of [[1, 100], [9990, 10010], [10000, 10000], [29999, 30000], [29990, 30010], [1, 40000], [15000, 15001], [20000, 20000], [5000, 35000]]) { n++; const got = await d.maxRewardsForRange(a, b), exp = refSum(sch, a, b); if (got !== exp) all = `[${a},${b}] got ${got} exp ${exp}`; }
-    const mixed = [[15000n, E("3"), true], [60000n, E("1"), false], [100000n, E("4"), false]]; await setSchedule(mixed);
-    for (let i = 0; i < 40; i++) { const a = 1 + Math.floor(Math.random() * 120000), b = a + Math.floor(Math.random() * 40000); n++; const got = await d.maxRewardsForRange(a, b), exp = refSum(mixed, a, b); if (got !== exp) all = `mixed [${a},${b}] got ${got} exp ${exp}`; }
-    ok(`F4) provisional and certified entries mixed: the contract equals the per-block reference on ${n} ranges`, all); }
-  // integration with distributeRewards: range inside the window
-  await fresh(); await setSchedule([[20000n, E("3"), false]]); await setU(slot("lastSettledBlock"), 10499n);
-  { const rc = await (await d.distributeRewards({ fromBlock: 10500, toBlock: 11499 }, [v1.address], [1000], E("3000"), 0)).wait();
-    ok("F5) inside the provisional window a reward at the larger rate (3 SUR x 1000) is accepted although the old rate would cap it at 2000", rc.status === 1); }
-  await fresh(); await setSchedule([[20000n, E("3"), false]]); await setU(slot("lastSettledBlock"), 10499n);
-  ok("F6) inside the window a reward above the larger rate is still rejected", await reverts(() => d.distributeRewards({ fromBlock: 10500, toBlock: 11499 }, [v1.address], [1000], E("3000") + 1n, 0), CAP_ERR));
-  // certification: written entry with activationTime 1000 (long past) and estimate 20,000; head is above 41,000
-  await fresh(); await setSchedule([[20000n, E("3"), false, 1000]]);
-  ok("F7) only the oracle can certify", await reverts(() => d.connect(payer).certifyRateStart(0, 20000), "caller is not the distribution oracle"));
-  ok("F8) a start block outside the tolerance window is rejected (estimate + 10,001 and estimate - 10,001)", await reverts(() => d.certifyRateStart(0, 30001), "outside the tolerance window") === true && await reverts(() => d.certifyRateStart(0, 9999), "outside the tolerance window") === true);
-  { const head = await hre.ethers.provider.getBlockNumber(); await setSchedule([[BigInt(head + 5000), E("3"), false, 1000]]);
-    ok("F9) a start block above the current head (estimate head+5,000, certified value head+3,000: inside the tolerance) is rejected as in the future", await reverts(() => d.certifyRateStart(0, head + 3000), "start block is in the future")); }
-  await fresh(); await setSchedule([[20000n, E("3"), false, 1000]]);
-  ok("F10) an index that does not exist is rejected", await reverts(() => d.certifyRateStart(5, 20000), "no such rate change"));
-  { const rc = await (await d.certifyRateStart(0, 22000)).wait(); const [sb, rt, at_, cert] = await d.rewardRateChange(0);
-    ok("F11) certification at 22,000 (estimate + 2,000) accepted: stored start 22,000, certified = true, activation time kept", rc.status === 1 && sb === 22000n && rt === E("3") && at_ === 1000n && cert === true); }
-  ok("F12) a second certification of the same entry is rejected", await reverts(() => d.certifyRateStart(0, 22000), "already certified"));
-  ok("F13) after certification the change is exact: [21999,21999] = 2, [22000,22000] = 3, [10000,29999] = 12,000 x 2 + 8,000 x 3", (await d.maxRewardsForRange(21999, 21999)) === E("2") && (await d.maxRewardsForRange(22000, 22000)) === E("3") && (await d.maxRewardsForRange(10000, 29999)) === E("2") * 12000n + E("3") * 8000n);
-  await setU(slot("lastSettledBlock"), 10499n);
-  ok("F14) after certification a reward inside the old window at the new higher rate is rejected again (exact cap 2 SUR per block before block 22,000)", await reverts(() => d.distributeRewards({ fromBlock: 10500, toBlock: 11499 }, [v1.address], [1000], E("3000"), 0), CAP_ERR));
-  { await fresh(); await setSchedule([[20000n, E("3"), false, 4_000_000_000]]);
-    ok("F15) certification before the activation time is rejected", await reverts(() => d.certifyRateStart(0, 20000), "activation time has not been reached")); }
   const bad = results.filter(x => !x).length; console.log(`\nنتیجه: ${results.length - bad}/${results.length} گذر`); process.exit(bad ? 1 : 0);
 })().catch(e => { console.error("خطا:", e.message); process.exit(1); });
