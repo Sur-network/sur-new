@@ -1,6 +1,6 @@
 # دستور آزمون Besu برای Claude Code — دور ۶ (قرارداد نسخهٔ ۲.۲، حالت Shanghai/Cancun)
 
-**تاریخ تدوین:** ۲۰۲۶-۱۰-۰۷ · **مخاطب:** Claude Code (اجراکننده) · **وضعیت:** دستور اجرا؛ اجرا نشده.
+**تاریخ تدوین:** ۲۰۲۶-۱۰-۰۷ · **مخاطب:** Claude Code (اجراکننده) · **وضعیت:** اجرا شد (۲۰۲۶-۱۰-۰۷)؛ نتایج در `testing-evidence/besu-live-test-v6-2026-10-07/REPORT.md` (۵۲ ردیف: ۳۶ PASS، ۹ OBSERVATION، ۲ SUPERSEDED، ۱ BLOCKED، ۴ NOT-RUN). اجرا با دو انحراف از این دستور انجام شد: Besu release ۲۶.۹.۰ به‌جای image توسعه و فشرده‌شدن `RATE_START_TOLERANCE_BLOCKS` به ۶۰ بلاک در test-fork (`DEVIATIONS.md`).
 **مبنای کد:** Plan فعلی. تنها قرارداد تغییرکرده نسبت به دور ۵ همین `BlockRewardDistributor` است (نسخهٔ ۲.۲، تصمیم ۸۹). نتایج دور ۵ برای این قرارداد معتبر نیست.
 
 ---

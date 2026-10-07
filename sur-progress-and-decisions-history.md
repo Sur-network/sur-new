@@ -153,8 +153,9 @@
 | ممیزی | ۳۰ سپتامبر ۲۰۲۶ | کد فعلی | فقط Hardhat؛ اصلاحات L01–L07 |
 | ۴ (v4) | ۲–۴ اکتبر ۲۰۲۶ | کد نسخهٔ ۲.۰.۰ | تک‌میزبان؛ شاهد baseline، test-fork، شبیه‌سازی و benchmark مصنوعی جدا شده‌اند؛ مسیر ترکیبی زمان واقعی L اجرا نشد؛ شکست A09-spec ناشی از ابزار آزمایشی بود و رفع شد |
 | ۵ (v5) | ۵ اکتبر ۲۰۲۶ | کد نسخهٔ ۲.۱.۰ (کامیت‌نشده روی HEAD `f04faa5`) | تک‌میزبان؛ ۲۸ ردیف: ۲۴ PASS، ۴ NOT-RUN. قلاب Registry به Board در همان تراکنش، کف ۱ ولیدیتور، هیأت ماهانه و بی‌اختیاری هیأت ماه قبل، قاعدهٔ تساوی، snapshot رأی اختلاف تحویل و اعتراض؛ مرز ماه فقط روی test-fork و ژنزیس پس‌تاریخ‌شده؛ مسیر L اجرا نشد |
+| ۶ (v6) | ۷ اکتبر ۲۰۲۶ | `BlockRewardDistributor` نسخهٔ ۲.۲، genesis حالت Shanghai/Cancun، Besu release ۲۶.۹.۰ | تک‌میزبان؛ ۵۲ ردیف: ۳۶ PASS، ۹ OBSERVATION، ۲ SUPERSEDED، ۱ BLOCKED، ۴ NOT-RUN، ۰ FAIL. Shanghai/Cancun (۰ و ۰، بدون `blobSchedule`) بالا آمد؛ گذار `blockreward` با کلید timestamp در نخستین بلاکِ `timestamp ≥ کلید` اعمال شد؛ حکمرانی و گواهی نرخ و سقف نسخهٔ ۲.۲ و پذیرش توزیع با پاداش واقعی در هر مرز مصوب روی test-fork کار کرد؛ نرخ بدون ورودی مصوب رد و فقط گزارش کمتر از واقع پذیرفته شد (R6). **گذار `blockheader` با کلید timestamp زنجیره را متوقف کرد** — روش بازیابی اضطراری N04 در Shanghai/Cancun تأییدشده نیست. انحراف از brief: release به‌جای image توسعه؛ tolerance فشرده به ۶۰. گروه X و مسیر L اجرا نشد |
 
-نتایج هر دور به دور بعد تعمیم داده نمی‌شود. آمار دقیق دور چهارم فقط در `testing-evidence/besu-live-test-v4-2026-10-03/REPORT.md` و آمار دور پنجم فقط در `testing-evidence/besu-live-test-v5-2026-10-05/REPORT.md` معتبر است.
+نتایج هر دور به دور بعد تعمیم داده نمی‌شود. آمار دقیق دور چهارم فقط در `testing-evidence/besu-live-test-v4-2026-10-03/REPORT.md` و آمار دقیق دور پنجم فقط در `testing-evidence/besu-live-test-v5-2026-10-05/REPORT.md` و آمار دور ششم فقط در `testing-evidence/besu-live-test-v6-2026-10-07/REPORT.md` معتبر است.
 
 ---
 
