@@ -1,0 +1,40 @@
+{
+  "solc": "0.8.24",
+  "optimizer": {
+    "enabled": true,
+    "runs": 200
+  },
+  "viaIR": false,
+  "contracts": {
+    "FoundationDAO": {
+      "bytes": 9677,
+      "runtimeKeccak": "0x2076152945bf7145dfbc504ae5c30e99abcaa48493352e555c63a72872e7fefd",
+      "immutableReferences": "{}"
+    },
+    "BlockRewardDistributor": {
+      "bytes": 20424,
+      "runtimeKeccak": "0x553f8c1489994d47bd630078c586df543cb7fa53ae11743ab1031e1ee6a10ce3",
+      "immutableReferences": "{}"
+    },
+    "ValidatorsRegistry": {
+      "bytes": 23005,
+      "runtimeKeccak": "0xa8e8245c5ae5ac4c303bf6ecaa765d8c9b94255f86c95fa327dbd1b357efba98",
+      "immutableReferences": "{}"
+    },
+    "ValidatorsBoard": {
+      "bytes": 17035,
+      "runtimeKeccak": "0xbcde0968ae34d81e895bc8852ffe81b3137b0ea2e6ca2dcf8be19e62a72b9763",
+      "immutableReferences": "{}"
+    },
+    "ValidatorsTreasury": {
+      "bytes": 5755,
+      "runtimeKeccak": "0x541259882868b7b8f28233c6d4c8863e098987df337210f2f6897ecfad7f2073",
+      "immutableReferences": "{}"
+    },
+    "IdentityRegistry": {
+      "bytes": 4526,
+      "runtimeKeccak": "0x8fe836d6320ca513aa50a3408519b42288ba91d234c2e54eea155278054a4eea",
+      "immutableReferences": "{}"
+    }
+  }
+}

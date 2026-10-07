@@ -1,0 +1,30 @@
+diff -ru -x testonly-genesis-seed contracts-baseline/BlockRewardDistributor.sol testfork/BlockRewardDistributor.sol
+--- contracts-baseline/BlockRewardDistributor.sol	2026-10-07 11:55:15.017899000 +0330
++++ testfork/BlockRewardDistributor.sol	2026-10-07 12:12:59.804701700 +0330
+@@ -126,7 +126,7 @@
+     uint256 public totalFeesBurned;
+ 
+     /// @notice Minimum allowed interval between two consecutive distribution calls.
+-    uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
++    uint256 public constant MIN_DISTRIBUTION_INTERVAL = 45 seconds; // TEST-FORK (real: 23 hours)
+ 
+     // The block count of a distribution is bounded by the range control in _settleRange, not by elapsed time.
+ 
+@@ -318,13 +318,13 @@
+     /// @notice Voting phase only. An approved proposal waiting for its delay/execution is NOT removed by this expiry.
+     uint256 public constant RATE_VOTING_EXPIRY = 30 days;
+     /// @notice Starts when BOTH chambers have completed.
+-    uint256 public constant RATE_CHANGE_DELAY = 7 days;
++    uint256 public constant RATE_CHANGE_DELAY = 120 seconds; // TEST-FORK (real: 7 days)
+     /// @notice Minimum distance in SECONDS between the executing block and a change's activation time. It is a time, independent of
+     ///         RATE_CHANGE_DELAY, and gives every operator a week to update the genesis of every node.
+-    uint256 public constant MIN_RATE_CHANGE_LEAD_SECONDS = 7 days;
++    uint256 public constant MIN_RATE_CHANGE_LEAD_SECONDS = 300 seconds; // TEST-FORK (real: 7 days)
+     /// @notice Half-width, in blocks, of the window around the estimated start block in which the larger of the two rates is
+     ///         allowed until the start block is certified, and the largest distance between a certified start block and its estimate.
+-    uint256 public constant RATE_START_TOLERANCE_BLOCKS = 10_000;
++    uint256 public constant RATE_START_TOLERANCE_BLOCKS = 60; // TEST-FORK (real: 10,000 blocks)
+ 
+     struct RateProposal {
+         uint128 startBlock; // estimated first block of the new rate
+Only in contracts-baseline: reference-dapps

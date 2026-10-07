@@ -1,0 +1,11 @@
+# Besu round 6 — BlockRewardDistributor v2.2 on a Shanghai/Cancun genesis (results and evidence)
+
+Executed per `sur-besu-live-test-brief-v6.md` (2026-10-07). Start with `REPORT.md` (52-row table, counted by script and by hand), then `FINDINGS.md`, `DEVIATIONS.md` (what differs from the brief and who decided it), `LIMITATIONS.md`, `QUESTIONS.md` (5 open questions — the first one asks permission to use the develop Besu image).
+
+**Headline observations:** (1) a timestamp-keyed `blockreward` transition changes the reward in exactly the first block with `timestamp ≥ key`, the same block the contract's definition names; (2) the v2.2 governance, certification and cap paths worked as designed in every case built, and `distributeRewards` with the real chain reward was accepted at every governed boundary; (3) a Besu transition at a time that is not an approved activation time makes the real reward exceed the cap — rejected, accepted only as an under-report; (4) **a `validatorselectionmode: blockheader` transition keyed by a timestamp halted the chain at the transition on Besu 26.9.0 (two networks); a restart did not help; the chain resumed only after the return transition plus 384 s.**
+
+Files in this folder: the six documents, `evidence/00-baseline/` (`r6-plan-contracts-sha256.txt`, `r6-testfork.diff`, `r6-testfork-sha256.txt`, `r6-compile-record.json`, `r6-vs-r5-hash-diff.txt`, `r6-genesis-sha256.txt`, `r6-plan-head.txt`) and `count-results.txt`. The complete package (raw node logs, genesis files, test keys, result JSON, scripts) is **outside the Plan**: `D:\Amir\Business\SUR\Test\final-package-work\round6\sur-besu-round6-v2.2-results.zip` (+ `.sha256`; `MANIFEST.sha256` inside, verify with `sha256sum -c MANIFEST.sha256`).
+
+Header of every result file in the package: baseline hash = `evidence/00-baseline/r6-plan-contracts-sha256.txt`; genesis hash of its network = `r6-genesis-sha256.txt`; Besu = release `besu/v26.9.0/windows-x86_64/openjdk-java-25` (rows of `REPORT.md` and the `seed-summary.json` of each network name the network).
+
+> این نتایج فقط دربارهٔ هش‌های ثبت‌شده در `r6-plan-contracts-sha256.txt`، نسخهٔ Besu ثبت‌شده و حالت Shanghai/Cancun با ثابت‌های ذکرشده در `DEVIATIONS.md` است. با تغییر هر یک از آن فایل‌ها معتبر نیست. این گزارش بیانیهٔ آمادگی production نیست.

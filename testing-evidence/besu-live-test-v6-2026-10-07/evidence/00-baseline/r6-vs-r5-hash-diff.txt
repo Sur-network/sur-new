@@ -1,0 +1,11 @@
+# Phase 0.2: Plan contract hashes now (r6-plan-contracts-sha256.txt) vs the round-5 record (/d/Amir/Business/SUR/NewSur/Plan/testing-evidence/besu-live-test-v5-2026-10-05/evidence/00-baseline/r5-plan-contracts-sha256.txt)
+# lines starting with '<' = round 5, '>' = now; only BlockRewardDistributor.sol (EN and FA) may differ
+1c1
+< 032de8ff29ac779caf31ea9c119a2253a6653d6fe95a69905d1b0b343fde1f88  contracts-fa/BlockRewardDistributor.sol
+---
+> cb3c645ad1902f3367a4df0c5b39d7bf42ab0d62aad2eb80296d3960475e38f9  contracts-fa/BlockRewardDistributor.sol
+13c13
+< 850a13fdd11480bc7e554db3c0ecd42be378445a5b4326109c2f45f35046e21c  contracts/BlockRewardDistributor.sol
+---
+> 50c3f95a04270650245eeaf37147a9e71aca82513ffd695f4da68e902378ed91  contracts/BlockRewardDistributor.sol
+(files compared: 24 now, 24 in round 5)
