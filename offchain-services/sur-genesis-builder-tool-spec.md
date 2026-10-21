@@ -63,10 +63,10 @@
         "to": "0x1111111111111111111111111111111111111111",
         "amountWei": "20000000000000000000000000"
       },
-      "formerValidatorCompensation": [
+      "initialValidatorClaims": [   // ردیف ۲: مطالبات ولیدیتورهای اولیه — ۷ ورودی (یک نود = یک ورودی)؛ جمع amountWei باید دقیقاً ۱۱٬۹۸۴٬۰۰۰ سورن باشد
         { "to": "0x....", "amountWei": "0" }
       ],
-      "debtSettlement": [
+      "foundationMemberClaims": [    // ردیف ۳: مطالبات اعضای بنیاد — ۱۵ ورودی؛ جمع amountWei باید دقیقاً ۲۱٬۳۲۷٬۰۰۰ سورن باشد
         { "to": "0x....", "amountWei": "0" }
       ]
     }
@@ -188,8 +188,9 @@
 
 جدا از storage خودِ قرارداد (بخش ۴.۲)، سه ردیف موجودی زیر باید مستقیم در `alloc` (نه storage قرارداد) نوشته شوند — این‌ها موجودی سورن (ارز بومی) هر آدرس‌اند، نه storage:
 - آدرس `0x1111...1111` (خودِ `FoundationDAO`): `genesisAllocations.ecosystemDevelopment.amountWei`.
-- هر آدرس در `genesisAllocations.formerValidatorCompensation`: مبلغ متناظرش.
-- هر آدرس در `genesisAllocations.debtSettlement`: مبلغ متناظرش (ردیفی، نه یک‌جا — طبق `sur-tokenomics.md`).
+- هر آدرس در `genesisAllocations.initialValidatorClaims` (مطالبات ولیدیتورهای اولیه، جمعاً ۱۱٬۹۸۴٬۰۰۰ سورن): مبلغ متناظرش (جدول مبلغ هر نود: `sur-tokenomics.md` بخش ۲.۲).
+- هر آدرس در `genesisAllocations.foundationMemberClaims` (مطالبات اعضای بنیاد، جمعاً ۲۱٬۳۲۷٬۰۰۰ سورن): مبلغ متناظرش (ردیفی، نه یک‌جا — جدول مبلغ هر عضو: `sur-tokenomics.md` بخش ۲.۱).
+- جمع سه ردیف باید دقیقاً ۵۳٬۳۱۱٬۰۰۰ سورن باشد؛ ابزار باید در مرحله‌ی تأیید این جمع را بسنجد.
 
 اگر یک آدرس هم به‌عنوان ولیدیتور/عضو هیأت/عضو بنیاد و هم به‌عنوان گیرنده‌ی یکی از این سه ردیف ظاهر شود، موجودی‌اش باید جمع این دو منبع باشد (نه جایگزین یکدیگر).
 
