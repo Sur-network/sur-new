@@ -379,7 +379,7 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `receive()` | هرکسی (در عمل: `FoundationDAO`) | — (فقط `msg.value`) | — | تأمین مالی قرارداد؛ فقط `Funded` event می‌زند |
 | `currentPriceToman()` | هرکسی (view) | — | `uint256` | قیمت فعلی، فقط از زمان و پارامترهای دوره محاسبه می‌شود — هیچ ورودی گزارش‌شده‌ای در آن اثر ندارد |
 | `currentPeriod()` / `isSaleActive()` | هرکسی (view) | — | دوره / `bool` | دورهٔ جاری (قیمت ثابت، گذار، پایان) و فعال‌بودن فروش |
-| `fulfillOrder(address buyer, uint256 surenAmount, bytes32 orderRef)` | **فقط صرافی مجاز** | خریدار، مقدار سورن، شناسهٔ یکتای سفارش | — | تنها تابعی که سورن واقعی جابه‌جا می‌کند؛ مبلغ تومانی = مقدار × قیمت جاری قرارداد؛ idempotent با `orderRef`؛ از سهمیهٔ همان صرافی و سقف کل کسر می‌شود؛ بالاتر از سهمیه revert |
+| `sellTo(address customer, uint256 tomanAmount, bytes32 reference)` | **فقط صرافی مجاز** | مشتری، مبلغ تومانی دریافت‌شده، شناسهٔ یکتای سفارش | — | تنها تابعی که سورن واقعی جابه‌جا می‌کند؛ مقدار سورن = مبلغ تومانی ÷ قیمت جاری قرارداد؛ idempotent با `reference`؛ از سهمیهٔ همان صرافی و سقف کل کسر می‌شود؛ بالاتر از سهمیه revert |
 | `setExchange(address exchange, uint256 quota)` / `setTotalCap(uint256 cap)` | **فقط `FoundationDAO`** (تصمیم هیأت‌مدیرهٔ بنیاد) | آدرس صرافی، سهمیه / سقف کل | — | افزودن، تغییر یا حذف صرافی مجاز |
 | `extendFixedPeriod(uint256 extraDays, uint256 price)` / `extendTransitionPeriod(uint256 extraDays)` | **فقط مدیرعامل بنیاد** (`FoundationDAO.ceo()`) | روزهای تمدید، قیمت (فقط دورهٔ ثابت) | — | تمدید بدون سقف؛ قیمت دورهٔ تمدیدشده ثابت می‌ماند؛ رویداد تمدید |
 | `sweepUnsold(address to)` | **فقط `FoundationDAO`** | آدرس مقصد | — | فقط بعد از پایان رسمی دوره‌های فروش (🔶 تعریف دقیق پایان با تمدیدها) |
