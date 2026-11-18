@@ -2,9 +2,11 @@
 
 > فقط آنچه **هنوز باز است**. تصمیم‌های گرفته‌شده، اصلاحات انجام‌شده و روایت زمانی در `sur-progress-and-decisions-history.md` و `sur-final-decisions-2026-09-28.md` آمده است. هر ردیف به سند مبدأ ارجاع می‌دهد.
 >
-> این فهرست از نسخه‌ی پیشین (`_archive/sur-master-open-items-2026-10-03.md`) استخراج شده است. بخش ۸ همین سند فهرست مواردی است که وضعیتشان در نسخه‌ی پیشین پیش از دور چهارم آزمون Besu ثبت شده و باید دوباره راستی‌آزمایی شوند.
+> بخش ۸ همین سند فهرست مواردی است که وضعیتشان پیش از دور چهارم آزمون Besu ثبت شده و باید دوباره راستی‌آزمایی شوند.
 >
 > **آخرین دور آزمون Besu: دور ششم (۷ اکتبر ۲۰۲۶، کد نسخهٔ ۲.۲، Shanghai/Cancun، Besu release ۲۶.۹.۰).** مهم‌ترین نتیجه برای این فهرست: گذار `blockheader` با timestamp زنجیره را متوقف کرد (ردیف بخش ۵).
+
+> **مبنای طرح:** کد قراردادها در مخزن نسخهٔ ۲.۲ است. طرح نهایی نسخهٔ ۲.۵ (وثیقهٔ ثابت، KYC ولیدیتور، تعلیق داوطلبانه، مالک/اپراتور، NFT صندلی، لاتاری، FoundationDAO مطابق اساس‌نامه، صندوق طلب‌های genesis، سوزاندن جریمه و مازاد پاداش، برنامهٔ فروش ۹۰ روزه از طریق صرافی‌ها) تصمیم قطعی است ولی هنوز در کد پیاده و روی Besu آزموده نشده؛ ردیف‌های آن در بخش ۳ و ۵ و ۹ آمده است.
 
 ## ۱. تصمیم‌های لازم از مالک
 
@@ -15,20 +17,24 @@
 | مرجع تصمیم، نصاب قابل‌اجرا، شواهد فقدان نود، وضعیت وثیقه و حق بازگشت برای ولیدیتور همیشه‌مفقود (طراحی محض، بدون کد) | `governance/sur-emergency-consensus-recovery.md` §۴ |
 | **پس از دور ششم Besu:** (۱) اجازهٔ دانلود image توسعهٔ `hyperledger/besu:26.9-develop-260f602` و تکرار S1، R1 و T1 تا T3 روی آن؛ (۲) آیا پیکربندی‌های دیگر گذار `blockheader` با timestamp (فهرست دیگر، نوشتن فهرست در `extraData` ژنزیس، زمان‌های دیگر) آزموده شود؛ (۳) آیا فشرده‌کردن `RATE_START_TOLERANCE_BLOCKS` از ۱۰٬۰۰۰ به ۶۰ در test-fork برای آزمون‌های بعدی پذیرفتنی است؛ (۴) مقادیر تولیدی `shanghaiTime` و `cancunTime` (آزمون با ۰ و ۰ انجام شد)؛ (۵) گروه اختیاری X در دور بعد اجرا شود؟ | `testing-evidence/besu-live-test-v6-2026-10-07/QUESTIONS.md` موارد ۱ تا ۶ |
 | الزام حضور فیزیکی نود در ایران: آیا پیامد فوری لازم است یا مسیر پایش آف‌چین (تأخیر حدود ۱ ساعت) کافی است؟ | `economics/sur-tokenomics.md` بخش ۶.۷، `offchain-services/sur-verifier-service-spec.md` بخش ۶.۵ |
-| آدرس‌های گیرندگان ردیف ۲ (مطالبات ولیدیتورهای اولیه، ۱۱٬۹۸۴٬۰۰۰ سورن، ۷ نود) و ردیف ۳ (مطالبات اعضای بنیاد، ۲۱٬۳۲۷٬۰۰۰ سورن، ۱۵ عضو)؛ مبالغ نهایی شده و جدول عرضه به‌روز است. همچنین ارزیابی مستقل اصل این مبالغ | `economics/sur-tokenomics.md` بخش ۲.۱ و ۲.۲ |
+| آدرس‌های گیرندگان ردیف ۲ و ۳ که باید پیش از ثبت genesis مشخص شوند و در `GenesisClaimsVault` ثبت می‌شوند (تعویض آدرس بعداً ممکن نیست) — ردیف ۲ (مطالبات ولیدیتورهای اولیه، ۱۱٬۹۸۴٬۰۰۰ سورن، ۷ نود) و ردیف ۳ (مطالبات اعضای بنیاد، ۲۱٬۳۲۷٬۰۰۰ سورن، ۱۵ عضو)؛ مبالغ نهایی شده و جدول عرضه به‌روز است. همچنین ارزیابی مستقل اصل این مبالغ | `economics/sur-tokenomics.md` بخش ۲.۱ و ۲.۲ |
 | تولید یا نتولید `transitions.qbft` در ابزار genesis (دور ششم: گذار `blockheader` با timestamp در Shanghai/Cancun در پیکربندی آزموده‌شده زنجیره را متوقف کرد؛ گذار `blockreward` با timestamp درست کار کرد) | `offchain-services/sur-genesis-builder-tool-spec.md` بخش ۱۰؛ `testing-evidence/besu-live-test-v6-2026-10-07/FINDINGS.md` بند ۱ تا ۳ |
 | سرنوشت انتقال‌های مستقیم به distributor و منظور از بازگشت کارمزد تراکنش توزیع به epoch بعدی | `technical-design/sur-audit-2026-09-30-final-status.md`؛ QUESTIONS بسته‌ی v4 |
 | بودجه‌ی کمپین بنیاد: برآورد ۳۹ تا ۶۵ میلیون سورن در برابر ۲۰ میلیون؛ هیچ مسیر رسمی روی زنجیره برای آن وجود ندارد | `sur-detailed-plan-and-rationale.md` بخش ۱۳.۳ |
 | زمان و روش درخواست بودجه‌ی تکمیلی بنیاد؛ منبع بودجه‌ی حسابرسی امنیتی؛ اجرای برنامه‌ی جایزه‌ی باگ | `economics/sur-tokenomics.md`، `business/sur-marketing-roadmap.md`، `technical-design/sur-security-audit-plan.md` |
 | اسامی افراد چرخه‌ی on-call و پیجینگ (Verifier و RewardRouter) | `offchain-services/sur-verifier-service-spec.md` |
+| سهمیهٔ هر صرافی و سقف کل فروش از طریق صرافی‌ها؛ فهرست صرافی‌های موافق؛ مبلغ بلیط و تعداد برندگان هر لاتاری؛ بودجهٔ هر کمیتهٔ بنیاد (تصمیم با هیأت‌مدیرهٔ بنیاد، پس از راه‌اندازی) | `offchain-services/sur-suren-sale-spec.md`، `governance/sur-organizational-structure.md` |
+| فروش سورن در دورهٔ آزادسازی (پس از گذار): جدا تصمیم گرفته می‌شود | `economics/sur-tokenomics.md` |
+| متن توافق‌نامهٔ ولیدیتور (توسط هیأت‌مدیرهٔ مجمع ولیدیتورها نوشته و با هیأت‌مدیرهٔ بنیاد نهایی می‌شود) | `governance/sur-organizational-structure.md` |
+| زمان دقیق ۶ ماه اولِ ممنوعیت تغییر ریوارد و فاصلهٔ ورود (مبدأ: genesis) و تاریخ اولین ماه میلادی آزادسازی قسط صندوق طلب‌ها | `economics/sur-tokenomics.md` |
 
 ## ۲. سرویس‌دهنده‌های خارجی — انتخاب نشده‌اند
 
 | مورد | سند مبدأ |
 |---|---|
 | سرویس‌دهنده‌ی eKYC (RFP آماده است) | `offchain-services/sur-ekyc-rfp.md`، `offchain-services/sur-identity-registry-spec.md` |
-| سرویس‌دهنده‌ی پیامک/تلگرام برای OTP | `offchain-services/sur-verifier-service-spec.md` |
-| درگاه پرداخت `SurenSale` (زرین‌پال یا جایگزین) | `offchain-services/sur-suren-sale-spec.md` |
+| سرویس‌دهنده‌ی پیامک/تلگرام/بله/ایمیل برای OTP (شماره تلفن، تلگرام، بله و ایمیل هر ولیدیتور احراز می‌شود) | `offchain-services/sur-verifier-service-spec.md` |
+| توافق با صرافی‌های رمزارزی ایرانی برای فروش از روی `SurenSale` (موافقت مشروط اعلام شده است؛ شروط: عضویت در سازمان نظام صنفی رایانه‌ای، گواهی خودتنظیم‌گری انجمن بلاک‌چین، موافقت نهادهای امنیتی و پلیس فتا) | `offchain-services/sur-suren-sale-spec.md` |
 | شرکت یا تیم حسابرسی امنیتی قراردادها | `technical-design/sur-security-audit-plan.md` |
 | مبلغ و تناوب تأمین موجودی قرارداد فروش؛ مسیر جبران پرداخت بدون دریافت سورن | `offchain-services/sur-suren-sale-spec.md` |
 
@@ -40,10 +46,14 @@
 | Verifier (شامل `c01-rules-v1`، `recordPreExitViolation`، `syncBoard`/`refreshBoard(address[])`) | `offchain-services/sur-verifier-service-spec.md` |
 | ابزار ساخت `genesis.json` تولیدی — T02 (مشخصات کامل؛ اجرا و تست `--verify` روی Besu واقعی وجود ندارد). **شامل الزام موجود:** نوشتن `boardMonthId` = ماه میلادی زمان genesis و `boardVersion` = ۱ وقتی هیأت seed می‌شود، و ترتیب `activationSeq` مؤسسان، و assert آن‌ها (مشخصات بند ۴.۲.۱)؛ این تصمیم باز نیست. دور پنجم Besu روی نسخهٔ ۲.۱.۰ اجرا شد (۲۴ PASS از ۲۸ ردیف) و این مقدارها را روی شبکهٔ تازه تأیید کرد: `boardMonthId`، `boardVersion = 1`، `activationCount = 7` و `activationSeq` ۱ تا ۷ با کنترل منفی (ابزار آزمایشی؛ ابزار production T02 هنوز پیاده و آزموده نشده). ۴ ردیف اجرانشده مانده و مرز واقعی ماه میلادی فقط روی test-fork آزموده شد. دور ششم همین assertionها را روی genesis حالت Shanghai/Cancun (۲۲ assertion برای هر یک از شش شبکه) هم پاس کرد | `offchain-services/sur-genesis-builder-tool-spec.md`؛ `testing-evidence/besu-live-test-v4-2026-10-03/FINDINGS.md` مورد ۲۲؛ `testing-evidence/besu-live-test-v6-2026-10-07/REPORT.md` ردیف G0 |
 | آزمون Besu باقی‌مانده برای نسخهٔ ۲.۱.۰ (۴ ردیف NOT-RUN در دور پنجم): تغییرات IdentityRegistry و ServiceStaking؛ اسکن ایستای A14 برای layout جدید؛ معافیت mass-failure، مسیرهای انقضای اختلاف و اعتراض، `recordPreExitViolation` و قاعدهٔ «کمتر از ۳ عضو»؛ مسیر ترکیبی زمان واقعی L. دور ششم هم همین چهار مورد (گروه X) را اجرا نکرد. همچنین مرز واقعی ماه میلادی روی قراردادهای اصلی (نه test-fork) و ماه‌های ۲۸ و ۳۱ روزه و تغییر سال آزموده نشد | `testing-evidence/besu-live-test-v5-2026-10-05/REPORT.md` ردیف‌های R5-X1 تا R5-X4؛ `testing-evidence/besu-live-test-v6-2026-10-07/REPORT.md` ردیف‌های X1 تا X4؛ `LIMITATIONS.md` |
-| Identity Service، PaymentReporter، اپ ولیدیتور، داشبورد حکمرانی، پرتال فروش | `offchain-services/sur-software-inventory.md` |
+| Identity Service، اپ ولیدیتور، داشبورد حکمرانی، صفحهٔ عمومی فروش و اتصال صرافی‌ها | `offchain-services/sur-software-inventory.md` |
 | ابزار بازیابی اضطراری | `governance/sur-emergency-consensus-recovery.md` |
 | سرویس همراه نود برای `SUR_NODE_CHECK_V1` (فقط مشخصات) | `offchain-services/sur-node-check-protocol-spec.md` |
 | صفحه‌ی حکمرانی نرخ پاداش در داشبورد | `offchain-services/sur-governance-dashboard-claudecode-brief.md` |
+| قراردادهای نسخهٔ ۲.۵: بازنویسی `FoundationDAO` (مجمع، هیأت‌مدیره، بازرس، انتخابات، خرج بدون سقف) و `FoundationMembers`؛ `ValidatorsRegistry` (وثیقهٔ ثابت، `SelfSuspended`، مالک/اپراتور، خروج دائم، فاصلهٔ ورود ۷ روز، سوزاندن جریمه، ورود مؤسسان پس از ثبت کلید نود)؛ `ValidatorsBoard` (تغییر وثیقه با ۳ از ۵)؛ `BlockRewardDistributor` (حد ±۱۰٪ و ۶ ماه، سوزاندن مازاد پاداش و رویداد)؛ `SurenSale` (۹۰ روز ۱۰۰/۱۰۵/۱۱۰، تمدید مدیرعامل، فروش از طریق صرافی‌ها با سهمیه)؛ `IdentityRegistry` (فقط حقیقی ایرانی)؛ قراردادهای تازه `ValidatorSeatNFT`، `GenesisClaimsVault`، `ValidatorLottery`؛ آزمون Hardhat و دور هفتم Besu برای همه | `technical-design/sur-smart-contracts-reference.md` |
+| Verifier: `personKey` آف‌چین (HMAC کد ملی)، سرویس دسترسی کلید، فعال‌سازی مؤسسان پس از ثبت کلید اپراتور، ازسرگیری از تعلیق داوطلبانه، راستی‌آزمایی نود پس از انتقال NFT یا تغییر اپراتور؛ سیستم eKYC نسخهٔ اولیه (از روز اول) | `offchain-services/sur-verifier-service-spec.md`، `offchain-services/sur-identity-registry-spec.md` |
+| گزارش‌های دورهٔ آزادسازی (عرضهٔ روزانهٔ ماشینی، شاخص‌های روزانه، سند تحلیلی هفتگی؛ نمای مجموع وثیقهٔ قفل‌شده) | `economics/sur-tokenomics.md` |
+| اتصال صرافی‌ها به `SurenSale` و صفحهٔ عمومی قیمت/وضعیت فروش | `offchain-services/sur-suren-sale-spec.md` |
 
 ## ۴. جزئیات فنی باقی‌مانده
 
@@ -57,7 +67,6 @@
 | اندازهٔ runtime `BlockRewardDistributor` ۲۰٬۴۲۴ بایت (۳۶۵ بایت بیش از برآورد brief دور ششم؛ سقف ۲۴٬۵۷۶)؛ علت اختلاف با برآورد بررسی نشد | `testing-evidence/besu-live-test-v6-2026-10-07/REPORT.md` ردیف P0.3b |
 | مقدار و روش تأمین موجودی گس اوراکل و هشدار موجودی کم (یک بار تراکنش با موجودی ناکافی بی‌صدا pending ماند) | `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۴، `technical-design/sur-contracts-oracles-accounts-report.md` |
 | توصیه‌ی heap و هشدار «نود روی ارتفاع N گیر کرده» برای نود با genesis ناهماهنگ | `technical-design/sur-contracts-deploy-notes.md` |
-| نصاب دوسوم برای چرخش `paymentOracle` در `SurenSale` اگر مبالغ بزرگ‌تر شود | `offchain-services/sur-suren-sale-spec.md` |
 | مدت نگهداری داده‌ی خام KYC؛ بازبینی دستی برای بازیابی هویت پرریسک | `offchain-services/sur-identity-registry-spec.md` |
 | بازیابی هویت: مسیر بلندمدت «انتقال هماهنگ عضویت ولیدیتور» برای کلید گم‌شده؛ هیچ مکانیزم on-chain ابطال کلید در معرض خطر (کلید سرقت‌شده) وجود ندارد | `offchain-services/sur-identity-registry-spec.md` |
 | پیش‌شرط ایمنی فعال‌سازی: ولیدیتور بدون نود واقعی می‌تواند اجماع را قفل کند؛ باید در Verifier پیاده شود | `offchain-services/sur-verifier-service-spec.md` |
@@ -92,14 +101,23 @@
 
 | ریسک | سند مرتبط |
 |---|---|
-| تمرکز شبکه از اقتصاد ولیدیتور (مانع واقعی هزینه‌ی سرمایه‌ی وثیقه است، نه سخت‌افزار؛ راه‌حل مشخصی نوشته نشده) | `economics/sur-tokenomics.md` |
+| تمرکز شبکه و حمله‌ی سیبیل: وثیقهٔ ثابت حمله‌ی سیبیل را پرهزینه می‌کند ولی از آن جلوگیری نمی‌کند؛ پوشش: KYC، یک شخص یک صندلی، لاتاری؛ تمرکز بر روند بازسازی پس از حمله | `economics/sur-tokenomics.md` |
 | ریسک نقدینگی راه‌اندازی DEX (خروج نقدینگی‌دهندگان اولیه، slippage بالا) | `technical-design/sur-dex-launch-plan.md` |
 | تبانی یک‌سوم در multisig پل ارتباطی (آستانه‌ی تبانی یا لورفتن کلید نگهبانان) | `technical-design/sur-bridge-risk-analysis.md` |
 | تعارض Zether با AML/KYC و گس بالای تراکنش‌های Zether (وابسته به تصمیم اجرای Zether) | `offchain-services/sur-zether-usage-guide.md` |
 
+## ۷.۱ ظرفیت‌های آینده (تصمیم‌گرفته‌شده: فعلاً اجرا نمی‌شود ولی زیرساخت نباید مانع شود)
+
+| مورد | توضیح |
+|---|---|
+| ابزار عملیاتی تنظیم قیمت گس برای اپراتور نود (`min-gas-price`) | نمایش سیاست مصوب و اعمال آن روی نود؛ رفتار `min-gas-price` در Besu `26.9-develop` آزموده نشده |
+| بلوکه‌کردن یک حساب خاص (مثلاً با حکم قضایی) در نودهای ولیدیتوری | امکان‌سنجی با Besu؛ آزموده نشده |
+| بازار فروش NFT صندلی روی قرارداد | قرارداد NFT طوری ساخته می‌شود که افزودن بازار ممکن باشد |
+| توسعهٔ سیستم KYC به اشخاص حقوقی و غیرایرانی | فعلاً فقط اشخاص حقیقی ایرانی |
+
 ## ۸. موارد با وضعیت احتمالاً کهنه — راستی‌آزمایی لازم
 
-این موارد در نسخه‌ی پیشین فهرست پیش از دور چهارم آزمون Besu یا پیش از چند اصلاح بعدی ثبت شده بودند و وضعیت جاری‌شان ثابت نشده است:
+این موارد پیش از دور چهارم آزمون Besu یا پیش از چند اصلاح بعدی ثبت شده‌اند و وضعیت جاری‌شان ثابت نشده است:
 
 | مورد | مرجع |
 |---|---|
@@ -107,7 +125,7 @@
 | راستی‌آزمایی `expected_turns` (انتخاب پیشنهاددهنده) روی نسخه‌ی دقیق Besu | `offchain-services/sur-verifier-service-spec.md` |
 | پوشش آزمون خودکار برای `FoundationDAO`، `IdentityRegistry`، `ServiceStaking`، `SurenSale` (آزمون Besu آن‌ها را پوشش داده، آزمون Hardhat ندارد) | `testing-evidence/hardhat-regression/` |
 | نیاز به بازبینی `sur-contracts-ui-review.md` و `business/sur-dapp-business-ideas.md` برای تصمیم‌های بعد از ۲۸ سپتامبر؛ احتمال ارجاع باقی‌مانده به مدل قدیمی | همان دو سند |
-| نبود سند `offchain-services/sur-identity-app-claudecode-brief.md` در پوشه، با این‌که قبلاً به آن ارجاع داده شده است | — |
+| نبود سند `offchain-services/sur-identity-app-claudecode-brief.md` در پوشه، در حالی که اسناد دیگر به آن ارجاع می‌دهند | — |
 | بازیابی سقوط زیر نصاب BFT و اثر مالی واقعی جریمه روی عضو پرداخت‌کننده (در دور اول آزموده نشده بود) | `_archive/sur-master-open-items-2026-10-03.md` بخش ۲۴ |
 | سناریوهای خروج بدون پرونده و تساوی رأی هیأت به‌صورت مورد جدا (در دور دوم اجرا نشده بودند؛ کم‌ریسک) | `testing-evidence/besu-live-test-v2-2026-09-28/` |
 | فرایند امضای ۵ از ۷ مسئولان بازیابی هیچ کدی برای آزمودن ندارد | `governance/sur-emergency-consensus-recovery.md` |
