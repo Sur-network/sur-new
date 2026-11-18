@@ -18,20 +18,20 @@
 |---|---|---|---|
 | [`parties/00-index-and-glossary.md`](00-index-and-glossary.md) | همه | همین سند: فهرست، راهنمای خواندن و واژه‌نامه | نوشته‌شده |
 | [`parties/01-interaction-matrix.md`](01-interaction-matrix.md) | همه؛ به‌ویژه حقوقی و فنی | تنها مرجع پیشنهاد/تأیید/اجرا/نظارت، تعامل دو‌به‌دوی ۱۴ طرف و جریان‌های مالی | نوشته‌شده |
-| `parties/10-sur-foundation.md` | شرکای بنیاد، وکیل، نهادهای ناظر | بنیاد سور: جایگاه حقوقی، مجمع عمومی، `FoundationDAO`، خزانه | برنامه‌ریزی‌شده |
-| `parties/11-foundation-board.md` | اعضای هیأت‌مدیرهٔ بنیاد | اختیارات و محدودیت‌های هیأت‌مدیره، خرج خزانه، لاتاری، سهمیهٔ صرافی‌ها | برنامه‌ریزی‌شده |
-| `parties/12-ceo-and-inspector.md` | مدیرعامل، بازرس | وظایف مدیرعامل (از جمله تمدید فروش) و نظارت بازرس | برنامه‌ریزی‌شده |
-| `parties/13-founders.md` | مؤسسان | شرکای بنیاد و ۷ ولیدیتور مؤسس؛ طلب‌ها و استثناها | برنامه‌ریزی‌شده |
-| `parties/14-committees.md` | اعضای کمیته‌ها، هیأت بنیاد | کمیته‌های فنی، توسعهٔ کسب‌وکار، ترویج و ... | برنامه‌ریزی‌شده |
-| `parties/20-validators-assembly.md` | ولیدیتورها، ناظران حکمرانی | مجمع ولیدیتورها: رأی کامل، پارامترهای امنیتی، رسیدگی به اعتراض جریمه | برنامه‌ریزی‌شده |
-| `parties/21-validators-board.md` | اعضای هیأت‌مدیرهٔ ولیدیتورها، ولیدیتورها | `ValidatorsBoard`: انتخاب ماهانه، اختیارات تفویضی، چرخش کلیدها | برنامه‌ریزی‌شده |
-| `parties/22-validator.md` | ولیدیتور فعلی و متقاضی | ورود، کلیدها، NFT صندلی، تعلیق، خروج، پاداش، وثیقه | برنامه‌ریزی‌شده |
-| `parties/30-token-holders-and-buyers.md` | خریداران و دارندگان سورن | خرید از صرافی‌ها، فی، لاتاری و خرید صندلی | برنامه‌ریزی‌شده |
-| `parties/31-licensed-exchanges.md` | صرافی‌های مجاز | شروط، `sellTo`، سهمیه، تسویه | برنامه‌ریزی‌شده |
-| `parties/32-developers-and-dapps.md` | توسعه‌دهندگان و تیم‌های دپ | فی، استقرار، نبود کنترل محتوایی، ابزارها | برنامه‌ریزی‌شده |
-| `parties/33-oracle-operators-and-kyc-provider.md` | اپراتورهای Verifier، RewardRouter، Identity Service و ارائه‌دهندهٔ KYC | سه کلید سرویس، وظایف و مرز اختیار | برنامه‌ریزی‌شده |
-| `parties/40-external-authorities-legal-interface.md` | وکیل، نهادهای ناظر، انجمن بلاک‌چین | رابط حقوقی و مراجع بیرونی (کوتاه) | برنامه‌ریزی‌شده |
-| `technical-design/sur-onchain-offchain-architecture.md` | تیم فنی، حسابرس امنیتی | معماری آن‌چین/آف‌چین و نقشهٔ کلیدها | برنامه‌ریزی‌شده |
+| `parties/10-sur-foundation.md` | شرکای بنیاد، وکیل، نهادهای ناظر | بنیاد سور: جایگاه حقوقی، مجمع عمومی، `FoundationDAO`، خزانه | نوشته‌شده |
+| `parties/11-foundation-board.md` | اعضای هیأت‌مدیرهٔ بنیاد | اختیارات و محدودیت‌های هیأت‌مدیره، خرج خزانه، لاتاری، سهمیهٔ صرافی‌ها | نوشته‌شده |
+| `parties/12-ceo-and-inspector.md` | مدیرعامل، بازرس | وظایف مدیرعامل (از جمله تمدید فروش) و نظارت بازرس | نوشته‌شده |
+| `parties/13-founders.md` | مؤسسان | شرکای بنیاد و ۷ ولیدیتور مؤسس؛ طلب‌ها و استثناها | نوشته‌شده |
+| `parties/14-committees.md` | اعضای کمیته‌ها، هیأت بنیاد | کمیته‌های فنی، توسعهٔ کسب‌وکار، ترویج و ... | نوشته‌شده |
+| `parties/20-validators-assembly.md` | ولیدیتورها، ناظران حکمرانی | مجمع ولیدیتورها: رأی کامل، پارامترهای امنیتی، رسیدگی به اعتراض جریمه | نوشته‌شده |
+| `parties/21-validators-board.md` | اعضای هیأت‌مدیرهٔ ولیدیتورها، ولیدیتورها | `ValidatorsBoard`: انتخاب ماهانه، اختیارات تفویضی، چرخش کلیدها | نوشته‌شده |
+| `parties/22-validator.md` | ولیدیتور فعلی و متقاضی | ورود، کلیدها، NFT صندلی، تعلیق، خروج، پاداش، وثیقه | نوشته‌شده |
+| `parties/30-token-holders-and-buyers.md` | خریداران و دارندگان سورن | خرید از صرافی‌ها، فی، لاتاری و خرید صندلی | نوشته‌شده |
+| `parties/31-licensed-exchanges.md` | صرافی‌های مجاز | شروط، `sellTo`، سهمیه، تسویه | نوشته‌شده |
+| `parties/32-developers-and-dapps.md` | توسعه‌دهندگان و تیم‌های دپ | فی، استقرار، نبود کنترل محتوایی، ابزارها | نوشته‌شده |
+| `parties/33-oracle-operators-and-kyc-provider.md` | اپراتورهای Verifier، RewardRouter، Identity Service و ارائه‌دهندهٔ KYC | سه کلید سرویس، وظایف و مرز اختیار | نوشته‌شده |
+| `parties/40-external-authorities-legal-interface.md` | وکیل، نهادهای ناظر، انجمن بلاک‌چین | رابط حقوقی و مراجع بیرونی (کوتاه) | نوشته‌شده |
+| `technical-design/sur-onchain-offchain-architecture.md` | تیم فنی، حسابرس امنیتی | معماری آن‌چین/آف‌چین و نقشهٔ کلیدها | نوشته‌شده |
 
 ### ۱٫۲ اسناد هسته: مرور، تصمیم و سپیدنامه
 
@@ -115,7 +115,7 @@
 | وکیل یا مشاور حقوقی | `parties/40`، `parties/10`، توافق‌نامه، اساس‌نامه، `sur-master-open-items.md` بخش ۶ | ماهیت حقوقی، تنش مواد ۲ و ۳۱، توافق‌نامه |
 | نهاد ناظر یا مرجع بیرونی | `parties/40`، سپیدنامه | رابط حقوقی، حدود مسئولیت |
 | مدیر پروژه یا مالک | `sur-master-open-items.md`، ماتریس بخش د، `proposals/sur-change-proposals-decisions.md` | موارد باز و تصمیم‌ها |
-| تیم فنی یا حسابرس امنیتی | `sur-smart-contracts-reference.md`، `sur-blockchain-design-doc.md`، `technical-design/sur-onchain-offchain-architecture.md` (برنامه‌ریزی‌شده)، ماتریس بخش ۵ | قراردادها، کلیدها، آزمون |
+| تیم فنی یا حسابرس امنیتی | `sur-smart-contracts-reference.md`، `sur-blockchain-design-doc.md`، `technical-design/sur-onchain-offchain-architecture.md` (نوشته‌شده)، ماتریس بخش ۵ | قراردادها، کلیدها، آزمون |
 | عضو شورای بازیابی | `governance/sur-emergency-consensus-recovery.md`، ماتریس بخش ۱۴ | ۵ از ۷، حدود اختیار |
 | علاقه‌مند عمومی | `sur-whitepaper.md`، `sur-website-content.md`، واژه‌نامهٔ همین سند | معرفی ساده |
 

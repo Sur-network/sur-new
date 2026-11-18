@@ -41,8 +41,11 @@
 - `sur-validator-agreement.md` — پیش‌نویس متن توافق‌نامه‌ی ولیدیتورها (قرارداد الگو بین بنیاد و هر ولیدیتور).
 - `sur-tokenomics.md` — توکنومیکس کامل سورن.
 
+### `parties/`
+یک سند برای هر طرف پروژه (بنیاد، هیأت‌مدیره، مدیرعامل و بازرس، مؤسسان، کمیته‌ها، مجمع ولیدیتورها، هیأت‌مدیره‌ی ولیدیتورها، ولیدیتور منفرد، خریداران، صرافی‌ها، توسعه‌دهندگان، اپراتورهای اوراکل/KYC، مراجع بیرونی): امکانات، عضویت، تعاملات و ابزارها. `01-interaction-matrix.md` منبع یگانهٔ «چه کسی پیشنهاد می‌دهد، تأیید می‌کند و اجرا می‌کند» و جریان پول است؛ `00-index-and-glossary.md` فهرست اسناد، راهنمای مخاطب و واژه‌نامه.
+
 ### `technical-design/`
-اسناد طراحی فنی عمیق: `sur-blockchain-design-doc.md` (معماری کلی)، `sur-contracts-deploy-notes.md` (نکات دیپلوی genesis)، `sur-smart-contracts-reference.md` (مرجع کامل هر قرارداد)، `sur-contracts-oracles-accounts-report.md` (فهرست اوراکل‌ها/کلیدها)، `sur-security-audit-plan.md`، و اسناد بررسی پل بین‌شبکه‌ای/DEX (`sur-bridge-*.md`, `sur-dex-launch-plan.md`).
+اسناد طراحی فنی عمیق: `sur-blockchain-design-doc.md` (معماری کلی)، `sur-onchain-offchain-architecture.md` (سهم آن‌چین و آف‌چین هر سیستم، مدل تهدید و نگه‌داری کلید)، `sur-contracts-deploy-notes.md` (نکات دیپلوی genesis)، `sur-smart-contracts-reference.md` (مرجع کامل هر قرارداد)، `sur-contracts-oracles-accounts-report.md` (فهرست اوراکل‌ها/کلیدها)، `sur-security-audit-plan.md`، و اسناد بررسی پل بین‌شبکه‌ای/DEX (`sur-bridge-*.md`, `sur-dex-launch-plan.md`).
 
 ### `offchain-services/`
 اسپک کامل هر نرم‌افزار جانبی (غیر از خودِ بلاک‌چین) که برای راه‌اندازی یا اکوسیستم لازم است — سرویس Verifier، RewardRouter، ابزار genesis، صفحهٔ عمومی فروش سورن (فقط‌خواندنی؛ خرید فقط از طریق صرافی‌های مجاز) و اتصال صرافی‌ها، اپلیکیشن‌های ولیدیتور/هویت، و پیشنهادهای تازه‌تر (`sur-zether-*.md`، `sur-blockchain-games-proposal.md`). `sur-software-inventory.md` فهرست کامل و اولویت‌بندی‌شده‌ی همه‌ی این‌هاست.

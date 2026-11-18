@@ -46,7 +46,7 @@
 | خزانه | خرج سورن و هر ERC20 موجود در `FoundationDAO` با اکثریت عددی هیأت‌مدیره، بدون سقف | `proposeSpend` / `voteSpend` |
 | اشخاص | انتخاب هیأت‌مدیره (۵ اصلی + ۲ علی‌البدل) و بازرس توسط مجمع عمومی؛ انتخاب رئیس، خزانه‌دار و مدیرعامل توسط هیأت | `proposeBoardElection`، `voteBoard`، `voteInspector`، `finalizeElection`، `electOfficers` |
 | اعضا | ورود/خروج شریک، انتقال سهم‌الشرکه، تعیین نماینده (فقط مجمع فوق‌العاده) | `proposeMembersResolution` / `voteResolution` / `executeResolution` ← `FoundationMembers` |
-| فروش سورن | تعیین صرافی‌های مجاز، سهمیهٔ هر صرافی و سقف کل؛ تأمین موجودی قرارداد فروش؛ بازگرداندن فروش‌نرفته؛ تمدید دوره‌ها (مدیرعامل) | `SurenSale.setExchange`، `setTotalCap`، `sweepUnsold`، `extendFixedPeriod`، `extendTransitionPeriod` |
+| فروش سورن | تعیین صرافی‌های مجاز، سهمیهٔ هر صرافی و سقف کل؛ تأمین موجودی قرارداد فروش؛ بازگرداندن فروش‌نرفته؛ تمدید دوره‌ها (مدیرعامل) | `SurenSale.setExchange`، `setTotalCap`، `sweepUnsold`، `extendFixedPeriod`، `extendTransition` |
 | هویت | چرخش کلید `identityOracle` | `IdentityRegistry.setIdentityOracle` (فقط `FoundationDAO`) |
 | لاتاری | اجرای لاتاری ولیدیتور (بلیط، تعداد برندگان، برگزارنکردن) | `ValidatorLottery.startLottery` |
 | توافق‌نامه | تأیید و امضای بی‌قیدوشرط متن تعیین‌شدهٔ هیأت ولیدیتورها | سامانهٔ قراردادهای مبتنی بر بلاک‌چین بنیاد |
