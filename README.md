@@ -38,6 +38,7 @@
 
 ### `governance/` و `economics/`
 - `sur-organizational-structure.md` — ساختار کامل بنیاد و مجمع ولیدیتورها.
+- `sur-validator-agreement.md` — پیش‌نویس متن توافق‌نامه‌ی ولیدیتورها (قرارداد الگو بین بنیاد و هر ولیدیتور).
 - `sur-tokenomics.md` — توکنومیکس کامل سورن.
 
 ### `technical-design/`
