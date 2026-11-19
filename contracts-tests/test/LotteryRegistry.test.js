@@ -22,6 +22,7 @@ async function fixture() {
   const dao = await deployAtFixed("FoundationDAO", "FoundationDAO_GenesisSeed", ADDR.FOUNDATION_DAO,
     [board.map((s) => s.address), S[7].address, board[0].address, board[1].address, ceo.address, (await now()) + 730 * DAY], E("100"));
   const reg = await deployAtFixed("ValidatorsRegistry", "ValidatorsRegistry_GenesisSeed", ADDR.VALIDATORS_REGISTRY, [S[15].address, ethers.Wallet.createRandom().address, [S[16].address], await now()]);
+  await deployAtFixed("ValidatorSeatNFT", "ValidatorSeatNFT_GenesisSeed", ADDR.VALIDATOR_SEAT_NFT, [[S[15].address, S[16].address]]);
   const lot = await setCodeOf("ValidatorLottery", ADDR.VALIDATOR_LOTTERY);
   const idr = await setCodeOf("MockIdentity", ADDR.IDENTITY_REGISTRY);
   const buyers = S.slice(10, 14);

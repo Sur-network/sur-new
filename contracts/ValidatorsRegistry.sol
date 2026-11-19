@@ -11,6 +11,11 @@ interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
 }
 
+interface IValidatorSeatNFT {
+    function mintSeat(address to) external returns (uint256);
+    function burnSeat(address owner) external;
+}
+
 interface IBoardAuthority {
     function hasBoardAuthority(address who) external view returns (bool);
 }
@@ -593,6 +598,7 @@ contract ValidatorsRegistry {
             isPaidEntrant: true
         });
         paidValidatorCount++;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
 
         emit MembershipRequested(msg.sender, collateral, fee);
     }
@@ -653,6 +659,7 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
+        require(!seatTransferPending[candidate], "ValidatorsRegistry: seat transfer not accepted");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
@@ -1130,6 +1137,7 @@ contract ValidatorsRegistry {
         // again and membershipEpoch invalidates any board seat stamped with the old epoch.
         permanentlyExited[msg.sender] = true;
         membershipEpoch[msg.sender]++;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).burnSeat(msg.sender);
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
         _notifyBoard(msg.sender);
@@ -1340,6 +1348,7 @@ contract ValidatorsRegistry {
             demotedAt: 0,
             isPaidEntrant: false
         });
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(winner);
         emit LotteryWinnerEntered(winner);
     }
 
@@ -1477,6 +1486,7 @@ contract ValidatorsRegistry {
         statusBeforeExit[msg.sender] = uint8(Status.RemovedInRecovery);
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).burnSeat(msg.sender);
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }
 
@@ -1521,6 +1531,7 @@ contract ValidatorsRegistry {
 
     function requestResume() external {
         require(validators[msg.sender].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
+        require(!seatTransferPending[msg.sender], "ValidatorsRegistry: accept the seat transfer (sign the agreement) first");
         resumeRequested[msg.sender] = true;
         emit ResumeRequested(msg.sender);
     }
@@ -1528,11 +1539,90 @@ contract ValidatorsRegistry {
     function recordResume(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         require(validators[validator].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
         require(resumeRequested[validator], "ValidatorsRegistry: no resume request");
+        require(!seatTransferPending[validator], "ValidatorsRegistry: seat transfer not accepted");
         require(operatorOf[validator] != address(0), "ValidatorsRegistry: operator key not set");
         resumeRequested[validator] = false;
         _activate(validator);
         decisionId = _recordDecision(validator, DecisionType.Resume, evidenceHash, 0);
         emit ResumeRecorded(validator, evidenceHash);
         _notifyBoard(validator);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: seat NFT. The owner of ValidatorSeatNFT token = the owner of the seat (reference doc §9).
+    // ------------------------------------------------------------------
+    /// @notice True from a seat transfer until the buyer accepts the validators' agreement (acceptSeatTransfer).
+    mapping(address => bool) public seatTransferPending;
+    /// @notice Informational: until when the buyer is expected to sign (3 days after the transfer). Nothing happens to the seat
+    ///         when the deadline passes: it simply stays out of the validator set until the agreement is accepted. 🔶
+    mapping(address => uint256) public seatAcceptDeadline;
+
+    uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
+
+    event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+    event SeatTransferAccepted(address indexed owner);
+
+    /// @notice Called by ValidatorSeatNFT after the token moved; reverts (so the token transfer reverts) unless the transfer is
+    ///         allowed. Moves the whole validator record from `from` to `to`.
+    function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
+        require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
+        ValidatorInfo storage v = validators[from];
+        Status st = v.status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            "ValidatorsRegistry: seat cannot be transferred in this status"
+        );
+        require(v.pendingSlashEpoch == 0 && pendingSlashDecisionId[from] == 0, "ValidatorsRegistry: open penalty case - transfer blocked");
+        // the buyer: never a validator, fully verified, not an operator key, not an owner of a seat already
+        require(validators[to].status == Status.None && !permanentlyExited[to] && !everActivated[to], "ValidatorsRegistry: buyer was a validator before");
+        require(ownerOfOperator[to] == address(0) && operatorOf[to] == address(0), "ValidatorsRegistry: buyer is an operator key");
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
+        require(to != from, "ValidatorsRegistry: same owner");
+
+        // if the seat is Active it leaves the validator set until the buyer signs and the Verifier checks the node
+        if (st == Status.Active) {
+            require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - transfer blocked");
+            _removeFromActive(from);
+            _recordActiveCheckpoint(from, false);
+            st = Status.SelfSuspended;
+            v.status = Status.SelfSuspended;
+            v.periodStartedAt = block.timestamp;
+        }
+
+        // move the record
+        validators[to] = v;
+        delete validators[from];
+        address op = operatorOf[from];
+        if (op != address(0)) {
+            operatorOf[to] = op;
+            ownerOfOperator[op] = to; // the node key stays with the seat
+            delete operatorOf[from];
+        }
+        if (isFounder[from]) {
+            isFounder[to] = true;
+            delete isFounder[from];
+        }
+        everActivated[to] = everActivated[from];
+        activationSeq[to] = activationSeq[from];
+        resumeRequested[to] = false;
+        resumeRequested[from] = false;
+
+        // the seller is treated as exited: permanent ban, board authority over
+        permanentlyExited[from] = true;
+        membershipEpoch[from]++;
+
+        seatTransferPending[to] = true;
+        seatAcceptDeadline[to] = block.timestamp + SEAT_ACCEPT_WINDOW;
+
+        emit SeatTransferred(seatId, from, to, st);
+        _notifyBoard(from);
+        _notifyBoard(to);
+    }
+
+    /// @notice The buyer accepts the validators' agreement (the signature itself is off-chain; this records the acceptance).
+    function acceptSeatTransfer() external {
+        require(seatTransferPending[msg.sender], "ValidatorsRegistry: no pending seat transfer");
+        seatTransferPending[msg.sender] = false;
+        emit SeatTransferAccepted(msg.sender);
     }
 }
