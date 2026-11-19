@@ -39,6 +39,8 @@ contract IdentityRegistry {
         string name;
         bool phoneVerified;      // the actual phone number is never stored here — only this flag
         bool telegramVerified;   // the actual Telegram ID is never stored here — only this flag
+        bool baleVerified;       // v2.5: Bale account flag (the account itself is never stored)
+        bool emailVerified;      // v2.5: e-mail flag (the address itself is never stored)
         bool kycVerified;        // result of the full eKYC check (photo + national ID + face match)
         bytes32 kycCommitment;   // kept only to prove non-tampering in disputes, never for matching
         address migratedTo;      // non-zero: this address is burned and its identity was migrated to that address (spec section 3.4)
@@ -56,6 +58,8 @@ contract IdentityRegistry {
     event IdentityRegistered(address indexed who, PersonType personType, string name);
     event PhoneVerificationUpdated(address indexed who, bool verified);
     event TelegramVerificationUpdated(address indexed who, bool verified);
+    event BaleVerificationUpdated(address indexed who, bool verified);
+    event EmailVerificationUpdated(address indexed who, bool verified);
     event KycVerificationUpdated(address indexed who, bool verified, bytes32 commitment);
     event IdentityMigrated(address indexed oldAddress, address indexed newAddress);
     event IdentityOracleUpdated(address indexed oldOracle, address indexed newOracle);
@@ -67,6 +71,12 @@ contract IdentityRegistry {
 
     modifier notMigrated(address who) {
         require(identities[who].migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
+        _;
+    }
+
+    /// @dev 🔶 Verification exists only for individuals; a legal-person identity stays self-declared.
+    modifier onlyIndividual(address who) {
+        require(identities[who].personType == PersonType.Individual, "IdentityRegistry: only individuals can be verified");
         _;
     }
 
@@ -112,14 +122,23 @@ contract IdentityRegistry {
 
     /// @notice Public verification-status check — everything here is boolean, no raw data, so
     ///         freely disclosing it is not a problem (exactly like SIP002 section 6-1).
+    ///         v2.5 order: registered, phone, telegram, bale, email, kyc.
     function getVerificationStatus(address who)
         external
         view
-        returns (bool registered, bool phoneVerified, bool telegramVerified, bool kycVerified)
+        returns (bool registered, bool phoneVerified, bool telegramVerified, bool baleVerified, bool emailVerified, bool kycVerified)
     {
         Identity storage id_ = identities[who];
-        if (id_.migratedTo != address(0)) return (false, false, false, false);
-        return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.kycVerified);
+        if (id_.migratedTo != address(0)) return (false, false, false, false, false, false);
+        return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.baleVerified, id_.emailVerified, id_.kycVerified);
+    }
+
+    /// @notice A registered INDIVIDUAL (Iranian natural person) whose national-ID eKYC, phone, Telegram, Bale and
+    ///         e-mail are all verified. Required to take a validator seat (entry, seat transfer, lottery).
+    function isFullyVerified(address who) external view returns (bool) {
+        Identity storage id_ = identities[who];
+        return id_.migratedTo == address(0) && id_.registered && id_.personType == PersonType.Individual &&
+            id_.kycVerified && id_.phoneVerified && id_.telegramVerified && id_.baleVerified && id_.emailVerified;
     }
 
     // ------------------------------------------------------------------
@@ -127,14 +146,24 @@ contract IdentityRegistry {
     // sur-identity-registry-spec.md for details)
     // ------------------------------------------------------------------
 
-    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
+    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         identities[who].phoneVerified = verified;
         emit PhoneVerificationUpdated(who, verified);
     }
 
-    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
+    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         identities[who].telegramVerified = verified;
         emit TelegramVerificationUpdated(who, verified);
+    }
+
+    function setBaleVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
+        identities[who].baleVerified = verified;
+        emit BaleVerificationUpdated(who, verified);
+    }
+
+    function setEmailVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
+        identities[who].emailVerified = verified;
+        emit EmailVerificationUpdated(who, verified);
     }
 
     /// @notice Records the result of a full eKYC check (personal photo + national ID card +
@@ -143,7 +172,7 @@ contract IdentityRegistry {
     ///         future legal dispute; no on-chain function ever uses it to answer a "matching"
     ///         query (that operation always goes through the off-chain Identity Service API —
     ///         see section 5 of `sur-identity-registry-spec.md`).
-    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) {
+    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         Identity storage id_ = identities[who];
         id_.kycVerified = verified;
         id_.kycCommitment = verified ? commitment : bytes32(0);
@@ -175,6 +204,8 @@ contract IdentityRegistry {
         newId.name = oldId.name;
         newId.phoneVerified = oldId.phoneVerified;
         newId.telegramVerified = oldId.telegramVerified;
+        newId.baleVerified = oldId.baleVerified;
+        newId.emailVerified = oldId.emailVerified;
         newId.kycVerified = oldId.kycVerified;
         newId.kycCommitment = oldId.kycCommitment;
 

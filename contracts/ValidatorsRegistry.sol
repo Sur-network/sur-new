@@ -1288,6 +1288,33 @@ contract ValidatorsRegistry {
     //     vote) within 7 days; with fewer than 3 impartial board members the case goes to the validators (two thirds of the
     //     validators eligible at referral); no decision in time = the removal is cancelled and the validator is reinstated.
     // ------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // v2.5: lottery winners (ValidatorLottery.drawBatch calls this for every winner)
+    // ------------------------------------------------------------------
+    /// @notice The only caller of enterAsLotteryWinner(): the ValidatorLottery contract.
+    address public constant LOTTERY = SurAddresses.VALIDATOR_LOTTERY;
+
+    event LotteryWinnerEntered(address indexed winner);
+
+    /// @notice A lottery winner takes a seat WITHOUT collateral and WITHOUT membership fee, outside the entry rate limit and
+    ///         not counted as a paid entrant. The seat starts in Probation like any entry: the node still has to be verified
+    ///         (and the agreement signed) before the Verifier activates it, so the vote is not live before that. An address
+    ///         that is already registered or has ever exited cannot take a seat (one seat per person, permanent ban).
+    function enterAsLotteryWinner(address winner) external {
+        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
+        require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
+        require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
+        validators[winner] = ValidatorInfo({
+            status: Status.Probation,
+            lockedStake: 0,
+            periodStartedAt: block.timestamp,
+            pendingSlashEpoch: 0,
+            demotedAt: 0,
+            isPaidEntrant: false
+        });
+        emit LotteryWinnerEntered(winner);
+    }
+
     enum RecoveryRemovalState { None, Recorded, Objected, ReferredToAssembly, Upheld, Cancelled }
 
     struct RecoveryRemoval {
