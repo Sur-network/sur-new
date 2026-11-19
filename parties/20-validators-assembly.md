@@ -111,7 +111,7 @@
 | «آیا بستهٔ شواهد تحویل شده» | هرکسی (اگر ولیدیتور تأیید دریافت نکند) | اکثریت در میان واجدان هنگام ثبت اختلاف | 🔶 `DELIVERY_DISPUTE_GRACE_PERIOD` (۷ روز؛ مقدار موقت) | هرکسی | `assertDeliveryDisputed` / `voteOnDelivery` / `resolveDeliveryDisputeIfExpired` |
 | مقدار بلاک‌ریوارد | هر ولیدیتور فعال | دومجلسی: هیأت ≥ ۳ رأی **و** `⌈۲/۳⌉` ولیدیتورهای واجد | مهلت رأی‌گیری ۳۰ روز؛ اثر ۷ روز پس از تصمیم | هرکسی `executeRateChange`؛ سپس فورک هماهنگ Besu؛ RewardRouter گواهی شروع | `proposeRateChange` / `boardVoteRateChange` / `validatorVoteRateChange` / `executeRateChange` / `certifyRateStart` |
 | نسبت سهم مستقیم/خزانه | هر ولیدیتور فعال | دومجلسی (همان) | حداقل ۱۸۰ روز بین دو تغییر (در لحظهٔ اجرا هم چک می‌شود) | هرکسی پس از تکمیل | `proposeShareChange` / `boardVoteShareChange` / `validatorVoteShareChange` |
-| حذف از فهرست در بازیابی شبکه | ثبت: Verifier؛ رسیدگی به اعتراض: هیأت ولیدیتورها (۳ از ۵)؛ مجمع فقط اگر کمتر از ۳ عضو بی‌طرف بماند | — | اعتراض ۷۲ ساعته؛ رسیدگی ۷ روز | بازیابی شبکه | `recordRecoveryRemoval`، `objectRecoveryRemoval`، `resolveRecoveryRemoval` (🔶 نصاب مجمع دوسوم) |
+| حذف از فهرست در بازیابی شبکه | ثبت: Verifier؛ رسیدگی به اعتراض: هیأت ولیدیتورها (۳ از ۵)؛ مجمع فقط اگر کمتر از ۳ عضو بی‌طرف بماند | — | اعتراض ۷۲ ساعته؛ رسیدگی ۷ روز | بازیابی شبکه | `recordRecoveryRemoval`، `objectRecoveryRemoval`، `resolveRecoveryRemoval` (نصاب مجمع دوسوم ولیدیتورهای واجد) |
 
 **قیدهای ویژهٔ پارامترها (✅):**
 
@@ -221,7 +221,7 @@
 
 **موارد باز (🔶):**
 
-۱. نصاب مجمع اگر کمتر از ۳ عضو بی‌طرف بماند و تفکیک خاموشی عمدی از گم‌شدن نود (ماتریس ۱٫۶).
+۱. تفکیک خاموشی عمدی از گم‌شدن نود (ماتریس ۱٫۶).
 ۲. مدت انقضای پیشنهادهای پارامتر و سقف (بخش ۶).
 ۳. مقدار نهایی `DELIVERY_DISPUTE_GRACE_PERIOD` (بخش ۶).
 ۴. مسیر تغییر آدرس قراردادهای اصلی (بخش ۲).
