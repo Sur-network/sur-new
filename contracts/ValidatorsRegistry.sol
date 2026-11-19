@@ -625,6 +625,7 @@ contract ValidatorsRegistry {
 
     function _claimOperator(address owner_, address operator) internal {
         require(operator != address(0), "ValidatorsRegistry: zero operator");
+        require(!_reservedForOther(operator, owner_), "ValidatorsRegistry: operator reserved by another owner's pending change");
         address attached = ownerOfOperator[operator];
         require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
         require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
@@ -634,16 +635,92 @@ contract ValidatorsRegistry {
         emit OperatorSet(owner_, operator);
     }
 
-    /// @notice The owner replaces the node key at once. The new node must be up: the Verifier keeps checking liveness and an
-    ///         Active validator whose new node is down will be suspended like any other.
+    // ------------------------------------------------------------------
+    // Changing the node key.
+    //   * Probation, Demoted, SelfSuspended (not in the QBFT set): `setOperator` is immediate. Nothing can go wrong for the
+    //     network now; the Verifier checks the node before the validator (re)enters the set.
+    //   * ACTIVE (the node signs blocks): TWO steps (owner decision 2026-11-19, from Besu finding F-5):
+    //       1. proposeOperator(newKey)            the owner reserves the new key; nothing changes in consensus yet;
+    //       2. confirmOperatorReady(owner, hash)  the Verifier checks the new node is up, synced and signing-capable and then
+    //                                             applies the switch in one transaction.
+    //     This way a swap to a node that is not running can never reach the QBFT set (a dead node would cost a 10+ second
+    //     round change on every one of its turns, and enough of them could stop the chain).
+    //     cancelOperatorChange() drops the proposal; a proposal also lapses after OPERATOR_PROPOSAL_EXPIRY.
+    // ------------------------------------------------------------------
+    mapping(address => address) public pendingOperator;
+    mapping(address => uint256) public pendingOperatorExpiresAt;
+    /// @dev new key => owner that reserved it in a still-open proposal
+    mapping(address => address) public operatorReservedBy;
+    uint256 public constant OPERATOR_PROPOSAL_EXPIRY = 7 days;
+
+    event OperatorChangeProposed(address indexed owner, address indexed newOperator, uint256 expiresAt);
+    event OperatorChangeConfirmed(address indexed owner, address indexed newOperator, bytes32 evidenceHash);
+    event OperatorChangeCancelled(address indexed owner, address indexed newOperator);
+
+    function _reservedForOther(address operator, address owner_) private view returns (bool) {
+        address r = operatorReservedBy[operator];
+        return r != address(0) && r != owner_ && pendingOperator[r] == operator && pendingOperatorExpiresAt[r] > block.timestamp;
+    }
+
+    /// @notice Immediate node-key change for an owner that is NOT in the consensus set (Probation, Demoted, SelfSuspended).
     function setOperator(address newOperator) external {
         Status st = validators[msg.sender].status;
+        require(st != Status.Active, "ValidatorsRegistry: an Active validator changes the node key in two steps (proposeOperator)");
         require(
-            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            st == Status.Probation || st == Status.Demoted || st == Status.SelfSuspended,
             "ValidatorsRegistry: cannot change the operator in this status"
         );
+        require(newOperator != address(0), "ValidatorsRegistry: zero operator");
         require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
         _claimOperator(msg.sender, newOperator);
+    }
+
+    /// @notice Step 1 for an ACTIVE validator: reserve the new node key. Consensus is untouched until the Verifier confirms.
+    function proposeOperator(address newOperator) external {
+        require(validators[msg.sender].status == Status.Active, "ValidatorsRegistry: only an Active validator proposes (others use setOperator)");
+        require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
+        require(
+            pendingOperator[msg.sender] == address(0) || pendingOperatorExpiresAt[msg.sender] <= block.timestamp,
+            "ValidatorsRegistry: a proposal is already open"
+        );
+        _checkOperatorFree(msg.sender, newOperator);
+        pendingOperator[msg.sender] = newOperator;
+        pendingOperatorExpiresAt[msg.sender] = block.timestamp + OPERATOR_PROPOSAL_EXPIRY;
+        operatorReservedBy[newOperator] = msg.sender;
+        emit OperatorChangeProposed(msg.sender, newOperator, pendingOperatorExpiresAt[msg.sender]);
+    }
+
+    /// @notice Step 2, Verifier only, after its health check of the new node: applies the switch (immediately visible in
+    ///         getValidators() and so in QBFT).
+    function confirmOperatorReady(address owner_, bytes32 evidenceHash) external onlyVerifier {
+        address newOp = pendingOperator[owner_];
+        require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        require(pendingOperatorExpiresAt[owner_] > block.timestamp, "ValidatorsRegistry: proposal expired");
+        require(validators[owner_].status == Status.Active, "ValidatorsRegistry: owner is no longer Active");
+        require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
+        delete pendingOperator[owner_];
+        delete pendingOperatorExpiresAt[owner_];
+        delete operatorReservedBy[newOp];
+        _claimOperator(owner_, newOp);
+        emit OperatorChangeConfirmed(owner_, newOp, evidenceHash);
+    }
+
+    function cancelOperatorChange() external {
+        address newOp = pendingOperator[msg.sender];
+        require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        delete pendingOperator[msg.sender];
+        delete pendingOperatorExpiresAt[msg.sender];
+        delete operatorReservedBy[newOp];
+        emit OperatorChangeCancelled(msg.sender, newOp);
+    }
+
+    /// @dev The same uniqueness rules as _claimOperator, without writing (used when a proposal is made).
+    function _checkOperatorFree(address owner_, address operator) private view {
+        require(operator != address(0), "ValidatorsRegistry: zero operator");
+        require(!_reservedForOther(operator, owner_), "ValidatorsRegistry: operator reserved by another owner's pending change");
+        address attached = ownerOfOperator[operator];
+        require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
+        require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
     }
 
     // ------------------------------------------------------------------

@@ -108,28 +108,87 @@ describe("Registry v2.5 - paying entry", () => {
   });
 });
 
-describe("Registry v2.5 - setOperator", () => {
-  it("only an owner in Probation/Active/Demoted; unique; immediate effect on the validator list; old keys stay attached to their owner", async () => {
-    const { reg, buyers, verifier, S, op0, founders } = await loadFixture(fixture);
+describe("Registry v2.5 - changing the node key", () => {
+  it("setOperator is immediate only outside the consensus set; an Active validator must use the two-step path", async () => {
+    const { reg, founders, S, verifier } = await loadFixture(fixture);
     await expect(reg.connect(S[15]).setOperator(rnd())).to.be.revertedWith("ValidatorsRegistry: cannot change the operator in this status");
-    const first = founders[0];
-    const op1 = rnd();
-    await expect(reg.connect(first).setOperator(op0)).to.be.revertedWith("ValidatorsRegistry: same operator");
-    await expect(reg.connect(first).setOperator(ZERO)).to.be.revertedWith("ValidatorsRegistry: zero operator");
-    await reg.connect(first).setOperator(op1);
-    expect(await reg.getValidators()).to.deep.equal([op1]); // the QBFT set changes at once
-    expect(await reg.operatorOf(first.address)).to.equal(op1);
-    expect(await reg.ownerOfOperator(op0)).to.equal(first.address); // still attached: old blocks map to the owner
-    // nobody else can ever take the old key
-    await expect(reg.connect(founders[1]).setOperator(op0)).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
-    // the owner may return to a key that was its own
-    await reg.connect(first).setOperator(op0);
-    expect(await reg.getValidators()).to.deep.equal([op0]);
+    await expect(reg.connect(founders[0]).setOperator(rnd())).to.be.revertedWith("ValidatorsRegistry: an Active validator changes the node key in two steps (proposeOperator)");
+    // a Probation founder: immediate, unique, may return to an own earlier key
+    const f = founders[1];
+    const a = rnd(), b = rnd();
+    await expect(reg.connect(f).setOperator(ZERO)).to.be.revertedWith("ValidatorsRegistry: zero operator");
+    await reg.connect(f).setOperator(a);
+    await expect(reg.connect(f).setOperator(a)).to.be.revertedWith("ValidatorsRegistry: same operator");
+    await reg.connect(f).setOperator(b);
+    expect(await reg.operatorOf(f.address)).to.equal(b);
+    expect(await reg.ownerOfOperator(a)).to.equal(f.address); // the old key stays attached forever
+    await expect(reg.connect(founders[2]).setOperator(a)).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
+    await reg.connect(f).setOperator(a); // own earlier key
+    expect(await reg.operatorOf(f.address)).to.equal(a);
+    await expect(reg.connect(founders[2]).setOperator(founders[3].address)).to.be.revertedWith("ValidatorsRegistry: operator is another owner");
   });
 
-  it("an operator key cannot be an owner of a validator seat and an owner address cannot be used as someone else's operator", async () => {
+  it("two steps for an Active validator: propose reserves the key, nothing changes in consensus until the Verifier confirms", async () => {
+    const { reg, founders, verifier, op0, S } = await loadFixture(fixture);
+    const first = founders[0];
+    const op1 = rnd();
+    await expect(reg.connect(S[15]).proposeOperator(op1)).to.be.revertedWith("ValidatorsRegistry: only an Active validator proposes (others use setOperator)");
+    await expect(reg.connect(first).proposeOperator(op0)).to.be.revertedWith("ValidatorsRegistry: same operator");
+    await expect(reg.connect(first).proposeOperator(ZERO)).to.be.revertedWith("ValidatorsRegistry: zero operator");
+    await reg.connect(first).proposeOperator(op1);
+    expect(await reg.pendingOperator(first.address)).to.equal(op1);
+    expect(await reg.getValidators()).to.deep.equal([op0]); // consensus unchanged: a dead node can never get in by proposing
+    await expect(reg.connect(first).proposeOperator(rnd())).to.be.revertedWith("ValidatorsRegistry: a proposal is already open");
+    // the reserved key cannot be taken by anyone else meanwhile
+    await expect(reg.connect(founders[1]).setOperator(op1)).to.be.revertedWith("ValidatorsRegistry: operator reserved by another owner's pending change");
+    // only the Verifier confirms, with evidence
+    await expect(reg.connect(first).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: caller is not the verifier");
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, ethers.ZeroHash)).to.be.revertedWith("ValidatorsRegistry: empty evidence hash");
+    await reg.connect(verifier).confirmOperatorReady(first.address, HASH);
+    expect(await reg.getValidators()).to.deep.equal([op1]); // the switch happens in the Verifier's transaction
+    expect(await reg.operatorOf(first.address)).to.equal(op1);
+    expect(await reg.ownerOfOperator(op0)).to.equal(first.address); // old key stays attached (event history, F-4)
+    expect(await reg.pendingOperator(first.address)).to.equal(ZERO);
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+  });
+
+  it("the owner can cancel; a proposal lapses after 7 days and frees the key; confirm after expiry is refused", async () => {
+    const { reg, founders, verifier } = await loadFixture(fixture);
+    const first = founders[0];
+    const op1 = rnd(), op2 = rnd();
+    await expect(reg.connect(first).cancelOperatorChange()).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+    await reg.connect(first).proposeOperator(op1);
+    await reg.connect(first).cancelOperatorChange();
+    expect(await reg.pendingOperator(first.address)).to.equal(ZERO);
+    await reg.connect(founders[1]).setOperator(op1); // reservation gone: another owner may use the key
+    await reg.connect(first).proposeOperator(op2);
+    await increaseTime(7 * DAY + 10);
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: proposal expired");
+    await reg.connect(founders[2]).setOperator(op2); // an expired reservation does not block others
+    await reg.connect(first).proposeOperator(rnd()); // a new proposal after expiry is allowed
+  });
+
+  it("a proposal for a key that belongs to another owner or to an owner address is refused", async () => {
     const { reg, founders } = await loadFixture(fixture);
-    await expect(reg.connect(founders[1]).setOperator(founders[2].address)).to.be.revertedWith("ValidatorsRegistry: operator is another owner");
+    const first = founders[0];
+    await reg.connect(founders[1]).setOperator(rnd());
+    const taken = await reg.operatorOf(founders[1].address);
+    await expect(reg.connect(first).proposeOperator(taken)).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
+    await expect(reg.connect(first).proposeOperator(founders[2].address)).to.be.revertedWith("ValidatorsRegistry: operator is another owner");
+  });
+
+  it("the Verifier cannot apply a proposal once the owner is no longer Active", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, founders, verifier } = f;
+    // activate founders 1..3 so the first validator is not the only one; then the second validator proposes and gets suspended
+    for (const x of founders.slice(1)) {
+      await reg.connect(x).setOperator(rnd());
+      await reg.connect(verifier).recordActivation(x.address, HASH);
+    }
+    const second = founders[1];
+    await reg.connect(second).proposeOperator(rnd());
+    await reg.connect(verifier).recordSuspension(second.address, HASH);
+    await expect(reg.connect(verifier).confirmOperatorReady(second.address, HASH)).to.be.revertedWith("ValidatorsRegistry: owner is no longer Active");
   });
 });
 
