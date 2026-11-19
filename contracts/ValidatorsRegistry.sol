@@ -607,9 +607,11 @@ contract ValidatorsRegistry {
     // v2.5: two keys per validator. The OWNER holds rewards, collateral, votes, identity and the seat; the OPERATOR is only
     // the node key that signs blocks. getValidators() returns operator keys.
     // ------------------------------------------------------------------
-    /// @notice The owner whose operator key this is. Once an address has been an operator it stays attached to that owner
-    ///         forever (it is never freed for someone else), so a block signed by an old operator key can always be mapped
-    ///         to its owner for reward purposes.
+    /// @notice The owner whose operator key this is NOW. Once an address has been an operator it is never freed for someone
+    ///         else, so a node-key swap by the same owner keeps old keys mapped to that owner. BUT a seat transfer re-points
+    ///         the operator key to the buyer, so this mapping alone does NOT tell who owned the key at an earlier block:
+    ///         the RewardRouter must replay SeatTransferred, OperatorSet and OperatorChangeConfirmed events to attribute
+    ///         each block to the owner at that block (owner decision 2026-11-19).
     mapping(address => address) public ownerOfOperator;
     /// @notice The CURRENT operator (node key) of an owner (zero until set).
     mapping(address => address) public operatorOf;
