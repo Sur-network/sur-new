@@ -1,6 +1,6 @@
 # یادداشت دیپلوی — مجموعه‌ی قراردادهای سور (مدل دیپلوی در بلاک genesis)
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). ⚠️ **دامنهٔ صادقانه:** باقی بازطراحی ۲.۵ `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش) و همچنین `ValidatorSeatNFT` و `RewardRouter` هنوز در کد نوشته **نشده‌اند**؛ بخش‌های این سند که آن‌ها را شرح می‌دهند طرح‌اند، نه کد. پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). نام تابع‌ها هر جا از کد گرفته شده همان نام کد است. 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۹۱ آزمون Hardhat در ۱۰ فایل (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`)، تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`)، `ValidatorSeatNFT` (صندلی ERC-721 با انتقال و قواعد خریدار)، هستهٔ بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، جریان مؤسسان، `SelfSuspended`، سوزاندن ۱۰۰٪ جریمه، قواعد فاصلهٔ ورود) و سوزاندن مازاد پاداش در `BlockRewardDistributor`. ⚠️ **دامنهٔ صادقانه:** هنوز در کد نوشته **نشده‌اند**: `RewardRouter` (سرویس آف‌چین)، ابزار genesis، سرویس‌های Verifier/Identity و حدود تغییر ریوارد (±۱۰٪ و ۶ ماه فاصله) در `proposeRateChange`؛ بخش‌های این سند که آن‌ها را شرح می‌دهند طرح‌اند، نه کد. پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). نام تابع‌ها هر جا از کد گرفته شده همان نام کد است. 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده و حسابرسی امنیتی هم انجام نشده است.
 
 > **وضعیت سند:** مرجع استقرار genesis برای نسخهٔ ۲.۵. 🔶 آزمون Besu برای نسخهٔ ۲.۵ انجام نشده است؛ نتایج آزمون‌های Besu که در انتهای این سند آمده‌اند فقط به کد پایه‌ی ۲.۲ مربوط‌اند.
 
@@ -16,12 +16,12 @@
 | `0x4444444444444444444444444444444444444444` | `ValidatorsBoard` |
 | `0x5555555555555555555555555555555555555555` | `ValidatorsTreasury` |
 | `0x6666666666666666666666666666666666666666` | `IdentityRegistry` |
-| `0x8888888888888888888888888888888888888888` (پیشنهادی) | `ValidatorSeatNFT` (هنوز نوشته نشده) |
+| `0x8888888888888888888888888888888888888888` (پیشنهادی) | `ValidatorSeatNFT` (✅ کد و آزمون Hardhat) |
 | `0x9999999999999999999999999999999999999999` (پیشنهادی) | `GenesisClaimsVault` (✅ کد و آزمون Hardhat) |
 | `0x7777777777777777777777777777777777777777` (پیشنهادی) | `FoundationMembers` |
 | `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa` (پیشنهادی؛ checksum به‌صورت کد) | `ValidatorLottery` |
 
-🔶 آدرس چهار قرارداد تازه در `SurAddresses.sol` **پیشنهاد** شده است (همان الگوی `0xNNNN…NNNN`؛ برای لاتاری `0xaAaA…aAaA`)؛ تثبیت نهایی بخشی از طراحی genesis است. `ValidatorSeatNFT` فقط آدرس رزروشده دارد و کدش نوشته نشده است؛ `GenesisClaimsVault` نوشته و با Hardhat آزموده شده است. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده است: ۲.۵ دقیقاً **سه اوراکل** دارد (`verifier`، `distributionOracle`، `identityOracle`) و `SurenSale` اوراکل ندارد.
+🔶 آدرس چهار قرارداد تازه در `SurAddresses.sol` **پیشنهاد** شده است (همان الگوی `0xNNNN…NNNN`؛ برای لاتاری `0xaAaA…aAaA`)؛ تثبیت نهایی بخشی از طراحی genesis است. `ValidatorSeatNFT` و `GenesisClaimsVault` نوشته و با Hardhat آزموده شده‌اند. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده است: ۲.۵ دقیقاً **سه اوراکل** دارد (`verifier`، `distributionOracle`، `identityOracle`) و `SurenSale` اوراکل ندارد.
 
 ## چرا این مسیر ممکن است: دیپلوی مستقیم در `alloc`
 
@@ -56,14 +56,14 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 ابزار ساخت genesis باید این‌طور عمل کند:
 
-1. برای هر قراردادی که `mapping`/آرایه‌ی پویا نیاز به مقداردهی دارد، یک **نسخه‌ی موقت (seed helper)** بسازد که یک `constructor` واقعی دارد. ✅ **از ۲.۵ برای پنج قرارداد `FoundationDAO`، `FoundationMembers`، `ValidatorsRegistry`، `ValidatorsBoard` و `GenesisClaimsVault` این نسخه‌ی موقت خودِ قرارداد واقعی را ارث می‌برد** (`contract X_GenesisSeed is X`، در `contracts/genesis-seed-helpers/`) و فقط یک `constructor` به آن اضافه می‌کند؛ پس **چینش storage به‌ساختار با قرارداد واقعی یکی است** و هیچ نسخه‌ی کپی‌شده‌ای وجود ندارد که باید دستی هم‌گام نگه داشته شود.
-2. این نسخه‌ی موقت را روی یک زنجیره‌ی محلی (Anvil/Hardhat) دیپلوی کند — `constructor` واقعاً و کامل اجرا می‌شود (آزمون‌های `contracts-tests/` همین روش را برای پنج قرارداد بالا به‌کار می‌برند)، خودِ EVM تمام محاسبات `keccak256` بالا را درست انجام می‌دهد.
+1. برای هر قراردادی که `mapping`/آرایه‌ی پویا نیاز به مقداردهی دارد، یک **نسخه‌ی موقت (seed helper)** بسازد که یک `constructor` واقعی دارد. ✅ **از ۲.۵ برای شش قرارداد `FoundationDAO`، `FoundationMembers`، `ValidatorsRegistry`، `ValidatorsBoard`، `ValidatorSeatNFT` و `GenesisClaimsVault` این نسخه‌ی موقت خودِ قرارداد واقعی را ارث می‌برد** (`contract X_GenesisSeed is X`، در `contracts/genesis-seed-helpers/`) و فقط یک `constructor` به آن اضافه می‌کند؛ پس **چینش storage به‌ساختار با قرارداد واقعی یکی است** و هیچ نسخه‌ی کپی‌شده‌ای وجود ندارد که باید دستی هم‌گام نگه داشته شود.
+2. این نسخه‌ی موقت را روی یک زنجیره‌ی محلی (Anvil/Hardhat) دیپلوی کند — `constructor` واقعاً و کامل اجرا می‌شود (آزمون‌های `contracts-tests/` همین روش را برای شش قرارداد بالا به‌کار می‌برند)، خودِ EVM تمام محاسبات `keccak256` بالا را درست انجام می‌دهد.
 3. از این زنجیره‌ی محلی، تمام storage slotهای واقعاً نوشته‌شده را بخواند (`eth_getStorageAt` روی هر slot لمس‌شده، یا با ابزار state-dump آن شبکه — مثل `anvil_dumpState`).
 4. این slotها را — همراه با بایت‌کد قرارداد **واقعی و نهایی** (بدون constructor) — زیر همان آدرس ثابت در `alloc` genesis بنویسد.
 
 ⚠️ نکته‌ی مهم: بایت‌کدی که در `alloc.code` می‌رود باید از قرارداد **واقعی و بدون constructor** باشد، نه از نسخه‌ی موقتِ دارای constructor — نسخه‌ی موقت فقط برای محاسبه‌ی storage استفاده می‌شود، نه برای گرفتن بایت‌کد (چون helper ارث‌بر است، runtime آن هم‌شکل است ولی باز هم باید runtime قرارداد واقعی نوشته شود).
 
-✅ **قاعدهٔ قدیمی `__gap` و `check_genesis_helper_layout.js` برای این پنج قرارداد دیگر لازم نیست:** در ۲.۲ نسخه‌ی موقت کپی دستی با جای‌گذارهای `__gap` بود و چینش با اسکریپت `check_genesis_helper_layout.js` مقایسه می‌شد. در ۲.۵ ارث‌بری یکسانی چینش را «به‌ساختار» تضمین می‌کند. 🔶 هر قرارداد دیگری که در آینده helper کپی‌شده بخواهد، همان قاعدهٔ قدیمی و بررسی چینش را می‌خواهد؛ در حال حاضر چنین قراردادی نیست (`BlockRewardDistributor`، `ValidatorsTreasury`، `IdentityRegistry` فقط مقدار ساده دارند و `ValidatorLottery`/`SurenSale` وضعیت اولیهٔ غیرصفر ندارند).
+✅ **قاعدهٔ قدیمی `__gap` و `check_genesis_helper_layout.js` برای این شش قرارداد دیگر لازم نیست:** در ۲.۲ نسخه‌ی موقت کپی دستی با جای‌گذارهای `__gap` بود و چینش با اسکریپت `check_genesis_helper_layout.js` مقایسه می‌شد. در ۲.۵ ارث‌بری یکسانی چینش را «به‌ساختار» تضمین می‌کند. 🔶 هر قرارداد دیگری که در آینده helper کپی‌شده بخواهد، همان قاعدهٔ قدیمی و بررسی چینش را می‌خواهد؛ در حال حاضر چنین قراردادی نیست (`BlockRewardDistributor`، `ValidatorsTreasury`، `IdentityRegistry` فقط مقدار ساده دارند و `ValidatorLottery`/`SurenSale` وضعیت اولیهٔ غیرصفر ندارند).
 
 ### جایگزین (فقط برای اعتبارسنجی، نه مسیر اصلی): محاسبه‌ی دستی
 
@@ -84,7 +84,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 چون قرارداد اصلی `constructor` ندارد، این نکته فقط برای همان **نسخه‌ی موقتِ شبیه‌سازی** (بخش بالا) صدق می‌کند: هر جا منطق مقداردهی اولیه (چه در `constructor` نسخه‌ی موقت، چه به‌عنوان مرجع برای محاسبه‌ی دستی) به `block.timestamp` نیاز دارد، مقداری که واقعاً باید استفاده شود، زمان **واقعی بلاک genesis شبکه‌ی سور** است، نه زمان اجرای شبیه‌سازی روی ماشین توسعه‌دهنده.
 
-- **`ValidatorsRegistry`**: `windowStart` (شروع پنجره‌ی فاصله‌ی ورود) باید دقیقاً برابر timestamp واقعی بلاک genesis باشد؛ `periodStartedAt` هر ولیدیتور اولیه هم برای یکدستی همان مقدار گذاشته شود. همچنین «۶ ماه اول از genesis» (ممنوعیت تغییر ریوارد و فاصله‌ی ورود) از همین timestamp شمرده می‌شود.
+- **`ValidatorsRegistry`**: `genesisTime` را کمکی seed از آرگومان `genesisTimestamp` می‌نویسد و باید دقیقاً برابر timestamp واقعی بلاک genesis باشد؛ `periodStartedAt` هر مؤسس هم همان مقدار می‌شود. «۶ ماه اول از genesis» برای تغییر `EntryWindowSeconds` از `genesisTime` شمرده می‌شود (برای ممنوعیت تغییر ریوارد هنوز کدی نیست). `windowStart` را کمکی نمی‌نویسد و ۰ می‌ماند: اولین `requestMembership` پنجرهٔ فاصلهٔ ورود را شروع می‌کند.
 - **`ValidatorsBoard`**: `boardMonthId` برابر ماه میلادی UTC زمان genesis (بخش «مقادیر پیش از genesis» پایین).
 - **`GenesisClaimsVault`**: `genesisTimestamp` (باید برابر `timestamp` فایل `genesis.json` باشد؛ seed آن را در storage می‌نویسد)؛ شناسه‌ی ماه میلادی genesis از آن محاسبه می‌شود؛ اولین قسط در ابتدای **اولین ماه میلادی پس از genesis** است (در ماه genesis قسطی آزاد نیست)، پس مبنای آزادسازی باید با timestamp واقعی genesis محاسبه شود.
 - **`BlockRewardDistributor`**: هیچ مقدار وابسته به timestamp genesis و هیچ immutableی ندارد (به‌جز زمان‌های «۶ ماه اول»، اگر در این قرارداد نگه‌داری شوند — 🔶 محل نگه‌داری این تایمر در طراحی نهایی تعیین می‌شود).
@@ -95,10 +95,10 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 |---|---|---|
 | `FoundationDAO` | ✅ بله (`FoundationDAO_GenesisSeed`) | اولین هیأت‌مدیره (۵ اصلی + حداکثر ۲ علی‌البدل)، بازرس، رئیس، خزانه‌دار، مدیرعامل، پایان دوره (آرایه/mapping) |
 | `FoundationMembers` | ✅ بله (`FoundationMembers_GenesisSeed`) | فهرست اعضا، `mapping` به `struct Member` با `string`، اندیس و نمایندهٔ شخص حقوقی، `totalShares` |
-| `ValidatorsRegistry` | ✅ بله (`ValidatorsRegistry_GenesisSeed`) | `validators` (mapping به `struct`: مالک، اپراتور، وضعیت)، `activeValidators`/`activeIndex`، نگاشت اپراتور↔مالک |
+| `ValidatorsRegistry` | ✅ بله (`ValidatorsRegistry_GenesisSeed`) | `validators` (mapping به `struct`: وضعیت، وثیقه، زمان‌ها)، `activeValidators`/`activeIndex`، `operatorOf`/`ownerOfOperator`، `isFounder`، `everActivated`/`activationSeq`، `genesisTime`، checkpoint فعال‌بودن |
 | `ValidatorsBoard` | ✅ بله (`ValidatorsBoard_GenesisSeed`) | `boardMembers` (آرایه‌ی پویا)، `isBoardMember` (mapping) |
 | `GenesisClaimsVault` | ✅ بله (`GenesisClaimsVault_GenesisSeed`) | `mapping` طلب هر آدرس (`held`، `withdrawn`)، `totalHeld`، `genesisTimestamp` |
-| `ValidatorSeatNFT` | ✅ بله | مالک و موجودی هر توکن، `tokenURI` هر توکن (mapping/string) |
+| `ValidatorSeatNFT` | ✅ بله (`ValidatorSeatNFT_GenesisSeed`) | مالک و موجودی هر توکن، `seatOf`، `totalMinted` و `baseURI` اولیه (رشته)؛ `tokenURI` ذخیره نمی‌شود و از `baseURI` + شناسه ساخته می‌شود |
 | `BlockRewardDistributor` | ❌ خیر | فقط `distributionOracle`، `validatorDirectShareBps` و مقدار مصوب ریوارد — مقادیر ساده، باید overlay شوند؛ immutable ندارد |
 | `ValidatorsTreasury` | ❌ خیر | فقط `perPaymentCap`/`periodCap` — مقادیر ساده |
 | `IdentityRegistry` | ❌ خیر | فقط `identityOracle` — مقدار ساده |
@@ -130,39 +130,40 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 (لیست کامل هرکدام در خودِ سورس با علامت `🔶 FILL_IN` مشخص است.) هر سه آدرس اوراکل (`verifier`، `distributionOracle`، `identityOracle`) مستقیم در سورس هاردکد شده‌اند. جزئیات کامل آدرس‌ها در `sur-contracts-oracles-accounts-report.md`.
 
-1. `ValidatorsRegistry` — فهرست ۷ ولیدیتور مؤسس (نیازمند شبیه‌سازی با `ValidatorsRegistry_GenesisSeed`): هرکدام با آدرس اتریومی **مالک** مشخص و وثیقه‌ی صفر؛ **فقط اولین ولیدیتور** (راه‌انداز genesis) در مجموعه‌ی فعال اولیه است و کلید اپراتورش از ابتدا تعریف شده؛ شش نفر دیگر در وضعیتی هستند که منتظر ثبت کلید اپراتور (`setOperator`) و تأیید روشن‌بودن نود توسط Verifier‌اند (🔶 نام وضعیت موقت). پارامترهای امنیتی (✅ نهایی: `maxEntriesPerWindow=1`, `entryWindowSeconds=604800` (۷ روز)، `probationPeriod=604800`, `recoveryPeriod=172800`, `slashBps=100`, `exitCooldown=604800`)؛ وثیقه‌ی ثابت `entryCollateral = 500_000 ether` و `membershipFeeBps = 400`؛ `windowStart` (= genesis timestamp واقعی). کل مکانیزم liveness آف‌چین است (تصمیم/تحویل/اعتراض/رأی)؛ به یادداشت معماری بالای `recordSuspension()` در `ValidatorsRegistry.sol` و `sur-tokenomics.md`/`sur-verifier-service-spec.md` مراجعه کن. **بدون** آدرس توکن — سورن ارز بومی شبکه است.
-2. `ValidatorsBoard` — فهرست **دقیقاً ۵** عضو اولیه‌ی هیأت (نیازمند شبیه‌سازی با `ValidatorsBoard_GenesisSeed`). 🔶 تا زمانی که شش مؤسس دیگر فعال نشده‌اند فقط یک ولیدیتور فعال وجود دارد؛ این‌که اعضای اولیه‌ی هیأت که هنوز فعال نیستند از ابتدا اختیار دارند یا نه، باید در طراحی نهایی روشن شود.
+1. `ValidatorsRegistry` — فهرست ۷ ولیدیتور مؤسس با `ValidatorsRegistry_GenesisSeed(address firstOwner, address firstOperator, address[] otherFounders, uint256 genesisTimestamp)` (نیازمند شبیه‌سازی): هرکدام با آدرس اتریومی **مالک** مشخص، وثیقه‌ی صفر، `isFounder = true` و غیرپرداخت‌کننده؛ **فقط اولین ولیدیتور** (`firstOwner`، راه‌انداز genesis) `Active` است و کلید اپراتورش (`firstOperator`، همان کلیدی که در QBFT genesis می‌آید) از ابتدا ثبت است؛ شش مؤسس دیگر (`otherFounders`) با وضعیت `Probation` و بدون اپراتور ثبت می‌شوند و پس از `setOperator` و `recordActivation` (✅ بدون انتظار دورهٔ آزمایشی؛ فقط تأیید روشن‌بودن نود توسط Verifier) `Active` می‌شوند. پارامترهای امنیتی (✅ نهایی؛ مقدار اولیه در سورس: `maxEntriesPerWindow=1`, `entryWindowSeconds=604800` (۷ روز)، `probationPeriod=604800`, `recoveryPeriod=172800`, `slashBps=100`, `exitCooldown=604800`)؛ وثیقه‌ی ثابت `entryCollateral = 500_000 ether` و `membershipFeeBps = 400`. چون helper ارث‌بر است، مقدارهای اولیهٔ scalarهای سورس (از جمله `verifier`) همراه storage استخراج می‌شوند؛ `genesisTime` را helper از آرگومان می‌نویسد و `windowStart` ۰ می‌ماند. کل مکانیزم liveness آف‌چین است (تصمیم/تحویل/اعتراض/رأی)؛ به یادداشت معماری بالای `recordSuspension()` در `ValidatorsRegistry.sol` و `sur-tokenomics.md`/`sur-verifier-service-spec.md` مراجعه کن. **بدون** آدرس توکن — سورن ارز بومی شبکه است.
+2. `ValidatorsBoard` — فهرست **دقیقاً ۵** عضو اولیه‌ی هیأت (نیازمند شبیه‌سازی با `ValidatorsBoard_GenesisSeed`). 🔶 تا زمانی که شش مؤسس دیگر فعال نشده‌اند فقط یک ولیدیتور فعال وجود دارد. در کد اختیار هیأت به `Active` بودن وابسته نیست (وضعیت نه `None`، نه `Exiting`، نه `RemovedInRecovery`؛ `ValidatorsBoard._hasAuthority`)؛ پس عضو اولیهٔ هیأت که هنوز `Probation` است هم از ابتدا اختیار دارد؛ ولی `voteFor` و انتخاب ماهانه فقط ولیدیتور `Active` را می‌پذیرند. تأیید مالک لازم است.
 3. `ValidatorsTreasury` — ✅ `perPaymentCap = 50_000 ether`، `periodCap = 200_000 ether` (مبلغ ثابت)، و `CAP_CHANGE_TIMELOCK_DELAY = 7 days` (ثابت). چون genesis فقط runtime code تزریق می‌کند، این دو slot **باید overlay شوند** (مقداردهی سورس هنگام تزریق اجرا نمی‌شود). خزانه در genesis موجودی ندارد.
-4. `ValidatorsBoard` — ✅ `boardMonthId` را **حتماً** برابر ماه میلادی UTC زمان genesis (`monthIdOf(genesisTimestamp)`) و `boardVersion` را برابر ۱ نوشته و assert کن (هر دو را `ValidatorsBoard_GenesisSeed` می‌نویسد). ⚠️ بدون آن، هیأت مؤسس از لحظهٔ اول بی‌اختیار است و تا نخستین `refreshBoard` هیچ اقدامی نمی‌تواند بزند. همچنین `activationCount` و `activationSeq` مؤسسان در `ValidatorsRegistry` باید به ترتیب genesis ۱ تا ۷ شوند (شکستن تساوی هیأت).
+4. `ValidatorsBoard` — ✅ `boardMonthId` را **حتماً** برابر ماه میلادی UTC زمان genesis (`monthIdOf(genesisTimestamp)`) و `boardVersion` را برابر ۱ نوشته و assert کن (هر دو را `ValidatorsBoard_GenesisSeed` می‌نویسد). ⚠️ بدون آن، هیأت مؤسس از لحظهٔ اول بی‌اختیار است و تا نخستین `refreshBoard` هیچ اقدامی نمی‌تواند بزند. در `ValidatorsRegistry` فقط ولیدیتور اول در seed `activationSeq = 1` می‌گیرد؛ مؤسسان بعدی هنگام `recordActivation` به ترتیب فعال‌شدن شماره می‌گیرند (شکستن تساوی هیأت با `activationSeq` است)؛ پس ترتیب ۱ تا ۷ دیگر ترتیب genesis نیست بلکه ترتیب فعال‌سازی است.
 5. `BlockRewardDistributor` — ✅ `lastSettledBlock = 0` (پیش‌فرض)؛ اولین `distributeRewards` باید بازه‌ی `{1, …}` بدهد. overlay لازم: `distributionOracle`، `validatorDirectShareBps` و مقدار مصوب بلاک‌ریوارد (۲ سورن).
 6. `FoundationDAO` و `FoundationMembers` — نام و آدرس ۱۵ عضو اولیه‌ی بنیاد (در `FoundationMembers` با `FoundationMembers_GenesisSeed`، نیازمند شبیه‌سازی)، وزن سهم‌الشرکه‌ی هر عضو، اولین هیأت‌مدیره (۵ اصلی + ۲ علی‌البدل) و بازرس. مقدار اولیه (طبق صورت‌جلسهٔ مجمع ۱۴۰۵/۰۷/۰۱): هیأت‌مدیرهٔ اصلی: سیده مهکامه شریف‌زاد، میرسهیل نیک‌زاد کلورزی، سیاوش تفضلی، محمدحسن محمدی اردهالی، علیرضا زجاجی قمی؛ علی‌البدل: حجت عباسی، کاوه مشتاق؛ بازرس: امیرعباس امامی کورعباسلو؛ وزن سهم‌الشرکهٔ هر یک از ۱۵ عضو برابر ۵۰ میلیون ریال.
 7. `GenesisClaimsVault` — فهرست طلبکاران، طلب جمع‌شده‌ی هر آدرس (کامل، شامل ۱۰۰ سورن کیف‌پول)، `genesisTimestamp` (نیازمند شبیه‌سازی با `GenesisClaimsVault_GenesisSeed`)؛ و موجودی `alloc` صندوق = `totalHeld()`.
-8. `ValidatorSeatNFT` — هفت توکن صندلی مؤسسان با مالک مشخص (نیازمند شبیه‌سازی)، و الگوی `tokenURI`.
+8. `ValidatorSeatNFT` — هفت توکن صندلی مؤسسان (شناسه‌های ۱ تا ۷) با `ValidatorSeatNFT_GenesisSeed(address[] founderOwners)` (نیازمند شبیه‌سازی) **به همان ترتیب seed کردن مؤسسان در Registry** (ولیدیتور اول اول)؛ `baseURI` اولیه `https://validator-nft.surnet.org/` است (میزبان را مالک داده؛ 🔶 مسئول نگه‌داری آن مشخص نیست) و در همان storage استخراج می‌شود.
 9. `IdentityRegistry` — جزئیات کامل در `sur-identity-registry-spec.md`.
 
 ## قراردادهای کمکی seed (`contracts/genesis-seed-helpers/`) — v2.5
 
-هر پنج helper خودِ قرارداد واقعی را **ارث می‌برند** و در `constructor` وضعیت بنیادین را می‌نویسند؛ ابزار genesis storage لمس‌شده را استخراج می‌کند (simulate-and-extract) و آن را همراه با runtime **قرارداد واقعی** زیر آدرس ثابت می‌گذارد:
+هر شش helper خودِ قرارداد واقعی را **ارث می‌برند** و در `constructor` وضعیت بنیادین را می‌نویسند؛ ابزار genesis storage لمس‌شده را استخراج می‌کند (simulate-and-extract) و آن را همراه با runtime **قرارداد واقعی** زیر آدرس ثابت می‌گذارد:
 
 | helper | امضای `constructor` | آنچه seed می‌شود |
 |---|---|---|
 | `FoundationDAO_GenesisSeed` | `(address[] principalsAndAlternates, address inspector_, address chair_, address treasurer_, address ceo_, uint256 termEnd)` | ۵ تا ۷ آدرس (۵ اصلی، سپس حداکثر ۲ علی‌البدل)؛ بازرس؛ رئیس؛ خزانه‌دار؛ مدیرعامل؛ پایان دوره؛ `boardVersion = 0` |
 | `FoundationMembers_GenesisSeed` | `(address[] accounts, string[] names, PersonType[] types, address[] representatives, uint256[] shares)` | اعضای اولیه با نام، نوع شخص، نماینده و سهم‌الشرکه |
-| `ValidatorsRegistry_GenesisSeed` | `(address[] founders, uint256 genesisTimestamp)` | مؤسسان با وضعیت `Active`، وثیقهٔ صفر، غیرپرداخت‌کننده، `everActivated`، `activationSeq` به ترتیب، `periodStartedAt = genesisTimestamp` |
+| `ValidatorsRegistry_GenesisSeed` | `(address firstOwner, address firstOperator, address[] otherFounders, uint256 genesisTimestamp)` | `genesisTime`؛ ولیدیتور اول: `Active`، اپراتور `firstOperator`، `everActivated`، `activationSeq = 1`، checkpoint فعال؛ مؤسسان دیگر: `Probation`، بدون اپراتور؛ همه `isFounder = true`، وثیقهٔ صفر، غیرپرداخت‌کننده، `periodStartedAt = genesisTimestamp` |
+| `ValidatorSeatNFT_GenesisSeed` | `(address[] founderOwners)` | صندلی‌های ۱ تا n به مالکان داده‌شده؛ **همان ترتیب مؤسسان در Registry** (ولیدیتور اول اول)؛ `baseURI` اولیه هم در storage می‌آید |
 | `ValidatorsBoard_GenesisSeed` | `(address[] members, uint256 genesisTimestamp)` | دقیقاً ۵ عضو اولیه؛ `boardMonthId` ماه genesis؛ `boardVersion = 1` |
 | `GenesisClaimsVault_GenesisSeed` | `(address[] claimants, uint256[] claims, uint256 genesisTimestamp)` | `genesisTimestamp`؛ برای هر آدرس `held = claim − ۱۰۰ سورن`؛ `totalHeld` = مجموع `held`؛ موجودی `alloc` صندوق باید برابر `totalHeld()` باشد |
 
 - `genesisTimestamp` باید برابر `timestamp` فایل `genesis.json` باشد.
-- 🔶 helper فعلی `ValidatorsRegistry_GenesisSeed` **همهٔ** مؤسسان داده‌شده را `Active` می‌کند؛ ورود پله‌ای (فقط اولین ولیدیتور فعال و شش نفر دیگر منتظر کلید اپراتور) جزو بازطراحی ۲.۵ Registry است که هنوز در کد نیست.
+- ✅ ورود پله‌ای در کد است: فقط اولین ولیدیتور `Active` است و شش مؤسس دیگر `Probation`اند تا `setOperator` و `recordActivation` بزنند. ترتیب `otherFounders` در Registry باید با ترتیب `founderOwners` در helper صندلی‌ها یکی باشد (ولیدیتور اول، سپس همان ترتیب).
 - ✅ آزمون‌های `contracts-tests/` قراردادهای واقعی را با همین روش در آدرس‌های ثابتشان می‌گذارند.
 
 ## 🔶 اندازهٔ قراردادها: سقف ۲۴٬۵۷۶ بایت
 
-سقف ۲۴٬۵۷۶ بایت (EIP-170) فقط برای **CREATE** اعمال می‌شود. runtime `FoundationDAO` حدود ۲۷٫۹ کیلوبایت و runtime `ValidatorsRegistry` حدود ۲۶٫۹ کیلوبایت است و هر دو از این سقف گذشته‌اند. چون هر دو در `alloc` بلاک genesis تزریق می‌شوند (نه با CREATE)، **این سقف روی زنجیرهٔ واقعی اعمال نمی‌شود**؛ آزمون‌های Hardhat برای شبکهٔ درون‌فرایندی آن را برمی‌دارند (`allowUnlimitedContractSize` در `contracts-tests/hardhat.config.js`، چون helper با CREATE دیپلوی می‌شود). 🔶 این یک پیش‌فرض باز است: پیش از راه‌اندازی باید روی Besu واقعی تأیید شود که کلاینت runtime بزرگ‌تر از سقف را در `alloc` می‌پذیرد و اجرا می‌کند. `SurenSale` با تراکنش عادی (CREATE) دیپلوی می‌شود و مشمول این سقف است.
+سقف ۲۴٬۵۷۶ بایت (EIP-170) فقط برای **CREATE** اعمال می‌شود. runtime `FoundationDAO` حدود ۲۷٫۹ کیلوبایت و runtime `ValidatorsRegistry` ۳۴٬۶۰۵ بایت (از artifact آزمون Hardhat با solc 0.8.24 و optimizer 200؛ `ValidatorSeatNFT` ۵٬۷۴۵ و `BlockRewardDistributor` ۲۰٬۶۷۱ بایت و زیر سقف) است و دو قرارداد اول از این سقف گذشته‌اند. helperهای seed هم با CREATE دیپلوی می‌شوند، پس زنجیرهٔ موقتِ شبیه‌سازی باید این سقف را بردارد (مثل `allowUnlimitedContractSize` در آزمون‌ها). چون هر دو در `alloc` بلاک genesis تزریق می‌شوند (نه با CREATE)، **این سقف روی زنجیرهٔ واقعی اعمال نمی‌شود**؛ آزمون‌های Hardhat برای شبکهٔ درون‌فرایندی آن را برمی‌دارند (`allowUnlimitedContractSize` در `contracts-tests/hardhat.config.js`، چون helper با CREATE دیپلوی می‌شود). 🔶 این یک پیش‌فرض باز است: پیش از راه‌اندازی باید روی Besu واقعی تأیید شود که کلاینت runtime بزرگ‌تر از سقف را در `alloc` می‌پذیرد و اجرا می‌کند. `SurenSale` با تراکنش عادی (CREATE) دیپلوی می‌شود و مشمول این سقف است.
 
 ## آزمون‌های Hardhat (v2.5)
 
-پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۶۲ آزمون موفق در ۷ فایل: `FoundationDAO` ۱۶، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `LotteryRegistry` ۳، `RecoveryRemoval` ۱۲، `SurenSale` ۱۱، `ValidatorLottery` ۱۰. ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ هنوز انجام نشده است.
+پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۹۱ آزمون موفق در ۱۰ فایل: `BlockRewardDistributor` ۴، `FoundationDAO` ۱۶، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `LotteryRegistry` ۳، `RecoveryRemoval` ۱۲، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۰، `ValidatorsRegistry` ۱۵. ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ هنوز انجام نشده است.
 
 ## پارامترهای قابل‌تغییر با رأی
 
@@ -177,17 +178,17 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 - آدرس اولیه‌ی کلید `verifier` (مقدار ساده، مستقیم در سورس `ValidatorsRegistry.sol` با علامت `🔶 FILL_IN`، **نه** آرگومان constructor)
 
 ### فاصله‌ی ورود (`entryWindowSeconds`) — فقط با رأی مجمع ولیدیتورها
-مقدار genesis ۷ روز (حداکثر یک ورود در هر ۷ روز؛ شمارش فاصله با لحظه‌ی فعال‌سازی). هر تغییر حداکثر ±۱ روز، بازه‌ی ۱ تا ۳۰ روز، حداقل ۶ ماه بین دو تغییر، و ۶ ماه اول از genesis ممنوع است. ورود شش مؤسس پس از اولین ولیدیتور و ورود برندگان لاتاری از این فاصله مستثناست.
+مقدار genesis ۷ روز (حداکثر یک ورود در هر ۷ روز؛ در کد شمارش فاصله در لحظهٔ **درخواست** `requestMembership` است؛ 🔶 محل شمارش تأیید مالک می‌خواهد). هر تغییر حداکثر ±۱ روز، بازه‌ی ۱ تا ۳۰ روز، حداقل ۶ ماه بین دو تغییر، و ۶ ماه اول از genesis ممنوع است. ورود شش مؤسس پس از اولین ولیدیتور و ورود برندگان لاتاری از این فاصله مستثناست.
 
 ### پارامترهای اقتصادی ورود — با رأی ۳ از ۵ هیأت‌مدیره‌ی ولیدیتورها
-`entryCollateral` و `membershipFeeBps` مقدار اولیه‌ی ثابت دارند (۵۰۰٬۰۰۰ سورن / ۴٪ = ۲۰٬۰۰۰ سورن) و فقط با رأی **۳ از ۵** هیأت‌مدیره‌ی ولیدیتورها (`ValidatorsBoard.proposeSetEntryCollateral` / `proposeSetMembershipFeeBps` — 🔶 نام‌ها موقت) قابل‌تغییرند:
+`entryCollateral` و `membershipFeeBps` مقدار اولیه‌ی ثابت دارند (۵۰۰٬۰۰۰ سورن / ۴٪ = ۲۰٬۰۰۰ سورن) و فقط با رأی **۳ از ۵** هیأت‌مدیره‌ی ولیدیتورها (`ValidatorsBoard.proposeSetEntryCollateral` / `proposeSetMembershipFeeBps`؛ نام‌ها همان نام کد است؛ اجرا با `Registry.setEntryCollateral` / `setMembershipFeeBps` فقط از `ValidatorsBoard`) قابل‌تغییرند:
 - هر تصمیم حداکثر ±۱۰٪ نسبی؛ حدود مطلق وثیقه ۱۰۰٬۰۰۰ تا ۲٬۰۰۰٬۰۰۰ سورن؛ بازه‌ی کارمزد عضویت ۱٪ تا ۱۰٪.
 - حداقل ۱۸۰ روز فاصله با تغییر قبلی؛ تایمر میان تغییر مبلغ وثیقه و تغییر درصد کارمزد مشترک است.
 - فقط روی ورودی‌های بعدی اثر می‌گذارد.
 دلیل: رسیدن به اجماع/اکثریت کامل بین همه‌ی ولیدیتورها هرچه شبکه بزرگ‌تر شود عملاً سخت‌تر می‌شود، در حالی که این دو پارامتر ممکن است با تغییر قیمت سورن نیاز به تعدیل داشته باشند. جزئیات کامل در `sur-blockchain-design-doc.md` بخش ۶ و `sur-smart-contracts-reference.md`.
 
 ### تغییر مقدار مصوب بلاک‌ریوارد — رأی دومجلسی
-هیأت‌مدیره + دوسوم مجمع ولیدیتورها. هر تصمیم حداکثر ±۱۰٪ نسبی به مقدار جاری؛ حداقل ۶ ماه بین دو تصمیم موفق؛ ۶ ماه اول از genesis ممنوع؛ زمان اثر یک هفته پس از تصمیم؛ کف و سقف مطلق ندارد. اگر پاداش واقعی (پیکربندی Besu) از مقدار مصوب بیشتر باشد، `BlockRewardDistributor` فقط مقدار مصوب را تقسیم می‌کند و مازاد را فوراً می‌سوزاند (رویداد `RewardExcessBurned`، بدون سقف در هر epoch)؛ این شامل کاهش مصوبِ اعمال‌نشده هم می‌شود. 🔶 آزموده‌نشده.
+هیأت‌مدیره + دوسوم مجمع ولیدیتورها. هر تصمیم حداکثر ±۱۰٪ نسبی به مقدار جاری؛ حداقل ۶ ماه بین دو تصمیم موفق؛ ۶ ماه اول از genesis ممنوع؛ زمان اثر یک هفته پس از تصمیم؛ کف و سقف مطلق ندارد. اگر پاداش واقعی (پیکربندی Besu) از مقدار مصوب بیشتر باشد، `BlockRewardDistributor` فقط مقدار مصوب را تقسیم می‌کند و مازاد را فوراً می‌سوزاند (رویداد `RewardExcessBurned`، بدون سقف در هر epoch)؛ این شامل کاهش مصوبِ اعمال‌نشده هم می‌شود. ✅ سوزاندن مازاد در کد و با ۴ آزمون Hardhat آزموده شده است (Router پاداش واقعی را گزارش می‌کند و قرارداد مصوب را از `maxRewardsForRange` حساب می‌کند؛ `RewardExcessBurned`، `totalExcessBurned`)؛ 🔶 روی Besu آزموده نشده. ⚠️ حدود ±۱۰٪ و فاصلهٔ ۶ ماه تغییر ریوارد هنوز در `proposeRateChange` نیست.
 
 ## مدل ترکیبی استیک
 
@@ -208,12 +209,12 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 - **مالک (`owner`):** ریوارد، وثیقه، برداشت، رأی در مجمع و هیأت‌مدیره، هویت، درخواست خروج، NFT، تعویض اپراتور.
 - **اپراتور (`operator`):** فقط امضای بلاک؛ `getValidators()` آدرس اپراتور را برمی‌گرداند.
 - `setOperator(newOperator)` فوری است و نود جدید وارد چرخه‌ی بررسی سلامت آف‌چین می‌شود (معافیتی از liveness نیست). یک اپراتور برای چند مالک مجاز نیست. گم‌شدن کلید مالک: `migrateIdentity` با تأیید هویت.
-- **ورود مؤسسان:** فقط اولین ولیدیتور در مجموعه‌ی اولیه‌ی genesis است. هر یک از شش مؤسس دیگر با آدرس اتریومی خودش `setOperator` را صدا می‌زند و به شرط تأیید روشن‌بودن نود توسط Verifier وارد فهرست ولیدیتورها می‌شود (از فاصله‌ی ورود مستثناست).
-- تعلیق داوطلبانه: وضعیت `SelfSuspended` با `selfSuspend()` و `requestResume()`؛ جزئیات در سند طراحی بخش ۶.۳.
+- **ورود مؤسسان:** فقط اولین ولیدیتور در مجموعه‌ی اولیه‌ی genesis است. هر یک از شش مؤسس دیگر (وضعیت `Probation`، `isFounder`) با آدرس اتریومی خودش `setOperator` را صدا می‌زند و به شرط تأیید روشن‌بودن نود توسط Verifier (`recordActivation`، بدون انتظار دوره) وارد فهرست ولیدیتورها می‌شود (از فاصله‌ی ورود مستثناست).
+- تعلیق داوطلبانه: وضعیت `SelfSuspended` با `selfSuspend()`، `requestResume()` و `recordResume` (Verifier)؛ جزئیات در سند طراحی بخش ۶.۳.
 
 ## NFT صندلی (`ValidatorSeatNFT`)
 
-هر صندلی ولیدیتوری (از جمله ۷ مؤسس) یک توکن ERC-721 است؛ مالک توکن = مالک وثیقه. توکن‌ها در genesis برای هفت مؤسس ایجاد می‌شوند؛ ورودی‌های بعدی هنگام ورود، توکن می‌گیرند. شرایط انتقال (KYC، نبودن سابقه‌ی ولیدیتوری، ۳ روز مهلت امضای توافق‌نامه، ممنوعیت انتقال در حال درخواست خروج یا با پروندهٔ جریمه‌ی باز، دوره‌ی آزمایشی در صورت تغییر آدرس نود)، `tokenURI` هر توکن، و قابلیت افزودن بازار در آینده در سند طراحی بخش ۶.۴ آمده است. چون قرارداد `constructor` ندارد، مالکان اولیه از طریق شبیه‌سازی (بالا) seed می‌شوند.
+هر صندلی ولیدیتوری (از جمله ۷ مؤسس) یک توکن ERC-721 است؛ مالک توکن = مالک وثیقه. توکن‌ها در genesis برای هفت مؤسس ایجاد می‌شوند؛ ورودی‌های بعدی هنگام ورود، توکن می‌گیرند. شرایط انتقال (✅ در کد: `isFullyVerified` خریدار، نبودن سابقه‌ی ولیدیتوری، اپراتور نبودن و صندلی نداشتن خریدار، ممنوعیت انتقال در حال درخواست خروج یا با پروندهٔ جریمه‌ی باز؛ صندلیِ `Active` پس از انتقال `SelfSuspended` می‌شود تا `acceptSeatTransfer()` و `requestResume()` و `recordResume`؛ مهلت ۳ روزه فقط اطلاعاتی است)، `tokenURI` = `baseURI` + شناسه (پیشوند اولیه `https://validator-nft.surnet.org/`)، و قابلیت افزودن بازار در آینده در سند طراحی بخش ۶.۴ آمده است. چون قرارداد `constructor` ندارد، مالکان اولیه از طریق `ValidatorSeatNFT_GenesisSeed(founderOwners)` و شبیه‌سازی (بالا) seed می‌شوند.
 
 ## هیأت‌مدیره‌ی ولیدیتورها
 
@@ -324,12 +325,13 @@ liveness کاملاً آف‌چین بررسی می‌شود؛ فقط تصمیم
 
 ## موارد باز مخصوص نسخهٔ ۲.۵
 
-- 🔶 آزمون Besu برای نسخهٔ ۲.۵ (ورود پله‌ای شش مؤسس به مجموعه‌ی اولیه‌ی تک‌ولیدیتوری، seed چهار قرارداد تازه (از این چهار، `FoundationMembers`، `ValidatorLottery` و `GenesisClaimsVault` کد دارند و با Hardhat آزموده شده‌اند؛ `ValidatorSeatNFT` هنوز کد ندارد)، آزادسازی ماهانه‌ی صندوق طلب‌ها، سوزاندن مازاد پاداش و جریمه‌ی سوزانده‌شده، NFT صندلی).
+- 🔶 آزمون Besu برای نسخهٔ ۲.۵ (ورود پله‌ای شش مؤسس به مجموعه‌ی اولیه‌ی تک‌ولیدیتوری با `getValidators` روی کلید اپراتور، seed چهار قرارداد تازه (هر چهار کد دارند و با Hardhat آزموده شده‌اند)، آزادسازی ماهانه‌ی صندوق طلب‌ها، سوزاندن مازاد پاداش و جریمه، انتقال NFT صندلی).
 - 🔶 تثبیت آدرس چهار قرارداد تازه (در `SurAddresses.sol` پیشنهاد شده‌اند: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xaAaA…aAaA`)؛ به‌روزرسانی ابزار genesis برای seed آن‌ها و تخصیص ۱۰۰ سورن گس به هر طلبکار.
-- 🔶 اندازهٔ runtime بزرگ‌تر از ۲۴٬۵۷۶ بایت برای `FoundationDAO` (~۲۷٫۹ KB) و `ValidatorsRegistry` (~۲۶٫۹ KB) در `alloc`: روی Besu واقعی تأیید نشده است.
-- 🔶 باقی بازطراحی ۲.۵ `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش) و `ValidatorSeatNFT`، `RewardRouter` هنوز نوشته نشده‌اند.
+- 🔶 اندازهٔ runtime بزرگ‌تر از ۲۴٬۵۷۶ بایت برای `FoundationDAO` (~۲۷٫۹ KB) و `ValidatorsRegistry` (۳۴٬۶۰۵ بایت) در `alloc`: روی Besu واقعی تأیید نشده است.
+- 🔶 هنوز نوشته نشده‌اند: `RewardRouter` (آف‌چین)، ابزار genesis و حدود تغییر ریوارد (±۱۰٪، ۶ ماه فاصله) در `proposeRateChange`. هستهٔ Registry/Board، `ValidatorSeatNFT` و سوزاندن مازاد پاداش نوشته و روی Hardhat آزموده شده‌اند.
 - 🔶 ثابت‌های پیشنهادی کد که اساس‌نامه/تصمیم تعیین نکرده: `VOTING_PERIOD = 3 days` در `FoundationDAO`، `RECOVERY_RECORD_MAX_AGE = 30 days` در `ValidatorsRegistry`.
 - 🔶 آدرس‌ها و مبلغ‌های واقعی طلبکاران صندوق طلب‌ها (فهرست پیش از genesis) و ارزیابی مستقل مبالغ. (رفتار باقیمانده‌ی تقسیم اقساط — قسط آخر — در کد تعیین شده است ✅.)
-- 🔶 اختیار اعضای اولیه‌ی هیأت‌مدیره‌ی ولیدیتورها پیش از فعال‌شدن شش مؤسس دیگر.
+- 🔶 اختیار اعضای اولیه‌ی هیأت‌مدیره‌ی ولیدیتورها پیش از فعال‌شدن شش مؤسس دیگر: در کد به `Active` بودن وابسته نیست (بند ۲ بالا)؛ تأیید مالک لازم است.
+- 🔶 رفتار پیاده‌شدهٔ انتقال NFT (صندلی `Active` تا پذیرش خریدار و بررسی Verifier `SelfSuspended` می‌ماند؛ تصمیم ۱۰۹ در `sur-detailed-plan-and-rationale.md`) و میزبان `tokenURI`: تأیید مالک لازم است.
 - ✅ commit–reveal در `ValidatorLottery` نوشته و با Hardhat آزموده شده است؛ 🔶 آزمون روی Besu واقعی باقی است (`REVEAL_WINDOW` شمار **بلاک** است، پس مدت زمانی‌اش به `blockperiodseconds` وابسته است).
 - ⏸️ ابزار عملیاتی `min-gas-price` برای اپراتور و بلوکه‌کردن حساب در نودهای ولیدیتوری (زیرساخت نباید مانع آینده شود).

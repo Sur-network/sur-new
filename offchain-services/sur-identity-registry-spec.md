@@ -1,6 +1,6 @@
 # مشخصات IdentityRegistry و سرویس آف‌چین Identity Service
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). تغییرات `IdentityRegistry` در `contracts/IdentityRegistry.sol` پیاده شده است: فلگ‌های `baleVerified` و `emailVerified`، `setBaleVerified`، `setEmailVerified`، `isFullyVerified`، و رد همهٔ تابع‌های احراز برای شخص حقوقی؛ Identity Service و eKYC هنوز نوشته نشده‌اند. 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۹۱ آزمون Hardhat در ۱۰ فایل (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`)، تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`)، `ValidatorSeatNFT` (صندلی ERC-721 با انتقال و قواعد خریدار)، هستهٔ بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، جریان مؤسسان، `SelfSuspended`، سوزاندن ۱۰۰٪ جریمه، قواعد فاصلهٔ ورود) و سوزاندن مازاد پاداش در `BlockRewardDistributor`. هنوز نوشته نشده‌اند: `RewardRouter` (سرویس آف‌چین، نه قرارداد)، سرویس‌های Verifier و Identity، ابزار genesis، بررسی‌های آف‌چین Verifier برای تعلیق داوطلبانه و ازسرگیری، و حدود تغییر ریوارد (±۱۰٪ و ۶ ماه فاصله؛ در `proposeRateChange` هنوز نیست). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). تغییرات `IdentityRegistry` در `contracts/IdentityRegistry.sol` پیاده شده است: فلگ‌های `baleVerified` و `emailVerified`، `setBaleVerified`، `setEmailVerified`، `isFullyVerified`، و رد همهٔ تابع‌های احراز برای شخص حقوقی؛ Identity Service و eKYC هنوز نوشته نشده‌اند. 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده و حسابرسی امنیتی هم انجام نشده است.
 
 > این سند قرارداد ساختاری سور (`contracts/IdentityRegistry.sol`) و سرویس آف‌چین همراهش را توصیف می‌کند. طراحی بر معماری query-matching (احراز یک‌باره، پرسش «تطابق» توسط دپ‌ها، سه سطح دسترسی) استوار است و دو اصل دارد که در بخش ۱ آمده است.
 
@@ -151,14 +151,14 @@ Body: {
 
 | قرارداد | رابطه با IdentityRegistry |
 |---|---|
-| `ValidatorsRegistry.sol` | هیچ داده‌ی هویتی (نه enum `PersonType`، نه struct `Identity`، نه `registerIdentity`) نگه نمی‌دارد. هنگام **ورود** (درخواست عضویت، انتقال NFT صندلی) فقط `kycVerified` و `Individual`‌بودن **مالک** را از `IdentityRegistry` می‌خواند (مؤسسان مستثنی‌اند) و پس از ورود چک نمی‌کند. `verifier`/`onlyVerifier` برای `recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery` و تأییدهای ازسرگیری/ورود است. |
-| `ValidatorSeatNFT.sol` | مالک جدید صندلی (خریدار) باید `kycVerified` و `Individual` باشد و قبلاً یا اکنون ولیدیتور نبوده باشد. |
+| `ValidatorsRegistry.sol` | هیچ داده‌ی هویتی (نه enum `PersonType`، نه struct `Identity`، نه `registerIdentity`) نگه نمی‌دارد. هنگام **ورود** (درخواست عضویت، و برای **خریدار** هنگام انتقال NFT صندلی) فقط `isFullyVerified` (ثبت‌شده، `Individual`، مهاجرت‌نکرده و هر پنج احراز) را از `IdentityRegistry` می‌خواند (✅ در کد؛ مؤسسان مستثنی‌اند چون seed می‌شوند) و پس از ورود چک نمی‌کند. `verifier`/`onlyVerifier` برای `recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery`/`recordResume` (و `recordRecoveryRemoval`) است. |
+| `ValidatorSeatNFT.sol` | خودش هویت نمی‌خواند؛ `Registry.onSeatTransferred` شرط‌ها را می‌سنجد: خریدار `isFullyVerified` باشد (✅ در کد) و قبلاً یا اکنون ولیدیتور نبوده باشد، کلید اپراتور کسی نباشد و صندلی دیگری نداشته باشد. |
 | `ValidatorsBoard.sol` | `voteFor` هویت را با `IDENTITY_REGISTRY.hasIdentity(...)` چک می‌کند (از طریق اینترفیس `IIdentityRegistry`). |
 | `ValidatorLottery.sol` | شرکت‌کنندگان لاتاری باید در سیستم احراز هویت تأیید شده باشند. |
 | `SurAddresses.sol` | ثابت `IDENTITY_REGISTRY = 0x6666...6666`. |
 | `FoundationDAO.sol` | چرخش `identityOracle` با پیشنهاد تایپ‌شدهٔ `RotateIdentityOracle` در `FoundationDAO` (۳ از ۵) انجام می‌شود. |
 
-⚠️ **پیامد روی استقرار:** `IdentityRegistry` یکی از قراردادهای ساختاری genesis است؛ در نسخهٔ ۲.۵ قراردادهای ساختاری تازه (`FoundationMembers` در `0x7777…7777`، `ValidatorSeatNFT` در `0x8888…8888`، `GenesisClaimsVault` در `0x9999…9999`، `ValidatorLottery` در `0xAaAa…AaAa`؛ آدرس‌ها پیشنهادی‌اند و `ValidatorSeatNFT` هنوز نوشته نشده است) هم اضافه می‌شود؛ شمارش و آدرس‌های دقیق در `sur-contracts-deploy-notes.md` و `sur-blockchain-design-doc.md`.
+⚠️ **پیامد روی استقرار:** `IdentityRegistry` یکی از قراردادهای ساختاری genesis است؛ در نسخهٔ ۲.۵ قراردادهای ساختاری تازه (`FoundationMembers` در `0x7777…7777`، `ValidatorSeatNFT` در `0x8888…8888`، `GenesisClaimsVault` در `0x9999…9999`، `ValidatorLottery` در `0xAaAa…AaAa`؛ آدرس‌ها پیشنهادی‌اند؛ `ValidatorSeatNFT` نوشته و روی Hardhat آزموده شده) هم اضافه می‌شود؛ شمارش و آدرس‌های دقیق در `sur-contracts-deploy-notes.md` و `sur-blockchain-design-doc.md`.
 
 ---
 
@@ -180,7 +180,7 @@ Body: {
 
 **گم‌شدن کلید مالک:** راه نجات همان `migrateIdentity` با تأیید هویت است (بخش ۳.۴): شخص با آدرس تازه وارد می‌شود، هویتش با مسیر سطح ۲ (برای ولیدیتورهای KYC‌شده) راستی‌آزمایی می‌شود و `identityOracle` مهاجرت را اجرا می‌کند. همین استثنا تنها استثنای «ممنوعیت بازگشت» است (شخصی که خودش خارج شده یا در بازیابی شبکه حذف شده، برای همیشه نمی‌تواند دوباره ولیدیتور شود).
 
-- **`migrateIdentity` به‌تنهایی** فقط وضعیت وریفای را در `IdentityRegistry` به آدرس جدید می‌برد. 🔶 سازوکار دقیق انتقال مالکیت صندلی (NFT و وثیقه) به آدرس جدید در قرارداد ۲.۵ تعیین می‌شود.
+- **`migrateIdentity` به‌تنهایی** فقط وضعیت وریفای را در `IdentityRegistry` به آدرس جدید می‌برد. انتقال مالکیت صندلی (NFT و وثیقه) به آدرس دیگر در کد فقط با فروش NFT انجام می‌شود (`transferFrom` ← `onSeatTransferred`؛ تصمیم ۱۰۹)؛ 🔶 برای گم‌شدن کلید مالک هنوز مسیری برای انتقال صندلی تعریف نشده است.
 - پیش از مهاجرت، فرایند `identityOracle` چک می‌کند آدرس قدیم ولیدیتور است یا نه؛ اگر بود، به متقاضی صراحتاً اعلام و تأیید آگاهانه گرفته می‌شود (اثر روی صندلی، رأی و وثیقه).
 - مهاجرت فقط توسط `identityOracle` آغاز می‌شود؛ خودِ ولیدیتور نمی‌تواند مستقیم مهاجرت بزند.
 
