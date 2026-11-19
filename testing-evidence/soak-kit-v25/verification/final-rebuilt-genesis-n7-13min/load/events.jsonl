@@ -1,0 +1,20 @@
+{"t":"2026-11-19T16:59:01.163Z","ms":1795107541163,"type":"loadgen-start","phase":null,"plan":"idle:2:0:0,transfers:2:0.5:0,changes:4:0.5:1.5,heavy:2:5:0:1,changes-heavy:3:5:1.5:1","pollHz":1,"burstSize":60,"entrantAtFrac":0.4,"windowStart":"2026-11-19T16:59:00.566Z","windowEnd":"2026-11-19T17:12:12.566Z"}
+{"t":"2026-11-19T16:59:01.167Z","ms":1795107541168,"type":"phase","phase":"idle","name":"idle","cycle":0,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T17:01:00.631Z","ms":1795107660631,"type":"phase","phase":"transfers","name":"transfers","cycle":0,"tps":0.5,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T17:03:00.650Z","ms":1795107780650,"type":"phase","phase":"changes","name":"changes","cycle":0,"tps":0.5,"changeEveryMin":1.5,"burstEveryMin":0}
+{"t":"2026-11-19T17:03:58.358Z","ms":1795107838358,"type":"listChange","phase":"changes","op":"swap","block":186,"proposeBlock":181,"owner":"owner6","from":"0x6cf7cd1426ed3f2d7e81baaa47df73c452ca60a0","to":"0xDE7912242c025b64eae2caaeB58850903903A0b0","node":"x1","validatorsAfter":7}
+{"t":"2026-11-19T17:04:18.510Z","ms":1795107858510,"type":"listChange","phase":"changes","op":"recordActivation","block":196,"owner":"owner8","validatorsAfter":8}
+{"t":"2026-11-19T17:06:02.469Z","ms":1795107962469,"type":"listChange","phase":"changes","op":"selfSuspend","block":248,"owner":"owner7","validatorsAfter":7}
+{"t":"2026-11-19T17:07:00.571Z","ms":1795108020571,"type":"phase","phase":"heavy","name":"heavy","cycle":0,"tps":5,"changeEveryMin":0,"burstEveryMin":1}
+{"t":"2026-11-19T17:07:04.145Z","ms":1795108024145,"type":"listChange","phase":"heavy","op":"recordResume","why":"phase-boundary","block":279,"owner":"owner7","validatorsAfter":8}
+{"t":"2026-11-19T17:07:30.589Z","ms":1795108050589,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T17:08:30.687Z","ms":1795108110687,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T17:09:00.584Z","ms":1795108140584,"type":"phase","phase":"changes-heavy","name":"changes-heavy","cycle":0,"tps":5,"changeEveryMin":1.5,"burstEveryMin":1}
+{"t":"2026-11-19T17:09:30.634Z","ms":1795108170634,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T17:09:54.426Z","ms":1795108194426,"type":"listChange","phase":"changes-heavy","op":"swap","block":364,"proposeBlock":359,"owner":"owner6","from":"0xde7912242c025b64eae2caaeb58850903903a0b0","to":"0x6cF7cD1426ed3f2D7e81baAA47dF73c452Ca60A0","node":"n6","validatorsAfter":8}
+{"t":"2026-11-19T17:10:30.660Z","ms":1795108230660,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T17:11:28.498Z","ms":1795108288498,"type":"listChange","phase":"changes-heavy","op":"selfSuspend","block":411,"owner":"owner7","validatorsAfter":7}
+{"t":"2026-11-19T17:11:30.664Z","ms":1795108290664,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T17:12:00.583Z","ms":1795108320583,"type":"phase","phase":"idle","name":"idle","cycle":1,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T17:12:04.131Z","ms":1795108324131,"type":"listChange","phase":"idle","op":"recordResume","why":"phase-boundary","block":429,"owner":"owner7","validatorsAfter":8}
+{"t":"2026-11-19T17:12:12.575Z","ms":1795108332575,"type":"loadgen-stop","phase":"idle","reason":"window end","stats":{"startedAt":"2026-11-19T16:59:01.144Z","phase":"idle","transfers":{"sent":1980,"errors":0,"resyncs":8,"bursts":5},"errorsByClass":{},"identityToggles":{"ok":33,"err":0},"listChanges":{"swap":2,"selfSuspend":2,"resume":2,"activate":1,"failed":0,"skipped":0},"poll":{"ok":779,"err":0},"lastChange":{"type":"recordResume","block":429,"at":"2026-11-19T17:12:04.128Z"},"nextChangeAt":null}}

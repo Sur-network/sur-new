@@ -1,0 +1,44 @@
+2026-11-19T16:57:31Z disk: 786 GB free where the kit lives, estimate for this run 7 GB (docker volumes live under /var/lib/docker, check there too)
+2026-11-19T16:57:31Z RAM available:  GB; this run uses about 7 GB (limit per node 1536 MB)
+================================================================
+ SUR soak: 0.22 h, Besu hyperledger/besu:26.9.0, 7 validators (net n7)
+ run dir        : /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T165731Z-besu-26.9.0-n7-0.22h-final7
+ containers     : sur25s-n1..n7, sur25s-x1, sur25s-x2 (Besu), sur25s-collector, sur25s-loadgen   network sur25s-net 172.29.71.0/24
+ JSON-RPC       : 127.0.0.1 only, host ports 19611.. (see nets/n7/nodes.tsv)
+ load phases    : idle:2:0:0,transfers:2:0.5:0,changes:4:0.5:1.5,heavy:2:5:0:1,changes-heavy:3:5:1.5:1
+ getValidators  : 1 Hz poller; entrant activation at 0.4 of the run; rows every 2 min
+ limits per node: 1536 MB RAM, 1.5 CPUs, JVM -Xmx768m; restart policy on-failure:20 (restarts are recorded, never hidden)
+ NOT pulled     : nothing is downloaded by this script (images checked above are local)
+================================================================
+2026-11-19T16:57:33Z creating network sur25s-net
+2026-11-19T16:57:33Z starting Besu nodes
+2026-11-19T16:57:34Z   started sur25s-n1 ip=172.29.71.11 rpc=127.0.0.1:19611
+2026-11-19T16:57:34Z   started sur25s-n2 ip=172.29.71.12 rpc=127.0.0.1:19612
+2026-11-19T16:57:35Z   started sur25s-n3 ip=172.29.71.13 rpc=127.0.0.1:19613
+2026-11-19T16:57:36Z   started sur25s-n4 ip=172.29.71.14 rpc=127.0.0.1:19614
+2026-11-19T16:57:37Z   started sur25s-n5 ip=172.29.71.15 rpc=127.0.0.1:19615
+2026-11-19T16:57:38Z   started sur25s-n6 ip=172.29.71.16 rpc=127.0.0.1:19616
+2026-11-19T16:57:39Z   started sur25s-n7 ip=172.29.71.17 rpc=127.0.0.1:19617
+2026-11-19T16:57:40Z   started sur25s-x1 ip=172.29.71.21 rpc=127.0.0.1:19621
+2026-11-19T16:57:41Z   started sur25s-x2 ip=172.29.71.22 rpc=127.0.0.1:19622
+2026-11-19T16:57:41Z starting collector
+2026-11-19T16:57:41Z bootstrap: waiting for the nodes, then activating validators 2..7 through the Registry (setOperator + recordActivation)
+2026-11-19T16:57:43.002Z [bootstrap] net n7: 7 validators wanted; waiting for 9 nodes
+2026-11-19T16:57:51.276Z [bootstrap] all nodes up and synced at head 2
+2026-11-19T16:58:00.065Z [bootstrap] owner2 Active (activation block 4); validators now 2
+2026-11-19T16:58:10.274Z [bootstrap] owner3 Active (activation block 9); validators now 3
+2026-11-19T16:58:20.476Z [bootstrap] owner4 Active (activation block 14); validators now 4
+2026-11-19T16:58:30.154Z [bootstrap] owner5 Active (activation block 19); validators now 5
+2026-11-19T16:58:40.349Z [bootstrap] owner6 Active (activation block 24); validators now 6
+2026-11-19T16:58:50.536Z [bootstrap] owner7 Active (activation block 29); validators now 7
+2026-11-19T16:59:00.274Z [bootstrap] done at head 37: 7 validators active
+2026-11-19T16:59:00Z SOAK CLOCK STARTED: 0.22 h, ends 2026-11-19T17:12:12Z
+2026-11-19T16:59:04Z heartbeat: head 36  last block age 1 s  validators 7  blocks recorded 36  rows written 0  collector errors 0
+2026-11-19T17:09:09Z heartbeat: head 334  last block age 0 s  validators 8  blocks recorded 334  rows written 4  collector errors 0
+2026-11-19T17:12:14Z duration reached
+2026-11-19T17:12:14Z finishing run 20261119T165731Z-besu-26.9.0-n7-0.22h-final7: stopping load generator and collector
+2026-11-19T17:12:25Z stopping the Besu nodes (containers and volumes are kept until cleanup.sh)
+2026-11-19T17:12:49Z analysing /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T165731Z-besu-26.9.0-n7-0.22h-final7
+summary.md written: 1 occurrences (1 in window), 396 window blocks, 7 rows
+summary: /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T165731Z-besu-26.9.0-n7-0.22h-final7/summary.md
+2026-11-19T17:12:50Z run finished. Results: /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T165731Z-besu-26.9.0-n7-0.22h-final7  (summary.md, hourly.csv, occurrences/)

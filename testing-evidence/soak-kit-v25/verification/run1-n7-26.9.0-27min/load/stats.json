@@ -1,0 +1,40 @@
+{
+ "startedAt": "2026-11-19T15:57:15.021Z",
+ "phase": "transfers",
+ "transfers": {
+  "sent": 3359,
+  "errors": 1,
+  "resyncs": 9,
+  "bursts": 5
+ },
+ "errorsByClass": {
+  "poll: fetch failed": 6,
+  "fetch failed": 1
+ },
+ "identityToggles": {
+  "ok": 63,
+  "err": 0
+ },
+ "listChanges": {
+  "swap": 3,
+  "selfSuspend": 2,
+  "resume": 2,
+  "activate": 1,
+  "failed": 0,
+  "skipped": 0
+ },
+ "poll": {
+  "ok": 1586,
+  "err": 6,
+  "maxMs": 217,
+  "p50Ms": 8
+ },
+ "lastChange": {
+  "type": "swap",
+  "block": 691,
+  "at": "2026-11-19T16:19:09.296Z"
+ },
+ "nextChangeAt": null,
+ "updatedAt": "2026-11-19T16:24:14.527Z",
+ "final": true
+}

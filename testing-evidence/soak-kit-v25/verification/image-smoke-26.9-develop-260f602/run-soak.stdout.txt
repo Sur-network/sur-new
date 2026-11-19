@@ -1,0 +1,37 @@
+2026-11-19T16:47:50Z disk: 786 GB free where the kit lives, estimate for this run 6 GB (docker volumes live under /var/lib/docker, check there too)
+2026-11-19T16:47:50Z RAM available:  GB; this run uses about 5 GB (limit per node 1536 MB)
+================================================================
+ SUR soak: 0.03 h, Besu hyperledger/besu:26.9-develop-260f602, 4 validators (net n4)
+ run dir        : /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T164750Z-besu-26.9-develop-260f602-n4-0.03h-imgtest
+ containers     : sur25s-n1..n4, sur25s-x1, sur25s-x2 (Besu), sur25s-collector, sur25s-loadgen   network sur25s-net 172.29.71.0/24
+ JSON-RPC       : 127.0.0.1 only, host ports 19611.. (see nets/n4/nodes.tsv)
+ load phases    : changes:2:1:0.5
+ getValidators  : 1 Hz poller; entrant activation at 0.5 of the run; rows every 1 min
+ limits per node: 1536 MB RAM, 1.5 CPUs, JVM -Xmx768m; restart policy on-failure:20 (restarts are recorded, never hidden)
+ NOT pulled     : nothing is downloaded by this script (images checked above are local)
+================================================================
+2026-11-19T16:47:52Z creating network sur25s-net
+2026-11-19T16:47:52Z starting Besu nodes
+2026-11-19T16:47:53Z   started sur25s-n1 ip=172.29.71.11 rpc=127.0.0.1:19611
+2026-11-19T16:47:53Z   started sur25s-n2 ip=172.29.71.12 rpc=127.0.0.1:19612
+2026-11-19T16:47:54Z   started sur25s-n3 ip=172.29.71.13 rpc=127.0.0.1:19613
+2026-11-19T16:47:55Z   started sur25s-n4 ip=172.29.71.14 rpc=127.0.0.1:19614
+2026-11-19T16:47:56Z   started sur25s-x1 ip=172.29.71.21 rpc=127.0.0.1:19621
+2026-11-19T16:47:57Z   started sur25s-x2 ip=172.29.71.22 rpc=127.0.0.1:19622
+2026-11-19T16:47:57Z starting collector
+2026-11-19T16:47:57Z bootstrap: waiting for the nodes, then activating validators 2..4 through the Registry (setOperator + recordActivation)
+2026-11-19T16:47:58.659Z [bootstrap] net n4: 4 validators wanted; waiting for 6 nodes
+2026-11-19T16:48:09.762Z [bootstrap] all nodes up and synced at head 2
+2026-11-19T16:48:19.058Z [bootstrap] owner2 Active (activation block 4); validators now 2
+2026-11-19T16:48:29.251Z [bootstrap] owner3 Active (activation block 9); validators now 3
+2026-11-19T16:48:39.397Z [bootstrap] owner4 Active (activation block 14); validators now 4
+2026-11-19T16:48:49.141Z [bootstrap] done at head 22: 4 validators active
+2026-11-19T16:48:49Z SOAK CLOCK STARTED: 0.03 h, ends 2026-11-19T16:50:37Z
+2026-11-19T16:48:52Z heartbeat: head 19  last block age 1 s  validators 4  blocks recorded 19  rows written 0  collector errors 0
+2026-11-19T16:50:43Z duration reached
+2026-11-19T16:50:43Z finishing run 20261119T164750Z-besu-26.9-develop-260f602-n4-0.03h-imgtest: stopping load generator and collector
+2026-11-19T16:50:53Z stopping the Besu nodes (containers and volumes are kept until cleanup.sh)
+2026-11-19T16:51:10Z analysing /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T164750Z-besu-26.9-develop-260f602-n4-0.03h-imgtest
+summary.md written: 0 occurrences (0 in window), 56 window blocks, 2 rows
+summary: /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T164750Z-besu-26.9-develop-260f602-n4-0.03h-imgtest/summary.md
+2026-11-19T16:51:10Z run finished. Results: /d/Amir/Business/SUR/NewSur/Plan/testing-evidence/soak-kit-v25/runs/20261119T164750Z-besu-26.9-develop-260f602-n4-0.03h-imgtest  (summary.md, hourly.csv, occurrences/)

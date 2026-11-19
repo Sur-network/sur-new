@@ -1,0 +1,11 @@
+idx,seq,sinceChangeBlocks,lastChangeOp,nodesRestartedIn30min,node,block,logTime,phase,bootstrap,validators,listChangeAtN,listChangeAtNminus1,nearChange3,txN,txPrev,txNext,roundN,roundNext,minerN,proposerIdxN,minerNext,proposerIdxNext,nodeIdxInSet,nodeIsProposerOfN,nodeIsProposerOfNext,logMinusBlockNtsMs,gapToNextBlockS,maxGapN_to_N5,persistBlockTaskSameMs,file
+1,1,1,bootstrap/other,,n7,30,2026-11-19T15:57:00.069480376Z,bootstrap,true,7,false,true,true,0,1,0,0,0,n2,1,n3,2,5,false,false,69,2,2,true,n7__0001__block30__2026-11-19T15-57-00-069480376Z.txt
+2,1,2,swap,x2+n5,n3,693,2026-11-19T16:19:13.031949368Z,changes-heavy,false,8,false,false,true,10,10,8,0,0,n7,6,n1,7,2,false,false,31,2,2,true,n3__0001__block693__2026-11-19T16-19-13-031949368Z.txt
+3,2,9,swap,x2+n5,n3,700,2026-11-19T16:19:27.023253785Z,idle,false,8,false,false,false,0,0,0,0,0,x1,5,n7,6,2,false,false,23,2,2,true,n3__0002__block700__2026-11-19T16-19-27-023253785Z.txt
+4,1,49,swap,x2+n5,n1,740,2026-11-19T16:20:47.022830734Z,idle,false,8,false,false,false,0,0,0,0,0,x1,5,n7,6,7,false,false,22,2,2,true,n1__0001__block740__2026-11-19T16-20-47-022830734Z.txt
+5,1,68,swap,x2+n5,x1,759,2026-11-19T16:21:25.018349501Z,idle,false,8,false,false,false,0,0,0,0,0,n5,0,n2,1,5,false,false,18,2,2,true,x1__0001__block759__2026-11-19T16-21-25-018349501Z.txt
+6,2,83,swap,x2+n5,x1,774,2026-11-19T16:21:55.047181384Z,idle,false,8,false,false,false,0,0,0,0,0,n1,7,n5,0,5,false,false,47,2,2,true,x1__0002__block774__2026-11-19T16-21-55-047181384Z.txt
+7,2,93,swap,x2+n5,n7,784,2026-11-19T16:22:15.042860093Z,transfers,false,8,false,false,false,1,0,1,0,0,n2,1,n3,2,6,false,false,42,2,2,true,n7__0002__block784__2026-11-19T16-22-15-042860093Z.txt
+8,3,94,swap,x2+n5,n7,785,2026-11-19T16:22:17.026602836Z,transfers,false,8,false,false,false,1,1,1,0,0,n3,2,n4,3,6,false,false,26,2,2,true,n7__0003__block785__2026-11-19T16-22-17-026602836Z.txt
+9,1,125,swap,x2+n5,x2,816,2026-11-19T16:23:19.051629976Z,transfers,false,8,false,false,false,1,1,1,0,0,n2,1,n3,2,4,false,false,51,2,2,true,x2__0001__block816__2026-11-19T16-23-19-051629976Z.txt
+10,2,146,swap,x2+n5,x2,837,2026-11-19T16:24:01.029333619Z,transfers,false,8,false,false,false,1,1,1,0,0,n7,6,n1,7,4,false,false,29,2,2,true,x2__0002__block837__2026-11-19T16-24-01-029333619Z.txt

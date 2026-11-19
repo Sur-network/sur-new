@@ -1,0 +1,15 @@
+SUR soak n7  2026-11-19T17:12:20.730Z  elapsed 0.22 h of 0.22 h
+head 433  last block age 9 s  validators 8  blocks recorded 433  rows written 7  collector errors 0
+phase idle  tx sent 1980 (errors 0)  list changes {"swap":2,"selfSuspend":2,"resume":2,"activate":1,"failed":0,"skipped":0}  next change -
+F-1 occurrences so far: 2   (per node: n1=0 n2=1 n3=0 n4=1 n5=0 n6=0 n7=0 x1=0 x2=0)
+node   state     restarts  head      peers  f1   errors warns  log lines
+n1     running   0         433       8      0    0      6      661
+n2     running   0         433       8      1    0      6      658
+n3     running   0         433       8      0    0      6      666
+n4     running   0         433       8      1    1      6      674
+n5     running   0         433       8      0    0      6      656
+n6     running   0         433       8      0    0      6      613
+n7     running   0         433       8      0    0      6      637
+x1     running   0         433       8      0    0      6      634
+x2     running   0         433       8      0    0      6      629
+last row #7 @ 2026-11-19T17:12:18.393Z: blocks 36, bt p50/p95/p99/max 2/2/2/2, gaps>2.5s 0, round-change blocks 0, F-1 1, fork mismatches 0, mem max 435 MB, run-dir 2 MB, host free 786.4 GB

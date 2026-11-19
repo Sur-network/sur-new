@@ -1,0 +1,19 @@
+containers: sur25s-loadgen sur25s-collector sur25s-x2 sur25s-x1 sur25s-n4 sur25s-n3 sur25s-n2 sur25s-n1
+volumes   : sur25s-n1-data sur25s-n2-data sur25s-n3-data sur25s-n4-data sur25s-x1-data sur25s-x2-data
+networks  : sur25s-net
+2026-11-19T16:55:47Z removed container sur25s-loadgen
+2026-11-19T16:55:48Z removed container sur25s-collector
+2026-11-19T16:55:48Z removed container sur25s-x2
+2026-11-19T16:55:48Z removed container sur25s-x1
+2026-11-19T16:55:48Z removed container sur25s-n4
+2026-11-19T16:55:49Z removed container sur25s-n3
+2026-11-19T16:55:49Z removed container sur25s-n2
+2026-11-19T16:55:49Z removed container sur25s-n1
+2026-11-19T16:55:50Z removed volume sur25s-n1-data
+2026-11-19T16:55:50Z removed volume sur25s-n2-data
+2026-11-19T16:55:50Z removed volume sur25s-n3-data
+2026-11-19T16:55:50Z removed volume sur25s-n4-data
+2026-11-19T16:55:51Z removed volume sur25s-x1-data
+2026-11-19T16:55:51Z removed volume sur25s-x2-data
+2026-11-19T16:55:51Z removed network sur25s-net
+2026-11-19T16:55:52Z left over with prefix sur25s-: containers [] volumes [] networks []

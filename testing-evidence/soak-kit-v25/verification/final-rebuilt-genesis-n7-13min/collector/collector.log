@@ -1,0 +1,11 @@
+2026-11-19T16:57:42.232Z collector start: net n7, 9 nodes, interval 2 min, rotate 100 MB x 12
+2026-11-19T16:57:42.243Z resumed: 0 blocks in blocks.csv, last 0, rows done 0
+2026-11-19T17:01:11.592Z ROW 1: head 101, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 0 (total 0), list changes 0, restarts 0, fork mismatches 0
+2026-11-19T17:03:11.694Z ROW 2: head 161, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 0 (total 0), list changes 0, restarts 0, fork mismatches 0
+2026-11-19T17:05:11.804Z ROW 3: head 221, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 0 (total 0), list changes 2, restarts 0, fork mismatches 0
+2026-11-19T17:07:11.830Z ROW 4: head 281, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 0 (total 0), list changes 1, restarts 0, fork mismatches 0
+2026-11-19T17:09:11.707Z ROW 5: head 341, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 0 (total 0), list changes 1, restarts 0, fork mismatches 0
+2026-11-19T17:11:11.544Z ROW 6: head 401, blocks 60, bt p50/p95/p99/max 2/2/2/2, F-1 1 (total 1), list changes 1, restarts 0, fork mismatches 0
+2026-11-19T17:12:14.378Z stop requested: final drain
+2026-11-19T17:12:20.715Z ROW 7 (partial): head 433, blocks 36, bt p50/p95/p99/max 2/2/2/2, F-1 1 (total 2), list changes 2, restarts 0, fork mismatches 0
+2026-11-19T17:12:20.748Z collector done

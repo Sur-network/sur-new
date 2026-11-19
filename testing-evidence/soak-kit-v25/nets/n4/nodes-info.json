@@ -1,0 +1,50 @@
+[
+  {
+    "node": "n1",
+    "role": "op1",
+    "operatorAddress": "0xfa1cB91691cDf69FB801c71F91fD328980406646",
+    "ip": "172.29.71.11",
+    "rpcHostPort": 19611,
+    "enode": "enode://b2323d2034f50f7c1f76ce48090fb60857d67206aa4d6ba0a3713cee7226fb03c2837b1c16737417ca7a2d61c6cc864f970ee215503a939ffaad3033afe49cae@172.29.71.11:30303"
+  },
+  {
+    "node": "n2",
+    "role": "op2",
+    "operatorAddress": "0x41De54d34CaE74160bE25f99025f6db7a40c03ae",
+    "ip": "172.29.71.12",
+    "rpcHostPort": 19612,
+    "enode": "enode://600f418279d6622c849d55b777f6f093b331d44dbbe9f24cdb3d8d49e86b0e1d458f61eb3282e0e01d5de8bb9bbf08b1daa45b63f6ad552f71f4f14dba66876d@172.29.71.12:30303"
+  },
+  {
+    "node": "n3",
+    "role": "op3",
+    "operatorAddress": "0x52E634F9A85b933B31Bbbf6Ed4FC82344bB253aB",
+    "ip": "172.29.71.13",
+    "rpcHostPort": 19613,
+    "enode": "enode://d5aa44a76b6cf73edc437736c5372f968962bb53ee55ea344d58f5421a5e3528433c675c8cf4ab7a60301037374ae59d02568ea2f186d970bd6049d8840ba158@172.29.71.13:30303"
+  },
+  {
+    "node": "n4",
+    "role": "op4",
+    "operatorAddress": "0x69e494394F27ffE07f9A5FE216a50553B90d4134",
+    "ip": "172.29.71.14",
+    "rpcHostPort": 19614,
+    "enode": "enode://a9c3522a32f733f22f3dd5401cf98272b434d89ca0ead998e01474da50344ef374322b244bed1bf0e8270fb74ca173678c62b16e850c6156de6085e5eea018e1@172.29.71.14:30303"
+  },
+  {
+    "node": "x1",
+    "role": "opX1",
+    "operatorAddress": "0xDE7912242c025b64eae2caaeB58850903903A0b0",
+    "ip": "172.29.71.21",
+    "rpcHostPort": 19621,
+    "enode": "enode://c58942e887fa7c98269262551182094649b6544acba38bde121e549bb61399f20143ee1104d6c2216727c2b5c3125bb110590bb7c17ce55e2312d4fb403f32d3@172.29.71.21:30303"
+  },
+  {
+    "node": "x2",
+    "role": "opE",
+    "operatorAddress": "0x9E1E49309Fe448d3DD1427dBb9db61864b791807",
+    "ip": "172.29.71.22",
+    "rpcHostPort": 19622,
+    "enode": "enode://766c45efc9b4d2574a4c77dbe5f4d40165a7e116584a207b0fc96383d6052dc496c440606ab4fe751001c75ce302147cff628aa38032853d7326dbce5d116d5e@172.29.71.22:30303"
+  }
+]

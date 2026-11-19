@@ -1,0 +1,9 @@
+$ ./cleanup.sh --yes
+2026-11-19T16:42:09Z removed volume sur25s-n1-data
+2026-11-19T16:42:09Z removed volume sur25s-n2-data
+2026-11-19T16:42:10Z removed volume sur25s-n3-data
+2026-11-19T16:42:10Z removed volume sur25s-n4-data
+2026-11-19T16:42:10Z removed volume sur25s-x1-data
+2026-11-19T16:42:11Z removed volume sur25s-x2-data
+2026-11-19T16:42:11Z removed network sur25s-net
+2026-11-19T16:42:12Z left over with prefix sur25s-: containers [] volumes [] networks []

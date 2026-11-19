@@ -1,0 +1,8 @@
+  "timestamp": "0x6af1f7f3",
+--- last log lines (blocks should be produced with the current time, 2 s apart):
+2026-11-19 16:43:07.007+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #16  (1e7b9.....64389)|    0 tx | 
+2026-11-19 16:43:09.015+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #17  (1ef5c.....9e965)|    0 tx | 
+2026-11-19 16:43:11.019+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #18  (9b2d3.....4bcec)|    0 tx | 
+2026-11-19 16:43:13.019+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #19  (eb829.....d437e)|    0 tx | 
+blocks produced in 45 s: 19
+STALE GENESIS TEST PASS

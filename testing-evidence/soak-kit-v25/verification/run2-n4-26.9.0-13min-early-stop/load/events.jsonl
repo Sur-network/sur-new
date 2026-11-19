@@ -1,0 +1,16 @@
+{"t":"2026-11-19T16:28:13.343Z","ms":1795105693343,"type":"loadgen-start","phase":null,"plan":"idle:2:0:0,changes:4:0.5:1.5,heavy:3:5:0:2,changes-heavy:3:5:1.5:2","pollHz":1,"burstSize":60,"entrantAtFrac":0.4,"windowStart":"2026-11-19T16:28:12.767Z","windowEnd":"2026-11-19T16:49:12.767Z"}
+{"t":"2026-11-19T16:28:13.347Z","ms":1795105693347,"type":"phase","phase":"idle","name":"idle","cycle":0,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:30:12.797Z","ms":1795105812797,"type":"phase","phase":"changes","name":"changes","cycle":0,"tps":0.5,"changeEveryMin":1.5,"burstEveryMin":0}
+{"t":"2026-11-19T16:31:26.229Z","ms":1795105886229,"type":"listChange","phase":"changes","op":"swap","block":119,"proposeBlock":114,"owner":"owner3","from":"0x52e634f9a85b933b31bbbf6ed4fc82344bb253ab","to":"0xDE7912242c025b64eae2caaeB58850903903A0b0","node":"x1","validatorsAfter":4}
+{"t":"2026-11-19T16:32:56.421Z","ms":1795105976421,"type":"listChange","phase":"changes","op":"selfSuspend","block":164,"owner":"owner4","validatorsAfter":3}
+{"t":"2026-11-19T16:34:12.818Z","ms":1795106052818,"type":"phase","phase":"heavy","name":"heavy","cycle":0,"tps":5,"changeEveryMin":0,"burstEveryMin":2}
+{"t":"2026-11-19T16:34:16.405Z","ms":1795106056405,"type":"listChange","phase":"heavy","op":"recordResume","why":"phase-boundary","block":204,"owner":"owner4","validatorsAfter":4}
+{"t":"2026-11-19T16:34:42.881Z","ms":1795106082881,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T16:36:42.895Z","ms":1795106202895,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T16:37:12.802Z","ms":1795106232802,"type":"phase","phase":"changes-heavy","name":"changes-heavy","cycle":0,"tps":5,"changeEveryMin":1.5,"burstEveryMin":2}
+{"t":"2026-11-19T16:37:14.349Z","ms":1795106234349,"type":"listChange","phase":"changes-heavy","op":"recordActivation","block":293,"owner":"owner8","validatorsAfter":5}
+{"t":"2026-11-19T16:37:42.814Z","ms":1795106262814,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T16:39:20.157Z","ms":1795106360157,"type":"listChange","phase":"changes-heavy","op":"swap","block":356,"proposeBlock":351,"owner":"owner3","from":"0xde7912242c025b64eae2caaeb58850903903a0b0","to":"0x52E634F9A85b933B31Bbbf6Ed4FC82344bB253aB","node":"n3","validatorsAfter":5}
+{"t":"2026-11-19T16:39:42.911Z","ms":1795106382911,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T16:40:12.854Z","ms":1795106412854,"type":"phase","phase":"idle","name":"idle","cycle":1,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:41:00.687Z","ms":1795106460687,"type":"loadgen-stop","phase":"idle","reason":"STOP file","stats":{"startedAt":"2026-11-19T16:28:13.327Z","phase":"idle","transfers":{"sent":2159,"errors":1,"resyncs":9,"bursts":4},"errorsByClass":{"poll: fetch failed":13,"fetch failed":1},"identityToggles":{"ok":30,"err":0},"listChanges":{"swap":2,"selfSuspend":1,"resume":1,"activate":1,"failed":0,"skipped":0},"poll":{"ok":741,"err":13},"lastChange":{"type":"swap","block":356,"at":"2026-11-19T16:39:20.156Z"},"nextChangeAt":null}}

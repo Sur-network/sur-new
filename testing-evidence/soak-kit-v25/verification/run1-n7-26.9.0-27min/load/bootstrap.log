@@ -1,0 +1,9 @@
+2026-11-19T15:55:57.639Z [bootstrap] net n7: 7 validators wanted; waiting for 9 nodes
+2026-11-19T15:56:05.737Z [bootstrap] all nodes up and synced at head 2
+2026-11-19T15:56:14.482Z [bootstrap] owner2 Active (activation block 4); validators now 2
+2026-11-19T15:56:24.165Z [bootstrap] owner3 Active (activation block 9); validators now 3
+2026-11-19T15:56:34.352Z [bootstrap] owner4 Active (activation block 14); validators now 4
+2026-11-19T15:56:44.044Z [bootstrap] owner5 Active (activation block 19); validators now 5
+2026-11-19T15:56:54.221Z [bootstrap] owner6 Active (activation block 24); validators now 6
+2026-11-19T15:57:04.426Z [bootstrap] owner7 Active (activation block 29); validators now 7
+2026-11-19T15:57:14.146Z [bootstrap] done at head 37: 7 validators active

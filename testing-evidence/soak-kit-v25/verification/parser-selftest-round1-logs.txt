@@ -1,0 +1,27 @@
+== round-1 Net-A n1.log (expected 3)
+F-1 found: 3, expected 3
+PARSER SELFTEST PASS
+== round-1 Net-A n2.log (expected 1)
+F-1 found: 1, expected 1
+PARSER SELFTEST PASS
+== round-1 Net-A n2b.log (expected 2)
+F-1 found: 2, expected 2
+PARSER SELFTEST PASS
+== round-1 Net-A n3.log (expected 0)
+F-1 found: 0, expected 0
+PARSER SELFTEST PASS
+== round-1 Net-A n3b.log (expected 1)
+F-1 found: 1, expected 1
+PARSER SELFTEST PASS
+== round-1 Net-A n4.log (expected 0)
+F-1 found: 0, expected 0
+PARSER SELFTEST PASS
+== round-1 Net-A n5.log (expected 1)
+F-1 found: 1, expected 1
+PARSER SELFTEST PASS
+== round-1 Net-A n6.log (expected 0)
+F-1 found: 0, expected 0
+PARSER SELFTEST PASS
+== round-1 Net-A n7.log (expected 0)
+F-1 found: 0, expected 0
+PARSER SELFTEST PASS

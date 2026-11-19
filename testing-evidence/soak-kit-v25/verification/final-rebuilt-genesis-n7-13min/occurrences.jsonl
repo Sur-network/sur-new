@@ -1,0 +1,1 @@
+{"seq":1,"node":"n4","block":391,"matchTs":"2026-11-19T17:10:48.067103809Z","errorTs":"2026-11-19 17:10:48.065","errorMsg":"State machine threw exception while processing event \\{org.hyperledger.besu.consensus.common.bft.events.BftReceivedMessageEvent@199af11\\}","persistBlockTaskWithin50ms":true,"file":"n4__0001__block391__2026-11-19T17-10-48-067103809Z.txt"}

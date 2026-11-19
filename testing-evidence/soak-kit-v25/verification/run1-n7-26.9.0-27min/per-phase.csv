@@ -1,0 +1,6 @@
+phase,blocks,tx_blocks,txs,list_change_blocks,f1,f1_per_1000_blocks,bt_p50,bt_p95,bt_p99,bt_max,gaps_gt_2_5s,gaps_ge_10s,round_change_blocks
+idle,180,1,8,0,4,22.222,2,2,2,2,0,0,0
+transfers,182,181,197,0,4,21.978,2,2,2,2,0,0,0
+changes,180,180,206,5,0,0.000,2,2,2,2,0,0,0
+heavy,116,116,1324,0,0,0.000,2,2,2,9,1,0,0
+changes-heavy,150,150,1700,3,1,6.667,2,2,2,2,0,0,0

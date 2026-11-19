@@ -1,0 +1,19 @@
+{"t":"2026-11-19T16:57:41.504Z","action":"create","name":"collector"}
+{"t":"2026-11-19T16:57:41.753Z","action":"start","name":"collector"}
+{"t":"2026-11-19T16:57:42.313Z","action":"create","name":"bootstrap-871"}
+{"t":"2026-11-19T16:57:42.317Z","action":"attach","name":"bootstrap-871"}
+{"t":"2026-11-19T16:57:42.537Z","action":"start","name":"bootstrap-871"}
+{"t":"2026-11-19T16:57:49.042Z","action":"health_status: healthy","name":"n1"}
+{"t":"2026-11-19T16:57:49.776Z","action":"health_status: healthy","name":"n2"}
+{"t":"2026-11-19T16:57:50.514Z","action":"health_status: healthy","name":"n3"}
+{"t":"2026-11-19T16:57:51.317Z","action":"health_status: healthy","name":"n4"}
+{"t":"2026-11-19T16:57:52.233Z","action":"health_status: healthy","name":"n5"}
+{"t":"2026-11-19T16:57:53.086Z","action":"health_status: healthy","name":"n6"}
+{"t":"2026-11-19T16:57:54.027Z","action":"health_status: healthy","name":"n7"}
+{"t":"2026-11-19T16:57:54.975Z","action":"health_status: healthy","name":"x1"}
+{"t":"2026-11-19T16:57:56.053Z","action":"health_status: healthy","name":"x2"}
+{"t":"2026-11-19T16:59:00.419Z","action":"die","name":"bootstrap-871","exitCode":"0"}
+{"t":"2026-11-19T16:59:00.438Z","action":"destroy","name":"bootstrap-871"}
+{"t":"2026-11-19T16:59:00.859Z","action":"create","name":"loadgen"}
+{"t":"2026-11-19T16:59:00.963Z","action":"start","name":"loadgen"}
+{"t":"2026-11-19T17:12:14.779Z","action":"die","name":"loadgen","exitCode":"0"}

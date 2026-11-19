@@ -1,0 +1,21 @@
+# Example systemd unit for a 72 h soak. Copy to /etc/systemd/system/sur-soak.service, replace USER and the path, then:
+#   sudo systemctl daemon-reload && sudo systemctl start sur-soak && journalctl -u sur-soak -f
+# Do NOT enable it at boot (a reboot ends a run; results so far stay in runs/<id>/).
+# `systemctl stop sur-soak` ends the run cleanly (final row, summary.md); the containers stay until ./cleanup.sh.
+[Unit]
+Description=SUR Besu soak test (finding F-1)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=USER
+WorkingDirectory=/home/USER/soak-kit-v25
+ExecStart=/home/USER/soak-kit-v25/run-soak.sh 72 26.9.0 7
+ExecStop=/home/USER/soak-kit-v25/stop-soak.sh
+KillMode=process
+TimeoutStopSec=900
+Restart=no
+
+[Install]
+# intentionally no WantedBy: start it by hand

@@ -1,0 +1,1 @@
+idx,seq,sinceChangeBlocks,lastChangeOp,nodesRestartedIn30min,node,block,logTime,phase,bootstrap,validators,listChangeAtN,listChangeAtNminus1,nearChange3,txN,txPrev,txNext,roundN,roundNext,minerN,proposerIdxN,minerNext,proposerIdxNext,nodeIdxInSet,nodeIsProposerOfN,nodeIsProposerOfNext,logMinusBlockNtsMs,gapToNextBlockS,maxGapN_to_N5,persistBlockTaskSameMs,file

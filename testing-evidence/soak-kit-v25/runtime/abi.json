@@ -1,0 +1,364 @@
+{
+ "ValidatorsRegistry": [
+  {
+   "inputs": [],
+   "name": "getValidators",
+   "outputs": [
+    {
+     "internalType": "address[]",
+     "name": "out",
+     "type": "address[]"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "getActiveOwners",
+   "outputs": [
+    {
+     "internalType": "address[]",
+     "name": "",
+     "type": "address[]"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "name": "validators",
+   "outputs": [
+    {
+     "internalType": "enum ValidatorsRegistry.Status",
+     "name": "status",
+     "type": "uint8"
+    },
+    {
+     "internalType": "uint256",
+     "name": "lockedStake",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "periodStartedAt",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "pendingSlashEpoch",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "demotedAt",
+     "type": "uint256"
+    },
+    {
+     "internalType": "bool",
+     "name": "isPaidEntrant",
+     "type": "bool"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "name": "operatorOf",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "name": "ownerOfOperator",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "name": "pendingOperator",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "newOperator",
+     "type": "address"
+    }
+   ],
+   "name": "setOperator",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "newOperator",
+     "type": "address"
+    }
+   ],
+   "name": "proposeOperator",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "owner_",
+     "type": "address"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "evidenceHash",
+     "type": "bytes32"
+    }
+   ],
+   "name": "confirmOperatorReady",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "cancelOperatorChange",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "candidate",
+     "type": "address"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "evidenceHash",
+     "type": "bytes32"
+    }
+   ],
+   "name": "recordActivation",
+   "outputs": [
+    {
+     "internalType": "uint256",
+     "name": "decisionId",
+     "type": "uint256"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "selfSuspend",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "requestResume",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "validator",
+     "type": "address"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "evidenceHash",
+     "type": "bytes32"
+    }
+   ],
+   "name": "recordResume",
+   "outputs": [
+    {
+     "internalType": "uint256",
+     "name": "decisionId",
+     "type": "uint256"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "name": "resumeRequested",
+   "outputs": [
+    {
+     "internalType": "bool",
+     "name": "",
+     "type": "bool"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "verifier",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  }
+ ],
+ "IdentityRegistry": [
+  {
+   "inputs": [
+    {
+     "internalType": "enum IdentityRegistry.PersonType",
+     "name": "personType",
+     "type": "uint8"
+    },
+    {
+     "internalType": "string",
+     "name": "name",
+     "type": "string"
+    }
+   ],
+   "name": "registerIdentity",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "who",
+     "type": "address"
+    },
+    {
+     "internalType": "bool",
+     "name": "verified",
+     "type": "bool"
+    }
+   ],
+   "name": "setPhoneVerified",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "who",
+     "type": "address"
+    },
+    {
+     "internalType": "bool",
+     "name": "verified",
+     "type": "bool"
+    }
+   ],
+   "name": "setTelegramVerified",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "who",
+     "type": "address"
+    }
+   ],
+   "name": "isFullyVerified",
+   "outputs": [
+    {
+     "internalType": "bool",
+     "name": "",
+     "type": "bool"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "identityOracle",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  }
+ ]
+}

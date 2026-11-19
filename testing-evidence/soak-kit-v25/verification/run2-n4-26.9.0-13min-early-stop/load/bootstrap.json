@@ -1,0 +1,70 @@
+{
+ "net": "n4",
+ "startedAt": "2026-11-19T16:27:22.407Z",
+ "steps": [
+  {
+   "owner": "owner2",
+   "fn": "setOperator",
+   "block": 3
+  },
+  {
+   "owner": "owner2",
+   "fn": "recordActivation",
+   "block": 4
+  },
+  {
+   "owner": "owner3",
+   "fn": "setOperator",
+   "block": 8
+  },
+  {
+   "owner": "owner3",
+   "fn": "recordActivation",
+   "block": 9
+  },
+  {
+   "owner": "owner4",
+   "fn": "setOperator",
+   "block": 13
+  },
+  {
+   "owner": "owner4",
+   "fn": "recordActivation",
+   "block": 14
+  },
+  {
+   "owner": "owner8",
+   "fn": "setOperator",
+   "block": 18
+  },
+  {
+   "role": "lg1",
+   "fn": "registerIdentity",
+   "block": 19
+  },
+  {
+   "role": "lg2",
+   "fn": "registerIdentity",
+   "block": 20
+  },
+  {
+   "role": "lg3",
+   "fn": "registerIdentity",
+   "block": 21
+  },
+  {
+   "role": "lg4",
+   "fn": "registerIdentity",
+   "block": 22
+  }
+ ],
+ "headWhenSynced": 2,
+ "finishedAt": "2026-11-19T16:28:12.465Z",
+ "head": 22,
+ "validatorOperators": [
+  "0xfa1cB91691cDf69FB801c71F91fD328980406646",
+  "0x41De54d34CaE74160bE25f99025f6db7a40c03ae",
+  "0x52E634F9A85b933B31Bbbf6Ed4FC82344bB253aB",
+  "0x69e494394F27ffE07f9A5FE216a50553B90d4134"
+ ]
+}

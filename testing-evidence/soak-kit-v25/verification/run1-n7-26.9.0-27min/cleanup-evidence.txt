@@ -1,0 +1,48 @@
+$ docker ps -a --filter name=sur25s- (before cleanup)
+NAMES              STATUS
+sur25s-loadgen     Exited (0) 2 minutes ago
+sur25s-collector   Exited (0) 2 minutes ago
+sur25s-x2          Exited (143) 2 minutes ago
+sur25s-x1          Exited (143) 2 minutes ago
+sur25s-n7          Exited (143) 2 minutes ago
+sur25s-n6          Exited (143) 2 minutes ago
+sur25s-n5          Exited (143) 2 minutes ago
+sur25s-n4          Exited (143) 2 minutes ago
+sur25s-n3          Exited (143) 2 minutes ago
+sur25s-n2          Exited (143) About a minute ago
+sur25s-n1          Exited (143) About a minute ago
+
+$ ./cleanup.sh --yes
+containers: sur25s-loadgen sur25s-collector sur25s-x2 sur25s-x1 sur25s-n7 sur25s-n6 sur25s-n5 sur25s-n4 sur25s-n3 sur25s-n2 sur25s-n1
+volumes   : sur25s-n1-data sur25s-n2-data sur25s-n3-data sur25s-n4-data sur25s-n5-data sur25s-n6-data sur25s-n7-data sur25s-x1-data sur25s-x2-data
+networks  : sur25s-net
+2026-11-19T16:26:54Z removed container sur25s-loadgen
+2026-11-19T16:26:54Z removed container sur25s-collector
+2026-11-19T16:26:54Z removed container sur25s-x2
+2026-11-19T16:26:55Z removed container sur25s-x1
+2026-11-19T16:26:55Z removed container sur25s-n7
+2026-11-19T16:26:55Z removed container sur25s-n6
+2026-11-19T16:26:55Z removed container sur25s-n5
+2026-11-19T16:26:56Z removed container sur25s-n4
+2026-11-19T16:26:56Z removed container sur25s-n3
+2026-11-19T16:26:56Z removed container sur25s-n2
+2026-11-19T16:26:57Z removed container sur25s-n1
+2026-11-19T16:26:57Z removed volume sur25s-n1-data
+2026-11-19T16:26:57Z removed volume sur25s-n2-data
+2026-11-19T16:26:57Z removed volume sur25s-n3-data
+2026-11-19T16:26:58Z removed volume sur25s-n4-data
+2026-11-19T16:26:58Z removed volume sur25s-n5-data
+2026-11-19T16:26:58Z removed volume sur25s-n6-data
+2026-11-19T16:26:59Z removed volume sur25s-n7-data
+2026-11-19T16:26:59Z removed volume sur25s-x1-data
+2026-11-19T16:26:59Z removed volume sur25s-x2-data
+2026-11-19T16:27:00Z removed network sur25s-net
+2026-11-19T16:27:00Z left over with prefix sur25s-: containers [] volumes [] networks []
+
+$ docker ps -a | grep sur25s ; docker volume ls | grep sur25s ; docker network ls | grep sur25s
+0
+0
+0
+
+$ docker ps -a (other containers on this machine, untouched)
+NAMES     STATUS

@@ -1,0 +1,250 @@
+{
+  "net": "n7",
+  "genesisTimestamp": 1795107364,
+  "genesisTimestampISO": "2026-11-19T16:56:04.000Z",
+  "contracts": {
+    "ValidatorsRegistry": {
+      "address": "0x3333333333333333333333333333333333333333",
+      "helper": "ValidatorsRegistry_GenesisSeed",
+      "runtimeCodeBytes": 36879,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "933ac4060f3c921ec9d04ace3928b25f2a4c950eb39e40b3bc4aac6ec483e812",
+      "touchedSlots": 77,
+      "nonZeroSlotsWritten": 44
+    },
+    "ValidatorSeatNFT": {
+      "address": "0x8888888888888888888888888888888888888888",
+      "helper": "ValidatorSeatNFT_GenesisSeed",
+      "runtimeCodeBytes": 5745,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "8ce2dc69f7d094b26eec05a1a397e2c2b6f000c961104b330112843cab87e482",
+      "touchedSlots": 28,
+      "nonZeroSlotsWritten": 28
+    },
+    "ValidatorsBoard": {
+      "address": "0x4444444444444444444444444444444444444444",
+      "helper": "ValidatorsBoard_GenesisSeed",
+      "runtimeCodeBytes": 20397,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "f7f8db219e0de9783b13660eb7d1d3780017bb4c34cd1884e760726062757093",
+      "touchedSlots": 13,
+      "nonZeroSlotsWritten": 13
+    },
+    "FoundationMembers": {
+      "address": "0x7777777777777777777777777777777777777777",
+      "helper": "FoundationMembers_GenesisSeed",
+      "runtimeCodeBytes": 5970,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "cecd3520aa1fac24d9b8fe77c32c75a2b50718982b55dae8582eccf39d26b6e8",
+      "touchedSlots": 20,
+      "nonZeroSlotsWritten": 14
+    },
+    "FoundationDAO": {
+      "address": "0x1111111111111111111111111111111111111111",
+      "helper": "FoundationDAO_GenesisSeed",
+      "runtimeCodeBytes": 28365,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "c8bbd96de3bb2be046839d898193437bdbeee547293c57b127152036ec5389ca",
+      "touchedSlots": 21,
+      "nonZeroSlotsWritten": 19
+    },
+    "GenesisClaimsVault": {
+      "address": "0x9999999999999999999999999999999999999999",
+      "helper": "GenesisClaimsVault_GenesisSeed",
+      "runtimeCodeBytes": 2120,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "6198baf6f98bba13b6329b3bd834142375481831fbe400896c2ca266acec13d4",
+      "touchedSlots": 5,
+      "nonZeroSlotsWritten": 5
+    },
+    "BlockRewardDistributor": {
+      "address": "0x2222222222222222222222222222222222222222",
+      "helper": "BlockRewardDistributor",
+      "runtimeCodeBytes": 20671,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "befcdd31cb1c004ae8eeb5b1f8d22bb8aba8810dcf410ff03fba7fe53b815f91",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "ValidatorsTreasury": {
+      "address": "0x5555555555555555555555555555555555555555",
+      "helper": "ValidatorsTreasury",
+      "runtimeCodeBytes": 5755,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "4c37faf4ca95e35d812a3e83d0296118fce74805d8b2607af112585af2a3684d",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "IdentityRegistry": {
+      "address": "0x6666666666666666666666666666666666666666",
+      "helper": "IdentityRegistry",
+      "runtimeCodeBytes": 5908,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "08ebdea6d041e0748564fe530629f2e30482f9f4d8ae350d90b781de4c9725bf",
+      "touchedSlots": 1,
+      "nonZeroSlotsWritten": 1
+    },
+    "ValidatorLottery": {
+      "address": "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa",
+      "helper": "ValidatorLottery",
+      "runtimeCodeBytes": 8199,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "2e8537a8c178069bc5e6d1a83cc3533ca853388fbb6d72209a12923b54acf02e",
+      "touchedSlots": 0,
+      "nonZeroSlotsWritten": 0
+    }
+  },
+  "overlays": {
+    "ValidatorsRegistry.verifier": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "old": "0x1a5e86f3333291b3332c0f9eddb04269940566bc",
+      "new": "0xeee4fB652a465061768da1bb89c3E1936dDd6BF3"
+    },
+    "BlockRewardDistributor.distributionOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "old": "0xbcbac7d286ea11ec57fb4e0f5d16d960d6d202b6",
+      "new": "0x430C71Cd2d68f38e96579e1424bb340Ea5e36a60"
+    },
+    "IdentityRegistry.identityOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "old": "0xbe7e65512eada6f4c6a9deddf2efb75547a065e9",
+      "new": "0xa2079Ca0485c774f1412a8D20cd142b9956a1ed6"
+    }
+  },
+  "seedArgs": {
+    "registry": {
+      "firstOwner": "0xd673e54463B7196dcC7D751358d61f1Aee0bA640",
+      "firstOperator": "0xfa1cB91691cDf69FB801c71F91fD328980406646",
+      "otherFounders": [
+        "0x5D47114cF0F940f99C9e8b44537a1dc370450151",
+        "0x25CbD80397c662811f154cC14040DdEA2d447146",
+        "0xe681E103c94e3210AC47cbCe7920C4440C14eD87",
+        "0x0042fA1415092747C9781cf4635E3f5A757BF383",
+        "0xB7319889369b7396D0E453f6fcD9fECf58826A9A",
+        "0xC03262E2Fd0c2497619bBd596AAed04c05dd15cB",
+        "0xA7cCD00FC08B1Be828Ba81f08E939b07c17D18bC"
+      ],
+      "genesisTimestamp": 1795107364
+    },
+    "seatNft": {
+      "founderOwners": [
+        "0xd673e54463B7196dcC7D751358d61f1Aee0bA640",
+        "0x5D47114cF0F940f99C9e8b44537a1dc370450151",
+        "0x25CbD80397c662811f154cC14040DdEA2d447146",
+        "0xe681E103c94e3210AC47cbCe7920C4440C14eD87",
+        "0x0042fA1415092747C9781cf4635E3f5A757BF383",
+        "0xB7319889369b7396D0E453f6fcD9fECf58826A9A",
+        "0xC03262E2Fd0c2497619bBd596AAed04c05dd15cB",
+        "0xA7cCD00FC08B1Be828Ba81f08E939b07c17D18bC"
+      ]
+    },
+    "board": {
+      "roles": [
+        "owner1",
+        "owner2",
+        "owner3",
+        "owner4",
+        "owner5"
+      ],
+      "members": [
+        "0xd673e54463B7196dcC7D751358d61f1Aee0bA640",
+        "0x5D47114cF0F940f99C9e8b44537a1dc370450151",
+        "0x25CbD80397c662811f154cC14040DdEA2d447146",
+        "0xe681E103c94e3210AC47cbCe7920C4440C14eD87",
+        "0x0042fA1415092747C9781cf4635E3f5A757BF383"
+      ],
+      "genesisTimestamp": 1795107364
+    }
+  },
+  "genesisSha256": "29eeda5dd237caaac5e4c9df6aecfe9b4f998bca788c52736cedb27ddd74bcb2",
+  "nodes": [
+    {
+      "node": "n1",
+      "role": "op1",
+      "operatorAddress": "0xfa1cB91691cDf69FB801c71F91fD328980406646",
+      "ip": "172.29.71.11",
+      "rpcHostPort": 19611,
+      "enode": "enode://b2323d2034f50f7c1f76ce48090fb60857d67206aa4d6ba0a3713cee7226fb03c2837b1c16737417ca7a2d61c6cc864f970ee215503a939ffaad3033afe49cae@172.29.71.11:30303"
+    },
+    {
+      "node": "n2",
+      "role": "op2",
+      "operatorAddress": "0x41De54d34CaE74160bE25f99025f6db7a40c03ae",
+      "ip": "172.29.71.12",
+      "rpcHostPort": 19612,
+      "enode": "enode://600f418279d6622c849d55b777f6f093b331d44dbbe9f24cdb3d8d49e86b0e1d458f61eb3282e0e01d5de8bb9bbf08b1daa45b63f6ad552f71f4f14dba66876d@172.29.71.12:30303"
+    },
+    {
+      "node": "n3",
+      "role": "op3",
+      "operatorAddress": "0x52E634F9A85b933B31Bbbf6Ed4FC82344bB253aB",
+      "ip": "172.29.71.13",
+      "rpcHostPort": 19613,
+      "enode": "enode://d5aa44a76b6cf73edc437736c5372f968962bb53ee55ea344d58f5421a5e3528433c675c8cf4ab7a60301037374ae59d02568ea2f186d970bd6049d8840ba158@172.29.71.13:30303"
+    },
+    {
+      "node": "n4",
+      "role": "op4",
+      "operatorAddress": "0x69e494394F27ffE07f9A5FE216a50553B90d4134",
+      "ip": "172.29.71.14",
+      "rpcHostPort": 19614,
+      "enode": "enode://a9c3522a32f733f22f3dd5401cf98272b434d89ca0ead998e01474da50344ef374322b244bed1bf0e8270fb74ca173678c62b16e850c6156de6085e5eea018e1@172.29.71.14:30303"
+    },
+    {
+      "node": "n5",
+      "role": "op5",
+      "operatorAddress": "0x3E521d649aD57aFbBF084078E5Cb7f442752B846",
+      "ip": "172.29.71.15",
+      "rpcHostPort": 19615,
+      "enode": "enode://216597a2a51faf4e57120bb71e2db979d2248583124e30fa71c20a73dcd6e0b59cfed286733b5396c69a7f9127ac8e6fac268e2cafd15be9c5c42d1c7f1cfa9c@172.29.71.15:30303"
+    },
+    {
+      "node": "n6",
+      "role": "op6",
+      "operatorAddress": "0x6cF7cD1426ed3f2D7e81baAA47dF73c452Ca60A0",
+      "ip": "172.29.71.16",
+      "rpcHostPort": 19616,
+      "enode": "enode://e775d9b80ccba430e4ec9be5ffb513358970a3853d40888e0108304d60df5c19e7171e50d3902f9275630e635588a18ad5103c21efa633eb3948ecacc8e9e265@172.29.71.16:30303"
+    },
+    {
+      "node": "n7",
+      "role": "op7",
+      "operatorAddress": "0xe8566EeA588Fc307e0214D7bE4132b6EC8DD415f",
+      "ip": "172.29.71.17",
+      "rpcHostPort": 19617,
+      "enode": "enode://3bf974a2a3bca66eccf0462be47a1766c3692a5c758014d2f0294e3bedd1a7538b65d1313a52a776b4c0892841186320b7be46321898cb6dc6e0e68e2f523c27@172.29.71.17:30303"
+    },
+    {
+      "node": "x1",
+      "role": "opX1",
+      "operatorAddress": "0xDE7912242c025b64eae2caaeB58850903903A0b0",
+      "ip": "172.29.71.21",
+      "rpcHostPort": 19621,
+      "enode": "enode://c58942e887fa7c98269262551182094649b6544acba38bde121e549bb61399f20143ee1104d6c2216727c2b5c3125bb110590bb7c17ce55e2312d4fb403f32d3@172.29.71.21:30303"
+    },
+    {
+      "node": "x2",
+      "role": "opE",
+      "operatorAddress": "0x9E1E49309Fe448d3DD1427dBb9db61864b791807",
+      "ip": "172.29.71.22",
+      "rpcHostPort": 19622,
+      "enode": "enode://766c45efc9b4d2574a4c77dbe5f4d40165a7e116584a207b0fc96383d6052dc496c440606ab4fe751001c75ce302147cff628aa38032853d7326dbce5d116d5e@172.29.71.22:30303"
+    }
+  ],
+  "roundTrip": {
+    "registryGetValidators": [
+      "0xfa1cB91691cDf69FB801c71F91fD328980406646"
+    ],
+    "registryVerifier": "0xeee4fB652a465061768da1bb89c3E1936dDd6BF3",
+    "statuses": {
+      "0xd673e54463B7196dcC7D751358d61f1Aee0bA640": 2,
+      "0x5D47114cF0F940f99C9e8b44537a1dc370450151": 1,
+      "0x25CbD80397c662811f154cC14040DdEA2d447146": 1,
+      "0xe681E103c94e3210AC47cbCe7920C4440C14eD87": 1,
+      "0x0042fA1415092747C9781cf4635E3f5A757BF383": 1,
+      "0xB7319889369b7396D0E453f6fcD9fECf58826A9A": 1,
+      "0xC03262E2Fd0c2497619bBd596AAed04c05dd15cB": 1,
+      "0xA7cCD00FC08B1Be828Ba81f08E939b07c17D18bC": 1
+    }
+  }
+}

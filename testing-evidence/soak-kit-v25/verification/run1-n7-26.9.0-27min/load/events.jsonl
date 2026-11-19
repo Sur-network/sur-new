@@ -1,0 +1,22 @@
+{"t":"2026-11-19T15:57:15.039Z","ms":1795103835039,"type":"loadgen-start","phase":null,"plan":"idle:3:0:0,transfers:4:0.5:0,changes:6:0.5:2,heavy:4:5:0:2,changes-heavy:5:5:2:2","pollHz":1,"burstSize":60,"entrantAtFrac":0.4,"windowStart":"2026-11-19T15:57:14.471Z","windowEnd":"2026-11-19T16:24:14.471Z"}
+{"t":"2026-11-19T15:57:15.042Z","ms":1795103835042,"type":"phase","phase":"idle","name":"idle","cycle":0,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:00:14.547Z","ms":1795104014547,"type":"phase","phase":"transfers","name":"transfers","cycle":0,"tps":0.5,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:04:14.514Z","ms":1795104254514,"type":"phase","phase":"changes","name":"changes","cycle":0,"tps":0.5,"changeEveryMin":2,"burstEveryMin":0}
+{"t":"2026-11-19T16:05:18.070Z","ms":1795104318070,"type":"listChange","phase":"changes","op":"swap","block":279,"proposeBlock":274,"owner":"owner6","from":"0x6cf7cd1426ed3f2d7e81baaa47df73c452ca60a0","to":"0xDE7912242c025b64eae2caaeB58850903903A0b0","node":"x1","validatorsAfter":7}
+{"t":"2026-11-19T16:06:34.424Z","ms":1795104394424,"type":"listChange","phase":"changes","op":"selfSuspend","block":317,"owner":"owner7","validatorsAfter":6}
+{"t":"2026-11-19T16:08:00.540Z","ms":1795104480540,"type":"listChange","phase":"changes","op":"recordResume","why":"rotation","block":360,"owner":"owner7","validatorsAfter":7}
+{"t":"2026-11-19T16:08:04.523Z","ms":1795104484523,"type":"listChange","phase":"changes","op":"recordActivation","block":362,"owner":"owner8","validatorsAfter":8}
+{"t":"2026-11-19T16:09:58.053Z","ms":1795104598053,"type":"listChange","phase":"changes","op":"swap","block":419,"proposeBlock":414,"owner":"owner6","from":"0xde7912242c025b64eae2caaeb58850903903a0b0","to":"0x6cF7cD1426ed3f2D7e81baAA47dF73c452Ca60A0","node":"n6","validatorsAfter":8}
+{"t":"2026-11-19T16:10:14.485Z","ms":1795104614485,"type":"phase","phase":"heavy","name":"heavy","cycle":0,"tps":5,"changeEveryMin":0,"burstEveryMin":2}
+{"t":"2026-11-19T16:10:44.526Z","ms":1795104644526,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T16:12:44.547Z","ms":1795104764547,"type":"burst","phase":"heavy","size":60}
+{"t":"2026-11-19T16:14:14.521Z","ms":1795104854521,"type":"phase","phase":"changes-heavy","name":"changes-heavy","cycle":0,"tps":5,"changeEveryMin":2,"burstEveryMin":2}
+{"t":"2026-11-19T16:14:44.623Z","ms":1795104884623,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T16:15:21.272Z","ms":1795104921272,"type":"listChange","phase":"changes-heavy","op":"selfSuspend","block":577,"owner":"owner7","validatorsAfter":7}
+{"t":"2026-11-19T16:16:44.707Z","ms":1795105004707,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T16:16:51.350Z","ms":1795105011350,"type":"listChange","phase":"changes-heavy","op":"recordResume","why":"rotation","block":622,"owner":"owner7","validatorsAfter":8}
+{"t":"2026-11-19T16:18:44.760Z","ms":1795105124760,"type":"burst","phase":"changes-heavy","size":60}
+{"t":"2026-11-19T16:19:09.299Z","ms":1795105149299,"type":"listChange","phase":"changes-heavy","op":"swap","block":691,"proposeBlock":686,"owner":"owner6","from":"0x6cf7cd1426ed3f2d7e81baaa47df73c452ca60a0","to":"0xDE7912242c025b64eae2caaeB58850903903A0b0","node":"x1","validatorsAfter":8}
+{"t":"2026-11-19T16:19:14.496Z","ms":1795105154496,"type":"phase","phase":"idle","name":"idle","cycle":1,"tps":0,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:22:14.481Z","ms":1795105334481,"type":"phase","phase":"transfers","name":"transfers","cycle":1,"tps":0.5,"changeEveryMin":0,"burstEveryMin":0}
+{"t":"2026-11-19T16:24:14.525Z","ms":1795105454525,"type":"loadgen-stop","phase":"transfers","reason":"window end","stats":{"startedAt":"2026-11-19T15:57:15.021Z","phase":"transfers","transfers":{"sent":3359,"errors":1,"resyncs":9,"bursts":5},"errorsByClass":{"poll: fetch failed":6,"fetch failed":1},"identityToggles":{"ok":63,"err":0},"listChanges":{"swap":3,"selfSuspend":2,"resume":2,"activate":1,"failed":0,"skipped":0},"poll":{"ok":1586,"err":6},"lastChange":{"type":"swap","block":691,"at":"2026-11-19T16:19:09.296Z"},"nextChangeAt":null}}

@@ -1,0 +1,7 @@
+{
+  "kitVersion": "soak-kit-v25",
+  "net": "n4", "validators": 4, "hours": 0.35, "intervalMinutes": 2, "phasePlan": "idle:2:0:0,changes:4:0.5:1.5,heavy:3:5:0:2,changes-heavy:3:5:1.5:2", "pollHz": 1, "entrantFrac": 0.4,
+  "image": "hyperledger/besu:26.9.0", "imageId": "sha256:fc1813d67d630d7660eea6ee555c01e73bfecda3e54d24f9484c1c4a52c6fcb0", "loadgenImage": "node:22", "loadgenImageId": "sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8",
+  "nodeMemMB": 1536, "nodeCpus": 1.5, "javaXmx": "768m", "logLevel": "INFO", "genesisSha256": "19250fe8999c406f242183df48055d15d20b6fc53d6b4a11d53f0de68ee62a28",
+  "createdUtc": "2026-11-19T16:27:15Z", "host": "MINGW64_NT-10.0-26200 3.6.4-b9f03e96.x86_64", "dockerServer": "29.7.2"
+}

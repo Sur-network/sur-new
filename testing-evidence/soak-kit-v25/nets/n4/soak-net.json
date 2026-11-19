@@ -1,0 +1,64 @@
+{
+  "name": "n4",
+  "chainId": 725004,
+  "validators": 4,
+  "genesisTimestamp": 1795107364,
+  "blockPeriodSeconds": 2,
+  "validatorNodes": [
+    "n1",
+    "n2",
+    "n3",
+    "n4"
+  ],
+  "extraNodes": [
+    "x1",
+    "x2"
+  ],
+  "nodeOperator": {
+    "n1": "op1",
+    "n2": "op2",
+    "n3": "op3",
+    "n4": "op4",
+    "x1": "opX1",
+    "x2": "opE"
+  },
+  "owners": {
+    "owner1": "op1",
+    "owner2": "op2",
+    "owner3": "op3",
+    "owner4": "op4",
+    "owner8": "opE"
+  },
+  "swapOwner": "owner3",
+  "swapOps": [
+    "op3",
+    "opX1"
+  ],
+  "swapNodes": {
+    "op3": "n3",
+    "opX1": "x1"
+  },
+  "suspendOwner": "owner4",
+  "entrantOwner": "owner8",
+  "entrantOp": "opE",
+  "entrantNode": "x2",
+  "boardRoles": [
+    "owner1",
+    "owner2",
+    "owner9",
+    "owner10",
+    "owner11"
+  ],
+  "addr": {
+    "FoundationDAO": "0x1111111111111111111111111111111111111111",
+    "BlockRewardDistributor": "0x2222222222222222222222222222222222222222",
+    "ValidatorsRegistry": "0x3333333333333333333333333333333333333333",
+    "ValidatorsBoard": "0x4444444444444444444444444444444444444444",
+    "ValidatorsTreasury": "0x5555555555555555555555555555555555555555",
+    "IdentityRegistry": "0x6666666666666666666666666666666666666666",
+    "FoundationMembers": "0x7777777777777777777777777777777777777777",
+    "ValidatorSeatNFT": "0x8888888888888888888888888888888888888888",
+    "GenesisClaimsVault": "0x9999999999999999999999999999999999999999",
+    "ValidatorLottery": "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa"
+  }
+}

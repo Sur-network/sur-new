@@ -1,0 +1,6 @@
+2026-11-19T16:27:22.408Z [bootstrap] net n4: 4 validators wanted; waiting for 6 nodes
+2026-11-19T16:27:33.530Z [bootstrap] all nodes up and synced at head 2
+2026-11-19T16:27:42.309Z [bootstrap] owner2 Active (activation block 4); validators now 2
+2026-11-19T16:27:52.531Z [bootstrap] owner3 Active (activation block 9); validators now 3
+2026-11-19T16:28:02.192Z [bootstrap] owner4 Active (activation block 14); validators now 4
+2026-11-19T16:28:12.474Z [bootstrap] done at head 22: 4 validators active

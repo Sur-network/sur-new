@@ -1,0 +1,8 @@
+row,ts_utc,elapsed_h,partial,phase,head,blocks,txs_in_blocks,blocks_with_tx,validators_min,validators_max,list_changes,bt_p50,bt_p95,bt_p99,bt_max,gaps_gt_2_5s,gaps_ge_10s,round_change_blocks,f1_interval,f1_total,err_other_interval,warn_interval,restarts_total,oom_total,containers_not_running,peers_min,peers_max,fork_mismatches,unreachable_nodes,mem_mb_max,cpu_pct_max,volumes_mb,run_dir_mb,host_free_gb,load_tx_sent,load_tx_errors,load_changes,poll_err,collector_errors
+1,2026-11-19T16:30:12.767Z,0.033,false,changes,86,60,0,0,4,4,0,2,2,2,2,0,0,0,0,0,0,36,0,0,0,5,5,0,,368,25,6,0,786.4,3,0,0,0,0
+2,2026-11-19T16:32:12.767Z,0.067,false,changes,146,60,67,60,4,4,1,2,2,2,2,0,0,0,0,0,0,0,0,0,0,5,5,0,,381,15.8,6,0,786.4,64,0,1,0,0
+3,2026-11-19T16:34:12.767Z,0.1,false,heavy,206,60,66,59,3,4,1,2,2,2,2,0,0,0,0,0,0,0,0,0,1,4,4,0,x2,386,25.5,11,0,786.4,195,1,3,4,0
+4,2026-11-19T16:36:12.767Z,0.133,false,heavy,266,60,665,60,3,4,1,2,2,2,2,0,0,0,0,0,0,6,0,0,0,5,5,0,,431,13.6,12,1,786.4,811,1,3,13,0
+5,2026-11-19T16:38:12.767Z,0.167,false,changes-heavy,326,60,727,60,4,5,1,2,2,2,2,0,0,0,0,0,0,0,0,0,0,5,5,0,,433,15.2,18,1,786.4,1539,1,4,13,0
+6,2026-11-19T16:40:12.767Z,0.2,false,idle,386,60,668,60,5,5,1,2,2,2,2,0,0,0,0,0,0,0,0,0,0,5,5,0,,438,8.9,24,1,786.4,2159,1,5,13,0
+7,2026-11-19T16:41:04.860Z,0.214,true,idle,405,23,4,1,5,5,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,5,5,0,,442,12.3,24,1,786.4,2159,1,5,13,0

@@ -1,0 +1,10 @@
+16:34:00 docker kill sur25s-x2 (supervisor test: a manual kill is not restarted by docker)
+sur25s-x2
+16:41:00 ./stop-soak.sh
+2026-11-19T16:41:00Z run-soak.sh (pid 246) is alive: asking it to finish
+2026-11-19T16:41:34Z runner finished
+sur25s-loadgen Exited (0) 31 seconds ago
+sur25s-collector Exited (0) 27 seconds ago
+sur25s-x2 Exited (143) 15 seconds ago
+
+[exited with code 0]

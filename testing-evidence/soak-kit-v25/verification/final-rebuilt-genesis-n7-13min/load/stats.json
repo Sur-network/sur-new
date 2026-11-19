@@ -1,0 +1,37 @@
+{
+ "startedAt": "2026-11-19T16:59:01.144Z",
+ "phase": "idle",
+ "transfers": {
+  "sent": 1980,
+  "errors": 0,
+  "resyncs": 8,
+  "bursts": 5
+ },
+ "errorsByClass": {},
+ "identityToggles": {
+  "ok": 33,
+  "err": 0
+ },
+ "listChanges": {
+  "swap": 2,
+  "selfSuspend": 2,
+  "resume": 2,
+  "activate": 1,
+  "failed": 0,
+  "skipped": 0
+ },
+ "poll": {
+  "ok": 779,
+  "err": 0,
+  "maxMs": 65,
+  "p50Ms": 8
+ },
+ "lastChange": {
+  "type": "recordResume",
+  "block": 429,
+  "at": "2026-11-19T17:12:04.128Z"
+ },
+ "nextChangeAt": null,
+ "updatedAt": "2026-11-19T17:12:12.578Z",
+ "final": true
+}
