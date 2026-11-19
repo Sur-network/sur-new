@@ -191,7 +191,7 @@
 
 **H2: قراردادهای ساختاری**
 
-> ⚠️ **وضعیت:** چهار قرارداد آخر جدول (`FoundationMembers`، `ValidatorSeatNFT`، `GenesisClaimsVault`، `ValidatorLottery`) بخشی از طرح نسخه‌ی ۲.۵اند و آدرس آن‌ها در کد پیشنهاد شده (`0x7777…`، `0x8888…`، `0x9999…`، `0xAaAa…`)، نه نهایی. `FoundationMembers`، `ValidatorLottery`، `GenesisClaimsVault` و `ValidatorSeatNFT` نوشته و فقط روی شبکه‌ی آزمایشی محلی آزموده شده‌اند (نه روی شبکه‌ی آزمون Besu). 🔶 هیچ‌یک از این‌ها آزموده‌ی نهایی نیست.
+> ⚠️ **وضعیت:** چهار قرارداد آخر جدول (`FoundationMembers`، `ValidatorSeatNFT`، `GenesisClaimsVault`، `ValidatorLottery`) بخشی از طرح نسخه‌ی ۲.۵اند و آدرس آن‌ها در کد پیشنهاد شده (`0x7777…`، `0x8888…`، `0x9999…`، `0xAaAa…`)، نه نهایی. `FoundationMembers`، `ValidatorLottery`، `GenesisClaimsVault` و `ValidatorSeatNFT` نوشته و روی شبکه‌ی آزمایشی محلی آزموده شده‌اند؛ دور اول آزمون زنده روی یک شبکه‌ی آزمایشی Besu (یک میزبان، اجراهای کوتاه) هم برای بخش بزرگی از آن‌ها گذشته است، ولی بخش‌هایی (مثل مهلت‌های چندروزه و ماهانه) هنوز روی Besu اجرا نشده است. 🔶 هیچ‌یک از این‌ها آزموده‌ی نهایی نیست.
 
 جدول (کامپوننت تعاملی با لینک به آدرس هرکدام روی اکسپلورر):
 
