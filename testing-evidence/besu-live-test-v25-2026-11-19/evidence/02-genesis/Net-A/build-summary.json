@@ -1,0 +1,339 @@
+{
+  "net": "Net-A",
+  "genesisTimestamp": 1795095145,
+  "genesisTimestampISO": "2026-11-19T13:32:25.000Z",
+  "contracts": {
+    "ValidatorsRegistry": {
+      "address": "0x3333333333333333333333333333333333333333",
+      "helper": "ValidatorsRegistry_GenesisSeed",
+      "runtimeCodeBytes": 34605,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "2fa1ec1cefaeee668b250718997ec0255296003a6b36d1a5886e8a326cb5c342",
+      "touchedSlots": 70,
+      "nonZeroSlotsWritten": 41
+    },
+    "ValidatorSeatNFT": {
+      "address": "0x8888888888888888888888888888888888888888",
+      "helper": "ValidatorSeatNFT_GenesisSeed",
+      "runtimeCodeBytes": 5745,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "babbe42c58a54505be70060e7360a3608850a86fb88ca370c7ae88ceda1e69b9",
+      "touchedSlots": 25,
+      "nonZeroSlotsWritten": 25
+    },
+    "ValidatorsBoard": {
+      "address": "0x4444444444444444444444444444444444444444",
+      "helper": "ValidatorsBoard_GenesisSeed",
+      "runtimeCodeBytes": 20140,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "6c5852d61e94ab0c14b7e19c004d38e9b9d22b718e2226765ab55f3043c330fd",
+      "touchedSlots": 13,
+      "nonZeroSlotsWritten": 13
+    },
+    "FoundationMembers": {
+      "address": "0x7777777777777777777777777777777777777777",
+      "helper": "FoundationMembers_GenesisSeed",
+      "runtimeCodeBytes": 5970,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "cecd3520aa1fac24d9b8fe77c32c75a2b50718982b55dae8582eccf39d26b6e8",
+      "touchedSlots": 20,
+      "nonZeroSlotsWritten": 14
+    },
+    "FoundationDAO": {
+      "address": "0x1111111111111111111111111111111111111111",
+      "helper": "FoundationDAO_GenesisSeed",
+      "runtimeCodeBytes": 28365,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "c8bbd96de3bb2be046839d898193437bdbeee547293c57b127152036ec5389ca",
+      "touchedSlots": 21,
+      "nonZeroSlotsWritten": 19
+    },
+    "GenesisClaimsVault": {
+      "address": "0x9999999999999999999999999999999999999999",
+      "helper": "GenesisClaimsVault_GenesisSeed",
+      "runtimeCodeBytes": 2120,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "6198baf6f98bba13b6329b3bd834142375481831fbe400896c2ca266acec13d4",
+      "touchedSlots": 5,
+      "nonZeroSlotsWritten": 5
+    },
+    "BlockRewardDistributor": {
+      "address": "0x2222222222222222222222222222222222222222",
+      "helper": "BlockRewardDistributor",
+      "runtimeCodeBytes": 20671,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "befcdd31cb1c004ae8eeb5b1f8d22bb8aba8810dcf410ff03fba7fe53b815f91",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "ValidatorsTreasury": {
+      "address": "0x5555555555555555555555555555555555555555",
+      "helper": "ValidatorsTreasury",
+      "runtimeCodeBytes": 5755,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "4c37faf4ca95e35d812a3e83d0296118fce74805d8b2607af112585af2a3684d",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "IdentityRegistry": {
+      "address": "0x6666666666666666666666666666666666666666",
+      "helper": "IdentityRegistry",
+      "runtimeCodeBytes": 5908,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "08ebdea6d041e0748564fe530629f2e30482f9f4d8ae350d90b781de4c9725bf",
+      "touchedSlots": 1,
+      "nonZeroSlotsWritten": 1
+    },
+    "ValidatorLottery": {
+      "address": "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa",
+      "helper": "ValidatorLottery",
+      "runtimeCodeBytes": 8199,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "2e8537a8c178069bc5e6d1a83cc3533ca853388fbb6d72209a12923b54acf02e",
+      "touchedSlots": 0,
+      "nonZeroSlotsWritten": 0
+    }
+  },
+  "overlays": {
+    "ValidatorsRegistry.verifier": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "old": "0x1a5e86f3333291b3332c0f9eddb04269940566bc",
+      "new": "0xb312b54A29C14E178775f472aA9a6D048e1afC30"
+    },
+    "BlockRewardDistributor.distributionOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "old": "0xbcbac7d286ea11ec57fb4e0f5d16d960d6d202b6",
+      "new": "0xA3dA61700D84b6A119020fC434c6031D9a9291FA"
+    },
+    "IdentityRegistry.identityOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "old": "0xbe7e65512eada6f4c6a9deddf2efb75547a065e9",
+      "new": "0x52914b17691DD6bABEB7Fe4A6531DD0d045A63CA"
+    }
+  },
+  "seedArgs": {
+    "registry": {
+      "firstOwner": "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+      "firstOperator": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "otherFounders": [
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+        "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+        "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E"
+      ],
+      "genesisTimestamp": 1795095145
+    },
+    "registryHelperGetValidators": [
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+    ],
+    "seatNft": {
+      "founderOwners": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+        "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+        "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E"
+      ]
+    },
+    "board": {
+      "members": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4"
+      ],
+      "genesisTimestamp": 1795095145
+    },
+    "foundationMembers": {
+      "accounts": [
+        "0xBE85587AF9DB4B2068E3Bd61aAfC1A751A312421",
+        "0x4AaEcE50712B479966323E436817e7f286022FBF",
+        "0xad2F679F09a5B17F3A085164b9710aae459aA2E7"
+      ],
+      "names": [
+        "Test Member One",
+        "Test Member Two",
+        "Test Member Three"
+      ],
+      "shares": [
+        "100",
+        "200",
+        "300"
+      ]
+    },
+    "dao": {
+      "principalsAndAlternates": [
+        "0x5AC3860f9e585d2Ec6c795322904EE185f90B87A",
+        "0x6Cf95b519897843677A7eDc0Ec59D952a363266A",
+        "0x5C5af81Ff7A1d109188eA34b59D25B1401B98c2B",
+        "0xFd745cFD6835AAf5c4675a5D0b663884E6194466",
+        "0x2fCc5533974D4a0Fd8789A549f5dc08321cd9C6A",
+        "0x05100fCe2199062a4a6777CA8aA1Cdf8c0d4f21D",
+        "0x124896d2d4c6E23833a7eAeB9AF60ef1c5B3830b"
+      ],
+      "inspector": "0x89bcDE69734Cd7987e716daf6CD5a29d8E0d321D",
+      "chair": "0x5AC3860f9e585d2Ec6c795322904EE185f90B87A",
+      "treasurer": "0x6Cf95b519897843677A7eDc0Ec59D952a363266A",
+      "ceo": "0xC2Ff1A81ddc0a2d99c64144570aeb5Db0cDf7E3a",
+      "termEnd": 1858167145
+    },
+    "claims": {
+      "claimants": [
+        "0x5bA9fCB6f602f98E8Ce1DDc68680bd9A3A5e0c6D",
+        "0x403D36a57368019b302Fc43658e9f5804D160E43",
+        "0xac8556bEd25ceaF92541c3D9717a130F55622410"
+      ],
+      "claims": [
+        "1000000000000000000000",
+        "2400000000000000000000",
+        "5000000000000000000000"
+      ],
+      "totalHeld": "8100000000000000000000"
+    }
+  },
+  "genesisSha256": "91c618649b379e207c239f2f55f9eff58c61ba5da37cf14ae4049d42e93f063a",
+  "blockperiodseconds": 2,
+  "blockreward": "2000000000000000000",
+  "chainId": 425025,
+  "nodes": [
+    {
+      "node": "n1",
+      "role": "op1",
+      "operatorAddress": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ip": "172.29.51.11",
+      "p2p": 30303,
+      "rpcHostPort": 19111,
+      "enode": "enode://9ffe4905933129b0ef97f06921238d1536815d0edba41c3b0c0991a2f6018745957d412a5bb36e8c38ad5dd404e54a02bd2c68b3d065f5aefc1eb2db506fbb23@172.29.51.11:30303"
+    },
+    {
+      "node": "n2",
+      "role": "op2",
+      "operatorAddress": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+      "ip": "172.29.51.12",
+      "p2p": 30303,
+      "rpcHostPort": 19112,
+      "enode": "enode://c0c35e6101addf99462314ce44d46f4b23ebad34c8c9a992a9460cbd7b29bcbcc8a00bf371faddf47821e212418c9964ba3d9d20d2caa6af49c9caf071256c06@172.29.51.12:30303"
+    },
+    {
+      "node": "n3",
+      "role": "op3",
+      "operatorAddress": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+      "ip": "172.29.51.13",
+      "p2p": 30303,
+      "rpcHostPort": 19113,
+      "enode": "enode://e590fe94e6e3b27d8b74024550a96a78d1ecd8522847132ec189e26c2850e5133bf0fc57538e69a7809c3fd52226bded67ee8a571d5c891bab7f1bc3ddad4a43@172.29.51.13:30303"
+    },
+    {
+      "node": "n4",
+      "role": "op4",
+      "operatorAddress": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ip": "172.29.51.14",
+      "p2p": 30303,
+      "rpcHostPort": 19114,
+      "enode": "enode://b90401b72e088523eb40ad73bb96d324f277d689cc59bd115f815d93d054aed9aa5d480d17b0781fc171d589f18b536544010e98ced63e9834e24d164d43376d@172.29.51.14:30303"
+    },
+    {
+      "node": "n5",
+      "role": "op5",
+      "operatorAddress": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ip": "172.29.51.15",
+      "p2p": 30303,
+      "rpcHostPort": 19115,
+      "enode": "enode://62f8d289a549ff8ef3db45954b78c0f05a66aa179a2ccb97a5debd802949487ab261f5407264565cbc0b7e8758f4c489ba675ef8dbf6ed61e4238e25b6dda6ce@172.29.51.15:30303"
+    },
+    {
+      "node": "n6",
+      "role": "op6",
+      "operatorAddress": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ip": "172.29.51.16",
+      "p2p": 30303,
+      "rpcHostPort": 19116,
+      "enode": "enode://95dda0fb946e740b6d0986762a6ad882f7d11a5457c76400b7f6d6f65b33f4469dffd00ab83577e6936fc96db185fa0a479cc53424e2e5cdaafd50e8a9e44dd3@172.29.51.16:30303"
+    },
+    {
+      "node": "n7",
+      "role": "op7",
+      "operatorAddress": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ip": "172.29.51.17",
+      "p2p": 30303,
+      "rpcHostPort": 19117,
+      "enode": "enode://7ffb7a5a48d0a7fed40e6873f2565aab085bce7cbb2852070bc6952e0a13aeb2be9ab07cf23030ee4736c275c2e1de6d91efd3f074de82cb4ff954e909338cf9@172.29.51.17:30303"
+    },
+    {
+      "node": "n2b",
+      "role": "op2b",
+      "operatorAddress": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ip": "172.29.51.22",
+      "p2p": 30303,
+      "rpcHostPort": 19122,
+      "enode": "enode://aa1ed8b475c97bab213a1792229a165dae76e1f1282a244fbf4e48c6d4e74bf3b7cf38e124876c8165efe460364ed9888a4e6a45ead5785317be5fcfcfddbb57@172.29.51.22:30303"
+    },
+    {
+      "node": "n3b",
+      "role": "op3b",
+      "operatorAddress": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ip": "172.29.51.23",
+      "p2p": 30303,
+      "rpcHostPort": 19123,
+      "enode": "enode://679aff54d19236968857599b1bc7a29ac2ec7ebf4f8f605604cd7ec25a1277304843a6c216c405b69185f494bdea40fe9ceef3b61328ddb799c6de4da11dabe1@172.29.51.23:30303"
+    },
+    {
+      "node": "nC",
+      "role": "opC",
+      "operatorAddress": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ip": "172.29.51.31",
+      "p2p": 30303,
+      "rpcHostPort": 19131,
+      "enode": "enode://4c64cd77e1eacb2a37efe87ba0d75bdeae3a01312b4613ad9fb19617e6dc8dad41e26b26570e256696c113c46f3c5fca888533f3067e6718641dbce14dc4fd19@172.29.51.31:30303"
+    }
+  ],
+  "roundTrip": {
+    "registryGetValidators": [
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+    ],
+    "registryVerifier": "0xb312b54A29C14E178775f472aA9a6D048e1afC30",
+    "registryGenesisTime": "1795095145",
+    "registryStatuses": {
+      "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC": 2,
+      "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1": 1,
+      "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343": 1,
+      "0x5a88853CBad947766fC96d210F337F2c246530D0": 1,
+      "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4": 1,
+      "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71": 1,
+      "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E": 1
+    },
+    "nftTotalMinted": "7",
+    "nftOwners": [
+      "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+      "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+      "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+      "0x5a88853CBad947766fC96d210F337F2c246530D0",
+      "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+      "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+      "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E"
+    ],
+    "distributionOracle": "0xA3dA61700D84b6A119020fC434c6031D9a9291FA",
+    "identityOracle": "0x52914b17691DD6bABEB7Fe4A6531DD0d045A63CA",
+    "daoBoard": [
+      "0x5AC3860f9e585d2Ec6c795322904EE185f90B87A",
+      "0x6Cf95b519897843677A7eDc0Ec59D952a363266A",
+      "0x5C5af81Ff7A1d109188eA34b59D25B1401B98c2B",
+      "0xFd745cFD6835AAf5c4675a5D0b663884E6194466",
+      "0x2fCc5533974D4a0Fd8789A549f5dc08321cd9C6A"
+    ],
+    "daoCeo": "0xC2Ff1A81ddc0a2d99c64144570aeb5Db0cDf7E3a",
+    "boardMembers": [
+      "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+      "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+      "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+      "0x5a88853CBad947766fC96d210F337F2c246530D0",
+      "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4"
+    ],
+    "claimsTotalHeld": "8100000000000000000000"
+  }
+}

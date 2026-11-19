@@ -1,0 +1,194 @@
+{
+  "id": "BG-10",
+  "writtenAtUTC": "2026-11-19T14:08:37.754Z",
+  "verdict": "PASS",
+  "summary": "lottery #1 full commit-reveal cycle on Net-S: close block 78, target 88, reveal 92 (4 blocks after target), 3 winners reproduced off-chain",
+  "checks": [
+    {
+      "name": "DAO: StartLottery (type 10) proposal created, 3 Voted events, ProposalExecuted in the block of the 3rd vote (lottery started in that same block)",
+      "pass": true,
+      "detail": {
+        "createdBlock": 2,
+        "voteBlocks": [
+          2,
+          3,
+          4
+        ],
+        "executedBlock": 4,
+        "lotteryStartedBlock": 4
+      }
+    },
+    {
+      "name": "LotteryStarted(1, ticket 10 Suren, 3 winners)",
+      "pass": true,
+      "detail": {
+        "closeTime": 1795096692
+      }
+    },
+    {
+      "name": "6 TicketBought events",
+      "pass": true,
+      "detail": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ]
+    },
+    {
+      "name": "LotteryClosed: targetBlock == closeBlock + 10",
+      "pass": true,
+      "detail": {
+        "closeBlock": 78,
+        "target": 88
+      }
+    },
+    {
+      "name": "closed at/after closeTime (block timestamp >= closeTime)",
+      "pass": true,
+      "detail": {
+        "blockTs": 1795096696,
+        "closeTime": 1795096692
+      }
+    },
+    {
+      "name": "SecretCommitted before closeTime",
+      "pass": true,
+      "detail": {
+        "commitBlock": 18
+      }
+    },
+    {
+      "name": "reveal inside the window: target < revealBlock <= target + 250",
+      "pass": true,
+      "detail": {
+        "revealBlock": 92,
+        "blocksAfterTarget": 4
+      }
+    },
+    {
+      "name": "commitment == keccak256(secret) (secret read from the reveal transaction calldata)",
+      "pass": true,
+      "detail": {
+        "secret": "0x5c1f5d34f59109b6f89b0e290c8de2ff4963091395c23ffc858b647a2f6cff17"
+      }
+    },
+    {
+      "name": "seed (event) == keccak256(abi.encode(secret, eth_getBlockByNumber(target).hash)) recomputed off-chain",
+      "pass": true,
+      "detail": {
+        "target": 88,
+        "targetHash": "0xf0717e7049d5e3153369101b65a1453345e30f69c3def115e8d304eb66d04f32",
+        "seed": "0x2133aac1fccbe30a31ff3c20216d4c84f756b70d0fb20ed94d63f82a9546281a"
+      }
+    },
+    {
+      "name": "3 WinnerDrawn events == off-chain replica of the partial Fisher-Yates draw",
+      "pass": true,
+      "detail": {
+        "winners": [
+          "0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8",
+          "0x9e284997710cEB494708F37D546C5B7fA4c056Af",
+          "0xc32cE696654f10f1B3F1380959A13c6B3F287489"
+        ],
+        "drawBlocks": [
+          93,
+          93,
+          94
+        ]
+      }
+    },
+    {
+      "name": "two draw batches (2 + 1 winners in different blocks), LotteryDrawn(3 winners, pot 60 Suren)",
+      "pass": true,
+      "detail": {
+        "drawBlocks": [
+          93,
+          93,
+          94
+        ],
+        "doneBlock": 94
+      }
+    },
+    {
+      "name": "no WinnerEntryFailed",
+      "pass": true
+    },
+    {
+      "name": "lottery #1 phase Drawn (4), pot 0, contract balance 0",
+      "pass": true
+    },
+    {
+      "name": "each winner: Registry Probation (1), zero collateral, holds a seat NFT",
+      "pass": true,
+      "detail": [
+        [
+          1,
+          "0",
+          "2"
+        ],
+        [
+          1,
+          "0",
+          "3"
+        ],
+        [
+          1,
+          "0",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "interactive run stdout: all recorded check lines are PASS (41 lines: identities, negatives, tickets, pot, commit, close, reveal, draw, DAO pot transfer, winners entered, seats)",
+      "pass": true,
+      "detail": {
+        "lines": 41
+      }
+    }
+  ],
+  "timeline": {
+    "startBlock": 4,
+    "ticketBlocks": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "commitBlock": 18,
+    "closeBlock": 78,
+    "targetBlock": 88,
+    "revealBlock": 92,
+    "drawBlocks": [
+      93,
+      93,
+      94
+    ],
+    "blockSecondsStartToDrawn": 180,
+    "blockSecondsCloseToReveal": 28
+  },
+  "participants": [
+    "0x9e284997710cEB494708F37D546C5B7fA4c056Af",
+    "0xc32cE696654f10f1B3F1380959A13c6B3F287489",
+    "0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8",
+    "0x6EeBE186825004F0318Ee99453cc2fd6ea598306",
+    "0x78de377f0c106DAEDAFae06E7054BEb1B57531f3",
+    "0x98476A42ce5D896b3CCdb77442822b573C02b267"
+  ],
+  "winners": [
+    "0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8",
+    "0x9e284997710cEB494708F37D546C5B7fA4c056Af",
+    "0xc32cE696654f10f1B3F1380959A13c6B3F287489"
+  ],
+  "seed": "0x2133aac1fccbe30a31ff3c20216d4c84f756b70d0fb20ed94d63f82a9546281a",
+  "targetBlock": {
+    "number": 88,
+    "hash": "0xf0717e7049d5e3153369101b65a1453345e30f69c3def115e8d304eb66d04f32"
+  },
+  "note": "built post-hoc from chain data; the live interactive checks (negatives, pot->DAO transfer, ids) are the PASS lines of logs/_scriptout/bg10.out; blockhash behaviour: BG-10-BH",
+  "interactiveStdoutPassLines": 41
+}

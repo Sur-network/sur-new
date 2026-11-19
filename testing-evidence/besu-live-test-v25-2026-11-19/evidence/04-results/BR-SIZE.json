@@ -1,0 +1,53 @@
+{
+  "id": "BR-SIZE",
+  "writtenAtUTC": "2026-11-19T14:18:09.972Z",
+  "verdict": "PASS",
+  "summary": "FoundationDAO (28,365 bytes) and ValidatorsRegistry (34,605 bytes) exceed the 24,576-byte EIP-170 CREATE limit; injected via genesis alloc they answer eth_getCode, eth_call and state-changing transactions on Besu (Registry: getValidators/activations/swaps/removals in BG-02..BG-07; DAO: proposals/votes/execution in BG-09, BG-10).",
+  "derivedFrom": [
+    "BG-01.json",
+    "BG-09.json",
+    "BG-02.json"
+  ],
+  "checks": [
+    {
+      "name": "eth_getCode DAO/Registry > 24576 bytes (injected via alloc)",
+      "pass": true,
+      "detail": {
+        "DAO": 28365.5,
+        "REG": 34605.5,
+        "BOARD": 20140.5,
+        "DIST": 20671.5,
+        "NFT": 5745.5,
+        "LOTTERY": 8199.5
+      }
+    },
+    {
+      "name": "BG-SIZE: the 28,365-byte FoundationDAO (> 24,576) answers calls on Besu",
+      "pass": true,
+      "detail": {
+        "codeLen": 28365
+      }
+    },
+    {
+      "name": "getProposal: typed fields readable (pType Spend=0, addrB=buyer, numA=amount, text, votes 1/3, Pending)",
+      "pass": true,
+      "detail": {
+        "votes": 1,
+        "createdAt": 1795096015,
+        "expiresAt": 1797688015
+      }
+    },
+    {
+      "name": "3rd vote executes the Spend: status Executed (1), ProposalExecuted emitted",
+      "pass": true,
+      "detail": {
+        "executeBlock": 359,
+        "gasUsed": "109694"
+      }
+    },
+    {
+      "name": "n=7: contract list == QBFT set == 7 operator keys",
+      "pass": true
+    }
+  ]
+}

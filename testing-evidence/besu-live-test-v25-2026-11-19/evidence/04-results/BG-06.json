@@ -1,0 +1,424 @@
+{
+  "id": "BG-06",
+  "writtenAtUTC": "2026-11-19T13:59:09.300Z",
+  "verdict": "PASS",
+  "summary": "seat 7 moved owner7 -> buyer at block 649; suspended; accepted + resumed at block 672; op7 mines again from 675",
+  "checks": [
+    {
+      "name": "start: 7 validators, owner7 Active and owns seat 7, buyer owns no seat",
+      "pass": true
+    },
+    {
+      "name": "negative: toUnverified reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer identity not fully verified"
+    },
+    {
+      "name": "negative: toSeatHolder reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: recipient already holds a seat"
+    },
+    {
+      "name": "negative: notOwner reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: not owner nor approved"
+    },
+    {
+      "name": "negative: toOperatorKey reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer is an operator key"
+    },
+    {
+      "name": "the refused transfer of seat 4 did not change anything (owner4 still Active, owns seat 4)",
+      "pass": true
+    },
+    {
+      "name": "Transfer(owner7 -> buyer, 7) and SeatTransferred(statusAfter = SelfSuspended 6) emitted",
+      "pass": true,
+      "detail": {
+        "gasUsed": "422964",
+        "block": 649
+      }
+    },
+    {
+      "name": "ownerOf(7)==buyer, seatOf(buyer)==7, balanceOf seller 0",
+      "pass": true
+    },
+    {
+      "name": "validator record moved: buyer SelfSuspended (6), seller record deleted (None 0), periodStartedAt reset",
+      "pass": true,
+      "detail": {
+        "buyerStatus": 6
+      }
+    },
+    {
+      "name": "operator key moved with the seat: operatorOf(buyer)==op7, ownerOfOperator(op7)==buyer, seller has no operator",
+      "pass": true
+    },
+    {
+      "name": "isFounder + everActivated + activationSeq moved to the buyer",
+      "pass": true
+    },
+    {
+      "name": "seller treated as exited: permanentlyExited(owner7) == true, membershipEpoch +1",
+      "pass": true
+    },
+    {
+      "name": "seatTransferPending(buyer) == true with a 3-day informational deadline",
+      "pass": true
+    },
+    {
+      "name": "op7 left getValidators() at once (n=6); owner list has no seller and no buyer",
+      "pass": true
+    },
+    {
+      "name": "QBFT: op7 in the set at B-1, out at B; op7 never mines afterwards; no halt",
+      "pass": true,
+      "detail": {
+        "gaps": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "name": "tokenURI(7) readable",
+      "pass": true,
+      "detail": "https://besu-live-test.local/seat/7"
+    },
+    {
+      "name": "negative: requestResume before accepting the agreement reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: accept the seat transfer (sign the agreement) first"
+    },
+    {
+      "name": "negative: recordResume before request/accept reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: no resume request"
+    },
+    {
+      "name": "negative: recordActivation cannot be used (not in Probation)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not in probation"
+    },
+    {
+      "name": "negative: acceptSeatTransfer by someone without a pending transfer reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: no pending seat transfer"
+    },
+    {
+      "name": "acceptSeatTransfer: pending cleared, SeatTransferAccepted emitted; still not in the set",
+      "pass": true
+    },
+    {
+      "name": "recordResume: buyer Active (2) again, op7 back in getValidators() (n=7), owner list has buyer",
+      "pass": true,
+      "detail": {
+        "resumeBlock": 672
+      }
+    },
+    {
+      "name": "op7 (the same node n7, never restarted) mines again for the buyer; gaps <= 4 s",
+      "pass": true,
+      "detail": {
+        "firstBlockByOp7": 675
+      }
+    },
+    {
+      "name": "negative: seller can no longer transfer (not owner)",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: wrong owner"
+    }
+  ],
+  "negatives": {
+    "toUnverified": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer identity not fully verified",
+      "stage": "eth_call",
+      "minedHash": "0x865e0d664ec63a6a84fd862c98f8400d2fbd8350fa83140b337acea81bda3a26",
+      "minedStatus": 0
+    },
+    "toSeatHolder": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: recipient already holds a seat",
+      "stage": "eth_call",
+      "minedHash": "0x3366c1e86f472d215eaa12124b601c362baed6cc2588efff86b2cd1534eb149c",
+      "minedStatus": 0
+    },
+    "notOwner": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: not owner nor approved",
+      "stage": "eth_call",
+      "minedHash": "0x173e1fc3d922f604535dfc4245bca43f48fda95c697aee1361458315b1471f5d",
+      "minedStatus": 0
+    },
+    "toOperatorKey": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer is an operator key",
+      "stage": "eth_call",
+      "minedHash": "0x012e060a6a32ac825678fcf92e3744ce4558a47bb81b822fa57b5862ffa38faf",
+      "minedStatus": 0
+    }
+  },
+  "txs": {
+    "transfer": "0x768fd8de7a1a4fdc10075d6514ece77372861fd566e0e01c03959a8421686f2b",
+    "accept": "0x0bb49a7871ea6baa7105d56c9996776dfe270561f341b1fd85868ab6c0bcd18f",
+    "requestResume": "0x7b5847749e3570b0a8171031e50d16c2d5b23ccfa2616a69ac3eeff6d364565a",
+    "recordResume": "0xc32f5e95090c09f5c1d3d2e662ca080f7e6a8cfe0cec34fdd3b89b4bae5400f5"
+  },
+  "qbftSets": {
+    "648": [
+      "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+    ],
+    "649": [
+      "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xEa043c1D90615c89884F8138b48b100C7529e17a"
+    ]
+  },
+  "seriesAfterTransfer": [
+    {
+      "block": 646,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096655
+    },
+    {
+      "block": 647,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096657
+    },
+    {
+      "block": 648,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096659
+    },
+    {
+      "block": 649,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096661
+    },
+    {
+      "block": 650,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096663
+    },
+    {
+      "block": 651,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096665
+    },
+    {
+      "block": 652,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096667
+    },
+    {
+      "block": 653,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096669
+    },
+    {
+      "block": 654,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096671
+    },
+    {
+      "block": 655,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096673
+    },
+    {
+      "block": 656,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096675
+    },
+    {
+      "block": 657,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096677
+    },
+    {
+      "block": 658,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096679
+    },
+    {
+      "block": 659,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096681
+    },
+    {
+      "block": 660,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096683
+    },
+    {
+      "block": 661,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096685
+    },
+    {
+      "block": 662,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096687
+    },
+    {
+      "block": 663,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096689
+    },
+    {
+      "block": 664,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096691
+    },
+    {
+      "block": 665,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096693
+    }
+  ],
+  "seriesAfterResume": [
+    {
+      "block": 670,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096703
+    },
+    {
+      "block": 671,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096705
+    },
+    {
+      "block": 672,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096707
+    },
+    {
+      "block": 673,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096709
+    },
+    {
+      "block": 674,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096711
+    },
+    {
+      "block": 675,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096713
+    },
+    {
+      "block": 676,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096715
+    },
+    {
+      "block": 677,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096717
+    },
+    {
+      "block": 678,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096719
+    },
+    {
+      "block": 679,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096721
+    },
+    {
+      "block": 680,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096723
+    },
+    {
+      "block": 681,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096725
+    },
+    {
+      "block": 682,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096727
+    },
+    {
+      "block": 683,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096729
+    },
+    {
+      "block": 684,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096731
+    },
+    {
+      "block": 685,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096733
+    },
+    {
+      "block": 686,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096735
+    },
+    {
+      "block": 687,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096737
+    },
+    {
+      "block": 688,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096739
+    },
+    {
+      "block": 689,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096741
+    },
+    {
+      "block": 690,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096743
+    },
+    {
+      "block": 691,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096745
+    },
+    {
+      "block": 692,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096747
+    }
+  ]
+}

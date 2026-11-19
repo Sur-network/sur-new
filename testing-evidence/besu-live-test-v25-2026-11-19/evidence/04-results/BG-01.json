@@ -1,0 +1,183 @@
+{
+  "id": "BG-01",
+  "writtenAtUTC": "2026-11-19T13:38:01.900Z",
+  "verdict": "PASS",
+  "summary": "head=114, validators=[operator1]",
+  "besu": "besu/v26.9.0/linux-x86_64/openjdk-java-25",
+  "chainId": "0x67c41",
+  "checks": [
+    {
+      "name": "blocks are produced (head advanced by >=5)",
+      "pass": true,
+      "detail": {
+        "h0": 109,
+        "h1": 114
+      }
+    },
+    {
+      "name": "block 1 timestamp after genesis",
+      "pass": true
+    },
+    {
+      "name": "Registry.getValidators() == [operator1]",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+      ]
+    },
+    {
+      "name": "operator key differs from owner key (owner1 not in the list)",
+      "pass": true,
+      "detail": {
+        "op1": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "owner1": "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC"
+      }
+    },
+    {
+      "name": "Registry.getActiveOwners() == [owner1]",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC"
+      ]
+    },
+    {
+      "name": "qbft_getValidatorsByBlockNumber(latest) == [operator1]",
+      "pass": true,
+      "detail": [
+        "0xdc318cb1d92b63320f2c0fb8761ff3640c484fa0"
+      ]
+    },
+    {
+      "name": "qbft validators at block 1 == [operator1]",
+      "pass": true,
+      "detail": [
+        "0xdc318cb1d92b63320f2c0fb8761ff3640c484fa0"
+      ]
+    },
+    {
+      "name": "miner of last 5 blocks is operator1",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+      ]
+    },
+    {
+      "name": "only owner1 Active (2) at genesis, owners 2..7 Probation (1)",
+      "pass": true,
+      "detail": {
+        "owner1": 2,
+        "owner2": 1,
+        "owner3": 1,
+        "owner4": 1,
+        "owner5": 1,
+        "owner6": 1,
+        "owner7": 1
+      }
+    },
+    {
+      "name": "7 founder seats minted",
+      "pass": true,
+      "detail": "7"
+    },
+    {
+      "name": "seat ids 1..7 owned by owner1..owner7 in order",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+        "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+        "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E"
+      ]
+    },
+    {
+      "name": "Registry.verifier == test verifier",
+      "pass": true
+    },
+    {
+      "name": "Distributor.distributionOracle == test oracle",
+      "pass": true
+    },
+    {
+      "name": "IdentityRegistry.identityOracle == test oracle",
+      "pass": true
+    },
+    {
+      "name": "eth_getCode DAO/Registry > 24576 bytes (injected via alloc)",
+      "pass": true,
+      "detail": {
+        "DAO": 28365.5,
+        "REG": 34605.5,
+        "BOARD": 20140.5,
+        "DIST": 20671.5,
+        "NFT": 5745.5,
+        "LOTTERY": 8199.5
+      }
+    },
+    {
+      "name": "FoundationDAO balance == 20,000,000 Suren at genesis block (+ no inflow)",
+      "pass": true,
+      "detail": "20000000000000000000000000"
+    },
+    {
+      "name": "committed-seal signers recovered cryptographically and all == operator1",
+      "pass": true,
+      "detail": [
+        {
+          "block": 113,
+          "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "headerValidators": [],
+          "sealCount": 1,
+          "round": "0x",
+          "digestSuffix": "(none)",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+          ]
+        },
+        {
+          "block": 112,
+          "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "headerValidators": [],
+          "sealCount": 1,
+          "round": "0x",
+          "digestSuffix": "(none)",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+          ]
+        },
+        {
+          "block": 111,
+          "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "headerValidators": [],
+          "sealCount": 1,
+          "round": "0x",
+          "digestSuffix": "(none)",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+          ]
+        }
+      ]
+    }
+  ],
+  "qbftValidatorsLatest": [
+    "0xdc318cb1d92b63320f2c0fb8761ff3640c484fa0"
+  ],
+  "signerMetrics": [
+    {
+      "address": "0xdc318cb1d92b63320f2c0fb8761ff3640c484fa0",
+      "proposedBlockCount": "0x64",
+      "lastProposedBlockNumber": "0x71"
+    }
+  ],
+  "balances": {
+    "dao": "20000000000000000000000000",
+    "vault": "8100000000000000000000",
+    "dist": "228000000000000000000"
+  }
+}

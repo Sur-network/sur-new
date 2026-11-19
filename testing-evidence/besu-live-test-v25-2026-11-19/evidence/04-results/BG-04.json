@@ -1,0 +1,478 @@
+{
+  "id": "BG-04",
+  "writtenAtUTC": "2026-11-19T13:57:31.643Z",
+  "verdict": "PASS",
+  "summary": "selfSuspend at block 596, out of the QBFT set from block 596; recordResume at block 620, mines again from block 624",
+  "checks": [
+    {
+      "name": "start: 7 validators",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ]
+    },
+    {
+      "name": "negative: boardMember reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: a board member cannot suspend voluntarily"
+    },
+    {
+      "name": "negative: notActive reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not active"
+    },
+    {
+      "name": "negative: resumeNotSuspended reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not self-suspended"
+    },
+    {
+      "name": "negative: verifierResumeActive reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not self-suspended"
+    },
+    {
+      "name": "SelfSuspendedEvent emitted",
+      "pass": true,
+      "detail": {
+        "gasUsed": "110313"
+      }
+    },
+    {
+      "name": "owner6 status SelfSuspended (6); getValidators() drops op6 at once; getActiveOwners drops owner6",
+      "pass": true
+    },
+    {
+      "name": "isValidator(owner6) == false; collateral untouched (0 for a founder)",
+      "pass": true
+    },
+    {
+      "name": "QBFT set at B-1 has op6, at B it does not (n=6)",
+      "pass": true,
+      "detail": {
+        "595": [
+          "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+        ],
+        "596": [
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+        ],
+        "597": [
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+        ]
+      }
+    },
+    {
+      "name": "op6 never mines after the suspension block; blocks keep coming (gaps <= 4 s)",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "node n6 keeps running as a non-validator (in sync)",
+      "pass": true
+    },
+    {
+      "name": "negative: recordResume before requestResume reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: no resume request"
+    },
+    {
+      "name": "requestResume: resumeRequested(owner6) == true; still out of the set",
+      "pass": true
+    },
+    {
+      "name": "negative: the owner cannot resume itself (only the Verifier)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: caller is not the verifier"
+    },
+    {
+      "name": "ResumeRecorded + ValidatorActivated events; status Active (2) again with NO probation",
+      "pass": true,
+      "detail": {
+        "gasUsed": "247590"
+      }
+    },
+    {
+      "name": "op6 back in getValidators() (n=7)",
+      "pass": true
+    },
+    {
+      "name": "op6 mines again (no restart of the node needed); gaps <= 4 s",
+      "pass": true,
+      "detail": {
+        "firstBlockByOp6": 624,
+        "resumeBlock": 620
+      }
+    }
+  ],
+  "negatives": {
+    "boardMember": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: a board member cannot suspend voluntarily",
+      "stage": "eth_call",
+      "minedHash": "0x7e9ea7854f125206d78b40641a3e516e0b4dd10a555018d005ff0f751e8eae37",
+      "minedStatus": 0
+    },
+    "notActive": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: not active",
+      "stage": "eth_call",
+      "minedHash": "0xdb7cc8b6f6842d99f6e0f89f84820f57ed9f3b4181eb2db4454a127996bbecc3",
+      "minedStatus": 0
+    },
+    "resumeNotSuspended": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: not self-suspended",
+      "stage": "eth_call",
+      "minedHash": "0xbead911d35815ee1770ae18c5646711640f139b550fdfef2d4d8a4cea61ba2d7",
+      "minedStatus": 0
+    },
+    "verifierResumeActive": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: not self-suspended",
+      "stage": "eth_call",
+      "minedHash": "0xe16f0cfa147cf4712938161e3fd57069a3327008b80dbf3e9599f02b308ae743",
+      "minedStatus": 0
+    }
+  },
+  "suspendTx": "0xbdf9eee3d473d6742e26e65bfe644ea2bac543e43dd9b56f50692cf7ba1fb4ad",
+  "requestResumeTx": "0x3c1d49617f69edda6f50be939e84c98f52d09a0ce9815046d97db169548e3ea1",
+  "recordResumeTx": "0x440547f784879811b1f311697c09027cc2d5165838bfedd091be99354c476974",
+  "qbftSets": {
+    "595": [
+      "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+    ],
+    "596": [
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+    ],
+    "597": [
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+    ]
+  },
+  "seriesDuringSuspension": [
+    {
+      "block": 592,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096547
+    },
+    {
+      "block": 593,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096549
+    },
+    {
+      "block": 594,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096551
+    },
+    {
+      "block": 595,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096553
+    },
+    {
+      "block": 596,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096555
+    },
+    {
+      "block": 597,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096557
+    },
+    {
+      "block": 598,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096559
+    },
+    {
+      "block": 599,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096561
+    },
+    {
+      "block": 600,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096563
+    },
+    {
+      "block": 601,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096565
+    },
+    {
+      "block": 602,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096567
+    },
+    {
+      "block": 603,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096569
+    },
+    {
+      "block": 604,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096571
+    },
+    {
+      "block": 605,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096573
+    },
+    {
+      "block": 606,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096575
+    },
+    {
+      "block": 607,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096577
+    },
+    {
+      "block": 608,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096579
+    },
+    {
+      "block": 609,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096581
+    },
+    {
+      "block": 610,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096583
+    },
+    {
+      "block": 611,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096585
+    },
+    {
+      "block": 612,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096587
+    },
+    {
+      "block": 613,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096589
+    },
+    {
+      "block": 614,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096591
+    },
+    {
+      "block": 615,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096593
+    },
+    {
+      "block": 616,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096595
+    }
+  ],
+  "seriesAfterResume": [
+    {
+      "block": 618,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096599
+    },
+    {
+      "block": 619,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096601
+    },
+    {
+      "block": 620,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096603
+    },
+    {
+      "block": 621,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096605
+    },
+    {
+      "block": 622,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096607
+    },
+    {
+      "block": 623,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096609
+    },
+    {
+      "block": 624,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096611
+    },
+    {
+      "block": 625,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096613
+    },
+    {
+      "block": 626,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096615
+    },
+    {
+      "block": 627,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096617
+    },
+    {
+      "block": 628,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096619
+    },
+    {
+      "block": 629,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096621
+    },
+    {
+      "block": 630,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096623
+    },
+    {
+      "block": 631,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096625
+    },
+    {
+      "block": 632,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096627
+    },
+    {
+      "block": 633,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096629
+    },
+    {
+      "block": 634,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096631
+    },
+    {
+      "block": 635,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096633
+    },
+    {
+      "block": 636,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096635
+    },
+    {
+      "block": 637,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096637
+    },
+    {
+      "block": 638,
+      "miner": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "ts": 1795096639
+    },
+    {
+      "block": 639,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795096641
+    },
+    {
+      "block": 640,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795096643
+    },
+    {
+      "block": 641,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795096645
+    },
+    {
+      "block": 642,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096647
+    },
+    {
+      "block": 643,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795096649
+    },
+    {
+      "block": 644,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795096651
+    }
+  ]
+}

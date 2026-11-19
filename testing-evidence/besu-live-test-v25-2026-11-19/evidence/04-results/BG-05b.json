@@ -1,0 +1,247 @@
+{
+  "id": "BG-05b",
+  "writtenAtUTC": "2026-11-19T14:03:10.089Z",
+  "verdict": "PASS",
+  "summary": "paid entrant cycle on Net-T with short probation/cooldown overlay: entry, activation in the QBFT set, exit, collateral back",
+  "checks": [
+    {
+      "name": "overlay visible on chain: probationPeriod 120, exitCooldown 60, entryWindowSeconds 30, recoveryPeriod 60",
+      "pass": true
+    },
+    {
+      "name": "constants are the real ones: MASS_DEMOTION_WINDOW 3600, RECOVERY_COLLATERAL_LOCK 90 days",
+      "pass": true
+    },
+    {
+      "name": "start: single validator op1 (genesis)",
+      "pass": true
+    },
+    {
+      "name": "cand fully verified",
+      "pass": true
+    },
+    {
+      "name": "node nC running and synced (non-validator)",
+      "pass": true,
+      "detail": {
+        "head": 7,
+        "node": 7
+      }
+    },
+    {
+      "name": "requestMembership: Probation, collateral 500,000 in Registry, seat #2 minted",
+      "pass": true,
+      "detail": {
+        "block": 8,
+        "gasUsed": "369472"
+      }
+    },
+    {
+      "name": "negative: recordActivation inside the 120 s probation reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: probation period not elapsed"
+    },
+    {
+      "name": "recordActivation after the probation period: status Active (2); ValidatorActivated emitted",
+      "pass": true,
+      "detail": {
+        "block": 70,
+        "gasUsed": "350921",
+        "secondsAfterEntry": 124
+      }
+    },
+    {
+      "name": "getValidators() == [op1, opC] (operator key of the paid entrant, not its owner key)",
+      "pass": true
+    },
+    {
+      "name": "QBFT set grows 1 -> 2 at the activation block; opC mines; blocks continue at 2 s",
+      "pass": true,
+      "detail": {
+        "firstBlockByOpC": 71,
+        "gaps": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "name": "negative: withdrawStake while Active reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not exiting"
+    },
+    {
+      "name": "requestExit: Exiting (4), ExitRequested(cooldownEnd = +60 s), leaves getValidators(), seat burned",
+      "pass": true,
+      "detail": {
+        "block": 86
+      }
+    },
+    {
+      "name": "QBFT set back to [op1] from the exit block; chain continues",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+      ]
+    },
+    {
+      "name": "negative: withdrawStake inside the 60 s cooldown reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: exit cooldown not elapsed"
+    },
+    {
+      "name": "withdrawStake returns the full 500,000 Suren collateral (net of gas); Registry balance -500,000",
+      "pass": true,
+      "detail": {
+        "gasUsed": "67712"
+      }
+    },
+    {
+      "name": "record deleted (None 0); permanentlyExited true; everActivated stays true",
+      "pass": true
+    },
+    {
+      "name": "negative: the same address can never rejoin (permanent exit) - or cannot afford: ValidatorsRegistry: this address has exited before and may not rejoin",
+      "pass": true,
+      "detail": {
+        "reverted": true,
+        "reason": "ValidatorsRegistry: this address has exited before and may not rejoin",
+        "stage": "eth_call",
+        "minedHash": "0x5bee49ace0af365fb8df9bd47eb215804a28b1a83b7263151f2df274842e3b2c",
+        "minedStatus": 0
+      }
+    }
+  ],
+  "txs": {
+    "identity": [
+      "0x4997c5e2671c62aafcc65d12125d9cb2a9e5aaead7d173603085b3e9121d19c6",
+      "0xb39310d7b3d14001a7c2efb61db661823e6958b9fbebeac88735f9aa956a2078",
+      "0x191b07ec7c56b4d2372176af5f49bff88c84c9ddb4d4be449933ebf8ce3f978e",
+      "0x4038dc02400f34b4cc845d3e7045bafa7fb7c773539ab110b1d19cdb8c261098",
+      "0x6cf6da519886e6bd3991c87f4f6209fdc8e063189a2c1e236f1d6d823f22f679",
+      "0x7575fe7b501752cd3cae6446dcc609e95b450fb1234cdbaf680900d07b29f474"
+    ],
+    "entry": "0x2683d308887900d78cc2c40abcdbce0378e1e0dfb9aab83e342ddde9e9230cbe",
+    "activation": "0xfaf1788ed2eae2b54c927f1fa3b11fa929ad7b23e32afa18c2608c7ef8e24282",
+    "exit": "0x4d58914d771d0914f96dabe590bde5fdad09a96afce20b7fe278e6dae5fe8eb3",
+    "withdraw": "0x75892c469990feae9e3e15c80aa56a23e377e776911df9a7cc1c62df4d103ffe"
+  },
+  "activationBlock": 70,
+  "qbftSets": {
+    "69": [
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+    ],
+    "70": [
+      "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+    ]
+  },
+  "series": [
+    {
+      "block": 67,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096886
+    },
+    {
+      "block": 68,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096888
+    },
+    {
+      "block": 69,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096890
+    },
+    {
+      "block": 70,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096892
+    },
+    {
+      "block": 71,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096894
+    },
+    {
+      "block": 72,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096896
+    },
+    {
+      "block": 73,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096898
+    },
+    {
+      "block": 74,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096900
+    },
+    {
+      "block": 75,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096902
+    },
+    {
+      "block": 76,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096904
+    },
+    {
+      "block": 77,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096906
+    },
+    {
+      "block": 78,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096908
+    },
+    {
+      "block": 79,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096910
+    },
+    {
+      "block": 80,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096912
+    },
+    {
+      "block": 81,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096914
+    },
+    {
+      "block": 82,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096916
+    },
+    {
+      "block": 83,
+      "miner": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+      "ts": 1795096918
+    },
+    {
+      "block": 84,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795096920
+    }
+  ],
+  "overlayNote": "ValidatorsRegistry.probationPeriod/exitCooldown/entryWindowSeconds/recoveryPeriod overwritten in genesis storage (TEST-ONLY); BG-05 (Net-A) used the real 7-day values"
+}

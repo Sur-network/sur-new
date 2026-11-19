@@ -1,0 +1,95 @@
+  PASS  lot1 fully verified
+  PASS  lot2 fully verified
+  PASS  lot3 fully verified
+  PASS  lot4 fully verified
+  PASS  lot5 fully verified
+  PASS  lot6 fully verified
+  PASS  outsider (not registered) is not fully verified
+  PASS  StartLottery proposal: proposer's vote counts automatically (1 vote), required = 3  :: {"id":1,"closeTime":1795096692,"paramsHash":"0xfff9c8ab23f5ac96bb3d5dbc2fb3c852c6d3ab284989a85c0cc3b760c1dbc6f5","hashMatchesStored":true,"votesAfterPropose":1,"votesAfterTwo":2,"statusAfterTwo":0,"votesAfterThree":3,"statusAfterThree":1,"requiredVotes":3,"proposeBlock":2,"executeBlock":4,"txs":{"propose":"0x80d97f105dbe11ae61eab6f5a0deab964119f1e26967823c14477f906c77584c","vote2":"0x33445f312b57c8e7ebdf7cbf04c66f332336cf752ac8b0655426e9860ea61848","vote3":"0x770d1d6d2e63275a3792f124676b6b457fca9fb1951c65d01806406b72aa81a8"}}
+  PASS  after 2 votes still Pending (0), after 3rd vote Executed (1)  :: {"id":1,"closeTime":1795096692,"paramsHash":"0xfff9c8ab23f5ac96bb3d5dbc2fb3c852c6d3ab284989a85c0cc3b760c1dbc6f5","hashMatchesStored":true,"votesAfterPropose":1,"votesAfterTwo":2,"statusAfterTwo":0,"votesAfterThree":3,"statusAfterThree":1,"requiredVotes":3,"proposeBlock":2,"executeBlock":4,"txs":{"propose":"0x80d97f105dbe11ae61eab6f5a0deab964119f1e26967823c14477f906c77584c","vote2":"0x33445f312b57c8e7ebdf7cbf04c66f332336cf752ac8b0655426e9860ea61848","vote3":"0x770d1d6d2e63275a3792f124676b6b457fca9fb1951c65d01806406b72aa81a8"}}
+  PASS  vote(id, paramsHash): hash from computeParamsHash == stored paramsHash
+  PASS  lottery #1 Open (phase 1) with the proposal's parameters  :: {"phase":1,"closeTime":1795096692}
+  PASS  lotteryCount == 1
+  PASS  negative: ceoBuy reverts  :: ValidatorLottery: identity not fully verified
+  PASS  negative: outsiderBuy reverts  :: ValidatorLottery: identity not fully verified
+  PASS  negative: wrongPrice reverts  :: ValidatorLottery: wrong ticket price
+  PASS  negative: closeEarly reverts  :: ValidatorLottery: cannot close now
+  PASS  negative: commitNotCeo reverts  :: ValidatorLottery: only the CEO
+  PASS  negative: drawEarly reverts  :: ValidatorLottery: not ready to draw
+  PASS  negative: second ticket from the same address reverts  :: ValidatorLottery: one ticket per address
+  PASS  6 participants recorded in order of purchase  :: ["0x9e284997710cEB494708F37D546C5B7fA4c056Af","0xc32cE696654f10f1B3F1380959A13c6B3F287489","0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0x6EeBE186825004F0318Ee99453cc2fd6ea598306","0x78de377f0c106DAEDAFae06E7054BEb1B57531f3","0x98476A42ce5D896b3CCdb77442822b573C02b267"]
+  PASS  pot == 6 x 10 Suren; lottery contract balance == pot  :: {"pot":"60000000000000000000","bal":"60000000000000000000"}
+  PASS  CEO commitment stored; a second commitment reverts  :: ValidatorLottery: commitment already set or empty
+  PASS  negative: ticket after closeTime reverts  :: ValidatorLottery: registration is not open
+  PASS  closeLottery: targetBlock == closeBlock + 10 (TARGET_DELAY)  :: {"closeBlock":78,"target":88}
+  PASS  phase Closed (2)
+  PASS  negative: reveal before the target block is mined reverts  :: ValidatorLottery: target block not mined yet
+  PASS  negative: wrong secret reverts  :: ValidatorLottery: secret does not match the commitment
+  PASS  negative: reveal by a non-CEO reverts  :: ValidatorLottery: only the CEO
+  PASS  seed == keccak256(abi.encode(secret, blockhash(target))) recomputed with eth_getBlockByNumber(target).hash  :: {"seedOnChain":"0x2133aac1fccbe30a31ff3c20216d4c84f756b70d0fb20ed94d63f82a9546281a","seedLocal":"0x2133aac1fccbe30a31ff3c20216d4c84f756b70d0fb20ed94d63f82a9546281a","targetHash":"0xf0717e7049d5e3153369101b65a1453345e30f69c3def115e8d304eb66d04f32"}
+  PASS  reveal landed inside the window (target < revealBlock <= target+250)  :: {"revealBlock":92,"target":88,"blocksAfterTarget":4}
+  PASS  after drawBatch(2): 2 winners, phase still Revealed (3)  :: ["0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0x9e284997710cEB494708F37D546C5B7fA4c056Af"]
+  PASS  3 winners == off-chain replica of the Fisher-Yates draw  :: {"winners":["0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0x9e284997710cEB494708F37D546C5B7fA4c056Af","0xc32cE696654f10f1B3F1380959A13c6B3F287489"],"expected":["0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0x9e284997710cEB494708F37D546C5B7fA4c056Af","0xc32cE696654f10f1B3F1380959A13c6B3F287489"]}
+  PASS  winners are distinct participants
+  PASS  phase Drawn (4), pot cleared, lottery balance 0
+  PASS  pot (60 Suren) transferred to FoundationDAO  :: {"diff":"60000000000000000000"}
+  PASS  every winner registered in the Registry as Probation (1) with no collateral  :: [1,1,1]
+  PASS  winners hold zero collateral  :: ["0","0","0"]
+  PASS  every winner holds a ValidatorSeatNFT seat (ids 2,3,4), totalMinted == 4  :: ["2","3","4"]
+  PASS  no WinnerEntryFailed
+  PASS  negative: drawBatch after Drawn reverts  :: ValidatorLottery: not ready to draw
+  PASS  probe contract deployed on Besu (contract creation works)  :: {"probe":"0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5","deployBlock":96}
+Error: transaction was replaced (cancelled=true, reason="replaced", replacement={ "_type": "TransactionResponse", "accessList": null, "blobVersionedHashes": null, "blockHash": "0xf3cc068dfba8e7b5f68153c425db8aebd28bd81d0322607a0c946997f4b14ff1", "blockNumber": 301, "chainId": "425026", "data": "0x0000000000000000000000000000000000000000000000000000000000000028", "from": "0x4b819bb5f43612a3D97930DA63702ea889E139eE", "gasLimit": "100000", "gasPrice": "100000000000000", "hash": "0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45", "index": 0, "maxFeePerBlobGas": null, "maxFeePerGas": null, "maxPriorityFeePerGas": null, "nonce": 8, "signature": { "_type": "signature", "networkV": "850087", "r": "0x07f042ee3b8032c32cf0ac6fbc348f372bcb5b3df9542eb01cb098cf5c814b87", "s": "0x3900d10df4a723a6d079a204a3f7191080fab70f893d57e4076dcba2eae9db21", "v": 27 }, "to": "0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5", "type": 0, "value": "0" }, hash="0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45", receipt={ "_type": "TransactionReceipt", "blobGasPrice": null, "blobGasUsed": null, "blockHash": "0xf3cc068dfba8e7b5f68153c425db8aebd28bd81d0322607a0c946997f4b14ff1", "blockNumber": 301, "contractAddress": null, "cumulativeGasUsed": "22079", "from": "0x4b819bb5f43612a3D97930DA63702ea889E139eE", "gasPrice": "100000000000000", "gasUsed": "22079", "hash": "0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45", "index": 0, "logs": [ { "_type": "log", "address": "0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5", "blockHash": "0xf3cc068dfba8e7b5f68153c425db8aebd28bd81d0322607a0c946997f4b14ff1", "blockNumber": 301, "data": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012d", "index": 0, "removed": null, "topics": [  ], "transactionHash": "0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45", "transactionIndex": 0 } ], "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000", "root": null, "status": 1, "to": "0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5" }, code=TRANSACTION_REPLACED, version=6.17.0)
+    at makeError (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\utils\errors.js:137:21)
+    at assert (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\utils\errors.js:157:15)
+    at checkReplacement (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\providers\provider.js:1126:47)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async JsonRpcProvider.replaceListener (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\providers\provider.js:1203:25) {
+  code: 'TRANSACTION_REPLACED',
+  cancelled: true,
+  reason: 'replaced',
+  replacement: TransactionResponse {
+    provider: JsonRpcProvider {},
+    blockNumber: 301,
+    blockHash: '0xf3cc068dfba8e7b5f68153c425db8aebd28bd81d0322607a0c946997f4b14ff1',
+    index: 0,
+    hash: '0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45',
+    type: 0,
+    to: '0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5',
+    from: '0x4b819bb5f43612a3D97930DA63702ea889E139eE',
+    nonce: 8,
+    gasLimit: 100000n,
+    gasPrice: 100000000000000n,
+    maxPriorityFeePerGas: null,
+    maxFeePerGas: null,
+    maxFeePerBlobGas: null,
+    data: '0x0000000000000000000000000000000000000000000000000000000000000028',
+    value: 0n,
+    chainId: 425026n,
+    signature: Signature { r: 0x07f042ee3b8032c32cf0ac6fbc348f372bcb5b3df9542eb01cb098cf5c814b87, s: 0x3900d10df4a723a6d079a204a3f7191080fab70f893d57e4076dcba2eae9db21, v: 27 },
+    accessList: null,
+    blobVersionedHashes: null,
+    authorizationList: null
+  },
+  hash: '0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45',
+  receipt: TransactionReceipt {
+    provider: JsonRpcProvider {},
+    to: '0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5',
+    from: '0x4b819bb5f43612a3D97930DA63702ea889E139eE',
+    contractAddress: null,
+    hash: '0x71c7079696d06d4487791b55f579688abfe9263831017b89a984232336bbfd45',
+    index: 0,
+    blockHash: '0xf3cc068dfba8e7b5f68153c425db8aebd28bd81d0322607a0c946997f4b14ff1',
+    blockNumber: 301,
+    logsBloom: '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000',
+    gasUsed: 22079n,
+    blobGasUsed: null,
+    cumulativeGasUsed: 22079n,
+    gasPrice: 100000000000000n,
+    blobGasPrice: null,
+    type: 0,
+    status: 1,
+    root: undefined
+  },
+  shortMessage: 'transaction was replaced'
+}

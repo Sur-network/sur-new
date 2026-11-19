@@ -1,0 +1,317 @@
+{
+  "id": "BG-08a",
+  "writtenAtUTC": "2026-11-19T14:06:23.317Z",
+  "verdict": "PASS",
+  "summary": "control (actual == approved); range [1,816], 8 validators, settled in block 836",
+  "checks": [
+    {
+      "name": "attribution: 816 blocks in [1,816] mapped to 8 owners; sum == range size",
+      "pass": true,
+      "detail": {
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4": "85",
+        "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E": "58",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343": "97",
+        "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71": "62",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0": "93",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1": "107",
+        "0xbA35499B77950fD5f85243Ab75AdA8e8556AC204": "23",
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC": "291"
+      }
+    },
+    {
+      "name": "maxRewardsForRange(1,816) == 816 x 2 Suren (initial approved rate)",
+      "pass": true,
+      "detail": "1632000000000000000000"
+    },
+    {
+      "name": "equation closed before sending: outflow == reported + effective fees == payouts + foundation + treasury + fee burn + excess burn",
+      "pass": true,
+      "detail": {
+        "reported": "1632000000000000000000",
+        "feeEff": "21221523200000000000000"
+      }
+    },
+    {
+      "name": "distributeRewards mined (block 836, gas 1666193) with 8 validators",
+      "pass": true,
+      "detail": {
+        "tx": "0xf4f148ef5591123e301ad55fac0e39ef7f0c2fce1f88e25757900936f289be18"
+      }
+    },
+    {
+      "name": "actual == approved: no RewardExcessBurned event, totalExcessBurned == 0",
+      "pass": true
+    },
+    {
+      "name": "EpochRangeSettled(1, 1, N), RewardsDistributed(epoch 1, totalRewards == APPROVED amount, totalFees, treasury incl. dust, blocks, validators)",
+      "pass": true,
+      "detail": {
+        "totalRewards": "1632000000000000000000",
+        "treasury": "571200000000000000005"
+      }
+    },
+    {
+      "name": "FoundationFunded == 15% of the APPROVED rewards; FeesBurned == 30% of ordinary fees (membership fees exempt)",
+      "pass": true,
+      "detail": {
+        "foundation": "244800000000000000000",
+        "feeBurn": "366456960000000000000"
+      }
+    },
+    {
+      "name": "validator 0x08C756...: 85 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+        "blocks": "85",
+        "expectedReward": "85000000000000000000",
+        "expectedFee": "2172402733333333333333",
+        "eventPayout": "2257402733333333333333",
+        "balanceDelta": "2257402733333333333333",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0x20a3b4...: 58 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E",
+        "blocks": "58",
+        "expectedReward": "58000000000000000000",
+        "expectedFee": "1482345394509803921568",
+        "eventPayout": "1540345394509803921568",
+        "balanceDelta": "1540345394509803921568",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0x2175FA...: 97 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "blocks": "97",
+        "expectedReward": "97000000000000000000",
+        "expectedFee": "2479094883921568627450",
+        "eventPayout": "2576094883921568627450",
+        "balanceDelta": "2576094883921568627450",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0x2D58CC...: 62 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+        "blocks": "62",
+        "expectedReward": "62000000000000000000",
+        "expectedFee": "1584576111372549019607",
+        "eventPayout": "1646576111372549019607",
+        "balanceDelta": "1646576111372549019607",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0x5a8885...: 93 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "blocks": "93",
+        "expectedReward": "93000000000000000000",
+        "expectedFee": "2376864167058823529411",
+        "eventPayout": "2469864167058823529411",
+        "balanceDelta": "2469864167058823529411",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0x62f7C0...: 107 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "blocks": "107",
+        "expectedReward": "107000000000000000000",
+        "expectedFee": "2734671676078431372549",
+        "eventPayout": "2841671676078431372549",
+        "balanceDelta": "2841671676078431372549",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0xbA3549...: 23 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0xbA35499B77950fD5f85243Ab75AdA8e8556AC204",
+        "blocks": "23",
+        "expectedReward": "23000000000000000000",
+        "expectedFee": "587826621960784313725",
+        "eventPayout": "610826621960784313725",
+        "balanceDelta": "610826621960784313725",
+        "ok": true
+      }
+    },
+    {
+      "name": "validator 0xd3b84C...: 291 blocks -> event and balance delta == recomputed share (reward + fee)",
+      "pass": true,
+      "detail": {
+        "owner": "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "blocks": "291",
+        "expectedReward": "291000000000000000000",
+        "expectedFee": "7437284651764705882352",
+        "eventPayout": "7728284651764705882352",
+        "balanceDelta": "7728284651764705882352",
+        "ok": true
+      }
+    },
+    {
+      "name": "FoundationDAO balance delta == 15% of approved rewards",
+      "pass": true,
+      "detail": {
+        "delta": "244800000000000000000"
+      }
+    },
+    {
+      "name": "ValidatorsTreasury balance delta == remainder + rounding dust",
+      "pass": true,
+      "detail": {
+        "delta": "571200000000000000005",
+        "expected": "571200000000000000005"
+      }
+    },
+    {
+      "name": "address(0) balance delta == ordinary-fee burn + excess burn",
+      "pass": true,
+      "detail": {
+        "delta": "366456960000000000000",
+        "feeBurn": "366456960000000000000",
+        "excess": "0"
+      }
+    },
+    {
+      "name": "Distributor balance delta == -(reported rewards + effective fees) + blockreward + tx fees of block B (all money accounted for)",
+      "pass": true,
+      "detail": {
+        "delta": "-22684903900000000000000",
+        "expected": "-22684903900000000000000"
+      }
+    },
+    {
+      "name": "lastSettledBlock == N, epochCount == 1, pendingMembershipFees reset to 0",
+      "pass": true
+    },
+    {
+      "name": "getEpoch(1) readable and equals the event",
+      "pass": true,
+      "detail": {
+        "totalRewards": "1632000000000000000000"
+      }
+    },
+    {
+      "name": "negative: a second distribution inside 23 h reverts (too soon)",
+      "pass": true,
+      "detail": "BlockRewardDistributor: too soon since last distribution"
+    }
+  ],
+  "net": "A",
+  "range": {
+    "fromBlock": 1,
+    "toBlock": 816
+  },
+  "owners": [
+    {
+      "owner": "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4",
+      "blocks": "85",
+      "expectedReward": "85000000000000000000",
+      "expectedFee": "2172402733333333333333",
+      "eventPayout": "2257402733333333333333",
+      "balanceDelta": "2257402733333333333333",
+      "ok": true
+    },
+    {
+      "owner": "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E",
+      "blocks": "58",
+      "expectedReward": "58000000000000000000",
+      "expectedFee": "1482345394509803921568",
+      "eventPayout": "1540345394509803921568",
+      "balanceDelta": "1540345394509803921568",
+      "ok": true
+    },
+    {
+      "owner": "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+      "blocks": "97",
+      "expectedReward": "97000000000000000000",
+      "expectedFee": "2479094883921568627450",
+      "eventPayout": "2576094883921568627450",
+      "balanceDelta": "2576094883921568627450",
+      "ok": true
+    },
+    {
+      "owner": "0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71",
+      "blocks": "62",
+      "expectedReward": "62000000000000000000",
+      "expectedFee": "1584576111372549019607",
+      "eventPayout": "1646576111372549019607",
+      "balanceDelta": "1646576111372549019607",
+      "ok": true
+    },
+    {
+      "owner": "0x5a88853CBad947766fC96d210F337F2c246530D0",
+      "blocks": "93",
+      "expectedReward": "93000000000000000000",
+      "expectedFee": "2376864167058823529411",
+      "eventPayout": "2469864167058823529411",
+      "balanceDelta": "2469864167058823529411",
+      "ok": true
+    },
+    {
+      "owner": "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+      "blocks": "107",
+      "expectedReward": "107000000000000000000",
+      "expectedFee": "2734671676078431372549",
+      "eventPayout": "2841671676078431372549",
+      "balanceDelta": "2841671676078431372549",
+      "ok": true
+    },
+    {
+      "owner": "0xbA35499B77950fD5f85243Ab75AdA8e8556AC204",
+      "blocks": "23",
+      "expectedReward": "23000000000000000000",
+      "expectedFee": "587826621960784313725",
+      "eventPayout": "610826621960784313725",
+      "balanceDelta": "610826621960784313725",
+      "ok": true
+    },
+    {
+      "owner": "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+      "blocks": "291",
+      "expectedReward": "291000000000000000000",
+      "expectedFee": "7437284651764705882352",
+      "eventPayout": "7728284651764705882352",
+      "balanceDelta": "7728284651764705882352",
+      "ok": true
+    }
+  ],
+  "totals": {
+    "reported": "1632000000000000000000",
+    "approved": "1632000000000000000000",
+    "excess": "0",
+    "reportedFees": "1221523200000000000000",
+    "pendingMembershipFees": "20000000000000000000000",
+    "foundation": "244800000000000000000",
+    "treasury": "571200000000000000005",
+    "feeBurn": "366456960000000000000",
+    "dust": "5"
+  },
+  "tx": "0xf4f148ef5591123e301ad55fac0e39ef7f0c2fce1f88e25757900936f289be18",
+  "settlingBlock": 836,
+  "accountingSeconds": 14,
+  "negatives": {},
+  "postHocMode": true,
+  "preCallChecksLog": "logs/_scriptout/bg08a.run1-pre-call-checks.out (first run: attribution, balance equation, 8 negatives, equation closed; it crashed after the call because of a wrong event field name in the script)",
+  "seatTransfersReplayed": [
+    {
+      "block": 649,
+      "from": "0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E",
+      "to": "0xbA35499B77950fD5f85243Ab75AdA8e8556AC204"
+    }
+  ]
+}

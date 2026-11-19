@@ -1,0 +1,21 @@
+  PASS  attribution: 816 blocks in [1,816] mapped to 8 owners; sum == range size  :: {"0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4":"85","0x20a3b465785dd0ddd41207Ac71E45829Ab1e441E":"58","0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343":"97","0x2D58CC9f6Cea77dF9a2e3035f10DEe01F146fb71":"62","0x5a88853CBad947766fC96d210F337F2c246530D0":"93","0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1":"107","0xbA35499B77950fD5f85243Ab75AdA8e8556AC204":"23","0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC":"291"}
+  PASS  Distributor balance at block 820 == blockreward x 820 + sum of all tx fees + pending membership fees (exact, before the call)  :: {"balance":"22861523200000000000000","expected":"22861523200000000000000","reward":"2000000000000000000","fees":"1221523200000000000000","pendingMembershipFees":"20000000000000000000000"}
+  PASS  maxRewardsForRange(1,816) == 816 x 2 Suren (initial approved rate)  :: 1632000000000000000000
+  PASS  negative: notOracle reverts  :: BlockRewardDistributor: caller is not the distribution oracle
+  PASS  negative: gapStart reverts  :: BlockRewardDistributor: range must start right after the last settled block
+  PASS  negative: futureBlock reverts  :: BlockRewardDistributor: range includes blocks that are not yet produced
+  PASS  negative: blocksExceedRange reverts  :: BlockRewardDistributor: reported blocks exceed the range size
+  PASS  negative: notAscending reverts  :: BlockRewardDistributor: validators must be strictly ascending
+  PASS  negative: neverActivated reverts  :: BlockRewardDistributor: reported blocks exceed the range size
+  PASS  negative: emptyList reverts  :: BlockRewardDistributor: empty validator list
+  PASS  negative: tooMuchForBalance reverts  :: BlockRewardDistributor: insufficient contract balance
+  PASS  none of the negative attempts changed lastSettledBlock/epochCount
+  PASS  equation closed before sending: outflow == reported + effective fees == payouts + foundation + treasury + fee burn + excess burn  :: {"reported":"1632000000000000000000","feeEff":"21221523200000000000000"}
+  PASS  Distributor balance covers reported + effective fees  :: {"balNow":"22961904200000000000000","need":"22853523200000000000000"}
+  PASS  distributeRewards mined (block 836, gas 1666193) with 8 validators  :: {"tx":"0xf4f148ef5591123e301ad55fac0e39ef7f0c2fce1f88e25757900936f289be18"}
+  PASS  actual == approved: no RewardExcessBurned event, totalExcessBurned == 0
+  PASS  EpochRangeSettled(1, 1, N), RewardsDistributed(epoch 1, totalRewards == APPROVED amount, totalFees, treasury incl. dust, blocks, validators)  :: {"totalRewards":"1632000000000000000000","treasury":"571200000000000000005"}
+  PASS  FoundationFunded == 15% of the APPROVED rewards; FeesBurned == 30% of ordinary fees (membership fees exempt)  :: {"foundation":"244800000000000000000","feeBurn":"366456960000000000000"}
+TypeError: Cannot read properties of undefined (reading 'toString')
+    at D:\Amir\Business\SUR\NewSur\Plan\testing-evidence\besu-live-test-v25-2026-11-19\scripts\bg08.js:129:181
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

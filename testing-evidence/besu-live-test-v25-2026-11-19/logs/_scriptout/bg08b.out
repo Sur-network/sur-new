@@ -1,0 +1,17 @@
+  PASS  attribution: 391 blocks in [1,391] mapped to 1 owners; sum == range size  :: {"0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC":"391"}
+  PASS  maxRewardsForRange(1,391) == 391 x 2 Suren (initial approved rate)  :: 782000000000000000000
+  PASS  equation closed before sending: outflow == reported + effective fees == payouts + foundation + treasury + fee burn + excess burn  :: {"reported":"1173000000000000000000","feeEff":"477763800000000000000"}
+  PASS  distributeRewards mined (block 406, gas 640217) with 1 validators  :: {"tx":"0x7196b643aef10cfc0a477aaebabac1bcb4257b9ae64ac53e13a288c6bb68e715"}
+  PASS  RewardExcessBurned(epoch 1, from 1, to N, approvedRewards, excessBurned) emitted with the exact numbers  :: {"approved":"782000000000000000000","excess":"391000000000000000000"}
+  PASS  totalExcessBurned == excess (391.0 Suren)
+  PASS  EpochRangeSettled(1, 1, N), RewardsDistributed(epoch 1, totalRewards == APPROVED amount, totalFees, treasury incl. dust, blocks, validators)  :: {"totalRewards":"782000000000000000000","treasury":"273700000000000000000"}
+  PASS  FoundationFunded == 15% of the APPROVED rewards; FeesBurned == 30% of ordinary fees (membership fees exempt)  :: {"foundation":"117300000000000000000","feeBurn":"143329140000000000000"}
+  PASS  validator 0xd3b84C...: 391 blocks -> event and balance delta == recomputed share (reward + fee)  :: {"owner":"0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC","blocks":"391","expectedReward":"391000000000000000000","expectedFee":"334434660000000000000","eventPayout":"725434660000000000000","balanceDelta":"725434660000000000000","ok":true}
+  PASS  FoundationDAO balance delta == 15% of approved rewards  :: {"delta":"117300000000000000000"}
+  PASS  ValidatorsTreasury balance delta == remainder + rounding dust  :: {"delta":"273700000000000000000","expected":"273700000000000000000"}
+  PASS  address(0) balance delta == ordinary-fee burn + excess burn  :: {"delta":"534329140000000000000","feeBurn":"143329140000000000000","excess":"391000000000000000000"}
+  PASS  Distributor balance delta == -(reported rewards + effective fees) + blockreward + tx fees of block B (all money accounted for)  :: {"delta":"-1583742100000000000000","expected":"-1583742100000000000000"}
+  PASS  lastSettledBlock == N, epochCount == 1, pendingMembershipFees reset to 0
+  PASS  getEpoch(1) readable and equals the event  :: {"totalRewards":"782000000000000000000"}
+  PASS  negative: a second distribution inside 23 h reverts (too soon)  :: BlockRewardDistributor: too soon since last distribution
+[BG-08b] PASS actual 1173.0 > approved 782.0: excess 391.0 Suren burned; range [1,391], 1 validators, settled in block 406

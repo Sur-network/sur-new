@@ -1,0 +1,10 @@
+  PASS  start: 6 validators (op1, op2b, op3b, op4, op5, op7)  :: 6
+  PASS  chain halts with 3 of 6 validators down (head did not advance in 40 s; at most the in-flight block)  :: {"hAtStop":1056,"hAfterStop":1057,"hAfter40s":1057}
+  PASS  reads still work during the halt: getValidators() unchanged (6)
+  PASS  transaction sent during the halt is not mined (no receipt)  :: {"tx":"0x1ed67a2d768ceb883e57fcf757a4de6858c3d568a06255e7dee72849a47dfbe0","txpoolEntries":1}
+  PASS  chain resumes after the 3 nodes are started (first new block seen)  :: {"secondsFromStartCommand":83}
+  PASS  the pending transaction is mined after the resume  :: {"block":1058,"secondsFromStartCommand":83}
+  PASS  after the resume the contract-defined set is unchanged and equals the QBFT set
+  PASS  block times return to 2 s within the next 20 blocks  :: [2,2,2,2,2,2,2,2,2,2]
+  PASS  all six validator nodes agree on the head (within 2)  :: [["n1",1078],["n2b",1078],["n3b",1078],["n4",1078],["n5",1078],["n7",1078]]
+[BG-13] PASS halt with <quorum and resume in QBFT contract mode: set unchanged, pending tx mined

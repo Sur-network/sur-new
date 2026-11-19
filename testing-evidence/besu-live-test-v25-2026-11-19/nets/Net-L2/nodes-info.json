@@ -1,0 +1,11 @@
+[
+  {
+    "node": "n1",
+    "role": "op1",
+    "operatorAddress": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+    "ip": "172.29.53.11",
+    "p2p": 30303,
+    "rpcHostPort": 19311,
+    "enode": "enode://9ffe4905933129b0ef97f06921238d1536815d0edba41c3b0c0991a2f6018745957d412a5bb36e8c38ad5dd404e54a02bd2c68b3d065f5aefc1eb2db506fbb23@172.29.53.11:30303"
+  }
+]

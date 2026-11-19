@@ -1,0 +1,125 @@
+{
+  "id": "BG-10b",
+  "writtenAtUTC": "2026-11-19T14:03:43.411Z",
+  "verdict": "PASS",
+  "summary": "cancel path: close block 47, target 57, cancel block 310 (window = 253 blocks after target)",
+  "checks": [
+    {
+      "name": "StartLottery executed with 3 of 5 votes",
+      "pass": true,
+      "detail": {
+        "id": 1,
+        "closeTime": 1795096487,
+        "paramsHash": "0x977a243c07d523defd68ea3cad2e75e9694adbf948aa6961b83478ef538ccc81",
+        "hashMatchesStored": true,
+        "votesAfterPropose": 1,
+        "votesAfterTwo": 2,
+        "statusAfterTwo": 0,
+        "votesAfterThree": 3,
+        "statusAfterThree": 1,
+        "requiredVotes": 3,
+        "proposeBlock": 2,
+        "executeBlock": 4,
+        "txs": {
+          "propose": "0x29c9563e65de04818f8894dc35b9521e181578876e01de0ea00ff268715fefe3",
+          "vote2": "0x87079b57d8c9956bccf3f91005b7664c614197d589a0ae9e3920f97dcad9447d",
+          "vote3": "0x512984e25180a43bf29480e30ba86c39093aed7f4e4f66b0d112c66bb8d99dc5"
+        }
+      }
+    },
+    {
+      "name": "negative: cancelLottery inside the window reverts",
+      "pass": true,
+      "detail": "ValidatorLottery: cannot cancel now"
+    },
+    {
+      "name": "negative: drawBatch while Closed reverts",
+      "pass": true,
+      "detail": "ValidatorLottery: not ready to draw"
+    },
+    {
+      "name": "reveal after the window reverts (CEO did not reveal in time)",
+      "pass": true,
+      "detail": "ValidatorLottery: reveal window over"
+    },
+    {
+      "name": "lottery Cancelled (phase 5)",
+      "pass": true,
+      "detail": 5
+    },
+    {
+      "name": "LotteryCancelled event emitted",
+      "pass": true,
+      "detail": "secret not revealed in the window"
+    },
+    {
+      "name": "lot1 refund == ticket price (excluding gas)",
+      "pass": true,
+      "detail": {
+        "net": "10000000000000000000"
+      }
+    },
+    {
+      "name": "lot2 refund == ticket price (excluding gas)",
+      "pass": true,
+      "detail": {
+        "net": "10000000000000000000"
+      }
+    },
+    {
+      "name": "lot3 refund == ticket price (excluding gas)",
+      "pass": true,
+      "detail": {
+        "net": "10000000000000000000"
+      }
+    },
+    {
+      "name": "negative: second refund claim reverts",
+      "pass": true,
+      "detail": "ValidatorLottery: nothing to refund"
+    },
+    {
+      "name": "lottery contract balance 0 after all refunds",
+      "pass": true
+    }
+  ],
+  "timeline": {
+    "start": {
+      "wallClockUTC": "2026-11-19T13:53:13.085Z",
+      "block": 0
+    },
+    "committed": {
+      "wallClockUTC": "2026-11-19T13:53:31.268Z",
+      "block": 8
+    },
+    "closed": {
+      "wallClockUTC": "2026-11-19T13:54:49.343Z",
+      "block": 47
+    },
+    "cancelled": {
+      "wallClockUTC": "2026-11-19T14:03:35.270Z",
+      "block": 310
+    }
+  },
+  "wallSeconds": 630,
+  "target": 57,
+  "cancelBlock": 310,
+  "revealEvalAtTargetPlus250": "eth_call at head==target+250 would pass (window still open)",
+  "refunds": [
+    {
+      "r": "lot1",
+      "netChange": "10000000000000000000",
+      "gasCost": "6464200000000000000"
+    },
+    {
+      "r": "lot2",
+      "netChange": "10000000000000000000",
+      "gasCost": "6464200000000000000"
+    },
+    {
+      "r": "lot3",
+      "netChange": "10000000000000000000",
+      "gasCost": "5984200000000000000"
+    }
+  ]
+}

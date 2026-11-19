@@ -1,0 +1,209 @@
+{
+  "id": "BG-09",
+  "writtenAtUTC": "2026-11-19T13:47:25.142Z",
+  "verdict": "PASS",
+  "summary": "Spend proposal #1 executed with 3 of 5; Execute proposal #2 (setBaseURI) executed with 3 of 5",
+  "checks": [
+    {
+      "name": "getBoard() == dao1..dao5 (5 principals seeded at genesis)",
+      "pass": true,
+      "detail": [
+        "0x5AC3860f9e585d2Ec6c795322904EE185f90B87A",
+        "0x6Cf95b519897843677A7eDc0Ec59D952a363266A",
+        "0x5C5af81Ff7A1d109188eA34b59D25B1401B98c2B",
+        "0xFd745cFD6835AAf5c4675a5D0b663884E6194466",
+        "0x2fCc5533974D4a0Fd8789A549f5dc08321cd9C6A"
+      ]
+    },
+    {
+      "name": "alternates == dao6, dao7; inspector, ceo as seeded",
+      "pass": true
+    },
+    {
+      "name": "BG-SIZE: the 28,365-byte FoundationDAO (> 24,576) answers calls on Besu",
+      "pass": true,
+      "detail": {
+        "codeLen": 28365
+      }
+    },
+    {
+      "name": "ProposalCreated + ProposalParams + auto Voted(1/3) events",
+      "pass": true,
+      "detail": {
+        "id": 1,
+        "gasUsed": "347596"
+      }
+    },
+    {
+      "name": "getProposal: typed fields readable (pType Spend=0, addrB=buyer, numA=amount, text, votes 1/3, Pending)",
+      "pass": true,
+      "detail": {
+        "votes": 1,
+        "createdAt": 1795096015,
+        "expiresAt": 1797688015
+      }
+    },
+    {
+      "name": "expiry = createdAt + 30 days",
+      "pass": true
+    },
+    {
+      "name": "computeParamsHash == stored paramsHash",
+      "pass": true,
+      "detail": "0x2d0befcea4eedbbb53fa31a1c03a675b077b8e14152ceac5f221ac049639956e"
+    },
+    {
+      "name": "negative: nonBoardPropose reverts",
+      "pass": true,
+      "detail": "FoundationDAO: not a principal board member"
+    },
+    {
+      "name": "negative: alternatePropose reverts",
+      "pass": true,
+      "detail": "FoundationDAO: not a principal board member"
+    },
+    {
+      "name": "negative: proposerVotesTwice reverts",
+      "pass": true,
+      "detail": "FoundationDAO: already voted"
+    },
+    {
+      "name": "negative: wrongHash reverts",
+      "pass": true,
+      "detail": "FoundationDAO: parameters hash mismatch"
+    },
+    {
+      "name": "negative: nonBoardVote reverts",
+      "pass": true,
+      "detail": "FoundationDAO: not a principal board member"
+    },
+    {
+      "name": "negative: badId reverts",
+      "pass": true,
+      "detail": "FoundationDAO: proposal not found"
+    },
+    {
+      "name": "2 of 5 votes: still Pending, money not moved",
+      "pass": true
+    },
+    {
+      "name": "3rd vote executes the Spend: status Executed (1), ProposalExecuted emitted",
+      "pass": true,
+      "detail": {
+        "executeBlock": 359,
+        "gasUsed": "109694"
+      }
+    },
+    {
+      "name": "buyer +600,000 Suren exactly; DAO treasury -600,000 exactly",
+      "pass": true,
+      "detail": {
+        "buyerDelta": "600000000000000000000000"
+      }
+    },
+    {
+      "name": "negative: vote after execution reverts (not pending)",
+      "pass": true,
+      "detail": "FoundationDAO: not pending"
+    },
+    {
+      "name": "negative: Execute proposal may not target FoundationDAO or FoundationMembers",
+      "pass": true,
+      "detail": [
+        "FoundationDAO: forbidden target",
+        "FoundationDAO: forbidden target"
+      ]
+    },
+    {
+      "name": "Execute proposal readable: target, value 0, data stored visibly, text",
+      "pass": true,
+      "detail": {
+        "id2": 2,
+        "dataBytes": 132
+      }
+    },
+    {
+      "name": "Execute: computeParamsHash == stored hash",
+      "pass": true
+    },
+    {
+      "name": "2 of 5: base URI unchanged",
+      "pass": true
+    },
+    {
+      "name": "3 of 5 executes: ValidatorSeatNFT.baseURI changed by the DAO call",
+      "pass": true,
+      "detail": "https://besu-live-test.local/seat/"
+    },
+    {
+      "name": "tokenURI(1) == newBase + '1' (was https://validator-nft.surnet.org/1)",
+      "pass": true,
+      "detail": "https://besu-live-test.local/seat/1"
+    },
+    {
+      "name": "negative: setBaseURI from a board member directly reverts (only FoundationDAO)",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: only FoundationDAO"
+    },
+    {
+      "name": "proposalCount == 2",
+      "pass": true
+    }
+  ],
+  "spend": {
+    "id": 1,
+    "propose": "0x5c6c6bbd979832ec812cc9d4f149e74817b14da3c1628a3277ea367251f7bded",
+    "vote2": "0xee20fa1d04da484c3f5c28c034224a0e871f642bcd6b2007480a0c1718d95cb6",
+    "vote3": "0xc2f001a7e29a78d9b2009eec934cc0e5645c6992ce71d7ed00e4117eced06aa2",
+    "executeBlock": 359
+  },
+  "execute": {
+    "id": 2,
+    "propose": "0x3723905be9625d8a1347db6c06f64e763c21c927cdf727da8578baf98c2681d0",
+    "finalVote": "0x5e4658ad8752180a1d974a79df67ec999d7ad3f1737ac1df859c19eb497aa068"
+  },
+  "negatives": {
+    "nonBoardPropose": {
+      "reverted": true,
+      "reason": "FoundationDAO: not a principal board member",
+      "stage": "eth_call",
+      "minedHash": "0xa1b1e9543ba118e058ad8a559316df29cc381d36021ed240ddfade9e56bf11d9",
+      "minedStatus": 0
+    },
+    "alternatePropose": {
+      "reverted": true,
+      "reason": "FoundationDAO: not a principal board member",
+      "stage": "eth_call",
+      "minedHash": "0x04a653cf86752f56ecdb547047d57703ee575d38bd442dca0ff400443b5287b0",
+      "minedStatus": 0
+    },
+    "proposerVotesTwice": {
+      "reverted": true,
+      "reason": "FoundationDAO: already voted",
+      "stage": "eth_call",
+      "minedHash": "0x6816db3082594b5793f247ca0ad2b4f3b1a250d44d01441b9ccf166781a6a92a",
+      "minedStatus": 0
+    },
+    "wrongHash": {
+      "reverted": true,
+      "reason": "FoundationDAO: parameters hash mismatch",
+      "stage": "eth_call",
+      "minedHash": "0xa298bf244b306f307e384f2daaa71262c28e02640a26b71855ee4e079a7c5464",
+      "minedStatus": 0
+    },
+    "nonBoardVote": {
+      "reverted": true,
+      "reason": "FoundationDAO: not a principal board member",
+      "stage": "eth_call",
+      "minedHash": "0x18ec08dcbaf92d531f0ff1ea2e44872a4443b0af2cc5f050c3b00157ac5e1155",
+      "minedStatus": 0
+    },
+    "badId": {
+      "reverted": true,
+      "reason": "FoundationDAO: proposal not found",
+      "stage": "eth_call",
+      "minedHash": "0xf03bfed9d1e82bb31ff37f3dd7f46578bcb1f9fb3fc3b44c4d8e60ace94b6bb8",
+      "minedStatus": 0
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "id": "BG-11",
+  "writtenAtUTC": "2026-11-19T13:48:45.136Z",
+  "verdict": "PASS",
+  "summary": "seeded totals, balance and the pre-release revert verified on Besu; monthly instalments NOT time-travelled",
+  "checks": [
+    {
+      "name": "vault.genesisTimestamp == genesis.json timestamp (block 0)",
+      "pass": true,
+      "detail": 1795095145
+    },
+    {
+      "name": "totalHeld == sum(claim - 100) == 8,100 Suren",
+      "pass": true,
+      "detail": "8100000000000000000000"
+    },
+    {
+      "name": "vault balance == totalHeld",
+      "pass": true,
+      "detail": "8100000000000000000000"
+    },
+    {
+      "name": "claimInfo(claimant1): held = claim-100, walletPart 100, released 0, withdrawn 0",
+      "pass": true,
+      "detail": {
+        "held": "900000000000000000000"
+      }
+    },
+    {
+      "name": "installmentAmount(claimant1) == held/24",
+      "pass": true
+    },
+    {
+      "name": "claimant1 wallet holds the 100 Suren wallet part (minus nothing yet)",
+      "pass": true,
+      "detail": "100000000000000000000"
+    },
+    {
+      "name": "claimInfo(claimant2): held = claim-100, walletPart 100, released 0, withdrawn 0",
+      "pass": true,
+      "detail": {
+        "held": "2300000000000000000000"
+      }
+    },
+    {
+      "name": "installmentAmount(claimant2) == held/24",
+      "pass": true
+    },
+    {
+      "name": "claimant2 wallet holds the 100 Suren wallet part (minus nothing yet)",
+      "pass": true,
+      "detail": "100000000000000000000"
+    },
+    {
+      "name": "claimInfo(claimant3): held = claim-100, walletPart 100, released 0, withdrawn 0",
+      "pass": true,
+      "detail": {
+        "held": "4900000000000000000000"
+      }
+    },
+    {
+      "name": "installmentAmount(claimant3) == held/24",
+      "pass": true
+    },
+    {
+      "name": "claimant3 wallet holds the 100 Suren wallet part (minus nothing yet)",
+      "pass": true,
+      "detail": "100000000000000000000"
+    },
+    {
+      "name": "monthsReleased() == 0 (still the genesis month)",
+      "pass": true
+    },
+    {
+      "name": "monthIdOf(timestamp) on Besu == year*12 + month-1 (UTC) for head and genesis timestamps",
+      "pass": true,
+      "detail": {
+        "mNow": "24322",
+        "mGen": "24322"
+      }
+    },
+    {
+      "name": "negative: withdraw before the first monthly release reverts",
+      "pass": true,
+      "detail": {
+        "reverted": true,
+        "reason": "GenesisClaimsVault: nothing released yet",
+        "stage": "eth_call",
+        "minedHash": "0x878fd4abf7052b9d532a4fa75e7730046754e717de05571d9307963da239827f",
+        "minedStatus": 0
+      }
+    },
+    {
+      "name": "negative: withdraw by a non-claimant reverts",
+      "pass": true,
+      "detail": "GenesisClaimsVault: no claim for this address"
+    },
+    {
+      "name": "plain Suren transfer into the vault is refused (funded only through alloc)",
+      "pass": true,
+      "detail": "rejected/reverted: transaction execution reverted"
+    },
+    {
+      "name": "vault balance unchanged after the refused transfer",
+      "pass": true
+    },
+    {
+      "name": "claimant1 withdrawn still 0",
+      "pass": true
+    }
+  ],
+  "notRun": "release after the first calendar month, 24 instalments, last-instalment remainder: Besu cannot advance time; covered only by the Hardhat tests (contracts-tests/test/GenesisClaimsVault.test.js)"
+}

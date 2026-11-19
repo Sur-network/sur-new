@@ -1,0 +1,12 @@
+  PASS  StartLottery executed with 3 of 5 votes  :: {"id":1,"closeTime":1795096487,"paramsHash":"0x977a243c07d523defd68ea3cad2e75e9694adbf948aa6961b83478ef538ccc81","hashMatchesStored":true,"votesAfterPropose":1,"votesAfterTwo":2,"statusAfterTwo":0,"votesAfterThree":3,"statusAfterThree":1,"requiredVotes":3,"proposeBlock":2,"executeBlock":4,"txs":{"propose":"0x29c9563e65de04818f8894dc35b9521e181578876e01de0ea00ff268715fefe3","vote2":"0x87079b57d8c9956bccf3f91005b7664c614197d589a0ae9e3920f97dcad9447d","vote3":"0x512984e25180a43bf29480e30ba86c39093aed7f4e4f66b0d112c66bb8d99dc5"}}
+  PASS  negative: cancelLottery inside the window reverts  :: ValidatorLottery: cannot cancel now
+  PASS  negative: drawBatch while Closed reverts  :: ValidatorLottery: not ready to draw
+  PASS  reveal after the window reverts (CEO did not reveal in time)  :: ValidatorLottery: reveal window over
+  PASS  lottery Cancelled (phase 5)  :: 5
+  PASS  LotteryCancelled event emitted  :: secret not revealed in the window
+  PASS  lot1 refund == ticket price (excluding gas)  :: {"net":"10000000000000000000"}
+  PASS  lot2 refund == ticket price (excluding gas)  :: {"net":"10000000000000000000"}
+  PASS  lot3 refund == ticket price (excluding gas)  :: {"net":"10000000000000000000"}
+  PASS  negative: second refund claim reverts  :: ValidatorLottery: nothing to refund
+  PASS  lottery contract balance 0 after all refunds
+[BG-10b] PASS cancel path: close block 47, target 57, cancel block 310 (window = 253 blocks after target)

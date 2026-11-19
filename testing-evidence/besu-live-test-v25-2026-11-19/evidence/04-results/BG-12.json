@@ -1,0 +1,167 @@
+{
+  "id": "BG-12",
+  "writtenAtUTC": "2026-11-19T13:44:50.041Z",
+  "verdict": "PASS",
+  "summary": "three activations in one block (n 4 -> 7)",
+  "checks": [
+    {
+      "name": "three recordActivation txs mined in the SAME block",
+      "pass": true,
+      "detail": [
+        252,
+        252,
+        252
+      ]
+    },
+    {
+      "name": "list grows by +3 in one block: contract list == QBFT set from the following blocks, 7 operator keys",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 252,
+        "qbftSets": {
+          "251": [
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+          ],
+          "252": [
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+          ],
+          "253": [
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+          ],
+          "254": [
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+          ],
+          "255": [
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+          ]
+        }
+      }
+    },
+    {
+      "name": "blocks continue after the +3 change (no halt; gaps <= 4 s in the window)",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  ],
+  "blocks": [
+    252,
+    252,
+    252
+  ],
+  "stage": {
+    "label": "activate owners 5,6,7 in one block (n 4 -> 7)",
+    "txBlock": 252,
+    "contractList": [
+      "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+      "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+      "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+    ],
+    "qbftSetsByBlock": {
+      "251": [
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ],
+      "252": [
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ],
+      "253": [
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ],
+      "254": [
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ],
+      "255": [
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ]
+    },
+    "firstBlockWithExpectedSet": 252,
+    "minersTxBlockPlus1to6": {
+      "253": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "254": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+      "255": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+      "256": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "257": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "258": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234"
+    },
+    "blockTimestampGaps": [
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "txs": [
+      "0x33241faf3e09fafa153608b425ce8d23d736bce2b71e25a2082aa55d649e7bd1",
+      "0xcf4957ff42c0e3ccd42efe457dbdb74a3155f0b10ce2c541c53a4d54a262c139",
+      "0x2edaaf1c61aa07ad1e7266564ae9be2a32a0cbb079238415c3c5b4758e98ac58"
+    ],
+    "blocks": [
+      252,
+      252,
+      252
+    ]
+  }
+}

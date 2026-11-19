@@ -1,0 +1,45 @@
+  PASS  lot1 fully verified
+  PASS  lot2 fully verified
+  PASS  lot3 fully verified
+  PASS  lot4 fully verified
+  PASS  lot5 fully verified
+  PASS  lot6 fully verified
+  PASS  outsider (not registered) is not fully verified
+  PASS  StartLottery proposal: proposer's vote counts automatically (1 vote), required = 3  :: {"id":1,"closeTime":1795096037,"paramsHash":"0x519e490a7ec2113586e5ebce9a03b95d15f647c8a51b5eef83ca81e64adbf54a","hashMatchesStored":true,"votesAfterPropose":1,"votesAfterTwo":2,"statusAfterTwo":0,"votesAfterThree":3,"statusAfterThree":1,"requiredVotes":3,"proposeBlock":51,"executeBlock":53,"txs":{"propose":"0x1b13a55a2f242ea3a5d33b1bd059f0cddca3f795cc3681d7ebdb8a6c5486087b","vote2":"0x7f8c972dba2b7ac0cefa71abaa478d7af2c5ce17dd306ebfa614b081c2353bb1","vote3":"0x1a5658a795283b8a3948da824994865f28217987bf72c46133bef278c1f13159"}}
+  PASS  after 2 votes still Pending (0), after 3rd vote Executed (1)  :: {"id":1,"closeTime":1795096037,"paramsHash":"0x519e490a7ec2113586e5ebce9a03b95d15f647c8a51b5eef83ca81e64adbf54a","hashMatchesStored":true,"votesAfterPropose":1,"votesAfterTwo":2,"statusAfterTwo":0,"votesAfterThree":3,"statusAfterThree":1,"requiredVotes":3,"proposeBlock":51,"executeBlock":53,"txs":{"propose":"0x1b13a55a2f242ea3a5d33b1bd059f0cddca3f795cc3681d7ebdb8a6c5486087b","vote2":"0x7f8c972dba2b7ac0cefa71abaa478d7af2c5ce17dd306ebfa614b081c2353bb1","vote3":"0x1a5658a795283b8a3948da824994865f28217987bf72c46133bef278c1f13159"}}
+  PASS  vote(id, paramsHash): hash from computeParamsHash == stored paramsHash
+  PASS  lottery #1 Open (phase 1) with the proposal's parameters  :: {"phase":1,"closeTime":1795096037}
+  PASS  lotteryCount == 1
+  PASS  negative: ceoBuy reverts  :: ValidatorLottery: identity not fully verified
+  PASS  negative: outsiderBuy reverts  :: ValidatorLottery: identity not fully verified
+  PASS  negative: wrongPrice reverts  :: ValidatorLottery: wrong ticket price
+  PASS  negative: closeEarly reverts  :: ValidatorLottery: cannot close now
+  PASS  negative: commitNotCeo reverts  :: ValidatorLottery: only the CEO
+  PASS  negative: drawEarly reverts  :: ValidatorLottery: not ready to draw
+  PASS  negative: second ticket from the same address reverts  :: ValidatorLottery: one ticket per address
+  PASS  6 participants recorded in order of purchase  :: ["0x9e284997710cEB494708F37D546C5B7fA4c056Af","0xc32cE696654f10f1B3F1380959A13c6B3F287489","0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0x6EeBE186825004F0318Ee99453cc2fd6ea598306","0x78de377f0c106DAEDAFae06E7054BEb1B57531f3","0x98476A42ce5D896b3CCdb77442822b573C02b267"]
+  PASS  pot == 6 x 10 Suren; lottery contract balance == pot  :: {"pot":"60000000000000000000","bal":"60000000000000000000"}
+  PASS  CEO commitment stored; a second commitment reverts  :: ValidatorLottery: commitment already set or empty
+  PASS  negative: ticket after closeTime reverts  :: ValidatorLottery: registration is not open
+  PASS  closeLottery: targetBlock == closeBlock + 10 (TARGET_DELAY)  :: {"closeBlock":127,"target":137}
+  PASS  phase Closed (2)
+  PASS  negative: reveal before the target block is mined reverts  :: ValidatorLottery: target block not mined yet
+  PASS  negative: wrong secret reverts  :: ValidatorLottery: secret does not match the commitment
+  PASS  negative: reveal by a non-CEO reverts  :: ValidatorLottery: only the CEO
+  PASS  seed == keccak256(abi.encode(secret, blockhash(target))) recomputed with eth_getBlockByNumber(target).hash  :: {"seedOnChain":"0xe623d12bff941d2cd2b870f34ada67da46b5793cc609d8598ebd8fcc2c93dc6c","seedLocal":"0xe623d12bff941d2cd2b870f34ada67da46b5793cc609d8598ebd8fcc2c93dc6c","targetHash":"0xd140b8a40242a5d848c2c3d8737249a314267d6bd0231b8023c437a50aac26b6"}
+  PASS  reveal landed inside the window (target < revealBlock <= target+250)  :: {"revealBlock":141,"target":137,"blocksAfterTarget":4}
+  PASS  after drawBatch(2): 2 winners, phase still Revealed (3)  :: ["0x78de377f0c106DAEDAFae06E7054BEb1B57531f3","0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8"]
+  PASS  3 winners == off-chain replica of the Fisher-Yates draw  :: {"winners":["0x78de377f0c106DAEDAFae06E7054BEb1B57531f3","0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0xc32cE696654f10f1B3F1380959A13c6B3F287489"],"expected":["0x78de377f0c106DAEDAFae06E7054BEb1B57531f3","0xe0bf9E2ba7b7eA0b149E5810874e1d35eBc103a8","0xc32cE696654f10f1B3F1380959A13c6B3F287489"]}
+  PASS  winners are distinct participants
+  PASS  phase Drawn (4), pot cleared, lottery balance 0
+  PASS  pot (60 Suren) transferred to FoundationDAO  :: {"diff":"60000000000000000000"}
+  PASS  every winner registered in the Registry as Probation (1) with no collateral  :: [1,1,1]
+  PASS  winners hold zero collateral  :: ["0","0","0"]
+  PASS  every winner holds a ValidatorSeatNFT seat (ids 2,3,4), totalMinted == 4  :: ["2","3","4"]
+  PASS  no WinnerEntryFailed
+  PASS  negative: drawBatch after Drawn reverts  :: ValidatorLottery: not ready to draw
+  PASS  probe contract deployed on Besu (contract creation works)  :: {"probe":"0x487f0ac8133AfAd84A1fFBb8431bBCF6De9220B5","deployBlock":145}
+Error: timeout waiting for block 300 (head 295)
+    at Net.waitForBlock (D:\Amir\Business\SUR\NewSur\Plan\testing-evidence\besu-live-test-v25-2026-11-19\scripts\lib.js:56:111)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async D:\Amir\Business\SUR\NewSur\Plan\testing-evidence\besu-live-test-v25-2026-11-19\scripts\bg10.js:128:20

@@ -1,0 +1,37 @@
+Error: execution reverted: "ValidatorLottery: less than a year since the last lottery" (action="estimateGas", data="0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003956616c696461746f724c6f74746572793a206c657373207468616e206120796561722073696e636520746865206c617374206c6f747465727900000000000000", reason="ValidatorLottery: less than a year since the last lottery", transaction={ "data": "0x68bb8bb6000000000000000000000000000000000000000000000000000000000000000291ea0dcf0aeeb33d6ca1529372de34526f3464cb7625c92995c2c3d354afd0e2", "from": "0x5C5af81Ff7A1d109188eA34b59D25B1401B98c2B", "to": "0x1111111111111111111111111111111111111111" }, invocation=null, revert={ "args": [ "ValidatorLottery: less than a year since the last lottery" ], "name": "Error", "signature": "Error(string)" }, code=CALL_EXCEPTION, version=6.17.0)
+    at makeError (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\utils\errors.js:137:21)
+    at getBuiltinCallException (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\abi\abi-coder.js:105:37)
+    at AbiCoder.getBuiltinCallException (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\abi\abi-coder.js:206:16)
+    at JsonRpcProvider.getRpcError (D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\providers\provider-jsonrpc.js:695:43)
+    at D:\Amir\Business\SUR\NewSur\Plan\contracts-tests\node_modules\ethers\lib.commonjs\providers\provider-jsonrpc.js:302:45
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  code: 'CALL_EXCEPTION',
+  action: 'estimateGas',
+  data: '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003956616c696461746f724c6f74746572793a206c657373207468616e206120796561722073696e636520746865206c617374206c6f747465727900000000000000',
+  reason: 'ValidatorLottery: less than a year since the last lottery',
+  transaction: {
+    to: '0x1111111111111111111111111111111111111111',
+    data: '0x68bb8bb6000000000000000000000000000000000000000000000000000000000000000291ea0dcf0aeeb33d6ca1529372de34526f3464cb7625c92995c2c3d354afd0e2',
+    from: '0x5C5af81Ff7A1d109188eA34b59D25B1401B98c2B'
+  },
+  invocation: null,
+  revert: {
+    signature: 'Error(string)',
+    name: 'Error',
+    args: [ 'ValidatorLottery: less than a year since the last lottery' ]
+  },
+  shortMessage: 'execution reverted: "ValidatorLottery: less than a year since the last lottery"',
+  info: {
+    error: {
+      code: 3,
+      message: 'Execution reverted (ValidatorLottery: less than a year since the last lottery)',
+      data: '0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003956616c696461746f724c6f74746572793a206c657373207468616e206120796561722073696e636520746865206c617374206c6f747465727900000000000000'
+    },
+    payload: {
+      method: 'eth_estimateGas',
+      params: [Array],
+      id: 84,
+      jsonrpc: '2.0'
+    }
+  }
+}

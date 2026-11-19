@@ -1,0 +1,61 @@
+{
+  "id": "BG-12b",
+  "writtenAtUTC": "2026-11-19T14:14:37.021Z",
+  "verdict": "PASS",
+  "summary": "getValidators() gas 1 validators: 28910; 6 validators: 53204",
+  "checks": [
+    {
+      "name": "getValidators() works through eth_call/eth_estimateGas on Besu for n=1 and n=6",
+      "pass": true,
+      "detail": [
+        {
+          "net": "Net-S",
+          "validators": 1,
+          "estimateGas": 28910,
+          "avgEthCallMs": 14.8,
+          "returnBytes": 96
+        },
+        {
+          "net": "Net-A",
+          "validators": 6,
+          "estimateGas": 53204,
+          "avgEthCallMs": 12.6,
+          "returnBytes": 256
+        }
+      ]
+    },
+    {
+      "name": "cost is linear and small (~4859 gas per validator; n=100 ~509931 gas) - far below the 30M block gas limit",
+      "pass": true,
+      "detail": {
+        "perValidatorGasApprox": 4859,
+        "n7": 58063,
+        "n100": 509931,
+        "n1000": 4882851
+      }
+    }
+  ],
+  "rows": [
+    {
+      "net": "Net-S",
+      "validators": 1,
+      "estimateGas": 28910,
+      "avgEthCallMs": 14.8,
+      "returnBytes": 96
+    },
+    {
+      "net": "Net-A",
+      "validators": 6,
+      "estimateGas": 53204,
+      "avgEthCallMs": 12.6,
+      "returnBytes": 256
+    }
+  ],
+  "projection": {
+    "perValidatorGasApprox": 4859,
+    "n7": 58063,
+    "n100": 509931,
+    "n1000": 4882851
+  },
+  "limitation": "measured only for n=1 and n=6; larger lists are an arithmetic extrapolation, and the gas Besu itself grants to the contract-mode system call was not observed"
+}

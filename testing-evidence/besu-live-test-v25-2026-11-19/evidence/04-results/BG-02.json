@@ -1,0 +1,607 @@
+{
+  "id": "BG-02",
+  "writtenAtUTC": "2026-11-19T13:44:50.039Z",
+  "verdict": "PASS",
+  "summary": "founders 2..7 joined; validator set 1 -> 2 -> 3 -> 4 -> 7; f=1 tolerance at n=4 observed",
+  "checks": [
+    {
+      "name": "all 7 founder nodes running and in sync before the first activation",
+      "pass": true,
+      "detail": {
+        "n1": 183,
+        "n2": 183,
+        "n3": 183,
+        "n4": 183,
+        "n5": 183,
+        "n6": 183,
+        "n7": 183
+      }
+    },
+    {
+      "name": "owner2 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner2.setOperator(op2) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 184
+      }
+    },
+    {
+      "name": "n=2: contract list == 2 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 185,
+        "activationBlock": 185
+      }
+    },
+    {
+      "name": "n=2: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=2: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1"
+      ]
+    },
+    {
+      "name": "owner3 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner3.setOperator(op3) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 192
+      }
+    },
+    {
+      "name": "n=3: contract list == 3 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 193,
+        "activationBlock": 193
+      }
+    },
+    {
+      "name": "n=3: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=3: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343"
+      ]
+    },
+    {
+      "name": "owner4 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner4.setOperator(op4) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 200
+      }
+    },
+    {
+      "name": "n=4: contract list == 4 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 201,
+        "activationBlock": 201
+      }
+    },
+    {
+      "name": "n=4: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=4: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0"
+      ]
+    },
+    {
+      "name": "n=4: the last 24 blocks were mined by all four OPERATOR keys and by no owner key",
+      "pass": true,
+      "detail": {
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6": 6,
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234": 6,
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0": 6,
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9": 6
+      }
+    },
+    {
+      "name": "n=4: committed-seal signers recovered from the header (>=3 = quorum, all operator keys)",
+      "pass": true,
+      "detail": [
+        {
+          "block": 230,
+          "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6"
+          ]
+        },
+        {
+          "block": 229,
+          "miner": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6"
+          ]
+        },
+        {
+          "block": 228,
+          "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "n=4, node n4 stopped (f=1): chain keeps producing blocks",
+      "pass": true,
+      "detail": {
+        "hStop": 231,
+        "hAfter": 245,
+        "seconds": 78
+      }
+    },
+    {
+      "name": "n=4, one node down: contract list unchanged (4 operators)",
+      "pass": true
+    },
+    {
+      "name": "n4 restarted and caught up (head within 3 blocks of n1)",
+      "pass": true,
+      "detail": {
+        "hN1": 248,
+        "hN4": 248
+      }
+    },
+    {
+      "name": "n=7: contract list == QBFT set == 7 operator keys",
+      "pass": true
+    },
+    {
+      "name": "n=7: the last 28 blocks were mined by the seven OPERATOR keys only",
+      "pass": true,
+      "detail": {
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9": 4,
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd": 4,
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508": 4,
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6": 4,
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234": 4,
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0": 4,
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03": 4
+      }
+    },
+    {
+      "name": "n=7: committed seals recovered, >=5 distinct operator signers (quorum 5 of 7)",
+      "pass": true,
+      "detail": [
+        {
+          "block": 287,
+          "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "sealCount": 5,
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508"
+          ]
+        },
+        {
+          "block": 286,
+          "miner": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "sealCount": 5,
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+          ]
+        },
+        {
+          "block": 285,
+          "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "sealCount": 5,
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+            "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+            "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd"
+          ]
+        },
+        {
+          "block": 284,
+          "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "sealCount": 5,
+          "signers": [
+            "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+            "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+            "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+            "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+            "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6"
+          ]
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "label": "activate owner2 (n=2)",
+      "txBlock": 185,
+      "contractList": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      ],
+      "qbftSetsByBlock": {
+        "184": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+        ],
+        "185": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "186": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "187": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "188": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ]
+      },
+      "firstBlockWithExpectedSet": 185,
+      "minersTxBlockPlus1to6": {
+        "186": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "187": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "188": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "189": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "190": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "191": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0xa9ce06e5042bdfeb8dd6153206d096634cd601c4399600f8c02376720ecf4dd0",
+      "activationTx": "0x17a355af4ff4a49e5ac6893df395217867f3be88f9663026804f3cc8bd66b27c"
+    },
+    {
+      "label": "activate owner3 (n=3)",
+      "txBlock": 193,
+      "contractList": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234"
+      ],
+      "qbftSetsByBlock": {
+        "192": [
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "193": [
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "194": [
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "195": [
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "196": [
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ]
+      },
+      "firstBlockWithExpectedSet": 193,
+      "minersTxBlockPlus1to6": {
+        "194": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "195": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "196": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "197": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "198": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "199": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0x2521f7f105cc5a396dd262c28d43953049df2649a638354f15879035c517ee4f",
+      "activationTx": "0xb0afd1d0dda3a5c4324f3b4721c3062385c96ea6d5bd5d82e6fd119245d61c38"
+    },
+    {
+      "label": "activate owner4 (n=4)",
+      "txBlock": 201,
+      "contractList": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6"
+      ],
+      "qbftSetsByBlock": {
+        "200": [
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "201": [
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "202": [
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "203": [
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "204": [
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ]
+      },
+      "firstBlockWithExpectedSet": 201,
+      "minersTxBlockPlus1to6": {
+        "202": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "203": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "204": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "205": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "206": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "207": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0x0286d4ddbf79e9a6b221da3deddeba54ea124fbe539811a9ce8cc640c467f12e",
+      "activationTx": "0x5e0ec137967044d823ee8051d1ef132ae454cd90d9e65c0027dc65af7a8e5a1d"
+    },
+    {
+      "label": "n=4 with n4 stopped",
+      "headAtStop": 231,
+      "headAfter": 245,
+      "blockTimestampGaps": [
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2
+      ],
+      "minersWhileDown": {
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234": 5,
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0": 5,
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9": 4
+      },
+      "note": "gaps > 2 s are rounds where the stopped node was the proposer (round change)"
+    },
+    {
+      "label": "activate owners 5,6,7 in one block (n 4 -> 7)",
+      "txBlock": 252,
+      "contractList": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ],
+      "qbftSetsByBlock": {
+        "251": [
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "252": [
+          "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "253": [
+          "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "254": [
+          "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ],
+        "255": [
+          "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+          "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+          "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+          "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+          "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+          "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+          "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9"
+        ]
+      },
+      "firstBlockWithExpectedSet": 252,
+      "minersTxBlockPlus1to6": {
+        "253": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "254": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+        "255": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "256": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "257": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "258": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "txs": [
+        "0x33241faf3e09fafa153608b425ce8d23d736bce2b71e25a2082aa55d649e7bd1",
+        "0xcf4957ff42c0e3ccd42efe457dbdb74a3155f0b10ce2c541c53a4d54a262c139",
+        "0x2edaaf1c61aa07ad1e7266564ae9be2a32a0cbb079238415c3c5b4758e98ac58"
+      ],
+      "blocks": [
+        252,
+        252,
+        252
+      ]
+    }
+  ],
+  "hist4": {
+    "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6": 6,
+    "0xae079C72c0DD0d41F8DD72C957514585Cc18C234": 6,
+    "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0": 6,
+    "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9": 6
+  },
+  "hist7": {
+    "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9": 4,
+    "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd": 4,
+    "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508": 4,
+    "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6": 4,
+    "0xae079C72c0DD0d41F8DD72C957514585Cc18C234": 4,
+    "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0": 4,
+    "0xFc13616C9874E04aa79710D1e051fb30406E7F03": 4
+  },
+  "signerMetrics": [
+    {
+      "address": "0x04ee03136fd3fb4c345f3193b2e2c879f6ee40dd",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0x11b"
+    },
+    {
+      "address": "0xae079c72c0dd0d41f8dd72c957514585cc18c234",
+      "proposedBlockCount": "0x16",
+      "lastProposedBlockNumber": "0x11e"
+    },
+    {
+      "address": "0x5f9be8a0fde4715eebed80f3f3712e8e1ece81f6",
+      "proposedBlockCount": "0xd",
+      "lastProposedBlockNumber": "0x11d"
+    },
+    {
+      "address": "0x5342b3d59dd497eba41ba286ec83b9a4b85a5508",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0x11c"
+    },
+    {
+      "address": "0xfee62972fe9fe58d4d93bb36be7350ccb581d8a9",
+      "proposedBlockCount": "0x19",
+      "lastProposedBlockNumber": "0x11a"
+    },
+    {
+      "address": "0xfc13616c9874e04aa79710d1e051fb30406e7f03",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0x119"
+    },
+    {
+      "address": "0xdc318cb1d92b63320f2c0fb8761ff3640c484fa0",
+      "proposedBlockCount": "0x19",
+      "lastProposedBlockNumber": "0x11f"
+    }
+  ],
+  "peers": {
+    "n1": 6,
+    "n2": 6,
+    "n3": 6,
+    "n4": 6,
+    "n5": 6,
+    "n6": 6,
+    "n7": 6
+  }
+}

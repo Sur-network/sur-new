@@ -1,0 +1,294 @@
+{
+  "id": "BG-10-BH",
+  "writtenAtUTC": "2026-11-19T14:08:10.503Z",
+  "verdict": "PASS",
+  "summary": "blockhash horizon on Besu QBFT is the standard EVM one: real hash for offsets 1..256, zero beyond and for the current/future block",
+  "checks": [
+    {
+      "name": "probe contract created on Besu; runtime code as assembled",
+      "pass": true,
+      "detail": {
+        "probe": "0xb8f31B0fb7AAaA45B43696d433FCBC15B64AD742",
+        "deployBlock": 374
+      }
+    },
+    {
+      "name": "every probe tx ran and logged",
+      "pass": true,
+      "detail": [
+        [
+          248,
+          true,
+          false
+        ],
+        [
+          249,
+          true,
+          false
+        ],
+        [
+          250,
+          true,
+          false
+        ],
+        [
+          251,
+          true,
+          false
+        ],
+        [
+          252,
+          true,
+          false
+        ],
+        [
+          253,
+          true,
+          false
+        ],
+        [
+          254,
+          true,
+          false
+        ],
+        [
+          255,
+          true,
+          false
+        ],
+        [
+          256,
+          true,
+          false
+        ],
+        [
+          257,
+          false,
+          true
+        ],
+        [
+          258,
+          false,
+          true
+        ],
+        [
+          259,
+          false,
+          true
+        ],
+        [
+          260,
+          false,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "blockhash(n) inside a transaction == eth_getBlockByNumber(n).hash for 1 <= offset <= 256 (offsets seen: 248,249,250,251,252,253,254,255,256)",
+      "pass": true
+    },
+    {
+      "name": "blockhash(n) == 0 for offset >= 257 (offsets seen: 257,258,259,260)",
+      "pass": true
+    },
+    {
+      "name": "the 256/257 boundary was straddled (an offset of exactly 256 returned the real hash, 257 returned 0)",
+      "pass": true,
+      "detail": [
+        [
+          248,
+          "hash"
+        ],
+        [
+          249,
+          "hash"
+        ],
+        [
+          250,
+          "hash"
+        ],
+        [
+          251,
+          "hash"
+        ],
+        [
+          252,
+          "hash"
+        ],
+        [
+          253,
+          "hash"
+        ],
+        [
+          254,
+          "hash"
+        ],
+        [
+          255,
+          "hash"
+        ],
+        [
+          256,
+          "hash"
+        ],
+        [
+          257,
+          "zero"
+        ],
+        [
+          258,
+          "zero"
+        ],
+        [
+          259,
+          "zero"
+        ],
+        [
+          260,
+          "zero"
+        ]
+      ]
+    },
+    {
+      "name": "blockhash(current/future block) == 0 in a transaction",
+      "pass": true,
+      "detail": {
+        "futureReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "currentOrFutureRows": 0
+      }
+    },
+    {
+      "name": "blockhash(1) (very old block) == 0",
+      "pass": true,
+      "detail": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "QBFT block header mixHash is the constant 'Istanbul/BFT fault tolerance' marker (not random) - why the lottery avoids prevrandao",
+      "pass": true,
+      "detail": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365"
+    }
+  ],
+  "probe": "0xb8f31B0fb7AAaA45B43696d433FCBC15B64AD742",
+  "rows": [
+    {
+      "queriedBlock": 127,
+      "executedInBlock": 375,
+      "offset": 248,
+      "blockhashReturned": "0x2b471c8a559f22aea9cb7111c8511026a7310596c28d5d5f4cc086ed2af4617c",
+      "realHash": "0x2b471c8a559f22aea9cb7111c8511026a7310596c28d5d5f4cc086ed2af4617c",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 126,
+      "executedInBlock": 375,
+      "offset": 249,
+      "blockhashReturned": "0x7d26d30d225be4ef8c0c3694c41a16b3ebd597517f57c60914dd211bad27bf00",
+      "realHash": "0x7d26d30d225be4ef8c0c3694c41a16b3ebd597517f57c60914dd211bad27bf00",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 125,
+      "executedInBlock": 375,
+      "offset": 250,
+      "blockhashReturned": "0x8697d5e7295e170b2956d670df9b58cedb113b44b8250cbd93eef9b09cab5201",
+      "realHash": "0x8697d5e7295e170b2956d670df9b58cedb113b44b8250cbd93eef9b09cab5201",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 124,
+      "executedInBlock": 375,
+      "offset": 251,
+      "blockhashReturned": "0xf3944bd5715da4732621dea7bcd054380b589a92bcda55b2a4218d78cf5dda88",
+      "realHash": "0xf3944bd5715da4732621dea7bcd054380b589a92bcda55b2a4218d78cf5dda88",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 123,
+      "executedInBlock": 375,
+      "offset": 252,
+      "blockhashReturned": "0x18f939354c7f6d495512b2803de531ff6cab79a0f89c940f94aaff859b411d6f",
+      "realHash": "0x18f939354c7f6d495512b2803de531ff6cab79a0f89c940f94aaff859b411d6f",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 122,
+      "executedInBlock": 375,
+      "offset": 253,
+      "blockhashReturned": "0xe2b6d7d40e5310d249b60202d68048eb4c7838a87ee2af5287d208c8ece4ec52",
+      "realHash": "0xe2b6d7d40e5310d249b60202d68048eb4c7838a87ee2af5287d208c8ece4ec52",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 121,
+      "executedInBlock": 375,
+      "offset": 254,
+      "blockhashReturned": "0x67f4e9085250993efabfc1259449adf34fd1227ac552533a55cb849ed90196dd",
+      "realHash": "0x67f4e9085250993efabfc1259449adf34fd1227ac552533a55cb849ed90196dd",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 120,
+      "executedInBlock": 375,
+      "offset": 255,
+      "blockhashReturned": "0x54cb0e389d62e71d39bd80ebd5ee6638b4661fc3e666f1280f889f410ebcb360",
+      "realHash": "0x54cb0e389d62e71d39bd80ebd5ee6638b4661fc3e666f1280f889f410ebcb360",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 119,
+      "executedInBlock": 375,
+      "offset": 256,
+      "blockhashReturned": "0x7a4afbdc755c1cd43ccdf16738a05df6e27d9606cdf7dbc35200d9c8a42e5bbd",
+      "realHash": "0x7a4afbdc755c1cd43ccdf16738a05df6e27d9606cdf7dbc35200d9c8a42e5bbd",
+      "equalsReal": true,
+      "isZero": false
+    },
+    {
+      "queriedBlock": 118,
+      "executedInBlock": 375,
+      "offset": 257,
+      "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "realHash": "0x1c9d07cf39e992651ffec51d0524e4319e4319c94255b24270c323aeda54b70f",
+      "equalsReal": false,
+      "isZero": true
+    },
+    {
+      "queriedBlock": 117,
+      "executedInBlock": 375,
+      "offset": 258,
+      "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "realHash": "0xc2775628cda0a8d047ed7d53dc1106d91a5d2a00ab0c7498f30578b2b53e1f54",
+      "equalsReal": false,
+      "isZero": true
+    },
+    {
+      "queriedBlock": 116,
+      "executedInBlock": 375,
+      "offset": 259,
+      "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "realHash": "0xe352f1082c9f895d436388c4ef6165390356bb2d437399a81e1b41683852bdd0",
+      "equalsReal": false,
+      "isZero": true
+    },
+    {
+      "queriedBlock": 115,
+      "executedInBlock": 375,
+      "offset": 260,
+      "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "realHash": "0xdc9791a6d05d34a31f03c9471efcfbcced6bce86176daee4ebe9e9be0d7f4e09",
+      "equalsReal": false,
+      "isZero": true
+    }
+  ],
+  "futureReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "oldReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "mixHashSample": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365"
+}

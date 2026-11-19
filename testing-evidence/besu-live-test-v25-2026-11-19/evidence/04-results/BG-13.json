@@ -1,0 +1,191 @@
+{
+  "id": "BG-13",
+  "writtenAtUTC": "2026-11-19T14:14:31.202Z",
+  "verdict": "PASS",
+  "summary": "halt with <quorum and resume in QBFT contract mode: set unchanged, pending tx mined",
+  "checks": [
+    {
+      "name": "start: 6 validators (op1, op2b, op3b, op4, op5, op7)",
+      "pass": true,
+      "detail": 6
+    },
+    {
+      "name": "chain halts with 3 of 6 validators down (head did not advance in 40 s; at most the in-flight block)",
+      "pass": true,
+      "detail": {
+        "hAtStop": 1056,
+        "hAfterStop": 1057,
+        "hAfter40s": 1057
+      }
+    },
+    {
+      "name": "reads still work during the halt: getValidators() unchanged (6)",
+      "pass": true
+    },
+    {
+      "name": "transaction sent during the halt is not mined (no receipt)",
+      "pass": true,
+      "detail": {
+        "tx": "0x1ed67a2d768ceb883e57fcf757a4de6858c3d568a06255e7dee72849a47dfbe0",
+        "txpoolEntries": 1
+      }
+    },
+    {
+      "name": "chain resumes after the 3 nodes are started (first new block seen)",
+      "pass": true,
+      "detail": {
+        "secondsFromStartCommand": 83
+      }
+    },
+    {
+      "name": "the pending transaction is mined after the resume",
+      "pass": true,
+      "detail": {
+        "block": 1058,
+        "secondsFromStartCommand": 83
+      }
+    },
+    {
+      "name": "after the resume the contract-defined set is unchanged and equals the QBFT set",
+      "pass": true
+    },
+    {
+      "name": "block times return to 2 s within the next 20 blocks",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "all six validator nodes agree on the head (within 2)",
+      "pass": true,
+      "detail": [
+        [
+          "n1",
+          1078
+        ],
+        [
+          "n2b",
+          1078
+        ],
+        [
+          "n3b",
+          1078
+        ],
+        [
+          "n4",
+          1078
+        ],
+        [
+          "n5",
+          1078
+        ],
+        [
+          "n7",
+          1078
+        ]
+      ]
+    }
+  ],
+  "haltSeconds": 62,
+  "firstBlocksAfterResume": [
+    {
+      "block": 1057,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795097487
+    },
+    {
+      "block": 1058,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795097630
+    },
+    {
+      "block": 1059,
+      "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+      "ts": 1795097632
+    },
+    {
+      "block": 1060,
+      "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+      "ts": 1795097634
+    },
+    {
+      "block": 1061,
+      "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+      "ts": 1795097636
+    },
+    {
+      "block": 1062,
+      "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+      "ts": 1795097638
+    },
+    {
+      "block": 1063,
+      "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+      "ts": 1795097640
+    },
+    {
+      "block": 1064,
+      "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+      "ts": 1795097642
+    }
+  ],
+  "roundsOfFirstBlocksAfterResume": [
+    {
+      "block": 1058,
+      "round": "0x03"
+    },
+    {
+      "block": 1059,
+      "round": "0x"
+    },
+    {
+      "block": 1060,
+      "round": "0x"
+    },
+    {
+      "block": 1061,
+      "round": "0x"
+    },
+    {
+      "block": 1062,
+      "round": "0x"
+    },
+    {
+      "block": 1063,
+      "round": "0x"
+    }
+  ],
+  "gapsAfterResume": [
+    143,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ]
+}

@@ -1,0 +1,25 @@
+  PASS  start: 7 validators, owner7 Active and owns seat 7, buyer owns no seat
+  PASS  negative: toUnverified reverts  :: ValidatorsRegistry: buyer identity not fully verified
+  PASS  negative: toSeatHolder reverts  :: ValidatorSeatNFT: recipient already holds a seat
+  PASS  negative: notOwner reverts  :: ValidatorSeatNFT: not owner nor approved
+  PASS  negative: toOperatorKey reverts  :: ValidatorsRegistry: buyer is an operator key
+  PASS  the refused transfer of seat 4 did not change anything (owner4 still Active, owns seat 4)
+  PASS  Transfer(owner7 -> buyer, 7) and SeatTransferred(statusAfter = SelfSuspended 6) emitted  :: {"gasUsed":"422964","block":649}
+  PASS  ownerOf(7)==buyer, seatOf(buyer)==7, balanceOf seller 0
+  PASS  validator record moved: buyer SelfSuspended (6), seller record deleted (None 0), periodStartedAt reset  :: {"buyerStatus":6}
+  PASS  operator key moved with the seat: operatorOf(buyer)==op7, ownerOfOperator(op7)==buyer, seller has no operator
+  PASS  isFounder + everActivated + activationSeq moved to the buyer
+  PASS  seller treated as exited: permanentlyExited(owner7) == true, membershipEpoch +1
+  PASS  seatTransferPending(buyer) == true with a 3-day informational deadline
+  PASS  op7 left getValidators() at once (n=6); owner list has no seller and no buyer
+  PASS  QBFT: op7 in the set at B-1, out at B; op7 never mines afterwards; no halt  :: {"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+  PASS  tokenURI(7) readable  :: https://besu-live-test.local/seat/7
+  PASS  negative: requestResume before accepting the agreement reverts  :: ValidatorsRegistry: accept the seat transfer (sign the agreement) first
+  PASS  negative: recordResume before request/accept reverts  :: ValidatorsRegistry: no resume request
+  PASS  negative: recordActivation cannot be used (not in Probation)  :: ValidatorsRegistry: not in probation
+  PASS  negative: acceptSeatTransfer by someone without a pending transfer reverts  :: ValidatorsRegistry: no pending seat transfer
+  PASS  acceptSeatTransfer: pending cleared, SeatTransferAccepted emitted; still not in the set
+  PASS  recordResume: buyer Active (2) again, op7 back in getValidators() (n=7), owner list has buyer  :: {"resumeBlock":672}
+  PASS  op7 (the same node n7, never restarted) mines again for the buyer; gaps <= 4 s  :: {"firstBlockByOp7":675}
+  PASS  negative: seller can no longer transfer (not owner)  :: ValidatorSeatNFT: wrong owner
+[BG-06] PASS seat 7 moved owner7 -> buyer at block 649; suspended; accepted + resumed at block 672; op7 mines again from 675

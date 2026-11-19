@@ -1,0 +1,18 @@
+  PASS  overlay visible on chain: probationPeriod 120, exitCooldown 60, entryWindowSeconds 30, recoveryPeriod 60
+  PASS  constants are the real ones: MASS_DEMOTION_WINDOW 3600, RECOVERY_COLLATERAL_LOCK 90 days
+  PASS  start: single validator op1 (genesis)
+  PASS  cand fully verified
+  PASS  node nC running and synced (non-validator)  :: {"head":7,"node":7}
+  PASS  requestMembership: Probation, collateral 500,000 in Registry, seat #2 minted  :: {"block":8,"gasUsed":"369472"}
+  PASS  negative: recordActivation inside the 120 s probation reverts  :: ValidatorsRegistry: probation period not elapsed
+  PASS  recordActivation after the probation period: status Active (2); ValidatorActivated emitted  :: {"block":70,"gasUsed":"350921","secondsAfterEntry":124}
+  PASS  getValidators() == [op1, opC] (operator key of the paid entrant, not its owner key)
+  PASS  QBFT set grows 1 -> 2 at the activation block; opC mines; blocks continue at 2 s  :: {"firstBlockByOpC":71,"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+  PASS  negative: withdrawStake while Active reverts  :: ValidatorsRegistry: not exiting
+  PASS  requestExit: Exiting (4), ExitRequested(cooldownEnd = +60 s), leaves getValidators(), seat burned  :: {"block":86}
+  PASS  QBFT set back to [op1] from the exit block; chain continues  :: ["0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0"]
+  PASS  negative: withdrawStake inside the 60 s cooldown reverts  :: ValidatorsRegistry: exit cooldown not elapsed
+  PASS  withdrawStake returns the full 500,000 Suren collateral (net of gas); Registry balance -500,000  :: {"gasUsed":"67712"}
+  PASS  record deleted (None 0); permanentlyExited true; everActivated stays true
+  PASS  negative: the same address can never rejoin (permanent exit) - or cannot afford: ValidatorsRegistry: this address has exited before and may not rejoin  :: {"reverted":true,"reason":"ValidatorsRegistry: this address has exited before and may not rejoin","stage":"eth_call","minedHash":"0x5bee49ace0af365fb8df9bd47eb215804a28b1a83b7263151f2df274842e3b2c","minedStatus":0}
+[BG-05b] PASS paid entrant cycle on Net-T with short probation/cooldown overlay: entry, activation in the QBFT set, exit, collateral back

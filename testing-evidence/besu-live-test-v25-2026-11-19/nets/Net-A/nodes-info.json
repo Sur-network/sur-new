@@ -1,0 +1,92 @@
+[
+  {
+    "node": "n1",
+    "role": "op1",
+    "operatorAddress": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+    "ip": "172.29.51.11",
+    "p2p": 30303,
+    "rpcHostPort": 19111,
+    "enode": "enode://9ffe4905933129b0ef97f06921238d1536815d0edba41c3b0c0991a2f6018745957d412a5bb36e8c38ad5dd404e54a02bd2c68b3d065f5aefc1eb2db506fbb23@172.29.51.11:30303"
+  },
+  {
+    "node": "n2",
+    "role": "op2",
+    "operatorAddress": "0xFeE62972fE9fE58D4d93Bb36BE7350CCB581d8A9",
+    "ip": "172.29.51.12",
+    "p2p": 30303,
+    "rpcHostPort": 19112,
+    "enode": "enode://c0c35e6101addf99462314ce44d46f4b23ebad34c8c9a992a9460cbd7b29bcbcc8a00bf371faddf47821e212418c9964ba3d9d20d2caa6af49c9caf071256c06@172.29.51.12:30303"
+  },
+  {
+    "node": "n3",
+    "role": "op3",
+    "operatorAddress": "0xae079C72c0DD0d41F8DD72C957514585Cc18C234",
+    "ip": "172.29.51.13",
+    "p2p": 30303,
+    "rpcHostPort": 19113,
+    "enode": "enode://e590fe94e6e3b27d8b74024550a96a78d1ecd8522847132ec189e26c2850e5133bf0fc57538e69a7809c3fd52226bded67ee8a571d5c891bab7f1bc3ddad4a43@172.29.51.13:30303"
+  },
+  {
+    "node": "n4",
+    "role": "op4",
+    "operatorAddress": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+    "ip": "172.29.51.14",
+    "p2p": 30303,
+    "rpcHostPort": 19114,
+    "enode": "enode://b90401b72e088523eb40ad73bb96d324f277d689cc59bd115f815d93d054aed9aa5d480d17b0781fc171d589f18b536544010e98ced63e9834e24d164d43376d@172.29.51.14:30303"
+  },
+  {
+    "node": "n5",
+    "role": "op5",
+    "operatorAddress": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+    "ip": "172.29.51.15",
+    "p2p": 30303,
+    "rpcHostPort": 19115,
+    "enode": "enode://62f8d289a549ff8ef3db45954b78c0f05a66aa179a2ccb97a5debd802949487ab261f5407264565cbc0b7e8758f4c489ba675ef8dbf6ed61e4238e25b6dda6ce@172.29.51.15:30303"
+  },
+  {
+    "node": "n6",
+    "role": "op6",
+    "operatorAddress": "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+    "ip": "172.29.51.16",
+    "p2p": 30303,
+    "rpcHostPort": 19116,
+    "enode": "enode://95dda0fb946e740b6d0986762a6ad882f7d11a5457c76400b7f6d6f65b33f4469dffd00ab83577e6936fc96db185fa0a479cc53424e2e5cdaafd50e8a9e44dd3@172.29.51.16:30303"
+  },
+  {
+    "node": "n7",
+    "role": "op7",
+    "operatorAddress": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+    "ip": "172.29.51.17",
+    "p2p": 30303,
+    "rpcHostPort": 19117,
+    "enode": "enode://7ffb7a5a48d0a7fed40e6873f2565aab085bce7cbb2852070bc6952e0a13aeb2be9ab07cf23030ee4736c275c2e1de6d91efd3f074de82cb4ff954e909338cf9@172.29.51.17:30303"
+  },
+  {
+    "node": "n2b",
+    "role": "op2b",
+    "operatorAddress": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+    "ip": "172.29.51.22",
+    "p2p": 30303,
+    "rpcHostPort": 19122,
+    "enode": "enode://aa1ed8b475c97bab213a1792229a165dae76e1f1282a244fbf4e48c6d4e74bf3b7cf38e124876c8165efe460364ed9888a4e6a45ead5785317be5fcfcfddbb57@172.29.51.22:30303"
+  },
+  {
+    "node": "n3b",
+    "role": "op3b",
+    "operatorAddress": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+    "ip": "172.29.51.23",
+    "p2p": 30303,
+    "rpcHostPort": 19123,
+    "enode": "enode://679aff54d19236968857599b1bc7a29ac2ec7ebf4f8f605604cd7ec25a1277304843a6c216c405b69185f494bdea40fe9ceef3b61328ddb799c6de4da11dabe1@172.29.51.23:30303"
+  },
+  {
+    "node": "nC",
+    "role": "opC",
+    "operatorAddress": "0x4cB1761ca938B6a6a4FaCA87cefB154850322046",
+    "ip": "172.29.51.31",
+    "p2p": 30303,
+    "rpcHostPort": 19131,
+    "enode": "enode://4c64cd77e1eacb2a37efe87ba0d75bdeae3a01312b4613ad9fb19617e6dc8dad41e26b26570e256696c113c46f3c5fca888533f3067e6718641dbce14dc4fd19@172.29.51.31:30303"
+  }
+]

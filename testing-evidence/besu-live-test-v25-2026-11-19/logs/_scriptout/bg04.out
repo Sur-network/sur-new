@@ -1,0 +1,18 @@
+  PASS  start: 7 validators  :: ["0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0","0xEa043c1D90615c89884F8138b48b100C7529e17a","0xc848eb0f8F94f33EbaAB7E66779E338420197acf","0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6","0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508","0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd","0xFc13616C9874E04aa79710D1e051fb30406E7F03"]
+  PASS  negative: boardMember reverts  :: ValidatorsRegistry: a board member cannot suspend voluntarily
+  PASS  negative: notActive reverts  :: ValidatorsRegistry: not active
+  PASS  negative: resumeNotSuspended reverts  :: ValidatorsRegistry: not self-suspended
+  PASS  negative: verifierResumeActive reverts  :: ValidatorsRegistry: not self-suspended
+  PASS  SelfSuspendedEvent emitted  :: {"gasUsed":"110313"}
+  PASS  owner6 status SelfSuspended (6); getValidators() drops op6 at once; getActiveOwners drops owner6
+  PASS  isValidator(owner6) == false; collateral untouched (0 for a founder)
+  PASS  QBFT set at B-1 has op6, at B it does not (n=6)  :: {"595":["0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd","0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508","0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6","0xc848eb0f8F94f33EbaAB7E66779E338420197acf","0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0","0xEa043c1D90615c89884F8138b48b100C7529e17a","0xFc13616C9874E04aa79710D1e051fb30406E7F03"],"596":["0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508","0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6","0xc848eb0f8F94f33EbaAB7E66779E338420197acf","0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0","0xEa043c1D90615c89884F8138b48b100C7529e17a","0xFc13616C9874E04aa79710D1e051fb30406E7F03"],"597":["0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508","0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6","0xc848eb0f8F94f33EbaAB7E66779E338420197acf","0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0","0xEa043c1D90615c89884F8138b48b100C7529e17a","0xFc13616C9874E04aa79710D1e051fb30406E7F03"]}
+  PASS  op6 never mines after the suspension block; blocks keep coming (gaps <= 4 s)  :: [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
+  PASS  node n6 keeps running as a non-validator (in sync)
+  PASS  negative: recordResume before requestResume reverts  :: ValidatorsRegistry: no resume request
+  PASS  requestResume: resumeRequested(owner6) == true; still out of the set
+  PASS  negative: the owner cannot resume itself (only the Verifier)  :: ValidatorsRegistry: caller is not the verifier
+  PASS  ResumeRecorded + ValidatorActivated events; status Active (2) again with NO probation  :: {"gasUsed":"247590"}
+  PASS  op6 back in getValidators() (n=7)
+  PASS  op6 mines again (no restart of the node needed); gaps <= 4 s  :: {"firstBlockByOp6":624,"resumeBlock":620}
+[BG-04] PASS selfSuspend at block 596, out of the QBFT set from block 596; recordResume at block 620, mines again from block 624

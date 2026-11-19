@@ -1,0 +1,31 @@
+  PASS  start: 7 validators  :: 7
+  PASS  founding board == owner1..owner5 and has authority (board month == current month)  :: ["0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC","0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1","0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343","0x5a88853CBad947766fC96d210F337F2c246530D0","0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4"]
+  PASS  negative: notVerifier reverts  :: ValidatorsRegistry: caller is not the verifier
+  PASS  negative: emptyHash reverts  :: ValidatorsRegistry: empty evidence hash
+  PASS  negative: future reverts  :: ValidatorsRegistry: recoveryTimestamp out of range
+  PASS  negative: tooOld reverts  :: ValidatorsRegistry: recoveryTimestamp out of range
+  PASS  negative: notActive reverts  :: ValidatorsRegistry: validator is not active
+  PASS  RecoveryRemovalRecorded(owner6, recoveryTimestamp, evidenceHash, exitAllowedAt = recoveryTimestamp + 90 days)  :: {"gasUsed":"284582","block":709}
+  PASS  owner6 status RemovedInRecovery (5); permanentlyExited true; membershipEpoch 1; collateral untouched (founder 0)
+  PASS  op6 removed from getValidators() while the chain runs (n=6)
+  PASS  QBFT set: op6 in at B-1, out at B; blocks keep coming with gaps <= 4 s after removal (the dead node is no longer a proposer)  :: {"gapsBeforeAndAfter":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],"block":709}
+  PASS  recoveryCaseInfo: state Recorded (1), objection deadline = recordedAt + 72 h  :: {"recordedAt":1795096791}
+  PASS  negative: second record for the same validator reverts  :: ValidatorsRegistry: validator is not active
+  PASS  negative: requestExit while the case is open (before the objection window ended) reverts  :: ValidatorsRegistry: removal case still open
+  PASS  objectRecoveryRemoval: state Objected (2), 7-day decision window opened
+  PASS  negative: objecting twice reverts  :: ValidatorsRegistry: nothing to object to
+  PASS  negative: expireRecoveryRemoval before the 7 days reverts (the expiry itself is NOT-RUN on Besu)  :: ValidatorsRegistry: nothing to expire
+  PASS  negative: referral to the validators refused while >= 3 impartial board members hold authority  :: ValidatorsBoard: enough impartial board members
+  PASS  negative: a non-board member cannot vote  :: ValidatorsBoard: caller has no board authority
+  PASS  negative: resolveRecoveryRemoval only callable by the ValidatorsBoard contract  :: ValidatorsRegistry: caller is not the validators board
+  PASS  after 2 uphold votes the case is still Objected
+  PASS  3rd board vote upholds: Registry state Upheld (4); status stays RemovedInRecovery; op6 stays out
+  PASS  negative: a vote after the case is decided reverts  :: ValidatorsBoard: no open board case
+  PASS  negative: requestExit after the case, before recoveryTimestamp + 90 days, reverts (90-day lock; the elapsed part is NOT-RUN)  :: ValidatorsRegistry: collateral locked for 90 days after recovery
+  PASS  case 2: buyer removed (n=5)  :: {"block":739}
+  PASS  3 board votes to cancel: Registry case Cancelled (5)  :: 5
+  FAIL  buyer reinstated: Active (2), permanentlyExited cleared, op7 back in getValidators() (n=6)  :: 6
+  PASS  op7 mines again after the cancel; gaps <= 4 s (n=5 in between did not stall)  :: {"firstBlockByOp7":745,"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+  PASS  membershipEpoch of buyer was bumped by the removal (board seat would end), unchanged by reinstatement
+  PASS  end: contract list == QBFT set (6 validators: op1, op2b, op3b, op4, op5, op7)  :: ["0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0","0xEa043c1D90615c89884F8138b48b100C7529e17a","0xc848eb0f8F94f33EbaAB7E66779E338420197acf","0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6","0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508","0xFc13616C9874E04aa79710D1e051fb30406E7F03"]
+[BG-07] FAIL case 1 (owner6, node down) removed at block 709, objected, upheld by 3 board votes; case 2 (buyer) removed, objected, cancelled by 3 board votes and reinstated; 90-day lock and 7-day expiry NOT elapsed (NOT-RUN)

@@ -1,0 +1,202 @@
+{
+  "id": "BG-05",
+  "writtenAtUTC": "2026-11-19T13:48:11.330Z",
+  "verdict": "PASS",
+  "summary": "cand entered on Net-A at block 385: collateral 500,000 in Registry, 20,000 fee to Distributor, seat #8 minted; Probation; activation refused before 7 days",
+  "checks": [
+    {
+      "name": "before: cand not fully verified",
+      "pass": true
+    },
+    {
+      "name": "cand registered + phone/telegram/bale/email/kyc verified",
+      "pass": true,
+      "detail": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "buyer fully verified too",
+      "pass": true
+    },
+    {
+      "name": "outsider still not fully verified",
+      "pass": true
+    },
+    {
+      "name": "negative: only the identity oracle sets flags",
+      "pass": true,
+      "detail": "IdentityRegistry: caller is not the identity oracle"
+    },
+    {
+      "name": "currentEntryThreshold == 500,000 Suren, fee (4%) == 20,000 Suren",
+      "pass": true,
+      "detail": {
+        "collateral": "500000000000000000000000",
+        "fee": "20000000000000000000000"
+      }
+    },
+    {
+      "name": "negative: unverified reverts",
+      "pass": true,
+      "detail": "missing revert data"
+    },
+    {
+      "name": "negative: wrongAmount reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: incorrect payment amount"
+    },
+    {
+      "name": "negative: operatorOfOther reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: operator belongs to another owner"
+    },
+    {
+      "name": "negative: zeroOperator reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: zero operator"
+    },
+    {
+      "name": "events: MembershipRequested(collateral 500k, fee 20k), OperatorSet(cand, opC), MembershipFeeReceived, ERC-721 Transfer(0 -> cand)",
+      "pass": true,
+      "detail": {
+        "gasUsed": "369472",
+        "block": 385
+      }
+    },
+    {
+      "name": "collateral stays in the Registry: Registry balance +500,000 Suren exactly",
+      "pass": true,
+      "detail": "500000000000000000000000"
+    },
+    {
+      "name": "Distributor.pendingMembershipFees +20,000 Suren",
+      "pass": true,
+      "detail": "20000000000000000000000"
+    },
+    {
+      "name": "Distributor balance rose by fee + blockreward(2) + tx fees of that block (exact)",
+      "pass": true,
+      "detail": {
+        "delta": "20038947200000000000000",
+        "expected": "20038947200000000000000",
+        "txsInBlock": 1
+      }
+    },
+    {
+      "name": "cand paid exactly 520,000 Suren + gas",
+      "pass": true,
+      "detail": "520036947200000000000000"
+    },
+    {
+      "name": "validators[cand]: Probation (1), lockedStake 500,000, isPaidEntrant, periodStartedAt == block timestamp",
+      "pass": true,
+      "detail": {
+        "periodStartedAt": 1795096083
+      }
+    },
+    {
+      "name": "paidValidatorCount +1",
+      "pass": true
+    },
+    {
+      "name": "operatorOf(cand)==opC, ownerOfOperator(opC)==cand, opC not in getValidators()",
+      "pass": true
+    },
+    {
+      "name": "seat NFT minted: totalMinted +1, ownerOf(seat)==cand, balanceOf==1",
+      "pass": true,
+      "detail": {
+        "seat": "8"
+      }
+    },
+    {
+      "name": "tokenURI(seat) readable on chain",
+      "pass": true,
+      "detail": "https://besu-live-test.local/seat/8"
+    },
+    {
+      "name": "negative: second requestMembership by the same address reverts (already registered)",
+      "pass": true,
+      "detail": "missing revert data"
+    },
+    {
+      "name": "buyer holds >= 520,000 Suren (funded by the DAO Spend of BG-09)",
+      "pass": true,
+      "detail": "604992822400000000000000"
+    },
+    {
+      "name": "negative: second paid entry in the same window reverts (maxEntriesPerWindow=1, 7 days)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: entry rate limit reached"
+    },
+    {
+      "name": "negative: recordActivation before the 7-day probation elapsed reverts (probation not elapsed)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: probation period not elapsed"
+    },
+    {
+      "name": "negative: recordActivation from a non-verifier reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: caller is not the verifier"
+    },
+    {
+      "name": "negative: setOperator to the same operator reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: same operator"
+    }
+  ],
+  "entryTx": "0x366242f14d25deb9a7a92f4a0635622ebb726a81d1992e95a2c5705374dd7ef7",
+  "entryBlock": 385,
+  "gasUsed": "369472",
+  "identityTxs": [
+    "0x04aa41daef7bf421ea408f691f9240b6877ad27fd7b2d97fff595bdf4e6f3aec",
+    "0x0d0145cd60ea303b21c58e0cabf78e35afa201c39334659f841ef9bf152bb9cd",
+    "0x692fdb92557d3dea0abf70f86e9031bea5b43465427037f58886dacd5de98a15",
+    "0xe9f4d3e12a79cf3ed2c82b9bf6480a338ef7b45ba48213ec219dda502312e763",
+    "0x16ba774154028a5f12330afe4888d5733d4a831f1fcd3c5a6596e6d54caaf4c2",
+    "0x68510f0f0efeb5dd932b3495161afaa1e871e955e9b6074a9564d5168d16e4e4",
+    "0x81dbf2289b99df2e9d8d1756c955a4fd8aee439e91422e554d448ac6f50f2289",
+    "0x7f1ea8b9647ac9bc4f59e4a824a3ee0968a55eff48cfd06d4ae258647675106a",
+    "0x2bac4fd13d9d04c917c09fe49ec0ad25b0a69d3f647c78b1017e34b5e63269e7",
+    "0x074bf6214ac01a24f087960b6b14508153d6a0c14086baa8b3e80a65a486cac8",
+    "0x6ba14d6a3f994288afd0499c9bf986e8e585c573aff65ca83af615c0b23d40f4",
+    "0x7f01958acf8a7e53b95d1a6e267883b714c79638de13706e1fd69fad09399441"
+  ],
+  "negatives": {
+    "unverified": {
+      "reverted": true,
+      "reason": "missing revert data",
+      "stage": "eth_call",
+      "minedHash": null,
+      "minedStatus": "rejected: insufficient funds for intrinsic transaction cost"
+    },
+    "wrongAmount": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: incorrect payment amount",
+      "stage": "eth_call",
+      "minedHash": "0xc2d12ab6cf1c99ed5c617a4cf769037099fc0f4a1d736b75f66be5ed533af8db",
+      "minedStatus": 0
+    },
+    "operatorOfOther": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: operator belongs to another owner",
+      "stage": "eth_call",
+      "minedHash": "0xf9e6d21d0957fd9175075b19bc9b27b02de8be5097ed61ccae2552affabfce8e",
+      "minedStatus": 0
+    },
+    "zeroOperator": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: zero operator",
+      "stage": "eth_call",
+      "minedHash": "0x0d6c6260cb200ebfd0d8eac3767f14046af057db55175e168637bf887afcd918",
+      "minedStatus": 0
+    }
+  },
+  "notRunHere": "probation -> activation after the probation period: BG-05b on Net-T (probationPeriod overlaid to 120 s)"
+}

@@ -1,0 +1,577 @@
+{
+  "id": "BG-07",
+  "writtenAtUTC": "2026-11-19T14:01:39.887Z",
+  "verdict": "FAIL",
+  "summary": "case 1 (owner6, node down) removed at block 709, objected, upheld by 3 board votes; case 2 (buyer) removed, objected, cancelled by 3 board votes and reinstated; 90-day lock and 7-day expiry NOT elapsed (NOT-RUN)",
+  "checks": [
+    {
+      "name": "start: 7 validators",
+      "pass": true,
+      "detail": 7
+    },
+    {
+      "name": "founding board == owner1..owner5 and has authority (board month == current month)",
+      "pass": true,
+      "detail": [
+        "0xd3b84CF7Cf769F21Df255617b9745C95C9dB5eFC",
+        "0x62f7C0154064F65Bc13Ae19fea8451aBfaE435c1",
+        "0x2175FA8af0B468Fb7776397966eAdc7c3CD2B343",
+        "0x5a88853CBad947766fC96d210F337F2c246530D0",
+        "0x08C7566f65E0B42A44d26B5C6cFDc09F58e063c4"
+      ]
+    },
+    {
+      "name": "negative: notVerifier reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: caller is not the verifier"
+    },
+    {
+      "name": "negative: emptyHash reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: empty evidence hash"
+    },
+    {
+      "name": "negative: future reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: recoveryTimestamp out of range"
+    },
+    {
+      "name": "negative: tooOld reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: recoveryTimestamp out of range"
+    },
+    {
+      "name": "negative: notActive reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: validator is not active"
+    },
+    {
+      "name": "RecoveryRemovalRecorded(owner6, recoveryTimestamp, evidenceHash, exitAllowedAt = recoveryTimestamp + 90 days)",
+      "pass": true,
+      "detail": {
+        "gasUsed": "284582",
+        "block": 709
+      }
+    },
+    {
+      "name": "owner6 status RemovedInRecovery (5); permanentlyExited true; membershipEpoch 1; collateral untouched (founder 0)",
+      "pass": true
+    },
+    {
+      "name": "op6 removed from getValidators() while the chain runs (n=6)",
+      "pass": true
+    },
+    {
+      "name": "QBFT set: op6 in at B-1, out at B; blocks keep coming with gaps <= 4 s after removal (the dead node is no longer a proposer)",
+      "pass": true,
+      "detail": {
+        "gapsBeforeAndAfter": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "block": 709
+      }
+    },
+    {
+      "name": "recoveryCaseInfo: state Recorded (1), objection deadline = recordedAt + 72 h",
+      "pass": true,
+      "detail": {
+        "recordedAt": 1795096791
+      }
+    },
+    {
+      "name": "negative: second record for the same validator reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: validator is not active"
+    },
+    {
+      "name": "negative: requestExit while the case is open (before the objection window ended) reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: removal case still open"
+    },
+    {
+      "name": "objectRecoveryRemoval: state Objected (2), 7-day decision window opened",
+      "pass": true
+    },
+    {
+      "name": "negative: objecting twice reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: nothing to object to"
+    },
+    {
+      "name": "negative: expireRecoveryRemoval before the 7 days reverts (the expiry itself is NOT-RUN on Besu)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: nothing to expire"
+    },
+    {
+      "name": "negative: referral to the validators refused while >= 3 impartial board members hold authority",
+      "pass": true,
+      "detail": "ValidatorsBoard: enough impartial board members"
+    },
+    {
+      "name": "negative: a non-board member cannot vote",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "negative: resolveRecoveryRemoval only callable by the ValidatorsBoard contract",
+      "pass": true,
+      "detail": "ValidatorsRegistry: caller is not the validators board"
+    },
+    {
+      "name": "after 2 uphold votes the case is still Objected",
+      "pass": true
+    },
+    {
+      "name": "3rd board vote upholds: Registry state Upheld (4); status stays RemovedInRecovery; op6 stays out",
+      "pass": true
+    },
+    {
+      "name": "negative: a vote after the case is decided reverts",
+      "pass": true,
+      "detail": "ValidatorsBoard: no open board case"
+    },
+    {
+      "name": "negative: requestExit after the case, before recoveryTimestamp + 90 days, reverts (90-day lock; the elapsed part is NOT-RUN)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: collateral locked for 90 days after recovery"
+    },
+    {
+      "name": "case 2: buyer removed (n=5)",
+      "pass": true,
+      "detail": {
+        "block": 739
+      }
+    },
+    {
+      "name": "3 board votes to cancel: Registry case Cancelled (5)",
+      "pass": true,
+      "detail": 5
+    },
+    {
+      "name": "buyer reinstated: Active (2), permanentlyExited cleared, op7 back in getValidators() (n=6)",
+      "pass": false,
+      "detail": 6
+    },
+    {
+      "name": "op7 mines again after the cancel; gaps <= 4 s (n=5 in between did not stall)",
+      "pass": true,
+      "detail": {
+        "firstBlockByOp7": 745,
+        "gaps": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "name": "membershipEpoch of buyer was bumped by the removal (board seat would end), unchanged by reinstatement",
+      "pass": true
+    },
+    {
+      "name": "end: contract list == QBFT set (6 validators: op1, op2b, op3b, op4, op5, op7)",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ]
+    }
+  ],
+  "negatives": {
+    "notVerifier": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: caller is not the verifier",
+      "stage": "eth_call",
+      "minedHash": "0xc976bb3b13a4a2659c5cae50769f548f5e1c68c5643e4c7282fdd02ca447fb67",
+      "minedStatus": 0
+    },
+    "emptyHash": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: empty evidence hash",
+      "stage": "eth_call",
+      "minedHash": "0x9e38763ce8ada9d4906f04fbfc0cbb5795ba6d567e6b55c678d022e17fb4a5c1",
+      "minedStatus": 0
+    },
+    "future": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: recoveryTimestamp out of range",
+      "stage": "eth_call",
+      "minedHash": "0x32c92b0af1a32728da729b12e2f536e6a4148eaed36bfdbdb49f4c848a239575",
+      "minedStatus": 0
+    },
+    "tooOld": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: recoveryTimestamp out of range",
+      "stage": "eth_call",
+      "minedHash": "0xaa2df427c011617834f7ef676b52b2bd4b392f7b1e6035818451f6ed34ed805b",
+      "minedStatus": 0
+    },
+    "notActive": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: validator is not active",
+      "stage": "eth_call",
+      "minedHash": "0xe22714cc428f50c8088b5f330028f552d6d4e7395d19c02dd5f31d24ffb63cf2",
+      "minedStatus": 0
+    }
+  },
+  "evidenceHashSource": "keccak256(JSON of qbft_getSignerMetrics at record time)",
+  "case1": {
+    "recordTx": "0x0aa074d67001e137012d0d40aafc3a7fe3bfb836da7efbe7865965a18796bc93",
+    "block": 709,
+    "qbftSets": {
+      "708": [
+        "0x04Ee03136fd3FB4c345f3193b2e2C879F6Ee40dd",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ],
+      "709": [
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ]
+    },
+    "series": [
+      {
+        "block": 704,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096781
+      },
+      {
+        "block": 705,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096783
+      },
+      {
+        "block": 706,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096785
+      },
+      {
+        "block": 707,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096787
+      },
+      {
+        "block": 708,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096789
+      },
+      {
+        "block": 709,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096791
+      },
+      {
+        "block": 710,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096793
+      },
+      {
+        "block": 711,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096795
+      },
+      {
+        "block": 712,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096797
+      },
+      {
+        "block": 713,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096799
+      },
+      {
+        "block": 714,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096801
+      },
+      {
+        "block": 715,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096803
+      },
+      {
+        "block": 716,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096805
+      },
+      {
+        "block": 717,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096807
+      },
+      {
+        "block": 718,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096809
+      },
+      {
+        "block": 719,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096811
+      },
+      {
+        "block": 720,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096813
+      },
+      {
+        "block": 721,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096815
+      },
+      {
+        "block": 722,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096817
+      },
+      {
+        "block": 723,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096819
+      },
+      {
+        "block": 724,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096821
+      },
+      {
+        "block": 725,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096823
+      }
+    ],
+    "objectTx": "0xb0e42f4a4adab32c50def88d5d649eebc7177b0a547d4027105c1479ac51d918",
+    "votes": [
+      {
+        "voter": "owner1",
+        "tx": "0x06d2ca644b6f06d2b2266c59c2ba1f5f1126eaffbde77077b2b80510369c23c7",
+        "gasUsed": "212856"
+      },
+      {
+        "voter": "owner2",
+        "tx": "0xede5d632b72293bbe0571b58d349e2b09efac82867d3b969244c47cad9d1d1ec",
+        "gasUsed": "195756"
+      },
+      {
+        "voter": "owner3",
+        "tx": "0x4a80e0d550c8cef6f43cb3bb65f825ef740b3a04791bf5137f0855708a395c55",
+        "gasUsed": "205518"
+      }
+    ]
+  },
+  "case2": {
+    "recordTx": "0x90796871d39add021f7f266ded47d4d02ab73416d72fb94370e1a340b5a538e0",
+    "cancelBlockApprox": 743,
+    "series": [
+      {
+        "block": 735,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096843
+      },
+      {
+        "block": 736,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096845
+      },
+      {
+        "block": 737,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096847
+      },
+      {
+        "block": 738,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096849
+      },
+      {
+        "block": 739,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096851
+      },
+      {
+        "block": 740,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096853
+      },
+      {
+        "block": 741,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096855
+      },
+      {
+        "block": 742,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096857
+      },
+      {
+        "block": 743,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096859
+      },
+      {
+        "block": 744,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096861
+      },
+      {
+        "block": 745,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096863
+      },
+      {
+        "block": 746,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096865
+      },
+      {
+        "block": 747,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096867
+      },
+      {
+        "block": 748,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096869
+      },
+      {
+        "block": 749,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096871
+      },
+      {
+        "block": 750,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096873
+      },
+      {
+        "block": 751,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096875
+      },
+      {
+        "block": 752,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096877
+      },
+      {
+        "block": 753,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096879
+      },
+      {
+        "block": 754,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096881
+      },
+      {
+        "block": 755,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096883
+      },
+      {
+        "block": 756,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096885
+      },
+      {
+        "block": 757,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096887
+      },
+      {
+        "block": 758,
+        "miner": "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "ts": 1795096889
+      },
+      {
+        "block": 759,
+        "miner": "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "ts": 1795096891
+      },
+      {
+        "block": 760,
+        "miner": "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "ts": 1795096893
+      },
+      {
+        "block": 761,
+        "miner": "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "ts": 1795096895
+      },
+      {
+        "block": 762,
+        "miner": "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "ts": 1795096897
+      },
+      {
+        "block": 763,
+        "miner": "0xFc13616C9874E04aa79710D1e051fb30406E7F03",
+        "ts": 1795096899
+      }
+    ]
+  },
+  "notRun": [
+    "collateral lock for 90 days after recovery (elapsed)",
+    "7-day expiry of the case (expireRecoveryRemoval after the deadline)",
+    "referral to the validators (needs < 3 impartial board members)",
+    "exit/withdraw after the lock"
+  ]
+}

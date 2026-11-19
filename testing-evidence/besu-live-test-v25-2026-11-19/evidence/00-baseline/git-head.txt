@@ -1,0 +1,1 @@
+7ff14ddd230027a1b1608218f2282ae1a7ff2698 Sync docs with the v2.5 Registry core, seat NFT and distributor excess burn

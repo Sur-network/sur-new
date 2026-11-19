@@ -1,0 +1,66 @@
+{
+  "id": "BG-07b",
+  "writtenAtUTC": "2026-11-19T14:03:27.581Z",
+  "verdict": "PASS",
+  "summary": "case 2 repeated with the corrected expectation: removal, objection, board cancel, reinstatement",
+  "checks": [
+    {
+      "name": "start: 6 validators = op1, op2b, op3b, op4, op5, op7 (op6 removed in BG-07 case 1)",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ]
+    },
+    {
+      "name": "buyer removed: status RemovedInRecovery (5), list = 5 operators without op7",
+      "pass": true,
+      "detail": {
+        "block": 787
+      }
+    },
+    {
+      "name": "QBFT set at the removal block == the 5 operators (n=5, f=1, quorum 4)",
+      "pass": true,
+      "detail": [
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a"
+      ]
+    },
+    {
+      "name": "3 board votes to cancel -> Registry case Cancelled (5); RecoveryRemovalCancelled(expired=false) emitted",
+      "pass": true,
+      "detail": {
+        "block": 797
+      }
+    },
+    {
+      "name": "buyer Active (2), permanentlyExited cleared, op7 back: list == the 6 operators incl. op7",
+      "pass": true,
+      "detail": [
+        "0xDc318cb1d92b63320F2C0fb8761FF3640C484FA0",
+        "0xEa043c1D90615c89884F8138b48b100C7529e17a",
+        "0xc848eb0f8F94f33EbaAB7E66779E338420197acf",
+        "0x5F9bE8A0FDE4715eEbEd80f3f3712E8e1ece81f6",
+        "0x5342B3d59dD497ebA41Ba286EC83B9a4b85A5508",
+        "0xFc13616C9874E04aa79710D1e051fb30406E7F03"
+      ]
+    },
+    {
+      "name": "QBFT set at the cancel block == 6 operators; op7 mines again; no gap > 4 s",
+      "pass": true,
+      "detail": {
+        "firstBlockByOp7": 798
+      }
+    }
+  ],
+  "removalTx": "0x6993cc8eedd19bcc8be0f07a8f499622f684a5a5775341a49752f44a10bbc122",
+  "cancelBlock": 797
+}
