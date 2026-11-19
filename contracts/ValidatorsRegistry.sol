@@ -11,6 +11,10 @@ interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
 }
 
+interface IBoardAuthority {
+    function hasBoardAuthority(address who) external view returns (bool);
+}
+
 interface IIdentityFullyVerified {
     function isFullyVerified(address who) external view returns (bool);
 }
@@ -84,7 +88,8 @@ contract ValidatorsRegistry {
 
     /// @dev RemovedInRecovery (v2.5, appended so earlier values keep their encoding): removed from the validator list after
     ///      shutting down their node during a network recovery. Not a penalty: collateral is locked until exitAllowedAt.
-    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery }
+    ///      SelfSuspended (v2.5, appended): voluntary, free suspension by the owner; no rewards, no votes, out of getValidators().
+    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery, SelfSuspended }
 
     struct ValidatorInfo {
         Status status;
@@ -262,7 +267,7 @@ contract ValidatorsRegistry {
     //   6. If no appeal is filed within the 72 hours, anyone may call executeUncontestedSlash().
     // ------------------------------------------------------------------
 
-    enum DecisionType { Activation, Suspension, Recovery }
+    enum DecisionType { Activation, Suspension, Recovery, Resume }
     enum DeliveryStatus { NotApplicable, Pending, Confirmed, Disputed }
     enum SlashOutcome { Undetermined, ExemptMassFailure, VoidedNoDelivery, Confirmed, RejectedByVote, RejectedNoQuorum, ExecutedUncontested }
 
@@ -628,7 +633,7 @@ contract ValidatorsRegistry {
     function setOperator(address newOperator) external {
         Status st = validators[msg.sender].status;
         require(
-            st == Status.Probation || st == Status.Active || st == Status.Demoted,
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
             "ValidatorsRegistry: cannot change the operator in this status"
         );
         require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
@@ -1098,7 +1103,7 @@ contract ValidatorsRegistry {
             return;
         }
         require(
-            v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted,
+            v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted || v.status == Status.SelfSuspended,
             "ValidatorsRegistry: nothing to exit"
         );
 
@@ -1484,5 +1489,50 @@ contract ValidatorsRegistry {
     function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount) {
         RecoveryRemoval storage r = recoveryRemovals[validator];
         return (r.referralNonce, r.eligibleCount);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: voluntary suspension (SelfSuspended) — free, no time or count limit
+    //   selfSuspend()      owner, Active -> SelfSuspended: out of getValidators() at once; collateral stays locked; no rewards, no votes
+    //   requestResume()    owner, SelfSuspended: asks the Verifier to check the node
+    //   recordResume()     Verifier only, after a successful node health check: SelfSuspended -> Active, NO probation
+    // A member of the validators' board cannot suspend voluntarily (it would silently shrink the board's quorum), and nobody can
+    // suspend below MIN_ACTIVE_VALIDATORS. Voluntary suspension is never a violation and never leads to a slash.
+    // ------------------------------------------------------------------
+    mapping(address => bool) public resumeRequested;
+
+    event SelfSuspendedEvent(address indexed validator);
+    event ResumeRequested(address indexed validator);
+    event ResumeRecorded(address indexed validator, bytes32 evidenceHash);
+
+    function selfSuspend() external nonReentrant {
+        ValidatorInfo storage v = validators[msg.sender];
+        require(v.status == Status.Active, "ValidatorsRegistry: not active");
+        require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - suspension blocked");
+        require(!IBoardAuthority(BOARD).hasBoardAuthority(msg.sender), "ValidatorsRegistry: a board member cannot suspend voluntarily");
+        _removeFromActive(msg.sender);
+        _recordActiveCheckpoint(msg.sender, false);
+        v.status = Status.SelfSuspended;
+        v.periodStartedAt = block.timestamp;
+        resumeRequested[msg.sender] = false;
+        emit SelfSuspendedEvent(msg.sender);
+        _notifyBoard(msg.sender);
+    }
+
+    function requestResume() external {
+        require(validators[msg.sender].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
+        resumeRequested[msg.sender] = true;
+        emit ResumeRequested(msg.sender);
+    }
+
+    function recordResume(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
+        require(validators[validator].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
+        require(resumeRequested[validator], "ValidatorsRegistry: no resume request");
+        require(operatorOf[validator] != address(0), "ValidatorsRegistry: operator key not set");
+        resumeRequested[validator] = false;
+        _activate(validator);
+        decisionId = _recordDecision(validator, DecisionType.Resume, evidenceHash, 0);
+        emit ResumeRecorded(validator, evidenceHash);
+        _notifyBoard(validator);
     }
 }

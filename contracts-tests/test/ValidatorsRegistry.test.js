@@ -235,3 +235,66 @@ describe("Registry v2.5 - slashing burns", () => {
     expect((await reg.validators(owner.address)).lockedStake).to.equal(E("500000") - slash);
   });
 });
+
+describe("Registry v2.5 - voluntary suspension (SelfSuspended)", () => {
+  async function withActivePaid(f) {
+    // all five founders Active (they are also the board) + one paid validator who is NOT on the board
+    for (const x of f.founders.slice(1)) {
+      await f.reg.connect(x).setOperator(rnd());
+      await f.reg.connect(f.verifier).recordActivation(x.address, HASH);
+    }
+    const owner = f.buyers[0];
+    await f.reg.connect(owner).requestMembership(rnd(), { value: await price(f.reg) });
+    await increaseTime(8 * DAY);
+    await f.reg.connect(f.verifier).recordActivation(owner.address, HASH);
+    return owner;
+  }
+
+  it("a validator suspends itself for free: out of the list at once, collateral stays, no vote; board members cannot", async () => {
+    const f = await loadFixture(fixture);
+    const { reg } = f;
+    const owner = await withActivePaid(f);
+    await expect(reg.connect(f.founders[1]).selfSuspend()).to.be.revertedWith("ValidatorsRegistry: a board member cannot suspend voluntarily");
+    await expect(reg.connect(f.S[15]).selfSuspend()).to.be.revertedWith("ValidatorsRegistry: not active");
+    const op = await reg.operatorOf(owner.address);
+    expect(await reg.getValidators()).to.include(op);
+    await reg.connect(owner).selfSuspend();
+    const v = await reg.validators(owner.address);
+    expect(v.status).to.equal(6); // SelfSuspended
+    expect(v.lockedStake).to.equal(E("500000"));
+    expect(await reg.getValidators()).to.not.include(op);
+    expect(await reg.isValidator(owner.address)).to.equal(false);
+    await expect(reg.connect(owner).proposeParameterChange(1, 8 * DAY)).to.be.revertedWith("ValidatorsRegistry: caller is not an active validator");
+    expect(await reg.pendingSlashDecisionId(owner.address)).to.equal(0); // not a violation
+  });
+
+  it("resume needs the owner's request AND the Verifier's health check, and skips probation", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, verifier } = f;
+    const owner = await withActivePaid(f);
+    await reg.connect(owner).selfSuspend();
+    await expect(reg.connect(verifier).recordResume(owner.address, HASH)).to.be.revertedWith("ValidatorsRegistry: no resume request");
+    await expect(reg.connect(f.S[15]).requestResume()).to.be.revertedWith("ValidatorsRegistry: not self-suspended");
+    await reg.connect(owner).requestResume();
+    await expect(reg.connect(owner).recordResume(owner.address, HASH)).to.be.revertedWith("ValidatorsRegistry: caller is not the verifier");
+    await reg.connect(verifier).recordResume(owner.address, HASH); // same day: no probation wait
+    expect((await reg.validators(owner.address)).status).to.equal(ST.Active);
+    expect(await reg.getActiveOwners()).to.include(owner.address);
+    await expect(reg.connect(verifier).recordResume(owner.address, HASH)).to.be.revertedWith("ValidatorsRegistry: not self-suspended");
+  });
+
+  it("a self-suspended validator may change its node key and may exit; nobody can suspend below the minimum active count", async () => {
+    const f = await loadFixture(fixture);
+    const { reg } = f;
+    // minimum floor: with only the genesis validator active, even a non-board owner could not suspend; test the floor with the first validator
+    await expect(reg.connect(f.founders[0]).selfSuspend()).to.be.reverted; // board member and sole active validator
+    const owner = await withActivePaid(f);
+    await reg.connect(owner).selfSuspend();
+    const op = rnd();
+    await reg.connect(owner).setOperator(op);
+    expect(await reg.operatorOf(owner.address)).to.equal(op);
+    await reg.connect(owner).requestExit();
+    expect((await reg.validators(owner.address)).status).to.equal(ST.Exiting);
+    expect(await reg.permanentlyExited(owner.address)).to.equal(true);
+  });
+});
