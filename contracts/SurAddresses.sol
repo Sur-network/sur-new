@@ -41,6 +41,23 @@ library SurAddresses {
     address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
 
     // ------------------------------------------------------------------
+    // v2.5 structural contracts (addresses PROPOSED here; the reference doc still marks them 🔶
+    // undetermined — fixing them is part of the genesis design, same 0xNNNN...NNNN pattern).
+    // ------------------------------------------------------------------
+
+    /// @dev FoundationMembers — member ledger and share accounts of the foundation.
+    address internal constant FOUNDATION_MEMBERS = 0x7777777777777777777777777777777777777777;
+
+    /// @dev ValidatorSeatNFT — ERC-721 validator seats (not implemented yet).
+    address internal constant VALIDATOR_SEAT_NFT = 0x8888888888888888888888888888888888888888;
+
+    /// @dev GenesisClaimsVault — genesis claims released in 24 monthly instalments (not implemented yet).
+    address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
+
+    /// @dev ValidatorLottery — validator-seat lottery against validator monopoly.
+    address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
+
+    // ------------------------------------------------------------------
     // Operational oracle addresses — unlike the six structural contract addresses above, these
     // are NOT immutable constants baked into every consumer forever: each contract still stores
     // its own oracle address in ordinary (mutable) state, initialized from here, and can later

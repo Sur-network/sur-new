@@ -1,0 +1,11 @@
+{
+  "name": "sur-contracts-v25-tests",
+  "private": true,
+  "description": "Local-EVM (Hardhat) unit tests for the Sur v2.5 contracts in ../contracts. NOT a Besu/QBFT test.",
+  "scripts": { "test": "hardhat test" },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "6.1.2",
+    "ethers": "6.17.0",
+    "hardhat": "2.29.1"
+  }
+}
