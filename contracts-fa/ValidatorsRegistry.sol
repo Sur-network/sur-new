@@ -1665,6 +1665,18 @@ contract ValidatorsRegistry {
         activationSeq[to] = activationSeq[from];
         resumeRequested[to] = false;
         resumeRequested[from] = false;
+        {
+            // باقیماندهٔ فروشنده نباید از انتقال جان به در ببرد: پیشنهاد باز کلید نود (و رزرو آن کلید) و پرچم پذیرش در انتظار؛
+            // خریدار تمیز شروع می‌کند و اگر کلید نود دیگری بخواهد باید پیشنهاد خودش را بدهد
+            address proposed = pendingOperator[from];
+            if (proposed != address(0)) {
+                delete operatorReservedBy[proposed];
+                delete pendingOperator[from];
+                delete pendingOperatorExpiresAt[from];
+            }
+            delete seatTransferPending[from];
+            delete seatAcceptDeadline[from];
+        }
 
         // فروشنده خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود
         permanentlyExited[from] = true;

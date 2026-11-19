@@ -1686,6 +1686,18 @@ contract ValidatorsRegistry {
         activationSeq[to] = activationSeq[from];
         resumeRequested[to] = false;
         resumeRequested[from] = false;
+        {
+            // the seller's leftovers must not survive the transfer: an open node-key proposal (and its key reservation) and a
+            // pending acceptance flag; the buyer starts clean and must make its own proposal if it wants another node key
+            address proposed = pendingOperator[from];
+            if (proposed != address(0)) {
+                delete operatorReservedBy[proposed];
+                delete pendingOperator[from];
+                delete pendingOperatorExpiresAt[from];
+            }
+            delete seatTransferPending[from];
+            delete seatAcceptDeadline[from];
+        }
 
         // the seller is treated as exited: permanent ban, board authority over
         permanentlyExited[from] = true;

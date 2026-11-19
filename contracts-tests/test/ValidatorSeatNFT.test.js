@@ -199,3 +199,30 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     await expect(reg.connect(seller).onSeatTransferred(6, seller.address, buyer.address)).to.be.revertedWith("ValidatorsRegistry: caller is not the seat NFT");
   });
 });
+
+describe("ValidatorSeatNFT - the seller leaves nothing behind", () => {
+  it("an open node-key proposal of the seller is cleared and its key freed; the seller's acceptance flag is cleared after a resale", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer, other } = f;
+    await enterAndActivate(f, seller);
+    const newKey = rnd();
+    await reg.connect(seller).proposeOperator(newKey);
+    expect(await reg.operatorReservedBy(newKey)).to.equal(seller.address);
+    await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
+    // the proposal and its reservation are gone; the buyer starts with no proposal
+    expect(await reg.pendingOperator(seller.address)).to.equal(ZERO);
+    expect(await reg.pendingOperator(buyer.address)).to.equal(ZERO);
+    expect(await reg.operatorReservedBy(newKey)).to.equal(ZERO);
+    await expect(f.reg.connect(f.verifier).confirmOperatorReady(seller.address, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+    // the freed key can be claimed by the buyer in a fresh proposal
+    await reg.connect(buyer).proposeOperator(newKey);
+    // resale: the first buyer's pending acceptance flag does not survive on the seller side
+    expect(await reg.seatTransferPending(buyer.address)).to.equal(true);
+    await nft.connect(buyer).transferFrom(buyer.address, other.address, 6);
+    expect(await reg.seatTransferPending(buyer.address)).to.equal(false);
+    expect(await reg.seatAcceptDeadline(buyer.address)).to.equal(0);
+    expect(await reg.seatTransferPending(other.address)).to.equal(true);
+    expect(await reg.pendingOperator(buyer.address)).to.equal(ZERO);
+    await expect(reg.connect(buyer).acceptSeatTransfer()).to.be.revertedWith("ValidatorsRegistry: no pending seat transfer");
+  });
+});
