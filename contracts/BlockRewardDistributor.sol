@@ -594,9 +594,11 @@ contract BlockRewardDistributor {
         // values are bundled into one memory struct (`prep`) instead of 4 live locals.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
         _settleRange(range, prep.totalBlocks);
-        // totalRewards may not exceed the approved reward of the blocks in this (already validated, contiguous) range.
-        // Fees and membership fees are outside this cap; split and burn rules are unchanged.
-        require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
+        // v2.5: the reported (actual) reward of the range may exceed the approved reward of its blocks (an unvoted change of the
+        // Besu configuration, or an approved decrease not yet applied in Besu). Only the APPROVED amount is split three ways;
+        // the excess is burned at once (no cap, the distribution is never halted, no manual or emergency path to split it).
+        // Fees and membership fees are outside this rule; their split and burn are unchanged.
+        totalRewards = _capAndBurnExcess(range, totalRewards);
 
         epochCount++;
         uint256 epochId = epochCount;
@@ -641,6 +643,25 @@ contract BlockRewardDistributor {
             distributedRewards,
             distributedFees
         );
+    }
+
+    /// @notice Cumulative Suren burned because the actual reward of a settled range exceeded the approved one.
+    uint256 public totalExcessBurned;
+
+    /// @dev Public on-chain alert for off-chain monitors (RewardRouter alerts by e-mail etc.).
+    event RewardExcessBurned(uint256 indexed epochId, uint256 fromBlock, uint256 toBlock, uint256 approvedRewards, uint256 excessBurned);
+
+    /// @dev Returns the amount that is split three ways: min(reported, approved for the range). Any excess is burned right
+    ///      here (before the payments; the balance check in _prepareEpoch already covered reported + fees). The epoch id the
+    ///      event carries is the one this distribution is about to take.
+    function _capAndBurnExcess(BlockRange calldata range, uint256 reportedRewards) private returns (uint256 approved) {
+        approved = maxRewardsForRange(range.fromBlock, range.toBlock);
+        if (reportedRewards <= approved) return reportedRewards;
+        uint256 excess = reportedRewards - approved;
+        totalExcessBurned += excess;
+        emit RewardExcessBurned(epochCount + 1, range.fromBlock, range.toBlock, approved, excess);
+        (bool ok, ) = BURN_ADDRESS.call{value: excess}("");
+        require(ok, "BlockRewardDistributor: excess burn transfer failed");
     }
 
     /// @notice Propose an approved-rate change taking effect at `activationTime` (unix seconds, the Besu transition time), with the
