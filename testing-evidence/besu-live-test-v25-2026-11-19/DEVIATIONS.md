@@ -1,0 +1,22 @@
+# Deviations (Besu round 1, v2.5)
+
+- **D-1** Docker (`hyperledger/besu:26.9.0`, fixed-IP bridge per net, data in named volumes, `JAVA_OPTS -Xms128m -Xmx640m`) instead of the native Windows binary of the v2.2 campaign. One host, many containers.
+- **D-2** The three oracle addresses of `SurAddresses` have no known private keys, so their storage slots were overwritten in genesis with throw-away test-key addresses: `Registry.verifier`, `Distributor.distributionOracle`, `IdentityRegistry.identityOracle`. Runtime bytecode is unchanged. Old and new values are in `evidence/02-genesis/*/build-summary.json`.
+- **D-3** Net-T only: genesis overlay of `Registry.probationPeriod` 120 s, `exitCooldown` 60 s, `entryWindowSeconds` 30 s and `recoveryPeriod` 60 s (storage variables, not constants; all constants are real). Used only for BG-05b.
+- **D-4** Net-S block reward is 3 Suren against an approved rate of 2, to create a real "actual above approved" case for BG-08b. All other nets use 2.
+- **D-5** `blockperiodseconds` is 2 (v2.2 used 3). Genesis timestamp is now minus 60 s.
+- **D-6** London-only genesis with paris bytecode, as in v2.2. The Distributor's rate-change design talks about activation by timestamp on a Shanghai/Cancun genesis; that combination was not tested.
+- **D-7** `sync-min-peers=1` was added to the configs and found to be ignored in FULL sync mode. Harmless; followers synced anyway.
+- **D-8** Script defects and re-runs, all disclosed:
+  - `bg10` died twice (a 300 s block-wait timeout, then a nonce clash in the probe tail). Net-S and Net-L2 were rebuilt, and the lottery JSON was rebuilt from chain data (`bg10post.js`) plus the interactive stdout. The blockhash probe was redone as `bg10bh.js`.
+  - `bg10b`'s first re-run also created a second pending StartLottery proposal, so Net-L2 was rebuilt for a clean run. First-run logs are kept as `bg10b.run2-failed.out` and `Net-L2/n1.run1-superseded.log`.
+  - Two BG-05 negatives (`unverified`, `second requestMembership`) were inconclusive: the caller could not afford 520,000 and Besu answered "missing revert data". Redone as BG-05-neg.
+  - BG-07 case 2 had an expectation bug in the script; redone as BG-07b. The first BG-07 run failed one of 30 checks for the same reason (op7 duplicated in the expected list).
+  - The BG-08a `neverActivated` negative actually hit the "blocks exceed range" rule first, so the everActivated rule itself was not isolated.
+  - The BG-08b `notAscending` negative is vacuous with a single validator. BG-08b run 1 (26/27) is kept next to the re-run.
+  - One BG-11 check contains a vacuous `|| true`; the balance value is recorded and equals 100 Suren.
+- **D-9** `bg08.js` crashed after the mined `distributeRewards` call (wrong event field name `payout`, should be `totalPayout`), and only one distribution per net is possible within 23 h. The after-call checks were run post hoc on the same tx with `SUR25_BG08_TX`. The before-call checks are in `logs/_scriptout/bg08a.run1-pre-call-checks.out` and `bg08b.run1.out`.
+- **D-10** On single-founder nets the seeded validators-board lists owner1..5 although owners 2..5 are not registered validators there. Irrelevant to the tests.
+- **D-11** The tooling used its own Hardhat project (`scripts/hh`) with sources from `contracts/` and `NODE_PATH` pointing at `contracts-tests/node_modules`. Nothing was installed or modified in `contracts-tests`.
+- **D-12** The committed-seal recovery digest was found empirically: the seals sign keccak256 of the RLP header with `extraData=[vanity, validators, vote, round, []]` and no suffix byte. It matched known keys in every case.
+- **D-13** The five narrative files (README, REPORT, DEVIATIONS, LIMITATIONS, FINDINGS) could not be written by the test agent (its write was refused by the harness). They were written afterwards by the orchestrating session from the agent's final report and checked against the raw result JSON files.
