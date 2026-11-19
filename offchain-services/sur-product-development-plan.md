@@ -36,7 +36,7 @@
 | ۱ | RewardRouter | 🔴 مسدودکننده | — |
 | ۲ | ابزار genesis.json | 🔴 مسدودکننده | تصمیمات نهایی همه‌ی پارامترهای genesis (`sur-contracts-deploy-notes.md`) باید قبل از اجرا قطعی باشند |
 | ۳ | سرویس Verifier | 🔴 مسدودکننده | سرویس دسترسی کلید (HMAC `personKey`)؛ Identity Service برای شرط ورود |
-| ۴ | اپلیکیشن همراه ولیدیتور | 🔴 عملاً مسدودکننده | API بک‌اند سرویس Verifier + تراکنش‌های چرخه‌ی عمر مستقیم روی `ValidatorsRegistry` (ورود با `entryCollateral`، `setOperator`، `selfSuspend()` / `requestResume()`، خروج) |
+| ۴ | اپلیکیشن همراه ولیدیتور | 🔴 عملاً مسدودکننده | API بک‌اند سرویس Verifier + تراکنش‌های چرخه‌ی عمر مستقیم روی `ValidatorsRegistry` (ورود با `entryCollateral`، `setOperator` بیرون از مجموعهٔ اجماع و `proposeOperator`/`cancelOperatorChange` برای `Active` (تأیید با Verifier)، `selfSuspend()` / `requestResume()`، خروج) |
 | ۹ | Identity Service و eKYC | 🔴 مسدودکننده — نسخهٔ اولیه از روز اول | انتخاب سرویس‌دهندهٔ eKYC (`sur-ekyc-rfp.md`) |
 | ۸ | اتصال صرافی‌ها | 🔴 ضروری قبل از شروع فروش | `SurenSale` و موافقت/شروط صرافی‌ها |
 | ۵ | بلاک اکسپلورر (Blockscout) | 🟡 مهم — فقط پیکربندی | — |

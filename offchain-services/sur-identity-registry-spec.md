@@ -151,7 +151,7 @@ Body: {
 
 | قرارداد | رابطه با IdentityRegistry |
 |---|---|
-| `ValidatorsRegistry.sol` | هیچ داده‌ی هویتی (نه enum `PersonType`، نه struct `Identity`، نه `registerIdentity`) نگه نمی‌دارد. هنگام **ورود** (درخواست عضویت، و برای **خریدار** هنگام انتقال NFT صندلی) فقط `isFullyVerified` (ثبت‌شده، `Individual`، مهاجرت‌نکرده و هر پنج احراز) را از `IdentityRegistry` می‌خواند (✅ در کد؛ مؤسسان مستثنی‌اند چون seed می‌شوند) و پس از ورود چک نمی‌کند. `verifier`/`onlyVerifier` برای `recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery`/`recordResume` (و `recordRecoveryRemoval`) است. |
+| `ValidatorsRegistry.sol` | هیچ داده‌ی هویتی (نه enum `PersonType`، نه struct `Identity`، نه `registerIdentity`) نگه نمی‌دارد. هنگام **ورود** (درخواست عضویت، و برای **خریدار** هنگام انتقال NFT صندلی) فقط `isFullyVerified` (ثبت‌شده، `Individual`، مهاجرت‌نکرده و هر پنج احراز) را از `IdentityRegistry` می‌خواند (✅ در کد؛ مؤسسان مستثنی‌اند چون seed می‌شوند) و پس از ورود چک نمی‌کند. `verifier`/`onlyVerifier` برای `recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery`/`recordResume` (و `recordRecoveryRemoval` و `confirmOperatorReady`) است. |
 | `ValidatorSeatNFT.sol` | خودش هویت نمی‌خواند؛ `Registry.onSeatTransferred` شرط‌ها را می‌سنجد: خریدار `isFullyVerified` باشد (✅ در کد) و قبلاً یا اکنون ولیدیتور نبوده باشد، کلید اپراتور کسی نباشد و صندلی دیگری نداشته باشد. |
 | `ValidatorsBoard.sol` | `voteFor` هویت را با `IDENTITY_REGISTRY.hasIdentity(...)` چک می‌کند (از طریق اینترفیس `IIdentityRegistry`). |
 | `ValidatorLottery.sol` | شرکت‌کنندگان لاتاری باید در سیستم احراز هویت تأیید شده باشند. |
@@ -176,7 +176,7 @@ Body: {
 
 در طرح ۲.۵ هر ولیدیتور دو کلید دارد: **مالک** (وثیقه، ریوارد، برداشت، رأی مجمع و هیأت، هویت، درخواست خروج، NFT صندلی، تعویض اپراتور) و **اپراتور** (فقط امضای بلاک).
 
-**گم‌شدن کلید اپراتور** مشکل هویتی نیست: مالک با `setOperator(newOperator)` کلید نود را فوراً عوض می‌کند و نود جدید وارد چرخهٔ بررسی سلامت آف‌چین Verifier می‌شود.
+**گم‌شدن کلید اپراتور** مشکل هویتی نیست: مالک کلید نود را عوض می‌کند: بیرون از مجموعهٔ اجماع (`Probation`، `Demoted`، `SelfSuspended`) با `setOperator(newOperator)` فوراً، و برای ولیدیتور `Active` در دو مرحله (`proposeOperator(newOperator)` و سپس تأیید Verifier با `confirmOperatorReady` پس از بررسی سلامت نود تازه؛ ✅ تصمیم ۱۱۰). نود جدید وارد چرخهٔ بررسی سلامت آف‌چین Verifier می‌شود.
 
 **گم‌شدن کلید مالک:** راه نجات همان `migrateIdentity` با تأیید هویت است (بخش ۳.۴): شخص با آدرس تازه وارد می‌شود، هویتش با مسیر سطح ۲ (برای ولیدیتورهای KYC‌شده) راستی‌آزمایی می‌شود و `identityOracle` مهاجرت را اجرا می‌کند. همین استثنا تنها استثنای «ممنوعیت بازگشت» است (شخصی که خودش خارج شده یا در بازیابی شبکه حذف شده، برای همیشه نمی‌تواند دوباره ولیدیتور شود).
 

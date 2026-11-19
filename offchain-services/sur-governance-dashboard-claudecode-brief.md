@@ -231,6 +231,7 @@
 - `ValidatorsRegistry.entryCollateral()` (وثیقهٔ ثابت)، `currentMembershipFee()`، `getActiveValidatorCount()`، `entryWindowSeconds()` و زمان باقی‌ماندهٔ تا ورود بعدی — رفرش خودکار هر ۳۰ ثانیه.
 - **مجموع وثیقهٔ قفل‌شدهٔ** Registry (فقط‌خواندنی؛ همان نمایی که در گزارش‌های دورهٔ آزادسازی می‌آید). در کد تابع جداگانه ندارد: برابر موجودی native آدرس `ValidatorsRegistry` است (`receive()` هر واریز غیر از `requestMembership` را رد می‌کند)؛ مجموع جریمهٔ سوزانده‌شده `totalSlashBurned()` است.
 - مقدار بلاک‌ریوارد جاری و مجموع پاداش سوزانده‌شده (بخش ۹).
+- (اختیاری، فقط‌خواندنی) تعداد ولیدیتورهای `Active` که پیشنهاد تعویض کلید نود باز دارند و هنوز Verifier تأییدشان نکرده (`pendingOperator(owner)` غیرصفر و `pendingOperatorExpiresAt(owner)` > اکنون؛ رویدادهای `OperatorChangeProposed`/`Confirmed`/`Cancelled`) و پیشنهادهای منقضی‌شده؛ برای دید جمعی از وضعیت تأیید Verifier (✅ تصمیم ۱۱۰). **خودِ جریان تعویض اپراتور در این داشبورد نیست** (`proposeOperator`، لغو و نمایش «در انتظار تأیید/منقضی» در اپ ولیدیتور، بخش ۵.۴ `sur-validator-app-claudecode-brief.md`)؛ این داشبورد برای تعویض اپراتور تراکنشی نمی‌فرستد. 🔶 مهلت (SLA) تأیید Verifier؛ پیشنهادهای منقضی‌شدهٔ تکراری نشانهٔ کندی یا قطع Verifier است.
 
 ---
 
