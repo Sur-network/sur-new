@@ -196,7 +196,7 @@ contract ValidatorsBoard {
     ///         (هر کسی می‌تواند برای آن `syncBoard()` را صدا بزند).
     modifier onlyBoardMember() {
         require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
-        require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
+        require(_canAct(msg.sender), "ValidatorsBoard: caller has no board authority");
         require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
@@ -466,8 +466,19 @@ contract ValidatorsBoard {
     }
 
     /// @notice تا وقتی `who` می‌تواند به‌عنوان عضو هیأت عمل کند true است: ماهِ هیأت همین ماه است و کرسی معتبر است.
+    /// @dev عضو جایگاه‌دار فقط وقتی می‌تواند «عمل کند» (پیشنهاد دهد، رأی دهد، در حد نصاب بازیابی شمرده شود) که ولیدیتوری باشد
+    ///      که از Probation خارج شده است: بنیان‌گذارانی که روی هیأت ژنسیس با وضعیت Probation کاشته شده‌اند جایگاه خود را دارند
+    ///      اما تا فعال‌سازی توسط Verifier نمی‌توانند عمل کنند. اعتبار جایگاه (_hasAuthority) بدون تغییر است، پس هر کس
+    ///      syncBoard() را صدا بزند بنیان‌گذاری را که هنوز در Probation است حذف «نمی‌کند». عضو تعلیق‌شده (Demoted یا
+    ///      SelfSuspended) مانند قبل تا پایان ماه خود عمل می‌کند (خودِ تعلیق اختیار را پایان نمی‌دهد).
+    function _canAct(address who) private view returns (bool) {
+        if (!_hasAuthority(who)) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
+        return status != 1; // 1 = Probation
+    }
+
     function hasBoardAuthority(address who) external view returns (bool) {
-        return _boardIsCurrent() && _hasAuthority(who);
+        return _boardIsCurrent() && _canAct(who);
     }
 
     function _syncNeeded() private view returns (bool) {
@@ -540,9 +551,13 @@ contract ValidatorsBoard {
     /// @notice همهٔ رأی‌هایی را که `validator` داده و گرفته پاک می‌کند، وقتی بیش از `recoveryPeriod() + STALE_VOTE_CLEAR_DELAY`
     ///         Demoted مانده باشد. هر کسی می‌تواند صدایش بزند.
     function clearStaleVotes(address validator) external {
-        (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
-        require(status == 3, "ValidatorsBoard: validator is not currently demoted");
-        uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
+        (uint8 status, , uint256 periodStartedAt, uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
+        // Demoted (3): دورهٔ بازیابی به‌علاوهٔ تأخیر پس از تعلیق. SelfSuspended (6): برای تعلیق داوطلبانه دورهٔ بازیابی وجود
+        // ندارد، پس تأخیر از لحظهٔ شروع آن شمرده می‌شود (Registry این لحظه را در periodStartedAt نگه می‌دارد).
+        require(status == 3 || status == 6, "ValidatorsBoard: validator is not currently suspended");
+        uint256 threshold = status == 3
+            ? demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY
+            : periodStartedAt + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
 
         address[] memory given = voterCandidates[validator];
@@ -739,7 +754,7 @@ contract ValidatorsBoard {
     function _impartialAuthorityCount(address subject) private view returns (uint256 n) {
         if (!_boardIsCurrent()) return 0;
         for (uint256 i = 0; i < boardMembers.length; i++) {
-            if (boardMembers[i] != subject && _hasAuthority(boardMembers[i])) n++;
+            if (boardMembers[i] != subject && _canAct(boardMembers[i])) n++;
         }
     }
 

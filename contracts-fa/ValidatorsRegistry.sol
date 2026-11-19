@@ -645,7 +645,6 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
-        require(!seatTransferPending[candidate], "ValidatorsRegistry: seat transfer not accepted");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
@@ -1510,7 +1509,7 @@ contract ValidatorsRegistry {
 
     function requestResume() external {
         require(validators[msg.sender].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
-        require(!seatTransferPending[msg.sender], "ValidatorsRegistry: accept the seat transfer (sign the agreement) first");
+
         resumeRequested[msg.sender] = true;
         emit ResumeRequested(msg.sender);
     }
@@ -1518,7 +1517,6 @@ contract ValidatorsRegistry {
     function recordResume(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         require(validators[validator].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
         require(resumeRequested[validator], "ValidatorsRegistry: no resume request");
-        require(!seatTransferPending[validator], "ValidatorsRegistry: seat transfer not accepted");
         require(operatorOf[validator] != address(0), "ValidatorsRegistry: operator key not set");
         resumeRequested[validator] = false;
         _activate(validator);
@@ -1530,10 +1528,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // v2.5: NFT جایگاه. مالک توکن ValidatorSeatNFT = مالک جایگاه (سند مرجع §9).
     // ------------------------------------------------------------------
-    /// @notice از لحظهٔ انتقال جایگاه تا وقتی خریدار توافق‌نامهٔ ولیدیتورها را بپذیرد (acceptSeatTransfer) true است.
+    /// @notice از لحظهٔ انتقال جایگاه تا وقتی خریدار پذیرش توافق‌نامهٔ ولیدیتورها را ثبت کند (acceptSeatTransfer) true است.
+    ///         این یک «ثبت» است، نه «شرط»: جایگاه چه پذیرفته شود چه نشود وضعیت خود را حفظ می‌کند (جایگاه Active، Active می‌ماند).
     mapping(address => bool) public seatTransferPending;
     /// @notice اطلاعاتی: تا چه زمانی انتظار می‌رود خریدار امضا کند (۳ روز پس از انتقال). با گذشتن مهلت هیچ اتفاقی برای جایگاه
-    ///         نمی‌افتد: صرفاً تا پذیرفته‌شدن توافق‌نامه خارج از مجموعهٔ ولیدیتورها می‌ماند. 🔶
+    ///         نمی‌افتد. 🔶 پیامد امضا نکردن موضوعی آف‌چین/حقوقی است.
     mapping(address => uint256) public seatAcceptDeadline;
 
     uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
@@ -1558,14 +1557,16 @@ contract ValidatorsRegistry {
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
         require(to != from, "ValidatorsRegistry: same owner");
 
-        // اگر جایگاه Active است، تا وقتی خریدار امضا کند و Verifier گره را بررسی کند از مجموعهٔ ولیدیتورها خارج می‌شود
+        // جایگاه Active، Active «می‌ماند» (تصمیم ۱۹ نوامبر ۲۰۲۶): خریدار جای مالک را در مجموعهٔ فعال با همان جایگاه ترتیبی و
+        // همان کلید اپراتور می‌گیرد، پس گره بدون وقفه به اعتبارسنجی ادامه می‌دهد. رأی فروشنده پایان می‌یابد و خریدار از همین
+        // لحظه رأی‌دهندهٔ جدید است (checkpointهای تازه)، پس نمی‌تواند در پیشنهادهای پیش از انتقال رأی دهد.
         if (st == Status.Active) {
-            require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - transfer blocked");
-            _removeFromActive(from);
+            uint256 idx = activeIndex[from];
+            activeValidators[idx - 1] = to;
+            activeIndex[to] = idx;
+            delete activeIndex[from];
             _recordActiveCheckpoint(from, false);
-            st = Status.SelfSuspended;
-            v.status = Status.SelfSuspended;
-            v.periodStartedAt = block.timestamp;
+            _recordActiveCheckpoint(to, true);
         }
 
         // جابه‌جایی رکورد
