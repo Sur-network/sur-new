@@ -12,6 +12,13 @@ interface IValidatorsRegistry {
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
 
+    // v2.5: removal in network recovery
+    function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline);
+    function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount);
+    function setRecoveryCaseReferred(address validator) external;
+    function resolveRecoveryRemoval(address validator, bool upheld) external;
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool);
+
     /// @dev Incremented each time an address exits voluntarily; a seat is valid only while the epoch
     ///      still equals the value stamped when the seat was taken.
     function membershipEpoch(address who) external view returns (uint256);
@@ -22,7 +29,7 @@ interface IValidatorsRegistry {
     function activationSeq(address who) external view returns (uint256);
 
     /// @dev `status` uses ValidatorsRegistry.Status's ABI encoding:
-    ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting. The six outputs must match the
+    ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting, 5=RemovedInRecovery. The six outputs must match the
     ///      real function exactly, in this order.
     function getValidatorInfo(address who) external view returns (
         uint8 status,
@@ -116,7 +123,7 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     // Storage. The order of the first variables must match the genesis seed helper.
     // ------------------------------------------------------------------
-    address[] private boardMembers;
+    address[] internal boardMembers;
     mapping(address => bool) public isBoardMember;
 
     /// @notice Candidates a voter currently votes for (up to MAX_VOTES_PER_VOTER).
@@ -213,6 +220,20 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
 
     /// @notice Month identifier (UTC) of a timestamp: year * 12 + (month - 1).
+    /// @dev Genesis seeding of the founding board. Used ONLY by genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol (which
+    ///      inherits this contract). `boardMonthId` must be the month of the genesis timestamp, otherwise the founding board
+    ///      has no authority until the first refreshBoard().
+    function _seedBoard(address[] memory members, uint256 genesisTimestamp) internal {
+        require(members.length == BOARD_SIZE, "seed: exactly 5 board members");
+        for (uint256 i = 0; i < members.length; i++) {
+            address m = members[i];
+            require(m != address(0) && !isBoardMember[m], "seed: bad or duplicate member");
+            boardMembers.push(m);
+            isBoardMember[m] = true;
+        }
+        boardMonthId = monthIdOf(genesisTimestamp);
+    }
+
     function monthIdOf(uint256 timestamp) public pure returns (uint256) {
         uint256 z = timestamp / 86400 + 719468;
         uint256 era = z / 146097;
@@ -460,7 +481,8 @@ contract ValidatorsBoard {
         if (!isBoardMember[who]) return false;
         if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false;
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
-        return status != 0 && status != 4;
+        // not None, not Exiting, and (v2.5) not removed in a network recovery
+        return status != 0 && status != 4 && status != 5;
     }
 
     /// @notice True while `who` may act as a board member: the board's month is the current month
@@ -692,5 +714,84 @@ contract ValidatorsBoard {
     /// @notice Candidates that currently hold at least one counted vote.
     function getCandidateList() external view returns (address[] memory) {
         return candidateList;
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: objections to a removal during network recovery (decision 2026-11-19)
+    //
+    // The removed validator objects in the Registry within 72 hours. The board then decides within 7 days: 3 votes to uphold
+    // or 3 votes to cancel; the subject never votes (it holds no seat anyway). If fewer than 3 impartial board members hold
+    // authority, ANYONE can refer the case to the validators: every validator that was Active at the referral moment may
+    // vote, two thirds of that electorate decide. No decision in time = the removal is cancelled (Registry.expire...).
+    // Registry case states: 2 = Objected (board), 3 = ReferredToAssembly (validators).
+    // ------------------------------------------------------------------
+    struct RecoveryTally {
+        uint256 uphold;
+        uint256 cancel;
+    }
+
+    /// @dev keyed by (validator, recordedAt) so a later case against the same address starts from zero.
+    mapping(address => mapping(uint256 => RecoveryTally)) public boardRecoveryTallies;
+    mapping(address => mapping(uint256 => RecoveryTally)) public assemblyRecoveryTallies;
+    mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryVoted;
+    mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryAssemblyVoted;
+
+    event RecoveryRemovalVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
+    event RecoveryAssemblyVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
+    event RecoveryCaseDecided(address indexed validator, bool upheld, bool byAssembly);
+
+    function voteRecoveryRemoval(address validator, bool uphold) external onlyBoardMember {
+        (uint8 state, uint256 recordedAt, uint256 deadline) = REGISTRY.recoveryCaseInfo(validator);
+        require(state == 2, "ValidatorsBoard: no open board case");
+        require(block.timestamp <= deadline, "ValidatorsBoard: decision window over");
+        require(msg.sender != validator, "ValidatorsBoard: the subject of a case cannot vote");
+        require(!recoveryVoted[validator][recordedAt][msg.sender], "ValidatorsBoard: already voted");
+        recoveryVoted[validator][recordedAt][msg.sender] = true;
+        RecoveryTally storage t = boardRecoveryTallies[validator][recordedAt];
+        if (uphold) t.uphold++; else t.cancel++;
+        emit RecoveryRemovalVote(validator, msg.sender, uphold, t.uphold, t.cancel);
+        if (t.uphold >= MIN_VOTES_SENSITIVE_ACTION) {
+            REGISTRY.resolveRecoveryRemoval(validator, true);
+            emit RecoveryCaseDecided(validator, true, false);
+        } else if (t.cancel >= MIN_VOTES_SENSITIVE_ACTION) {
+            REGISTRY.resolveRecoveryRemoval(validator, false);
+            emit RecoveryCaseDecided(validator, false, false);
+        }
+    }
+
+    /// @notice Anyone, when fewer than 3 board members other than the subject hold authority: the validators decide.
+    function referRecoveryRemovalToAssembly(address validator) external {
+        require(_impartialAuthorityCount(validator) < MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: enough impartial board members");
+        REGISTRY.setRecoveryCaseReferred(validator); // checks the case is Objected and still open
+    }
+
+    function _impartialAuthorityCount(address subject) private view returns (uint256 n) {
+        if (!_boardIsCurrent()) return 0;
+        for (uint256 i = 0; i < boardMembers.length; i++) {
+            if (boardMembers[i] != subject && _hasAuthority(boardMembers[i])) n++;
+        }
+    }
+
+    /// @notice A validator that was Active when the case was referred votes; two thirds of that electorate decide.
+    function voteRecoveryAssembly(address validator, bool uphold) external {
+        (uint8 state, uint256 recordedAt, uint256 deadline) = REGISTRY.recoveryCaseInfo(validator);
+        require(state == 3, "ValidatorsBoard: no open assembly case");
+        require(block.timestamp <= deadline, "ValidatorsBoard: decision window over");
+        require(msg.sender != validator, "ValidatorsBoard: the subject of a case cannot vote");
+        (uint256 referralNonce, uint256 eligible) = REGISTRY.recoveryReferral(validator);
+        require(REGISTRY.isValidator(msg.sender) && REGISTRY.wasActiveAt(msg.sender, referralNonce), "ValidatorsBoard: not an eligible validator");
+        require(!recoveryAssemblyVoted[validator][recordedAt][msg.sender], "ValidatorsBoard: already voted");
+        recoveryAssemblyVoted[validator][recordedAt][msg.sender] = true;
+        RecoveryTally storage t = assemblyRecoveryTallies[validator][recordedAt];
+        if (uphold) t.uphold++; else t.cancel++;
+        emit RecoveryAssemblyVote(validator, msg.sender, uphold, t.uphold, t.cancel);
+        uint256 need = (2 * eligible + 2) / 3; // ceil(2n/3)
+        if (t.uphold >= need) {
+            REGISTRY.resolveRecoveryRemoval(validator, true);
+            emit RecoveryCaseDecided(validator, true, true);
+        } else if (t.cancel > eligible - need) {
+            REGISTRY.resolveRecoveryRemoval(validator, false); // the two-thirds needed to uphold can no longer be reached
+            emit RecoveryCaseDecided(validator, false, true);
+        }
     }
 }

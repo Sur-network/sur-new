@@ -4,6 +4,9 @@ const { ethers } = hre;
 
 const ADDR = {
   FOUNDATION_DAO: "0x1111111111111111111111111111111111111111",
+  BLOCK_REWARD_DISTRIBUTOR: "0x2222222222222222222222222222222222222222",
+  VALIDATORS_BOARD: "0x4444444444444444444444444444444444444444",
+  VERIFIER: "0x1A5E86f3333291B3332C0f9Eddb04269940566bc",
   VALIDATORS_REGISTRY: "0x3333333333333333333333333333333333333333",
   IDENTITY_REGISTRY: "0x6666666666666666666666666666666666666666",
   FOUNDATION_MEMBERS: "0x7777777777777777777777777777777777777777",
@@ -50,10 +53,15 @@ async function increaseTime(seconds) {
   await hre.network.provider.send("evm_mine", []);
 }
 
+async function setTime(ts) {
+  await hre.network.provider.send("evm_setNextBlockTimestamp", [ts]);
+  await hre.network.provider.send("evm_mine", []);
+}
+
 async function now() {
   return (await ethers.provider.getBlock("latest")).timestamp;
 }
 
 const DAY = 86400;
 
-module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, now, DAY };
+module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, setTime, now, DAY };

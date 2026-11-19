@@ -49,6 +49,10 @@ contract MockLotteryRegistry {
     }
 }
 
+contract MockDistributor {
+    function receiveMembershipFee() external payable {}
+}
+
 contract MockToken {
     mapping(address => uint256) public balanceOf;
     function mint(address to, uint256 x) external { balanceOf[to] += x; }

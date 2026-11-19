@@ -78,7 +78,9 @@ contract ValidatorsRegistry {
     // Validator state
     // ------------------------------------------------------------------
 
-    enum Status { None, Probation, Active, Demoted, Exiting }
+    /// @dev RemovedInRecovery (v2.5, appended so earlier values keep their encoding): removed from the validator list after
+    ///      shutting down their node during a network recovery. Not a penalty: collateral is locked until exitAllowedAt.
+    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery }
 
     struct ValidatorInfo {
         Status status;
@@ -148,8 +150,8 @@ contract ValidatorsRegistry {
     //   paidValidatorCount is not incremented for founders.
     // ------------------------------------------------------------------
     // Active validator set, exposed via getValidators(). Removal is swap-and-pop through a 1-based index.
-    address[] private activeValidators;
-    mapping(address => uint256) private activeIndex;
+    address[] internal activeValidators;
+    mapping(address => uint256) internal activeIndex;
 
     // ------------------------------------------------------------------
     // Governed parameters (changeable only via full validator vote — see below)
@@ -435,7 +437,7 @@ contract ValidatorsRegistry {
         bool active;
     }
     uint256 public statusNonce;
-    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
+    mapping(address => ActiveCheckpoint[]) internal activeCheckpoints;
 
     // ------------------------------------------------------------------
     // Events
@@ -1016,6 +1018,26 @@ contract ValidatorsRegistry {
         emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
+    /// @dev Genesis seeding of one founding validator. Used ONLY by genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol
+    ///      (which inherits this contract, so the storage layout is identical by construction); never reachable on the real chain.
+    function _seedFounder(address v, uint256 genesisTimestamp) internal {
+        require(v != address(0), "seed: zero address");
+        require(validators[v].status == Status.None, "seed: duplicate founder");
+        validators[v] = ValidatorInfo({
+            status: Status.Active,
+            lockedStake: 0,
+            periodStartedAt: genesisTimestamp,
+            pendingSlashEpoch: 0,
+            demotedAt: 0,
+            isPaidEntrant: false // founders are free, never paid entrants
+        });
+        activeIndex[v] = activeValidators.length + 1;
+        activeValidators.push(v);
+        everActivated[v] = true; // payable from the first distribution
+        activationSeq[v] = ++activationCount;
+        activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true}));
+    }
+
     function _activate(address who) private {
         ValidatorInfo storage v = validators[who];
         v.status = Status.Active;
@@ -1057,6 +1079,10 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     function requestExit() external {
         ValidatorInfo storage v = validators[msg.sender];
+        if (v.status == Status.RemovedInRecovery) {
+            _exitAfterRecoveryRemoval(v);
+            return;
+        }
         require(
             v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted,
             "ValidatorsRegistry: nothing to exit"
@@ -1249,4 +1275,164 @@ contract ValidatorsRegistry {
 
     /// @notice statusNonce when an appeal was filed, per decision: only validators that were Active then may vote on the slash.
     mapping(uint256 => uint256) public appealNonce;
+
+    // ------------------------------------------------------------------
+    // v2.5: removal from the validator list during network recovery (decision 2026-11-19)
+    //
+    // There is NO expulsion. A validator who shut down their node and so halted the network is, after the network is back in
+    // `contract` mode, removed from the list by the Verifier's record. This is not a penalty:
+    //   * collateral is never slashed; it stays locked until recoveryTimestamp + 90 days, then the owner calls requestExit()
+    //     (and waits exitCooldown) as usual;
+    //   * the permanent validator ban applies (permanentlyExited), exactly as after a voluntary exit;
+    //   * the removed validator has 72 hours to object; objections are decided by ValidatorsBoard (3 of 5, the subject has no
+    //     vote) within 7 days; with fewer than 3 impartial board members the case goes to the validators (two thirds of the
+    //     validators eligible at referral); no decision in time = the removal is cancelled and the validator is reinstated.
+    // ------------------------------------------------------------------
+    enum RecoveryRemovalState { None, Recorded, Objected, ReferredToAssembly, Upheld, Cancelled }
+
+    struct RecoveryRemoval {
+        RecoveryRemovalState state;
+        uint256 recoveryTimestamp;   // when the network returned to contract mode (given by the Verifier)
+        bytes32 evidenceHash;        // hash of the evidence package (e.g. qbft_getSignerMetrics output)
+        uint256 recordedAt;
+        uint256 objectionDeadline;   // recordedAt + 72 h
+        uint256 resolutionDeadline;  // set when an objection (or an assembly referral) opens the 7-day decision window
+        uint256 exitAllowedAt;       // recoveryTimestamp + 90 days
+        uint256 referralNonce;       // statusNonce at assembly referral (only validators Active then may vote)
+        uint256 eligibleCount;       // active validators at referral = the assembly electorate size
+    }
+
+    uint256 public constant RECOVERY_OBJECTION_WINDOW = 72 hours;
+    uint256 public constant RECOVERY_RESOLUTION_WINDOW = 7 days;
+    uint256 public constant RECOVERY_COLLATERAL_LOCK = 90 days;
+    /// @dev 🔶 not fixed by the decision: how old recoveryTimestamp may be when the Verifier records the removal.
+    uint256 public constant RECOVERY_RECORD_MAX_AGE = 30 days;
+
+    mapping(address => RecoveryRemoval) public recoveryRemovals;
+
+    event RecoveryRemovalRecorded(address indexed validator, uint256 recoveryTimestamp, bytes32 evidenceHash, uint256 exitAllowedAt);
+    event RecoveryRemovalObjected(address indexed validator, uint256 resolutionDeadline);
+    event RecoveryCaseReferredToAssembly(address indexed validator, uint256 referralNonce, uint256 eligibleCount, uint256 resolutionDeadline);
+    event RecoveryRemovalUpheld(address indexed validator);
+    event RecoveryRemovalCancelled(address indexed validator, bool expired);
+
+    /// @notice Verifier only, and only after the network is back in contract mode. Removes an Active validator from the
+    ///         consensus list (no rewards, no votes, no board authority) without touching their collateral.
+    function recordRecoveryRemoval(address validator, uint256 recoveryTimestamp, bytes32 evidenceHash) external onlyVerifier nonReentrant {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Active, "ValidatorsRegistry: validator is not active");
+        require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
+        require(
+            recoveryTimestamp <= block.timestamp && block.timestamp - recoveryTimestamp <= RECOVERY_RECORD_MAX_AGE,
+            "ValidatorsRegistry: recoveryTimestamp out of range"
+        );
+        require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count");
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(r.state == RecoveryRemovalState.None || r.state == RecoveryRemovalState.Cancelled, "ValidatorsRegistry: removal case exists");
+
+        _removeFromActive(validator);
+        _recordActiveCheckpoint(validator, false);
+        if (v.isPaidEntrant) paidValidatorCount--;
+        v.status = Status.RemovedInRecovery;
+        v.periodStartedAt = block.timestamp;
+        permanentlyExited[validator] = true; // the permanent ban applies
+        membershipEpoch[validator]++;        // ends any board seat
+
+        r.state = RecoveryRemovalState.Recorded;
+        r.recoveryTimestamp = recoveryTimestamp;
+        r.evidenceHash = evidenceHash;
+        r.recordedAt = block.timestamp;
+        r.objectionDeadline = block.timestamp + RECOVERY_OBJECTION_WINDOW;
+        r.resolutionDeadline = 0;
+        r.exitAllowedAt = recoveryTimestamp + RECOVERY_COLLATERAL_LOCK;
+        r.referralNonce = 0;
+        r.eligibleCount = 0;
+        emit RecoveryRemovalRecorded(validator, recoveryTimestamp, evidenceHash, r.exitAllowedAt);
+        _notifyBoard(validator);
+    }
+
+    /// @notice The removed validator objects within 72 hours; this opens the 7-day decision window.
+    function objectRecoveryRemoval() external {
+        RecoveryRemoval storage r = recoveryRemovals[msg.sender];
+        require(validators[msg.sender].status == Status.RemovedInRecovery && r.state == RecoveryRemovalState.Recorded, "ValidatorsRegistry: nothing to object to");
+        require(block.timestamp <= r.objectionDeadline, "ValidatorsRegistry: objection window over");
+        r.state = RecoveryRemovalState.Objected;
+        r.resolutionDeadline = block.timestamp + RECOVERY_RESOLUTION_WINDOW;
+        emit RecoveryRemovalObjected(msg.sender, r.resolutionDeadline);
+    }
+
+    /// @notice ValidatorsBoard only: fewer than 3 impartial board members, so the validators decide. A new 7-day window starts.
+    function setRecoveryCaseReferred(address validator) external onlyBoard {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(r.state == RecoveryRemovalState.Objected && block.timestamp <= r.resolutionDeadline, "ValidatorsRegistry: case cannot be referred");
+        r.state = RecoveryRemovalState.ReferredToAssembly;
+        r.referralNonce = statusNonce;
+        r.eligibleCount = activeValidators.length;
+        r.resolutionDeadline = block.timestamp + RECOVERY_RESOLUTION_WINDOW;
+        emit RecoveryCaseReferredToAssembly(validator, r.referralNonce, r.eligibleCount, r.resolutionDeadline);
+    }
+
+    /// @notice ValidatorsBoard only, with the decision of the board (3 of 5) or of the validators (two thirds).
+    ///         upheld = the removal stands; otherwise the validator is reinstated.
+    function resolveRecoveryRemoval(address validator, bool upheld) external onlyBoard nonReentrant {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(
+            (r.state == RecoveryRemovalState.Objected || r.state == RecoveryRemovalState.ReferredToAssembly) && block.timestamp <= r.resolutionDeadline,
+            "ValidatorsRegistry: no open case"
+        );
+        if (upheld) {
+            r.state = RecoveryRemovalState.Upheld;
+            emit RecoveryRemovalUpheld(validator);
+        } else {
+            _cancelRecoveryRemoval(validator, false);
+        }
+    }
+
+    /// @notice Anyone, after the decision window ended without a decision: the removal is cancelled.
+    function expireRecoveryRemoval(address validator) external nonReentrant {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(
+            (r.state == RecoveryRemovalState.Objected || r.state == RecoveryRemovalState.ReferredToAssembly) && block.timestamp > r.resolutionDeadline,
+            "ValidatorsRegistry: nothing to expire"
+        );
+        _cancelRecoveryRemoval(validator, true);
+    }
+
+    function _cancelRecoveryRemoval(address validator, bool expired) private {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.RemovedInRecovery, "ValidatorsRegistry: not removed");
+        recoveryRemovals[validator].state = RecoveryRemovalState.Cancelled;
+        permanentlyExited[validator] = false;
+        if (v.isPaidEntrant) paidValidatorCount++;
+        _activate(validator); // back into the validator list
+        emit RecoveryRemovalCancelled(validator, expired);
+        _notifyBoard(validator);
+    }
+
+    /// @dev requestExit() for a validator removed in recovery: only when the case is settled and the 90-day collateral lock has
+    ///      elapsed. The rest (exitCooldown, withdrawStake) is the ordinary exit.
+    function _exitAfterRecoveryRemoval(ValidatorInfo storage v) private {
+        RecoveryRemoval storage r = recoveryRemovals[msg.sender];
+        require(
+            r.state == RecoveryRemovalState.Upheld ||
+            (r.state == RecoveryRemovalState.Recorded && block.timestamp > r.objectionDeadline),
+            "ValidatorsRegistry: removal case still open"
+        );
+        require(block.timestamp >= r.exitAllowedAt, "ValidatorsRegistry: collateral locked for 90 days after recovery");
+        statusBeforeExit[msg.sender] = uint8(Status.RemovedInRecovery);
+        v.status = Status.Exiting;
+        v.periodStartedAt = block.timestamp;
+        emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
+    }
+
+    /// @notice Narrow views for ValidatorsBoard (positional decoding): state, recordedAt, resolutionDeadline.
+    function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline) {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        return (uint8(r.state), r.recordedAt, r.resolutionDeadline);
+    }
+
+    function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount) {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        return (r.referralNonce, r.eligibleCount);
+    }
 }
