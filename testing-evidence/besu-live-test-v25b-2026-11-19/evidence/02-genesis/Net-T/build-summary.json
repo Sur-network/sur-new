@@ -1,0 +1,262 @@
+{
+  "net": "Net-T",
+  "genesisTimestamp": 1795100921,
+  "genesisTimestampISO": "2026-11-19T15:08:41.000Z",
+  "contracts": {
+    "ValidatorsRegistry": {
+      "address": "0x3333333333333333333333333333333333333333",
+      "helper": "ValidatorsRegistry_GenesisSeed",
+      "runtimeCodeBytes": 34275,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "931c40e074ee028bbcd5d8e0092b9ca1694fa315ebc6573a8f14296196659021",
+      "touchedSlots": 28,
+      "nonZeroSlotsWritten": 23
+    },
+    "ValidatorSeatNFT": {
+      "address": "0x8888888888888888888888888888888888888888",
+      "helper": "ValidatorSeatNFT_GenesisSeed",
+      "runtimeCodeBytes": 5745,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "8ce2dc69f7d094b26eec05a1a397e2c2b6f000c961104b330112843cab87e482",
+      "touchedSlots": 7,
+      "nonZeroSlotsWritten": 7
+    },
+    "ValidatorsBoard": {
+      "address": "0x4444444444444444444444444444444444444444",
+      "helper": "ValidatorsBoard_GenesisSeed",
+      "runtimeCodeBytes": 20397,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "f7f8db219e0de9783b13660eb7d1d3780017bb4c34cd1884e760726062757093",
+      "touchedSlots": 13,
+      "nonZeroSlotsWritten": 13
+    },
+    "FoundationMembers": {
+      "address": "0x7777777777777777777777777777777777777777",
+      "helper": "FoundationMembers_GenesisSeed",
+      "runtimeCodeBytes": 5970,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "cecd3520aa1fac24d9b8fe77c32c75a2b50718982b55dae8582eccf39d26b6e8",
+      "touchedSlots": 20,
+      "nonZeroSlotsWritten": 14
+    },
+    "FoundationDAO": {
+      "address": "0x1111111111111111111111111111111111111111",
+      "helper": "FoundationDAO_GenesisSeed",
+      "runtimeCodeBytes": 28365,
+      "exceedsEip170": true,
+      "runtimeCodeSha256": "c8bbd96de3bb2be046839d898193437bdbeee547293c57b127152036ec5389ca",
+      "touchedSlots": 21,
+      "nonZeroSlotsWritten": 19
+    },
+    "GenesisClaimsVault": {
+      "address": "0x9999999999999999999999999999999999999999",
+      "helper": "GenesisClaimsVault_GenesisSeed",
+      "runtimeCodeBytes": 2120,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "6198baf6f98bba13b6329b3bd834142375481831fbe400896c2ca266acec13d4",
+      "touchedSlots": 5,
+      "nonZeroSlotsWritten": 5
+    },
+    "BlockRewardDistributor": {
+      "address": "0x2222222222222222222222222222222222222222",
+      "helper": "BlockRewardDistributor",
+      "runtimeCodeBytes": 20671,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "befcdd31cb1c004ae8eeb5b1f8d22bb8aba8810dcf410ff03fba7fe53b815f91",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "ValidatorsTreasury": {
+      "address": "0x5555555555555555555555555555555555555555",
+      "helper": "ValidatorsTreasury",
+      "runtimeCodeBytes": 5755,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "4c37faf4ca95e35d812a3e83d0296118fce74805d8b2607af112585af2a3684d",
+      "touchedSlots": 2,
+      "nonZeroSlotsWritten": 2
+    },
+    "IdentityRegistry": {
+      "address": "0x6666666666666666666666666666666666666666",
+      "helper": "IdentityRegistry",
+      "runtimeCodeBytes": 5908,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "08ebdea6d041e0748564fe530629f2e30482f9f4d8ae350d90b781de4c9725bf",
+      "touchedSlots": 1,
+      "nonZeroSlotsWritten": 1
+    },
+    "ValidatorLottery": {
+      "address": "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa",
+      "helper": "ValidatorLottery",
+      "runtimeCodeBytes": 8199,
+      "exceedsEip170": false,
+      "runtimeCodeSha256": "2e8537a8c178069bc5e6d1a83cc3533ca853388fbb6d72209a12923b54acf02e",
+      "touchedSlots": 0,
+      "nonZeroSlotsWritten": 0
+    }
+  },
+  "overlays": {
+    "ValidatorsRegistry.verifier": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "old": "0x1a5e86f3333291b3332c0f9eddb04269940566bc",
+      "new": "0xeb2996596d0829A6672C1aEBc8d2B2C7A6a6D617"
+    },
+    "ValidatorsRegistry.probationPeriod": {
+      "slot": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "old": "0x0000000000000000000000000000000000093a80",
+      "new": 120
+    },
+    "ValidatorsRegistry.exitCooldown": {
+      "slot": "0x000000000000000000000000000000000000000000000000000000000000000d",
+      "old": "0x0000000000000000000000000000000000093a80",
+      "new": 60
+    },
+    "ValidatorsRegistry.entryWindowSeconds": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000009",
+      "old": "0x0000000000000000000000000000000000093a80",
+      "new": 30
+    },
+    "ValidatorsRegistry.recoveryPeriod": {
+      "slot": "0x000000000000000000000000000000000000000000000000000000000000000b",
+      "old": "0x000000000000000000000000000000000002a300",
+      "new": 60
+    },
+    "BlockRewardDistributor.distributionOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "old": "0xbcbac7d286ea11ec57fb4e0f5d16d960d6d202b6",
+      "new": "0xD0aA6066FF36abAa573676018C2b7951596b4847"
+    },
+    "IdentityRegistry.identityOracle": {
+      "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "old": "0xbe7e65512eada6f4c6a9deddf2efb75547a065e9",
+      "new": "0x73Ccd0bF883558405a90Ba5fe35b03AD09C741C1"
+    }
+  },
+  "seedArgs": {
+    "registry": {
+      "firstOwner": "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+      "firstOperator": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "otherFounders": [],
+      "genesisTimestamp": 1795100921
+    },
+    "registryHelperGetValidators": [
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+    ],
+    "seatNft": {
+      "founderOwners": [
+        "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe"
+      ]
+    },
+    "board": {
+      "members": [
+        "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+        "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+        "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+        "0x85395564520f9946B29A2CB59854D05A356d1D99",
+        "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa"
+      ],
+      "genesisTimestamp": 1795100921
+    },
+    "foundationMembers": {
+      "accounts": [
+        "0xa7d3FA91B911F03E7012093FA086e8324649a84E",
+        "0x23a618CccC31bd3Df87Fc78aA41eEFBd906AFA62",
+        "0xe733B38be99E992B5dc78d0eC1a706a8d7e4a0D8"
+      ],
+      "names": [
+        "Test Member One",
+        "Test Member Two",
+        "Test Member Three"
+      ],
+      "shares": [
+        "100",
+        "200",
+        "300"
+      ]
+    },
+    "dao": {
+      "principalsAndAlternates": [
+        "0xDE70C80B7599b496b2F828e05B96c73438f4eD56",
+        "0x0aF006D885Fcf5cDE58a049ea0bdE5789D3347a0",
+        "0x4656345e7292f1608a87186C6Fd7317b57d5a862",
+        "0x2Dfa744C8295070312980C61363B715334dc51b1",
+        "0xB594797f6a46c1D4ae524522b08064c4972A1496",
+        "0xd9a71a6E75Ae938Cda0cDcC3DA818116922CF72c",
+        "0x46875b96796917eD5FA68BE3007328cf9bE47080"
+      ],
+      "inspector": "0xaF73F872e65fE3f1f58B01d924646dDBA56E5Cc5",
+      "chair": "0xDE70C80B7599b496b2F828e05B96c73438f4eD56",
+      "treasurer": "0x0aF006D885Fcf5cDE58a049ea0bdE5789D3347a0",
+      "ceo": "0x80B4eb5ca9b8aF2e7d362670adA5Eb9Eea0Ee529",
+      "termEnd": 1858172921
+    },
+    "claims": {
+      "claimants": [
+        "0x9631A8f9e382601F14ca5f9BEEd61c8649f2fdBD",
+        "0x166fDAB9d057fFc293497F8E33175C5D365b8252",
+        "0xf33c1D10eDaD795B402A85f87D8cdd96C34B47F1"
+      ],
+      "claims": [
+        "1000000000000000000000",
+        "2400000000000000000000",
+        "5000000000000000000000"
+      ],
+      "totalHeld": "8100000000000000000000"
+    }
+  },
+  "genesisSha256": "0105c7955f109ccce7ae5542eb2cf959dd7749cb322416a5b4b488df48108989",
+  "blockperiodseconds": 2,
+  "blockreward": "2000000000000000000",
+  "chainId": 425038,
+  "nodes": [
+    {
+      "node": "n1",
+      "role": "op1",
+      "operatorAddress": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ip": "172.29.64.11",
+      "p2p": 30303,
+      "rpcHostPort": 19611,
+      "enode": "enode://e410af54a11739131b0a4b5f66326c8b5b4291a44ccd25141f8742c2c4aba65e6b659120ee57904eeb692f6a4def91916799d05d199245fe4ea96f12b63bc849@172.29.64.11:30303"
+    },
+    {
+      "node": "nC",
+      "role": "opC",
+      "operatorAddress": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ip": "172.29.64.31",
+      "p2p": 30303,
+      "rpcHostPort": 19631,
+      "enode": "enode://35c3543abd54dc8019608ff3107a306f70e7fe9274e2d46450ddb1dd68e102a1669405ff58103010ced63cc24c50ad5ff8167709c451189572391fcd48155e78@172.29.64.31:30303"
+    }
+  ],
+  "roundTrip": {
+    "registryGetValidators": [
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+    ],
+    "registryVerifier": "0xeb2996596d0829A6672C1aEBc8d2B2C7A6a6D617",
+    "registryGenesisTime": "1795100921",
+    "registryStatuses": {
+      "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe": 2
+    },
+    "nftTotalMinted": "1",
+    "nftOwners": [
+      "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe"
+    ],
+    "distributionOracle": "0xD0aA6066FF36abAa573676018C2b7951596b4847",
+    "identityOracle": "0x73Ccd0bF883558405a90Ba5fe35b03AD09C741C1",
+    "daoBoard": [
+      "0xDE70C80B7599b496b2F828e05B96c73438f4eD56",
+      "0x0aF006D885Fcf5cDE58a049ea0bdE5789D3347a0",
+      "0x4656345e7292f1608a87186C6Fd7317b57d5a862",
+      "0x2Dfa744C8295070312980C61363B715334dc51b1",
+      "0xB594797f6a46c1D4ae524522b08064c4972A1496"
+    ],
+    "daoCeo": "0x80B4eb5ca9b8aF2e7d362670adA5Eb9Eea0Ee529",
+    "boardMembers": [
+      "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+      "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+      "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+      "0x85395564520f9946B29A2CB59854D05A356d1D99",
+      "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa"
+    ],
+    "claimsTotalHeld": "8100000000000000000000"
+  }
+}

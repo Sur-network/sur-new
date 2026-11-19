@@ -1,0 +1,753 @@
+{
+  "id": "BH-02",
+  "writtenAtUTC": "2026-11-19T15:18:15.726Z",
+  "verdict": "PASS",
+  "summary": "founders 2..7 joined (1 -> 2 -> 3 -> 4 -> 7); board authority follows the activation; Probation founders refused before, accepted after; 3-of-5 board action executed (entryCollateral 500,000 -> 550,000)",
+  "checks": [
+    {
+      "name": "all 7 founder nodes running and in sync before the first activation",
+      "pass": true,
+      "detail": {
+        "n1": 105,
+        "n2": 105,
+        "n3": 105,
+        "n4": 106,
+        "n5": 106,
+        "n6": 106,
+        "n7": 106
+      }
+    },
+    {
+      "name": "start: owner1 has board authority, owners 2..5 hold a seat without authority",
+      "pass": true
+    },
+    {
+      "name": "entryCollateral is 500,000 Suren before the board action",
+      "pass": true,
+      "detail": "500000000000000000000000"
+    },
+    {
+      "name": "owner2 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner2.setOperator(op2) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 107
+      }
+    },
+    {
+      "name": "owner2: hasBoardAuthority == false before activation (Probation, operator set)",
+      "pass": true
+    },
+    {
+      "name": "negative: Probation founder owner2 cannot propose (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "owner2: hasBoardAuthority == true right after recordActivation",
+      "pass": true,
+      "detail": {
+        "activationBlock": 109
+      }
+    },
+    {
+      "name": "board unchanged by the activation: getBoardSize() == 5",
+      "pass": true
+    },
+    {
+      "name": "n=2: contract list == 2 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 109,
+        "activationBlock": 109
+      }
+    },
+    {
+      "name": "n=2: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=2: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true
+    },
+    {
+      "name": "after activation owner2's proposeSetEntryCollateral(550,000) is ACCEPTED (ActionProposed emitted, amount 550,000)",
+      "pass": true,
+      "detail": {
+        "actionId": 1,
+        "atype": 2,
+        "tx": "0x10fcac3ce8b5260648093c981a9d8675948a045bdaaa05788c6c0c730ed4e3ea"
+      }
+    },
+    {
+      "name": "action state: votes 1, requiredVotes 3, not executed",
+      "pass": true,
+      "detail": {
+        "votes": 1,
+        "requiredVotes": 3
+      }
+    },
+    {
+      "name": "owner1 votes: 2 of 3, NOT executed (only two board members are activated)",
+      "pass": true,
+      "detail": {
+        "tx": "0x0319ab0deaa9cfd57d469da077ff775176e42fd9ee7cf331770c344fc8a60859"
+      }
+    },
+    {
+      "name": "owner3 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner3.setOperator(op3) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 118
+      }
+    },
+    {
+      "name": "owner3: hasBoardAuthority == false before activation (Probation, operator set)",
+      "pass": true
+    },
+    {
+      "name": "negative: Probation founder owner3 cannot propose (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "negative: Probation founder owner3 cannot vote on the open action 1 (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "owner3: hasBoardAuthority == true right after recordActivation",
+      "pass": true,
+      "detail": {
+        "activationBlock": 121
+      }
+    },
+    {
+      "name": "board unchanged by the activation: getBoardSize() == 5",
+      "pass": true
+    },
+    {
+      "name": "n=3: contract list == 3 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 121,
+        "activationBlock": 121
+      }
+    },
+    {
+      "name": "n=3: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=3: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true
+    },
+    {
+      "name": "owner3 (3rd activated board member) votes: 3 of 3 -> action EXECUTED on the live chain (RegistryEconomicParamSet emitted)",
+      "pass": true,
+      "detail": {
+        "block": 128,
+        "gasUsed": "257109",
+        "tx": "0x0fe8b733b7c7f6c5b140e198a1c6096421b43e27043cf2c0477f8ecf1985995d"
+      }
+    },
+    {
+      "name": "Registry.entryCollateral == 550,000 Suren (+10%), membership fee follows (4% of 550,000 = 22,000)",
+      "pass": true,
+      "detail": {
+        "colAfter": "550000000000000000000000",
+        "feeAfter": "22000000000000000000000",
+        "feeBefore": "20000000000000000000000"
+      }
+    },
+    {
+      "name": "negative: voting on the executed action reverts",
+      "pass": true,
+      "detail": "ValidatorsBoard: already executed"
+    },
+    {
+      "name": "owner4 in Probation before",
+      "pass": true,
+      "detail": 1
+    },
+    {
+      "name": "owner4.setOperator(op4) does not change the validator list yet",
+      "pass": true,
+      "detail": {
+        "opSetBlock": 130
+      }
+    },
+    {
+      "name": "owner4: hasBoardAuthority == false before activation (Probation, operator set)",
+      "pass": true
+    },
+    {
+      "name": "negative: Probation founder owner4 cannot propose (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "negative: Probation founder owner4 cannot vote on the open action 1 (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "owner4: hasBoardAuthority == true right after recordActivation",
+      "pass": true,
+      "detail": {
+        "activationBlock": 133
+      }
+    },
+    {
+      "name": "board unchanged by the activation: getBoardSize() == 5",
+      "pass": true
+    },
+    {
+      "name": "n=4: contract list == 4 operator keys and equals the QBFT set",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 133,
+        "activationBlock": 133
+      }
+    },
+    {
+      "name": "n=4: blocks keep being produced at ~2s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "n=4: getActiveOwners() returns owner keys, getValidators() operator keys",
+      "pass": true
+    },
+    {
+      "name": "n=4: the last 24 blocks were mined by all four OPERATOR keys and by no owner key",
+      "pass": true,
+      "detail": {
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7": 6,
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894": 6,
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6": 6,
+        "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9": 6
+      }
+    },
+    {
+      "name": "n=4: committed-seal signers recovered from the header (>=3 = quorum, all operator keys)",
+      "pass": true,
+      "detail": [
+        {
+          "block": 162,
+          "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+            "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+          ]
+        },
+        {
+          "block": 161,
+          "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+            "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+          ]
+        },
+        {
+          "block": 160,
+          "miner": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+            "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "n=4, node n4 stopped (f=1): chain keeps producing blocks",
+      "pass": true,
+      "detail": {
+        "hStop": 163,
+        "hAfter": 177,
+        "seconds": 68
+      }
+    },
+    {
+      "name": "n4 restarted and caught up (head within 3 blocks of n1)",
+      "pass": true,
+      "detail": {
+        "hN1": 180,
+        "hN4": 180
+      }
+    },
+    {
+      "name": "negative: Probation founder owner5 cannot propose (before activation)",
+      "pass": true,
+      "detail": "ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "name": "before the 3 activations: owner5 hasBoardAuthority false (Probation board seat), owner6/7 false (no board seat)",
+      "pass": true
+    },
+    {
+      "name": "three recordActivation txs mined in the SAME block (BG-12 style)",
+      "pass": true,
+      "detail": [
+        185,
+        185,
+        185
+      ]
+    },
+    {
+      "name": "n=7: contract list == QBFT set == 7 operator keys from the activation block on",
+      "pass": true,
+      "detail": {
+        "firstBlockWithExpectedSet": 185
+      }
+    },
+    {
+      "name": "blocks continue after the +3 change (gaps <= 4 s in the window)",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "owner5 hasBoardAuthority true after activation; owners 1..5 all true; owner6/7 false (not board members, getBoardSize still 5)",
+      "pass": true
+    },
+    {
+      "name": "owner5 (activated) can now propose (proposeSetMembershipFeeBps(450) accepted; left open, 1 of 3 votes)",
+      "pass": true,
+      "detail": {
+        "tx": "0x5e448c66ceb31fd2d81c0a9a40336bcb51e3e455654f5d53a9b068a9a0de1158"
+      }
+    },
+    {
+      "name": "n=7: the last 28 blocks were mined by the seven OPERATOR keys only",
+      "pass": true,
+      "detail": {
+        "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0": 4,
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7": 4,
+        "0x0F338C4348d8249186950C26E59E041104ae00Fd": 4,
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894": 4,
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6": 4,
+        "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9": 4,
+        "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002": 4
+      }
+    },
+    {
+      "name": "n=7: committed seals recovered, >=5 distinct operator signers (quorum 5 of 7)",
+      "pass": true,
+      "detail": [
+        {
+          "block": 221,
+          "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "sealCount": 5,
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+            "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+            "0x0F338C4348d8249186950C26E59E041104ae00Fd"
+          ]
+        },
+        {
+          "block": 220,
+          "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "sealCount": 5,
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+            "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+            "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+          ]
+        },
+        {
+          "block": 219,
+          "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "sealCount": 5,
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+            "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+            "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7"
+          ]
+        },
+        {
+          "block": 218,
+          "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "sealCount": 5,
+          "signers": [
+            "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+            "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+            "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+            "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+            "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+          ]
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "label": "activate owner2 (n=2)",
+      "txBlock": 109,
+      "contractList": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7"
+      ],
+      "qbftSetsByBlock": {
+        "108": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "109": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "110": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "111": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "112": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ]
+      },
+      "firstBlockWithExpectedSet": 109,
+      "minersTxBlockPlus1to6": {
+        "110": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "111": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "112": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "113": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "114": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "115": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0xff5301361bfcb1b81b8346c5c8aafd25a29b8e258566e5b1f083cb5a72d42873",
+      "activationTx": "0x8772c8a4e8ede369c8f84b5314cc6c0b4e3e86ab57da622947a5a620aa8093a5"
+    },
+    {
+      "label": "activate owner3 (n=3)",
+      "txBlock": 121,
+      "contractList": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+      ],
+      "qbftSetsByBlock": {
+        "120": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "121": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+        ],
+        "122": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+        ],
+        "123": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+        ],
+        "124": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+        ]
+      },
+      "firstBlockWithExpectedSet": 121,
+      "minersTxBlockPlus1to6": {
+        "122": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "123": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "124": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "125": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "126": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "127": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0x5ff2277b3b4aa73c8e010a1a12874d9d0334455213cd8562d7c1435786bab1eb",
+      "activationTx": "0x500a8f4df7e745bb3a508e3b5d661d7ab028c399c802ce711d63c6260b2d8b5d"
+    },
+    {
+      "label": "activate owner4 (n=4)",
+      "txBlock": 133,
+      "contractList": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+      ],
+      "qbftSetsByBlock": {
+        "132": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"
+        ],
+        "133": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+        ],
+        "134": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+        ],
+        "135": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+        ],
+        "136": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+        ]
+      },
+      "firstBlockWithExpectedSet": 133,
+      "minersTxBlockPlus1to6": {
+        "134": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "135": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+        "136": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "137": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "138": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "139": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "setOperatorTx": "0xda753d5c8147bd64408d74ee0b8891619d15b59ebdf119614d7cfb21dbeee43b",
+      "activationTx": "0x0940ce94989caf16030f782de673aa74435ef9daf6b849680eb47aa558d3310b"
+    },
+    {
+      "label": "n=4 with n4 stopped",
+      "headAtStop": 163,
+      "headAfter": 177,
+      "blockTimestampGaps": [
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2,
+        2,
+        12,
+        2
+      ]
+    },
+    {
+      "label": "activate owners 5,6,7 (n 4 -> 7)",
+      "txBlock": 185,
+      "contractList": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+        "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+        "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+        "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+      ],
+      "qbftSetsByBlock": {
+        "184": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"
+        ],
+        "185": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "186": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "187": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "188": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ]
+      },
+      "firstBlockWithExpectedSet": 185,
+      "minersTxBlockPlus1to6": {
+        "186": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+        "187": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+        "188": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+        "189": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "190": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+        "191": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      },
+      "blockTimestampGaps": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "txs": [
+        "0x52db3171073862ca49759ede1d7ad3d2268639a05a4b613a81f2138fd4929609",
+        "0x3e140b6e7bc28f93344ce7560dcca718fd88362d3d1124ba95fe866860df9600",
+        "0xadc7741832a9523c045e8f17e0100bfa77bbea7e25c7035cfa2b06346f2cfb14"
+      ],
+      "blocks": [
+        185,
+        185,
+        185
+      ]
+    }
+  ],
+  "boardLog": [
+    {
+      "proposeTx": "0x10fcac3ce8b5260648093c981a9d8675948a045bdaaa05788c6c0c730ed4e3ea",
+      "owner1VoteTx": "0x0319ab0deaa9cfd57d469da077ff775176e42fd9ee7cf331770c344fc8a60859",
+      "actionId": 1
+    },
+    {
+      "owner3VoteTx": "0x0fe8b733b7c7f6c5b140e198a1c6096421b43e27043cf2c0477f8ecf1985995d",
+      "executedBlock": 128
+    }
+  ],
+  "hist4": {
+    "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7": 6,
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894": 6,
+    "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6": 6,
+    "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9": 6
+  },
+  "hist7": {
+    "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0": 4,
+    "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7": 4,
+    "0x0F338C4348d8249186950C26E59E041104ae00Fd": 4,
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894": 4,
+    "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6": 4,
+    "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9": 4,
+    "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002": 4
+  },
+  "signerMetrics": [
+    {
+      "address": "0xc54f6528796e4fe2ac3eae25e44b48961e09ceb6",
+      "proposedBlockCount": "0x18",
+      "lastProposedBlockNumber": "0xdc"
+    },
+    {
+      "address": "0x786f7353eca41f73768e2bdcdb1659d29e93e894",
+      "proposedBlockCount": "0x17",
+      "lastProposedBlockNumber": "0xdb"
+    },
+    {
+      "address": "0x03afa95a36cb5285eeefdd3a0a8137691b4cbed7",
+      "proposedBlockCount": "0x17",
+      "lastProposedBlockNumber": "0xd9"
+    },
+    {
+      "address": "0x0f338c4348d8249186950c26e59e041104ae00fd",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0xda"
+    },
+    {
+      "address": "0xd2dcd9f6ccbe4b49677c4ffd436bee400727d4d9",
+      "proposedBlockCount": "0xf",
+      "lastProposedBlockNumber": "0xdd"
+    },
+    {
+      "address": "0xf862d8071cd043eb9ea049fee859ff8448337bb0",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0xd8"
+    },
+    {
+      "address": "0xe21e60fdf8d3b0f37a3e36b522738cec87aad002",
+      "proposedBlockCount": "0x5",
+      "lastProposedBlockNumber": "0xd7"
+    }
+  ]
+}

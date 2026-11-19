@@ -1,0 +1,647 @@
+{
+  "id": "BH-06B",
+  "writtenAtUTC": "2026-11-19T15:32:17.272Z",
+  "verdict": "PASS",
+  "summary": "paid-entrant seat (collateral 500,000): Probation seat sold and activated without acceptSeatTransfer (block 85); Active seat sold at block 102 with set/order unchanged; new owner exited and withdrew the collateral",
+  "checks": [
+    {
+      "name": "overlay visible on chain: probationPeriod 120, exitCooldown 60, entryWindowSeconds 30, recoveryPeriod 60",
+      "pass": true
+    },
+    {
+      "name": "start: single validator op1 (genesis)",
+      "pass": true
+    },
+    {
+      "name": "cand, buyerP and buyerQ fully verified",
+      "pass": true
+    },
+    {
+      "name": "node nC running and synced (non-validator)",
+      "pass": true,
+      "detail": {
+        "head": 22,
+        "node": 22
+      }
+    },
+    {
+      "name": "requestMembership: Probation (1), collateral 500,000 locked, seat #2 owned by cand, operator opC",
+      "pass": true,
+      "detail": {
+        "block": 23
+      }
+    },
+    {
+      "name": "negative: toUnverified reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer identity not fully verified"
+    },
+    {
+      "name": "negative: toSeatHolder reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: recipient already holds a seat"
+    },
+    {
+      "name": "negative: toOperatorKey reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer is an operator key"
+    },
+    {
+      "name": "negative: notOwner reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: not owner nor approved"
+    },
+    {
+      "name": "Probation seat sold: SeatTransferred(statusAfter = Probation 1); record, collateral (500,000), isPaidEntrant, periodStartedAt and operator opC moved to buyerP; cand record deleted",
+      "pass": true,
+      "detail": {
+        "block": 28,
+        "gasUsed": "346472"
+      }
+    },
+    {
+      "name": "Registry balance unchanged by the sale (collateral stays in the Registry, now belongs to buyerP's record); seatTransferPending(buyerP) true",
+      "pass": true
+    },
+    {
+      "name": "getValidators() still [op1] (Probation is not in the set)",
+      "pass": true
+    },
+    {
+      "name": "negative: recordActivation inside the 120 s probation still reverts (probation is not reset by the sale)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: probation period not elapsed"
+    },
+    {
+      "name": "before activation: buyerP has NOT called acceptSeatTransfer (seatTransferPending true)",
+      "pass": true
+    },
+    {
+      "name": "recordActivation succeeds WITHOUT acceptSeatTransfer (old rule refused with 'seat transfer not accepted'): buyerP Active (2), still seatTransferPending",
+      "pass": true,
+      "detail": {
+        "block": 85,
+        "gasUsed": "348708"
+      }
+    },
+    {
+      "name": "getValidators() == [op1, opC]",
+      "pass": true
+    },
+    {
+      "name": "QBFT set grows 1 -> 2 at the activation block; opC (node nC) mines; blocks continue at 2 s",
+      "pass": true,
+      "detail": {
+        "firstBlockByOpC": 86,
+        "gaps": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "name": "Active seat sold: SeatTransferred(statusAfter = Active 2); validators(buyerQ) Active (2) with lockedStake 500,000 and isPaidEntrant; buyerP record deleted",
+      "pass": true,
+      "detail": {
+        "block": 102,
+        "gasUsed": "519753"
+      }
+    },
+    {
+      "name": "Registry balance unchanged by the sale (collateral moved with the record, nothing paid out)",
+      "pass": true
+    },
+    {
+      "name": "getValidators() IDENTICAL (same keys, same order); getActiveOwners(): buyerQ at buyerP's index 1",
+      "pass": true,
+      "detail": {
+        "listBefore": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0x6CD32175c654300f27634fAB19F8DFAF18F971ef"
+        ],
+        "listAfter": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0x6CD32175c654300f27634fAB19F8DFAF18F971ef"
+        ],
+        "ownersBefore": [
+          "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+          "0x78f0FF4254C6C3553D8C5b26Cd8E717826dFf1E1"
+        ],
+        "ownersAfter": [
+          "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+          "0x49326F628206A781fE96cB7e4bc05f3DdD83C678"
+        ]
+      }
+    },
+    {
+      "name": "operator key moved: operatorOf(buyerQ)==opC, ownerOfOperator(opC)==buyerQ; seller permanentlyExited, membershipEpoch 1; seatTransferPending(buyerQ) true",
+      "pass": true
+    },
+    {
+      "name": "buyerQ is a new voter: wasActiveAt(buyerQ, N0) false, true at N1; seller true at N0, false at N1; statusNonce +2",
+      "pass": true,
+      "detail": {
+        "N0": "1",
+        "N1": "3"
+      }
+    },
+    {
+      "name": "QBFT set at B-1, B, B+1 == [op1, opC] (opC never leaves)",
+      "pass": true,
+      "detail": {
+        "101": [
+          "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "102": [
+          "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ],
+        "103": [
+          "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+        ]
+      }
+    },
+    {
+      "name": "opC keeps mining after the sale (10 blocks in B+1..B+20); no gap above the block period: max gap 2 s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "node nC container NOT restarted (same StartedAt)",
+      "pass": true,
+      "detail": {
+        "nCStart0": "2026-11-19T15:27:24.498178228Z",
+        "nCStart1": "2026-11-19T15:27:24.498178228Z"
+      }
+    },
+    {
+      "name": "INFO: seatTransferPending(seller buyerP) after selling = true (the flag is not cleared on the seller; seller has no record, so it has no effect)",
+      "pass": true,
+      "detail": {
+        "staleSellerPending": true
+      }
+    },
+    {
+      "name": "buyerQ acceptSeatTransfer: pending false, list unchanged",
+      "pass": true,
+      "detail": {
+        "block": 123
+      }
+    },
+    {
+      "name": "negative: the seller (buyerP) cannot requestExit (no record)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: nothing to exit"
+    },
+    {
+      "name": "buyerQ requestExit: Exiting (4), leaves getValidators() ([op1]), seat burned",
+      "pass": true,
+      "detail": {
+        "block": 125
+      }
+    },
+    {
+      "name": "withdrawStake returns the full 500,000 Suren to buyerQ (net of gas); Registry balance -500,000: the collateral moved with the seat",
+      "pass": true,
+      "detail": {
+        "gasUsed": "67712"
+      }
+    }
+  ],
+  "negatives": {
+    "toUnverified": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer identity not fully verified",
+      "stage": "eth_call",
+      "minedHash": "0xebcb2adc36a02eb6e5895a4e2fa00b91624232dbd5e9dd2180ca694239be8e87",
+      "minedStatus": 0
+    },
+    "toSeatHolder": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: recipient already holds a seat",
+      "stage": "eth_call",
+      "minedHash": "0x423190767d26035445eb44c797a3e05786217a4474ce9f31b3432bc0563637cb",
+      "minedStatus": 0
+    },
+    "toOperatorKey": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer is an operator key",
+      "stage": "eth_call",
+      "minedHash": "0xe4d036cfbc373ca3af8122846a4bb47af250268addf04b906fd0ee2d81cfdb77",
+      "minedStatus": 0
+    },
+    "notOwner": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: not owner nor approved",
+      "stage": "eth_call",
+      "minedHash": "0x02f6ad44f934523f5b1350700ec7a41469a43fa043a4bebacb74839184a352e9",
+      "minedStatus": 0
+    }
+  },
+  "txs": {
+    "identity": [
+      "0x6f471d4b1d09fb084f9b7351fdd8edf637e1c09fcdcc6781021adb22a6363be6",
+      "0x8bf12759bda89f381f6156cab6e7521a1098a258adb70a234a158cf472842b10",
+      "0x6a03d42e40e108f58198f5633ce95c775a12c4e90d8477bfb5d5c0bb597c0533",
+      "0x5da0562fe2bdcf5aec899f6244b782794e5cb547b910a05af66b98e0c22a1e90",
+      "0x8b96392539ee7de66213b03e52d13cfe99c01dc20d6c6834d735082a62badd31",
+      "0x948a7183b86e061fff06c3b7fdeb5172a93b32b9f42baeaaa83fd51adda02f14",
+      "0x04565e9f9d51824cf4a7b739fd10f4127af2ebe766d312e4f8b5d096e8143820",
+      "0x3c993506fcea03ab3911ea192fb23595a6c90b90e20632af3ceaccc9b26e8527",
+      "0x91c6b3cdd4f77b52a120069a8a7396d94ef69457db391226e28f81b9f0c8c510",
+      "0xdc0979c26bd1ee4846779f924887e62dd2924add971979207e4e24447905b4ae",
+      "0x1aa4042385a1981f9807c24cf925a2c9b9a8250df6d6fe5e1f22987a0cdf728d",
+      "0xc3a64e5248fcb67be794c022084ee8298495cd4476465b5a389309257d1a0006",
+      "0x0ad5da7e41ecf1b045a94b5724dcf0c750531b2904f7d3d01eef7e01bfc62fdb",
+      "0xf2da7f9283f5c9910a0aba54901d1c3524c155ae3566f07299a2de07f13ade02",
+      "0xcb1fe98b5d296b79e8bf5c743f31907e1de7ed2f9310175b13502ab118050c76",
+      "0xbdbbaa0a16a842dec54a6876d90fa989f8cb6ab1af873b604cff7e613d04e89a",
+      "0x2dc120cebb0badde765397cbbef0aa01f35ccd44c965daa77f9c92c469dbb876",
+      "0xe2d4241a981f95a8970965b92a6fe2c138dbb1bda1d0aae4a0dcec3cc1237f36"
+    ],
+    "entry": "0x98844cb7d8e768f63b4e9d6d20dabeb48dafab7e7bbfe0ea22604989615d6b71",
+    "saleProbation": "0x1aff826b31f8d6ca589db2dee57e358e4a09073aefe70bcd7ee4350f04c61e53",
+    "activation": "0xbb8ad55ff53bd211209a2ddf22542bb84754aba92f321d024e1f19665468f1dc",
+    "saleActive": "0x015892c0d6a8ceb1effa3b619baa3751564508fa4fe2db1e104afee901181573",
+    "accept": "0x452d44c9750a7d7ca51e106a961a30159d5ed6e9542f958edc975f55fffe7b1a",
+    "exit": "0x11af539179a2782abdf3c6be4f696313313f761379fcd3fb3639b3b2f65abbc7",
+    "withdraw": "0x3067f8ad9f52b85429badd6b3c93f781634157ee521f8203b9869d23228250df"
+  },
+  "activationBlock": 85,
+  "saleBlock": 102,
+  "listBefore": [
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+    "0x6CD32175c654300f27634fAB19F8DFAF18F971ef"
+  ],
+  "listAfter": [
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+    "0x6CD32175c654300f27634fAB19F8DFAF18F971ef"
+  ],
+  "ownersBefore": [
+    "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+    "0x78f0FF4254C6C3553D8C5b26Cd8E717826dFf1E1"
+  ],
+  "ownersAfter": [
+    "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+    "0x49326F628206A781fE96cB7e4bc05f3DdD83C678"
+  ],
+  "qbftSets": {
+    "activation": {
+      "84": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      ],
+      "85": [
+        "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      ]
+    },
+    "sale": {
+      "101": [
+        "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      ],
+      "102": [
+        "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      ],
+      "103": [
+        "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894"
+      ]
+    }
+  },
+  "seriesActivation": [
+    {
+      "block": 82,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102187
+    },
+    {
+      "block": 83,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102189
+    },
+    {
+      "block": 84,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102191
+    },
+    {
+      "block": 85,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102193
+    },
+    {
+      "block": 86,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102195
+    },
+    {
+      "block": 87,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102197
+    },
+    {
+      "block": 88,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102199
+    },
+    {
+      "block": 89,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102201
+    },
+    {
+      "block": 90,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102203
+    },
+    {
+      "block": 91,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102205
+    },
+    {
+      "block": 92,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102207
+    },
+    {
+      "block": 93,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102209
+    },
+    {
+      "block": 94,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102211
+    },
+    {
+      "block": 95,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102213
+    },
+    {
+      "block": 96,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102215
+    },
+    {
+      "block": 97,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102217
+    },
+    {
+      "block": 98,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102219
+    },
+    {
+      "block": 99,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102221
+    }
+  ],
+  "seriesSale": [
+    {
+      "block": 92,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102207
+    },
+    {
+      "block": 93,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102209
+    },
+    {
+      "block": 94,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102211
+    },
+    {
+      "block": 95,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102213
+    },
+    {
+      "block": 96,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102215
+    },
+    {
+      "block": 97,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102217
+    },
+    {
+      "block": 98,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102219
+    },
+    {
+      "block": 99,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102221
+    },
+    {
+      "block": 100,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102223
+    },
+    {
+      "block": 101,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102225
+    },
+    {
+      "block": 102,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102227
+    },
+    {
+      "block": 103,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102229
+    },
+    {
+      "block": 104,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102231
+    },
+    {
+      "block": 105,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102233
+    },
+    {
+      "block": 106,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102235
+    },
+    {
+      "block": 107,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102237
+    },
+    {
+      "block": 108,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102239
+    },
+    {
+      "block": 109,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102241
+    },
+    {
+      "block": 110,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102243
+    },
+    {
+      "block": 111,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102245
+    },
+    {
+      "block": 112,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102247
+    },
+    {
+      "block": 113,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102249
+    },
+    {
+      "block": 114,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102251
+    },
+    {
+      "block": 115,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102253
+    },
+    {
+      "block": 116,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102255
+    },
+    {
+      "block": 117,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102257
+    },
+    {
+      "block": 118,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102259
+    },
+    {
+      "block": 119,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102261
+    },
+    {
+      "block": 120,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102263
+    },
+    {
+      "block": 121,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795102265
+    },
+    {
+      "block": 122,
+      "miner": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+      "ts": 1795102267
+    }
+  ],
+  "gapsSale": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "nCStartedAt": {
+    "before": "2026-11-19T15:27:24.498178228Z",
+    "after": "2026-11-19T15:27:24.498178228Z"
+  },
+  "overlayNote": "ValidatorsRegistry.probationPeriod/exitCooldown/entryWindowSeconds/recoveryPeriod overwritten in genesis storage (TEST-ONLY)"
+}

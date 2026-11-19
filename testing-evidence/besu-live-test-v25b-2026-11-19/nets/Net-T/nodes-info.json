@@ -1,0 +1,20 @@
+[
+  {
+    "node": "n1",
+    "role": "op1",
+    "operatorAddress": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+    "ip": "172.29.64.11",
+    "p2p": 30303,
+    "rpcHostPort": 19611,
+    "enode": "enode://e410af54a11739131b0a4b5f66326c8b5b4291a44ccd25141f8742c2c4aba65e6b659120ee57904eeb692f6a4def91916799d05d199245fe4ea96f12b63bc849@172.29.64.11:30303"
+  },
+  {
+    "node": "nC",
+    "role": "opC",
+    "operatorAddress": "0x6CD32175c654300f27634fAB19F8DFAF18F971ef",
+    "ip": "172.29.64.31",
+    "p2p": 30303,
+    "rpcHostPort": 19631,
+    "enode": "enode://35c3543abd54dc8019608ff3107a306f70e7fe9274e2d46450ddb1dd68e102a1669405ff58103010ced63cc24c50ad5ff8167709c451189572391fcd48155e78@172.29.64.31:30303"
+  }
+]

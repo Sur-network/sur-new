@@ -1,0 +1,634 @@
+{
+  "id": "BH-06A",
+  "writtenAtUTC": "2026-11-19T15:21:29.560Z",
+  "verdict": "PASS",
+  "summary": "Active seat 6 moved owner6 -> buyer at block 287; set and order unchanged, op6 mines on, buyer is a new voter, acceptance is a record",
+  "checks": [
+    {
+      "name": "buyer fully verified; outsider and tester are not",
+      "pass": true
+    },
+    {
+      "name": "start: 7 validators, owner6 Active at index 5 of the active set, owns seat 6; buyer owns no seat",
+      "pass": true,
+      "detail": {
+        "listBefore": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+        ],
+        "ownersBefore": [
+          "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+          "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+          "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+          "0x85395564520f9946B29A2CB59854D05A356d1D99",
+          "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa",
+          "0x8AC9cc70d8dc713f50AF05729EE916843d3CdA0f",
+          "0x29c6B7BBfE4113fC56Ab801046999586736450EA"
+        ]
+      }
+    },
+    {
+      "name": "negative: toUnverified reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer identity not fully verified"
+    },
+    {
+      "name": "negative: toSeatHolder reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: recipient already holds a seat"
+    },
+    {
+      "name": "negative: notOwner reverts",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: not owner nor approved"
+    },
+    {
+      "name": "negative: toOperatorKey reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: buyer is an operator key"
+    },
+    {
+      "name": "the refused transfers of seat 4 did not change anything (owner4 still Active, owns seat 4, list unchanged)",
+      "pass": true
+    },
+    {
+      "name": "Transfer(owner6 -> buyer, 6) and SeatTransferred(statusAfter = Active 2) emitted",
+      "pass": true,
+      "detail": {
+        "gasUsed": "504454",
+        "block": 287
+      }
+    },
+    {
+      "name": "ownerOf(6)==buyer, seatOf(buyer)==6, seller balance 0",
+      "pass": true
+    },
+    {
+      "name": "validators(buyer): Active (2) with the seller's collateral/period data (lockedStake equal, isPaidEntrant equal); seller record deleted (None 0)",
+      "pass": true,
+      "detail": {
+        "buyerStatus": 2,
+        "lockedStake": "0"
+      }
+    },
+    {
+      "name": "operator key moved with the seat: operatorOf(buyer)==op6, ownerOfOperator(op6)==buyer, seller has no operator",
+      "pass": true
+    },
+    {
+      "name": "isFounder + everActivated + activationSeq moved to the buyer",
+      "pass": true
+    },
+    {
+      "name": "seller treated as exited: permanentlyExited(owner6) true, membershipEpoch 1",
+      "pass": true
+    },
+    {
+      "name": "getValidators() is IDENTICAL (same 7 operator keys, same order): op6 at the same position 5",
+      "pass": true,
+      "detail": {
+        "listBefore": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+        ],
+        "listAfter": [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+        ]
+      }
+    },
+    {
+      "name": "getActiveOwners(): the buyer takes the seller's index, all other owners unchanged",
+      "pass": true,
+      "detail": {
+        "ownersBefore": [
+          "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+          "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+          "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+          "0x85395564520f9946B29A2CB59854D05A356d1D99",
+          "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa",
+          "0x8AC9cc70d8dc713f50AF05729EE916843d3CdA0f",
+          "0x29c6B7BBfE4113fC56Ab801046999586736450EA"
+        ],
+        "ownersAfter": [
+          "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+          "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+          "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+          "0x85395564520f9946B29A2CB59854D05A356d1D99",
+          "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa",
+          "0xFcdC4EC768FFeCAa7BB3Ee9c6A1D87c32db3602E",
+          "0x29c6B7BBfE4113fC56Ab801046999586736450EA"
+        ]
+      }
+    },
+    {
+      "name": "isValidator(buyer) true, isValidator(seller) false",
+      "pass": true
+    },
+    {
+      "name": "seatTransferPending(buyer) == true with a 3-day informational deadline",
+      "pass": true
+    },
+    {
+      "name": "statusNonce +2 (seller checkpoint false, buyer checkpoint true)",
+      "pass": true,
+      "detail": {
+        "N0": "6",
+        "N1": "8"
+      }
+    },
+    {
+      "name": "buyer is a NEW voter: wasActiveAt(buyer, N0) false, wasActiveAt(buyer, N1) true; seller: wasActiveAt(seller, N0) true, wasActiveAt(seller, N1) false",
+      "pass": true,
+      "detail": {
+        "N0": "6",
+        "N1": "8"
+      }
+    },
+    {
+      "name": "buyer cannot vote on the Registry proposal created BEFORE the transfer ('not Active when this proposal was created')",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not eligible - not Active when this proposal was created"
+    },
+    {
+      "name": "buyer CAN vote on a proposal created after the transfer (2 votes of 4)",
+      "pass": true,
+      "detail": {
+        "tx": "0x75db64f75115a35dd7ff4435a90e6493a35a32af297ffe12cffe8ffd8e4af2f2"
+      }
+    },
+    {
+      "name": "the seller can no longer vote (not an active validator)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: caller is not an active validator"
+    },
+    {
+      "name": "QBFT set at B-1, B and B+1 is the same 7 operator keys (op6 never leaves)",
+      "pass": true,
+      "detail": {
+        "286": [
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "287": [
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "288": [
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ]
+      }
+    },
+    {
+      "name": "QBFT set at the latest block == getValidators() (7 operator keys, op6 included)",
+      "pass": true
+    },
+    {
+      "name": "op6 keeps mining after the transfer (first block 294, 2 blocks in B+1..B+20)",
+      "pass": true,
+      "detail": {
+        "op6Count": 2
+      }
+    },
+    {
+      "name": "no gap above the block period (2 s) in blocks B-10..B+20 (31 blocks, 30 gaps): max gap 2 s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "node n6 container was NOT restarted (same StartedAt)",
+      "pass": true,
+      "detail": {
+        "n6Start0": "2026-11-19T15:10:25.159368697Z",
+        "n6Start1": "2026-11-19T15:10:25.159368697Z"
+      }
+    },
+    {
+      "name": "tokenURI(6) readable",
+      "pass": true,
+      "detail": "https://validator-nft.surnet.org/6"
+    },
+    {
+      "name": "negative: requestResume reverts (the seat is not suspended)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not self-suspended"
+    },
+    {
+      "name": "negative: recordActivation reverts (the seat is not in Probation)",
+      "pass": true,
+      "detail": "ValidatorsRegistry: not in probation"
+    },
+    {
+      "name": "negative: acceptSeatTransfer by someone without a pending transfer reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: no pending seat transfer"
+    },
+    {
+      "name": "acceptSeatTransfer: seatTransferPending false, SeatTransferAccepted emitted",
+      "pass": true,
+      "detail": {
+        "block": 311
+      }
+    },
+    {
+      "name": "acceptance changed nothing else: getValidators() still identical, buyer still Active",
+      "pass": true
+    },
+    {
+      "name": "negative: second acceptSeatTransfer reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: no pending seat transfer"
+    },
+    {
+      "name": "negative: seller can no longer transfer (not owner)",
+      "pass": true,
+      "detail": "ValidatorSeatNFT: wrong owner"
+    },
+    {
+      "name": "after the acceptance blocks keep coming at 2 s",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  ],
+  "negatives": {
+    "toUnverified": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer identity not fully verified",
+      "stage": "eth_call",
+      "minedHash": "0x453daf7b6367efa95b8b4addd585059ad6365ac24333427f0d3d537d19a8077b",
+      "minedStatus": 0
+    },
+    "toSeatHolder": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: recipient already holds a seat",
+      "stage": "eth_call",
+      "minedHash": "0x4106e38033daa5c66f0badf0789949010d33f50146c8dd92ccabd1a1e8e6f050",
+      "minedStatus": 0
+    },
+    "notOwner": {
+      "reverted": true,
+      "reason": "ValidatorSeatNFT: not owner nor approved",
+      "stage": "eth_call",
+      "minedHash": "0xe3681008677408b9737f72259ae3299645b171a7491da9bc48f3b693e1a5cef9",
+      "minedStatus": 0
+    },
+    "toOperatorKey": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: buyer is an operator key",
+      "stage": "eth_call",
+      "minedHash": "0xde78a9aac2eb48a98d042e97c4b31621db9e2578e8d66e7a3bdf705c4518ce05",
+      "minedStatus": 0
+    }
+  },
+  "txs": {
+    "transfer": "0x677850d1148a9dfec098962813cb019878b07a2147666feb4d29749f0647d074",
+    "accept": "0xf1035298799ae922ad1c20550180bf18ae4fadc0dcad70204f197ce3fe98e983",
+    "identity": [
+      "0xa616bcd61e216f36583b8fdcefdd1a55023bc4fe3534301400eff9c98b89e4d5",
+      "0x99c87f99bf8a35694ffa581f64af826a5e32dade1398f7fd44e8830585bbcc71",
+      "0xe97554a1a576436ee7df8b99c5acc7ea702f326f7f62ccf34427ed486557ff2c",
+      "0x70d58a8d779f9269ac8bf184f001e999a07aab894ba13d7e7d3bdeb599f0ab03",
+      "0x2db1c191f32add0aae6be358a6c39e0ca00bf5b37f9a0a06e6c29534ced804d1",
+      "0x0076f88cd7a5ef9ab16121e1769eb5e6f4277abd68e8f414da60d727c1faf3e2"
+    ],
+    "pp1": "0xf449440f923060ffaba78812f116ebe3a4b5d109dfc6a036006fbef2ab41061f",
+    "pp2": "0xc12d8fcd99d098a67b5f8552b832db3ef86a7efa8314a3b7726efb43f0853a87",
+    "buyerVote": "0x75db64f75115a35dd7ff4435a90e6493a35a32af297ffe12cffe8ffd8e4af2f2"
+  },
+  "indexInActiveSet": 5,
+  "listBefore": [
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+    "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+    "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+    "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+    "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+    "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+    "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+  ],
+  "listAfter": [
+    "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+    "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+    "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+    "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+    "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+    "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+    "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+  ],
+  "ownersBefore": [
+    "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+    "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+    "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+    "0x85395564520f9946B29A2CB59854D05A356d1D99",
+    "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa",
+    "0x8AC9cc70d8dc713f50AF05729EE916843d3CdA0f",
+    "0x29c6B7BBfE4113fC56Ab801046999586736450EA"
+  ],
+  "ownersAfter": [
+    "0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe",
+    "0x117CFAb7300642E676E30bF414481727FF6f8ca3",
+    "0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104",
+    "0x85395564520f9946B29A2CB59854D05A356d1D99",
+    "0xc8F18F72B35EB5196a6F36908A6096090A0358Aa",
+    "0xFcdC4EC768FFeCAa7BB3Ee9c6A1D87c32db3602E",
+    "0x29c6B7BBfE4113fC56Ab801046999586736450EA"
+  ],
+  "statusNonce": {
+    "N0": "6",
+    "N1": "8"
+  },
+  "qbftSets": {
+    "286": [
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ],
+    "287": [
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ],
+    "288": [
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ]
+  },
+  "seriesAroundTransfer": [
+    {
+      "block": 277,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101605
+    },
+    {
+      "block": 278,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101607
+    },
+    {
+      "block": 279,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101609
+    },
+    {
+      "block": 280,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101611
+    },
+    {
+      "block": 281,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101613
+    },
+    {
+      "block": 282,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101615
+    },
+    {
+      "block": 283,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101617
+    },
+    {
+      "block": 284,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101619
+    },
+    {
+      "block": 285,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101621
+    },
+    {
+      "block": 286,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101623
+    },
+    {
+      "block": 287,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101625
+    },
+    {
+      "block": 288,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101627
+    },
+    {
+      "block": 289,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101629
+    },
+    {
+      "block": 290,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101631
+    },
+    {
+      "block": 291,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101633
+    },
+    {
+      "block": 292,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101635
+    },
+    {
+      "block": 293,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101637
+    },
+    {
+      "block": 294,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101639
+    },
+    {
+      "block": 295,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101641
+    },
+    {
+      "block": 296,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101643
+    },
+    {
+      "block": 297,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101645
+    },
+    {
+      "block": 298,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101647
+    },
+    {
+      "block": 299,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101649
+    },
+    {
+      "block": 300,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101651
+    },
+    {
+      "block": 301,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101653
+    },
+    {
+      "block": 302,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101655
+    },
+    {
+      "block": 303,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101657
+    },
+    {
+      "block": 304,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101659
+    },
+    {
+      "block": 305,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101661
+    },
+    {
+      "block": 306,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101663
+    },
+    {
+      "block": 307,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101665
+    }
+  ],
+  "gaps": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "n6StartedAt": {
+    "before": "2026-11-19T15:10:25.159368697Z",
+    "after": "2026-11-19T15:10:25.159368697Z"
+  }
+}

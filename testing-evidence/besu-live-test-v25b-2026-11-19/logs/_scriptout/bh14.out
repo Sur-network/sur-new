@@ -1,0 +1,16 @@
+  PASS  start: 7 validators, owner7 Active (2)  :: 7
+  PASS  STALE_VOTE_CLEAR_DELAY == 30 days
+  PASS  votes exist: owner7 -> owner1 given, owner1 -> owner7 received
+  PASS  negative: clearStaleVotes on an ACTIVE validator reverts with exactly 'ValidatorsBoard: validator is not currently suspended'  :: ValidatorsBoard: validator is not currently suspended
+  PASS  negative: clearStaleVotes on an address with no validator record reverts with the same message  :: ValidatorsBoard: validator is not currently suspended
+  PASS  negative: a board member (owner4) cannot selfSuspend ('a board member cannot suspend voluntarily')  :: ValidatorsRegistry: a board member cannot suspend voluntarily
+  PASS  negative: a non-validator cannot selfSuspend  :: ValidatorsRegistry: not active
+  PASS  selfSuspend: status SelfSuspended (6), SelfSuspendedEvent emitted, op7 out of getValidators() (n=6)  :: {"block":336,"gasUsed":"128864"}
+  PASS  QBFT: op7 in at B-1, out at B; op7 never mines afterwards; no halt (gaps <= 4 s)  :: {"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+  PASS  negative: clearStaleVotes on a SelfSuspended validator before 30 days reverts with exactly 'ValidatorsBoard: stale-vote delay not elapsed' (so status 6 is accepted by the status check)  :: {"reason":"ValidatorsBoard: stale-vote delay not elapsed","status":6,"periodStartedAt":1795101723,"suspendedAtBlockTs":1795101723,"secondsSince":28,"thresholdIs":"periodStartedAt + 30 days = 1797693723"}
+  PASS  periodStartedAt == the timestamp of the selfSuspend block (the 30 days count from the suspension)  :: {"periodStartedAt":1795101723,"tsS":1795101723}
+  PASS  the refused call purged nothing: the votes are still there
+  PASS  requestResume + recordResume: Active (2) again, no probation, op7 back in getValidators() (n=7)  :: {"block":353}
+  PASS  negative: after the resume clearStaleVotes is again 'not currently suspended'  :: ValidatorsBoard: validator is not currently suspended
+  PASS  op7 (same node n7) mines again; no gap > 4 s  :: {"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+[BH-14] PASS clearStaleVotes: Active -> 'not currently suspended'; SelfSuspended before 30 days -> 'stale-vote delay not elapsed'; 30-day success NOT-RUN

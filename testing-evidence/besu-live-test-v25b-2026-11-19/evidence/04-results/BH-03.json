@@ -1,0 +1,399 @@
+{
+  "id": "BH-03",
+  "writtenAtUTC": "2026-11-19T15:20:01.439Z",
+  "verdict": "PASS",
+  "summary": "swap with the new node running (part A): clean cut-over at the swap block with the new Registry bytecode",
+  "checks": [
+    {
+      "name": "start: 7 validators (operators of owners 1..7)",
+      "pass": true,
+      "detail": [
+        "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+        "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+        "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+        "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+        "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+        "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+        "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+      ]
+    },
+    {
+      "name": "n2b (new node) running and synced before the swap",
+      "pass": true,
+      "detail": {
+        "head": 235,
+        "node": 234
+      }
+    },
+    {
+      "name": "negative: sameOperator reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: same operator"
+    },
+    {
+      "name": "negative: operatorOfOtherOwner reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: operator belongs to another owner"
+    },
+    {
+      "name": "negative: ownerKeyOfOther reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: operator is another owner"
+    },
+    {
+      "name": "negative: notAValidator reverts",
+      "pass": true,
+      "detail": "ValidatorsRegistry: cannot change the operator in this status"
+    },
+    {
+      "name": "OperatorSet(owner2, op2b) emitted; gas used 58138",
+      "pass": true
+    },
+    {
+      "name": "operatorOf(owner2)==op2b; ownerOfOperator(op2b)==owner2; old op2 stays attached to owner2",
+      "pass": true
+    },
+    {
+      "name": "getValidators(): op2 replaced by op2b at the SAME index, owner list unchanged",
+      "pass": true,
+      "detail": {
+        "indexBefore": 1,
+        "indexAfter": 1
+      }
+    },
+    {
+      "name": "status of owner2 still Active (2); owner2 still has board authority (swap does not touch the seat)",
+      "pass": true
+    },
+    {
+      "name": "negative: the retired operator key cannot be claimed by another owner",
+      "pass": true,
+      "detail": "ValidatorsRegistry: operator belongs to another owner"
+    },
+    {
+      "name": "QBFT set switches at the swap block (set at B-1 has op2, set at B has op2b)",
+      "pass": true,
+      "detail": {
+        "239": [
+          "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "240": [
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ],
+        "241": [
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+        ]
+      }
+    },
+    {
+      "name": "op2 never mines after the swap block; op2b mines within the next 20 blocks",
+      "pass": true,
+      "detail": {
+        "swapBlock": 240,
+        "firstBlockByOp2b": 246,
+        "lastBlockByOp2": 238
+      }
+    },
+    {
+      "name": "no gap > 4 s around the swap (no halt) while the old node n2 is still running",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "recovered seal signers of later blocks are all in the new operator set (op2 never signs)",
+      "pass": true,
+      "detail": [
+        [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE"
+        ],
+        [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002"
+        ],
+        [
+          "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+          "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+          "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+          "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+          "0x1562f32768397F700b0960C8A62C9737C742e3CE"
+        ]
+      ]
+    },
+    {
+      "name": "old node n2 stopped: 14 more blocks, no slow round (gaps <= 4 s), old operator was not needed",
+      "pass": true,
+      "detail": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "name": "end: validator list == QBFT set == op1, op2b, op3..op7",
+      "pass": true
+    }
+  ],
+  "negatives": {
+    "sameOperator": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: same operator",
+      "stage": "eth_call",
+      "minedHash": "0x9f9cd104a01f184b532abaecf97b759237ee55a493ba68e8283e42d79796f9ed",
+      "minedStatus": 0
+    },
+    "operatorOfOtherOwner": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: operator belongs to another owner",
+      "stage": "eth_call",
+      "minedHash": "0x29bdb697f3717365bd0d429e552520e938d4ec4e6f4de66dd6a3657e95f93fa7",
+      "minedStatus": 0
+    },
+    "ownerKeyOfOther": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: operator is another owner",
+      "stage": "eth_call",
+      "minedHash": "0x1ad8eeaa585f3808d032404f247b7a1064bcc3b7659660ae42487d29298e13a1",
+      "minedStatus": 0
+    },
+    "notAValidator": {
+      "reverted": true,
+      "reason": "ValidatorsRegistry: cannot change the operator in this status",
+      "stage": "eth_call",
+      "minedHash": "0xf37c0c5d61c055946fcb040c84480dc14baaa0d5c39139ce17a3abb686ae329f",
+      "minedStatus": 0
+    }
+  },
+  "swapBlock": 240,
+  "tx": "0xf969dbe48c27aa068603df2e5a35065a498c9495ebb77fa8729a59ef99adbb7d",
+  "gasUsed": "58138",
+  "qbftSets": {
+    "239": [
+      "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ],
+    "240": [
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ],
+    "241": [
+      "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"
+    ]
+  },
+  "firstBlockByNewOperator": 246,
+  "lastBlockByOldOperator": 238,
+  "series": [
+    {
+      "block": 234,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101519
+    },
+    {
+      "block": 235,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101521
+    },
+    {
+      "block": 236,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101523
+    },
+    {
+      "block": 237,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101525
+    },
+    {
+      "block": 238,
+      "miner": "0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7",
+      "ts": 1795101527
+    },
+    {
+      "block": 239,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101529
+    },
+    {
+      "block": 240,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101531
+    },
+    {
+      "block": 241,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101533
+    },
+    {
+      "block": 242,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101535
+    },
+    {
+      "block": 243,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101537
+    },
+    {
+      "block": 244,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101539
+    },
+    {
+      "block": 245,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101541
+    },
+    {
+      "block": 246,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101543
+    },
+    {
+      "block": 247,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101545
+    },
+    {
+      "block": 248,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101547
+    },
+    {
+      "block": 249,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101549
+    },
+    {
+      "block": 250,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101551
+    },
+    {
+      "block": 251,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101553
+    },
+    {
+      "block": 252,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101555
+    },
+    {
+      "block": 253,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101557
+    },
+    {
+      "block": 254,
+      "miner": "0x786f7353eCa41f73768E2bdCdB1659D29e93E894",
+      "ts": 1795101559
+    },
+    {
+      "block": 255,
+      "miner": "0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6",
+      "ts": 1795101561
+    },
+    {
+      "block": 256,
+      "miner": "0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9",
+      "ts": 1795101563
+    },
+    {
+      "block": 257,
+      "miner": "0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002",
+      "ts": 1795101565
+    },
+    {
+      "block": 258,
+      "miner": "0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0",
+      "ts": 1795101567
+    },
+    {
+      "block": 259,
+      "miner": "0x0F338C4348d8249186950C26E59E041104ae00Fd",
+      "ts": 1795101569
+    },
+    {
+      "block": 260,
+      "miner": "0x1562f32768397F700b0960C8A62C9737C742e3CE",
+      "ts": 1795101571
+    }
+  ]
+}

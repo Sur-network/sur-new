@@ -1,0 +1,17 @@
+# docker state after the run (2026-11-19T15:33:01Z)
+## docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+## docker volume ls
+DRIVER    VOLUME NAME
+local     d902a2e0faaced61008aac6822b57b4bdcd5dee3b7ca02d6b8725112d199e7e6
+local     e5-e2e-docker
+local     s3-gocache
+local     s3-gomodcache
+## docker network ls
+NETWORK ID     NAME          DRIVER    SCOPE
+ae0b0a882824   bridge        bridge    local
+09f0f398af23   e4_isolated   bridge    local
+1345f30e3493   host          host      local
+eadf9361a6eb   none          null      local
+## sur25b-* objects
+0

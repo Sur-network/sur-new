@@ -1,0 +1,21 @@
+  PASS  blocks are produced (head advanced by >=5)  :: {"h0":62,"h1":67}
+  PASS  eth_getCode(ValidatorsRegistry) sha256 == the freshly compiled runtime code of this run, and != the round-1 code  :: {"onChain":"931c40e074ee028bbcd5d8e0092b9ca1694fa315ebc6573a8f14296196659021","round1":"2fa1ec1cefaeee668b250718997ec0255296003a6b36d1a5886e8a326cb5c342"}
+  PASS  eth_getCode(ValidatorSeatNFT) sha256 == the freshly compiled runtime code of this run, and != the round-1 code  :: {"onChain":"8ce2dc69f7d094b26eec05a1a397e2c2b6f000c961104b330112843cab87e482","round1":"babbe42c58a54505be70060e7360a3608850a86fb88ca370c7ae88ceda1e69b9"}
+  PASS  eth_getCode(ValidatorsBoard) sha256 == the freshly compiled runtime code of this run, and != the round-1 code  :: {"onChain":"f7f8db219e0de9783b13660eb7d1d3780017bb4c34cd1884e760726062757093","round1":"6c5852d61e94ab0c14b7e19c004d38e9b9d22b718e2226765ab55f3043c330fd"}
+  PASS  Registry.getValidators() == [operator1]  :: ["0x786f7353eCa41f73768E2bdCdB1659D29e93E894"]
+  PASS  qbft_getValidatorsByBlockNumber(latest) == [operator1]  :: ["0x786f7353eca41f73768e2bdcdb1659d29e93e894"]
+  PASS  qbft validators at block 1 == [operator1]  :: ["0x786f7353eca41f73768e2bdcdb1659d29e93e894"]
+  PASS  miner of last 5 blocks is operator1  :: ["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x786f7353eCa41f73768E2bdCdB1659D29e93E894"]
+  PASS  committed-seal signers recovered from the header all == operator1  :: [["0x786f7353eCa41f73768E2bdCdB1659D29e93E894"],["0x786f7353eCa41f73768E2bdCdB1659D29e93E894"],["0x786f7353eCa41f73768E2bdCdB1659D29e93E894"]]
+  PASS  only owner1 Active (2) at genesis, owners 2..7 Probation (1)  :: {"owner1":2,"owner2":1,"owner3":1,"owner4":1,"owner5":1,"owner6":1,"owner7":1}
+  PASS  7 founder seats minted, seat i owned by owner i  :: ["0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe","0x117CFAb7300642E676E30bF414481727FF6f8ca3","0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104","0x85395564520f9946B29A2CB59854D05A356d1D99","0xc8F18F72B35EB5196a6F36908A6096090A0358Aa","0x8AC9cc70d8dc713f50AF05729EE916843d3CdA0f","0x29c6B7BBfE4113fC56Ab801046999586736450EA"]
+  PASS  getBoardSize() == 5 and the seats are owner1..owner5  :: ["0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe","0x117CFAb7300642E676E30bF414481727FF6f8ca3","0xf9Bd4B6DfA23C335a96f228494B46F2CeEB3d104","0x85395564520f9946B29A2CB59854D05A356d1D99","0xc8F18F72B35EB5196a6F36908A6096090A0358Aa"]
+  PASS  hasBoardAuthority: true for owner1 (Active); FALSE for the Probation founders owner2..owner5 (seat holders)  :: {"owner1":true,"owner2":false,"owner3":false,"owner4":false,"owner5":false,"owner6":false,"owner7":false}
+  PASS  hasBoardAuthority false for owner6/owner7 (not board members)
+  PASS  isBoardMember true for owner1..5 (the seats are held)
+  PASS  negative: Probation founder owner2 cannot propose (message 'caller has no board authority')  :: ValidatorsBoard: caller has no board authority
+  PASS  syncBoard() by a stranger: no BoardMemberAuthorityEnded event, getBoardSize() still 5, same members, boardVersion unchanged  :: {"block":69,"gasUsed":"151290","boardVersion":"1"}
+  PASS  after syncBoard: authority flags unchanged (owner1 true, owners 2..5 false)  :: {"owner1":true,"owner2":false,"owner3":false,"owner4":false,"owner5":false}
+  PASS  Registry.verifier == test verifier
+  PASS  Registry still above 24,576 bytes and live through alloc  :: {"DAO":28365.5,"REG":34275.5,"BOARD":20397.5,"NFT":5745.5}
+[BH-01] PASS head=67, validators=[operator1], board 5 seats, authority only for owner1, syncBoard keeps 5

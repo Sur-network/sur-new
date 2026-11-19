@@ -1,0 +1,31 @@
+  PASS  overlay visible on chain: probationPeriod 120, exitCooldown 60, entryWindowSeconds 30, recoveryPeriod 60
+  PASS  start: single validator op1 (genesis)
+  PASS  cand, buyerP and buyerQ fully verified
+  PASS  node nC running and synced (non-validator)  :: {"head":22,"node":22}
+  PASS  requestMembership: Probation (1), collateral 500,000 locked, seat #2 owned by cand, operator opC  :: {"block":23}
+  PASS  negative: toUnverified reverts  :: ValidatorsRegistry: buyer identity not fully verified
+  PASS  negative: toSeatHolder reverts  :: ValidatorSeatNFT: recipient already holds a seat
+  PASS  negative: toOperatorKey reverts  :: ValidatorsRegistry: buyer is an operator key
+  PASS  negative: notOwner reverts  :: ValidatorSeatNFT: not owner nor approved
+  PASS  Probation seat sold: SeatTransferred(statusAfter = Probation 1); record, collateral (500,000), isPaidEntrant, periodStartedAt and operator opC moved to buyerP; cand record deleted  :: {"block":28,"gasUsed":"346472"}
+  PASS  Registry balance unchanged by the sale (collateral stays in the Registry, now belongs to buyerP's record); seatTransferPending(buyerP) true
+  PASS  getValidators() still [op1] (Probation is not in the set)
+  PASS  negative: recordActivation inside the 120 s probation still reverts (probation is not reset by the sale)  :: ValidatorsRegistry: probation period not elapsed
+  PASS  before activation: buyerP has NOT called acceptSeatTransfer (seatTransferPending true)
+  PASS  recordActivation succeeds WITHOUT acceptSeatTransfer (old rule refused with 'seat transfer not accepted'): buyerP Active (2), still seatTransferPending  :: {"block":85,"gasUsed":"348708"}
+  PASS  getValidators() == [op1, opC]
+  PASS  QBFT set grows 1 -> 2 at the activation block; opC (node nC) mines; blocks continue at 2 s  :: {"firstBlockByOpC":86,"gaps":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]}
+  PASS  Active seat sold: SeatTransferred(statusAfter = Active 2); validators(buyerQ) Active (2) with lockedStake 500,000 and isPaidEntrant; buyerP record deleted  :: {"block":102,"gasUsed":"519753"}
+  PASS  Registry balance unchanged by the sale (collateral moved with the record, nothing paid out)
+  PASS  getValidators() IDENTICAL (same keys, same order); getActiveOwners(): buyerQ at buyerP's index 1  :: {"listBefore":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x6CD32175c654300f27634fAB19F8DFAF18F971ef"],"listAfter":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x6CD32175c654300f27634fAB19F8DFAF18F971ef"],"ownersBefore":["0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe","0x78f0FF4254C6C3553D8C5b26Cd8E717826dFf1E1"],"ownersAfter":["0x358c24cbC4475Bd67CC1Cf4A8515D15D5A17a3fe","0x49326F628206A781fE96cB7e4bc05f3DdD83C678"]}
+  PASS  operator key moved: operatorOf(buyerQ)==opC, ownerOfOperator(opC)==buyerQ; seller permanentlyExited, membershipEpoch 1; seatTransferPending(buyerQ) true
+  PASS  buyerQ is a new voter: wasActiveAt(buyerQ, N0) false, true at N1; seller true at N0, false at N1; statusNonce +2  :: {"N0":"1","N1":"3"}
+  PASS  QBFT set at B-1, B, B+1 == [op1, opC] (opC never leaves)  :: {"101":["0x6CD32175c654300f27634fAB19F8DFAF18F971ef","0x786f7353eCa41f73768E2bdCdB1659D29e93E894"],"102":["0x6CD32175c654300f27634fAB19F8DFAF18F971ef","0x786f7353eCa41f73768E2bdCdB1659D29e93E894"],"103":["0x6CD32175c654300f27634fAB19F8DFAF18F971ef","0x786f7353eCa41f73768E2bdCdB1659D29e93E894"]}
+  PASS  opC keeps mining after the sale (10 blocks in B+1..B+20); no gap above the block period: max gap 2 s  :: [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
+  PASS  node nC container NOT restarted (same StartedAt)  :: {"nCStart0":"2026-11-19T15:27:24.498178228Z","nCStart1":"2026-11-19T15:27:24.498178228Z"}
+  PASS  INFO: seatTransferPending(seller buyerP) after selling = true (the flag is not cleared on the seller; seller has no record, so it has no effect)  :: {"staleSellerPending":true}
+  PASS  buyerQ acceptSeatTransfer: pending false, list unchanged  :: {"block":123}
+  PASS  negative: the seller (buyerP) cannot requestExit (no record)  :: ValidatorsRegistry: nothing to exit
+  PASS  buyerQ requestExit: Exiting (4), leaves getValidators() ([op1]), seat burned  :: {"block":125}
+  PASS  withdrawStake returns the full 500,000 Suren to buyerQ (net of gas); Registry balance -500,000: the collateral moved with the seat  :: {"gasUsed":"67712"}
+[BH-06B] PASS paid-entrant seat (collateral 500,000): Probation seat sold and activated without acceptSeatTransfer (block 85); Active seat sold at block 102 with set/order unchanged; new owner exited and withdrew the collateral

@@ -1,0 +1,52 @@
+  PASS  all 7 founder nodes running and in sync before the first activation  :: {"n1":105,"n2":105,"n3":105,"n4":106,"n5":106,"n6":106,"n7":106}
+  PASS  start: owner1 has board authority, owners 2..5 hold a seat without authority
+  PASS  entryCollateral is 500,000 Suren before the board action  :: 500000000000000000000000
+  PASS  owner2 in Probation before  :: 1
+  PASS  owner2.setOperator(op2) does not change the validator list yet  :: {"opSetBlock":107}
+  PASS  owner2: hasBoardAuthority == false before activation (Probation, operator set)
+  PASS  negative: Probation founder owner2 cannot propose (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  owner2: hasBoardAuthority == true right after recordActivation  :: {"activationBlock":109}
+  PASS  board unchanged by the activation: getBoardSize() == 5
+  PASS  n=2: contract list == 2 operator keys and equals the QBFT set  :: {"firstBlockWithExpectedSet":109,"activationBlock":109}
+  PASS  n=2: blocks keep being produced at ~2s  :: [2,2,2,2,2]
+  PASS  n=2: getActiveOwners() returns owner keys, getValidators() operator keys
+  PASS  after activation owner2's proposeSetEntryCollateral(550,000) is ACCEPTED (ActionProposed emitted, amount 550,000)  :: {"actionId":1,"atype":2,"tx":"0x10fcac3ce8b5260648093c981a9d8675948a045bdaaa05788c6c0c730ed4e3ea"}
+  PASS  action state: votes 1, requiredVotes 3, not executed  :: {"votes":1,"requiredVotes":3}
+  PASS  owner1 votes: 2 of 3, NOT executed (only two board members are activated)  :: {"tx":"0x0319ab0deaa9cfd57d469da077ff775176e42fd9ee7cf331770c344fc8a60859"}
+  PASS  owner3 in Probation before  :: 1
+  PASS  owner3.setOperator(op3) does not change the validator list yet  :: {"opSetBlock":118}
+  PASS  owner3: hasBoardAuthority == false before activation (Probation, operator set)
+  PASS  negative: Probation founder owner3 cannot propose (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  negative: Probation founder owner3 cannot vote on the open action 1 (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  owner3: hasBoardAuthority == true right after recordActivation  :: {"activationBlock":121}
+  PASS  board unchanged by the activation: getBoardSize() == 5
+  PASS  n=3: contract list == 3 operator keys and equals the QBFT set  :: {"firstBlockWithExpectedSet":121,"activationBlock":121}
+  PASS  n=3: blocks keep being produced at ~2s  :: [2,2,2,2,2]
+  PASS  n=3: getActiveOwners() returns owner keys, getValidators() operator keys
+  PASS  owner3 (3rd activated board member) votes: 3 of 3 -> action EXECUTED on the live chain (RegistryEconomicParamSet emitted)  :: {"block":128,"gasUsed":"257109","tx":"0x0fe8b733b7c7f6c5b140e198a1c6096421b43e27043cf2c0477f8ecf1985995d"}
+  PASS  Registry.entryCollateral == 550,000 Suren (+10%), membership fee follows (4% of 550,000 = 22,000)  :: {"colAfter":"550000000000000000000000","feeAfter":"22000000000000000000000","feeBefore":"20000000000000000000000"}
+  PASS  negative: voting on the executed action reverts  :: ValidatorsBoard: already executed
+  PASS  owner4 in Probation before  :: 1
+  PASS  owner4.setOperator(op4) does not change the validator list yet  :: {"opSetBlock":130}
+  PASS  owner4: hasBoardAuthority == false before activation (Probation, operator set)
+  PASS  negative: Probation founder owner4 cannot propose (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  negative: Probation founder owner4 cannot vote on the open action 1 (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  owner4: hasBoardAuthority == true right after recordActivation  :: {"activationBlock":133}
+  PASS  board unchanged by the activation: getBoardSize() == 5
+  PASS  n=4: contract list == 4 operator keys and equals the QBFT set  :: {"firstBlockWithExpectedSet":133,"activationBlock":133}
+  PASS  n=4: blocks keep being produced at ~2s  :: [2,2,2,2,2]
+  PASS  n=4: getActiveOwners() returns owner keys, getValidators() operator keys
+  PASS  n=4: the last 24 blocks were mined by all four OPERATOR keys and by no owner key  :: {"0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7":6,"0x786f7353eCa41f73768E2bdCdB1659D29e93E894":6,"0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6":6,"0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9":6}
+  PASS  n=4: committed-seal signers recovered from the header (>=3 = quorum, all operator keys)  :: [{"block":162,"miner":"0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6","signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"]},{"block":161,"miner":"0x786f7353eCa41f73768E2bdCdB1659D29e93E894","signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9","0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6"]},{"block":160,"miner":"0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"]}]
+  PASS  n=4, node n4 stopped (f=1): chain keeps producing blocks  :: {"hStop":163,"hAfter":177,"seconds":68}
+  PASS  n4 restarted and caught up (head within 3 blocks of n1)  :: {"hN1":180,"hN4":180}
+  PASS  negative: Probation founder owner5 cannot propose (before activation)  :: ValidatorsBoard: caller has no board authority
+  PASS  before the 3 activations: owner5 hasBoardAuthority false (Probation board seat), owner6/7 false (no board seat)
+  PASS  three recordActivation txs mined in the SAME block (BG-12 style)  :: [185,185,185]
+  PASS  n=7: contract list == QBFT set == 7 operator keys from the activation block on  :: {"firstBlockWithExpectedSet":185}
+  PASS  blocks continue after the +3 change (gaps <= 4 s in the window)  :: [2,2,2,2,2]
+  PASS  owner5 hasBoardAuthority true after activation; owners 1..5 all true; owner6/7 false (not board members, getBoardSize still 5)
+  PASS  owner5 (activated) can now propose (proposeSetMembershipFeeBps(450) accepted; left open, 1 of 3 votes)  :: {"tx":"0x5e448c66ceb31fd2d81c0a9a40336bcb51e3e455654f5d53a9b068a9a0de1158"}
+  PASS  n=7: the last 28 blocks were mined by the seven OPERATOR keys only  :: {"0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0":4,"0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7":4,"0x0F338C4348d8249186950C26E59E041104ae00Fd":4,"0x786f7353eCa41f73768E2bdCdB1659D29e93E894":4,"0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6":4,"0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9":4,"0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002":4}
+  PASS  n=7: committed seals recovered, >=5 distinct operator signers (quorum 5 of 7)  :: [{"block":221,"miner":"0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9","sealCount":5,"signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002","0x0F338C4348d8249186950C26E59E041104ae00Fd"]},{"block":220,"miner":"0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6","sealCount":5,"signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","0x0F338C4348d8249186950C26E59E041104ae00Fd","0xF862d8071cd043EB9Ea049FeE859Ff8448337Bb0"]},{"block":219,"miner":"0x786f7353eCa41f73768E2bdCdB1659D29e93E894","sealCount":5,"signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0xC54F6528796E4Fe2aC3eAe25e44b48961E09ceb6","0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9","0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7"]},{"block":218,"miner":"0x0F338C4348d8249186950C26E59E041104ae00Fd","sealCount":5,"signers":["0x786f7353eCa41f73768E2bdCdB1659D29e93E894","0x0F338C4348d8249186950C26E59E041104ae00Fd","0xe21E60fDf8D3B0f37a3E36b522738Cec87AaD002","0x03AfA95A36Cb5285eEeFdD3A0A8137691B4cBeD7","0xd2Dcd9F6CcBE4b49677c4FfD436BEE400727D4D9"]}]
+[BH-02] PASS founders 2..7 joined (1 -> 2 -> 3 -> 4 -> 7); board authority follows the activation; Probation founders refused before, accepted after; 3-of-5 board action executed (entryCollateral 500,000 -> 550,000)
