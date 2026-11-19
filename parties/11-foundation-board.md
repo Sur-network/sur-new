@@ -151,7 +151,7 @@
 | مؤسسان (شرکا) | پاسخ‌گویی | رأی مجمع | `FoundationMembers` |
 | هیأت‌مدیرهٔ ولیدیتورها | تأیید و امضای متن توافق‌نامه؛ نسخهٔ Verifier و RewardRouter | متن پیشنهادی توافق‌نامه؛ اجرای سرویس‌ها | سامانهٔ قراردادها؛ مخزن نرم‌افزار |
 | ولیدیتور | امضای توافق‌نامه؛ اجرای لاتاری | تعهد اجرا؛ مبلغ بلیط | سامانهٔ قراردادها؛ `startLottery` |
-| صرافی‌های مجاز | سهمیه، سقف، موجودی | سفارش‌ها؛ تسویهٔ تومانی | `setExchange`، `setTotalCap` |
+| صرافی‌های مجاز | سهمیه، سقف، موجودی | سفارش‌ها؛ تسویهٔ تومانی | پیشنهادهای تایپ‌شدهٔ `RegisterExchange`، `SetExchangeQuota`، `ChangeExchangeKey`، `ResumeExchange`، `RemoveExchange`، `SetSaleTotalCap`؛ `pauseExchange` |
 | خریداران/دارندگان | فروش، لاتاری | تومان، بلیط | `SurenSale`، `ValidatorLottery` |
 | توسعه‌دهندگان | ابزار و آموزش | بازخورد | کمیته‌های فنی و ترویج |
 | اپراتورهای اوراکل | چرخش `identityOracle` | نتیجهٔ احراز | `setIdentityOracle` |
@@ -166,7 +166,7 @@
 |---|---|---|
 | `FoundationDAO` | آن‌چین | `proposeSpend`، `voteSpend`، `electOfficers`، `propose<Type>` (پیشنهادهای تایپ‌شده)، `vote(id, paramsHash)`، `getProposal`، `pauseExchange`، `callAssembly` (رئیس)، `getBoard`، `ceo`، `getEthBalance`، `hasVoted` |
 | `FoundationMembers` | آن‌چین | فهرست و وزن اعضا |
-| `SurenSale` | آن‌چین | `setExchange`، `setTotalCap`، `sweepUnsold` (از راه `FoundationDAO`) |
+| `SurenSale` | آن‌چین | `registerExchange`، `setExchangeQuota`، `changeExchangeKey`، `resumeExchange`، `removeExchange`، `setTotalCap`، `sweepUnsold` (با پیشنهاد تایپ‌شده از `FoundationDAO`)، `pauseExchange`، `getExchange` |
 | `ValidatorLottery` | آن‌چین | `startLottery` |
 | `IdentityRegistry` | آن‌چین | `setIdentityOracle` (فقط `FoundationDAO`) |
 | داشبورد حکمرانی | آف‌چین | مشاهدهٔ رأی‌ها و تصمیم‌ها |

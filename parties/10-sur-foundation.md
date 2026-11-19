@@ -46,7 +46,7 @@
 | خزانه | خرج سورن و هر ERC20 موجود در `FoundationDAO` با اکثریت عددی هیأت‌مدیره، بدون سقف | `proposeSpend` / `voteSpend` |
 | اشخاص | انتخاب هیأت‌مدیره (۵ اصلی + ۲ علی‌البدل) و بازرس توسط مجمع عمومی؛ انتخاب رئیس، خزانه‌دار و مدیرعامل توسط هیأت | `proposeBoardElection`، `voteBoard`، `voteInspector`، `finalizeElection`، `electOfficers` |
 | اعضا | ورود/خروج شریک، انتقال سهم‌الشرکه، تعیین نماینده (فقط مجمع فوق‌العاده) | `proposeMembersResolution` / `voteResolution` / `executeResolution` ← `FoundationMembers` |
-| فروش سورن | تعیین صرافی‌های مجاز، سهمیهٔ هر صرافی و سقف کل؛ تأمین موجودی قرارداد فروش؛ بازگرداندن فروش‌نرفته؛ تمدید دوره‌ها (مدیرعامل) | `SurenSale.setExchange`، `setTotalCap`، `sweepUnsold`، `extendFixedPeriod`، `extendTransition` |
+| فروش سورن | تعیین صرافی‌های مجاز، سهمیهٔ هر صرافی و سقف کل؛ تأمین موجودی قرارداد فروش؛ بازگرداندن فروش‌نرفته؛ تمدید دوره‌ها (مدیرعامل) | پیشنهادهای تایپ‌شدهٔ `RegisterExchange`، `SetExchangeQuota`، `ChangeExchangeKey`، `ResumeExchange`، `RemoveExchange`، `SetSaleTotalCap`، `SweepUnsold`؛ `pauseExchange` (مدیرعامل یا عضو اصلی)؛ `extendFixedPeriod`، `extendTransition` (مدیرعامل) |
 | هویت | چرخش کلید `identityOracle` | `IdentityRegistry.setIdentityOracle` (فقط `FoundationDAO`) |
 | لاتاری | اجرای لاتاری ولیدیتور (بلیط، تعداد برندگان، برگزارنکردن) | `ValidatorLottery.startLottery` |
 | توافق‌نامه | تأیید و امضای بی‌قیدوشرط متن تعیین‌شدهٔ هیأت ولیدیتورها | سامانهٔ قراردادهای مبتنی بر بلاک‌چین بنیاد |
@@ -169,7 +169,7 @@
 | ولیدیتور (تک‌تک) | امضای بی‌قیدوشرط توافق‌نامه؛ راه‌اندازی eKYC؛ اطلاع‌رسانی قواعد | تعهد به اجرای نود و قواعد؛ پذیرش عدم غرامت | سامانهٔ قراردادهای بنیاد؛ وب‌سایت |
 | شبکه (توزیع پاداش) | هیچ کنترلی | ۱۵٪ ریوارد | `BlockRewardDistributor` → `FoundationDAO` |
 | خریداران و دارندگان | فروش سورن از راه صرافی‌ها؛ لاتاری | تومان (پس از تسویه)؛ مبلغ بلیط | `SurenSale`؛ `ValidatorLottery` |
-| صرافی‌های مجاز | سهمیه، سقف کل، موجودی قرارداد فروش | سفارش‌های ثبت‌شده؛ تسویهٔ تومانی | `setExchange`، `setTotalCap`؛ `receive()` |
+| صرافی‌های مجاز | سهمیه، سقف کل، موجودی قرارداد فروش | سفارش‌های ثبت‌شده؛ تسویهٔ تومانی | پیشنهادهای تایپ‌شدهٔ ثبت و سهمیهٔ صرافی و `SetSaleTotalCap`؛ `receive()` |
 | توسعه‌دهندگان | ابزار، آموزش، مستندات (کمیته‌های فنی و ترویج) | بازخورد | سایت و مخازن |
 | اپراتورهای اوراکل | چرخش `identityOracle` | نتیجهٔ احراز هویت روی `IdentityRegistry` | `setIdentityOracle` |
 | ارائه‌دهندهٔ KYC | قرارداد و راه‌اندازی (کمیتهٔ فنی) | نتیجهٔ جلسهٔ eKYC | API و webhook؛ 🔶 ارائه‌دهنده انتخاب نشده |

@@ -54,6 +54,9 @@
 | Verifier: `personKey` آف‌چین (HMAC کد ملی)، سرویس دسترسی کلید، فعال‌سازی مؤسسان پس از ثبت کلید اپراتور، ازسرگیری از تعلیق داوطلبانه، راستی‌آزمایی نود پس از انتقال NFT یا تغییر اپراتور؛ سیستم eKYC نسخهٔ اولیه (از روز اول) | `offchain-services/sur-verifier-service-spec.md`، `offchain-services/sur-identity-registry-spec.md` |
 | گزارش‌های دورهٔ آزادسازی (عرضهٔ روزانهٔ ماشینی، شاخص‌های روزانه، سند تحلیلی هفتگی؛ نمای مجموع وثیقهٔ قفل‌شده) | `economics/sur-tokenomics.md` |
 | اتصال صرافی‌ها به `SurenSale` و صفحهٔ عمومی قیمت/وضعیت فروش | `offchain-services/sur-suren-sale-spec.md` |
+| `FoundationDAO` با پیشنهادهای تایپ‌شده (بدون `bytes data`؛ رأی با `paramsHash`؛ انقضای یک ماه) | `technical-design/sur-smart-contracts-reference.md` |
+| `SurenSale` نسخهٔ ۲٫۵: ثبت صرافی با سپردهٔ گس ۱۰۰ سورن، آمار هر صرافی، `minSurenOut`، توقف فوری، تغییر کلید | `offchain-services/sur-suren-sale-spec.md` |
+| حذف در بازیابی شبکه: `recordRecoveryRemoval`، اعتراض، رسیدگی `ValidatorsBoard`، قفل ۹۰ روزهٔ وثیقه | `governance/sur-emergency-consensus-recovery.md` بخش ۴-ب |
 
 ## ۴. جزئیات فنی باقی‌مانده
 
