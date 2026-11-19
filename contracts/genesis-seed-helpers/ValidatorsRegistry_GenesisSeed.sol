@@ -12,9 +12,12 @@ import "../ValidatorsRegistry.sol";
 // see sur-contracts-deploy-notes.md) and writes them together with the REAL contract's runtime bytecode into `alloc`.
 // ============================================================================
 contract ValidatorsRegistry_GenesisSeed is ValidatorsRegistry {
-    /// @param founders the founding validators (Active, collateral 0, free entrants)
+    /// @param firstOwner the genesis launcher: the only validator Active at genesis
+    /// @param firstOperator its node (operator) key, the one written into the QBFT genesis
+    /// @param otherFounders the other founding owners: no collateral, Probation until they set an operator and the Verifier activates them
     /// @param genesisTimestamp must equal genesis.json `timestamp`
-    constructor(address[] memory founders, uint256 genesisTimestamp) {
-        for (uint256 i = 0; i < founders.length; i++) _seedFounder(founders[i], genesisTimestamp);
+    constructor(address firstOwner, address firstOperator, address[] memory otherFounders, uint256 genesisTimestamp) {
+        _seedFirstValidator(firstOwner, firstOperator, genesisTimestamp);
+        for (uint256 i = 0; i < otherFounders.length; i++) _seedFounder(otherFounders[i], genesisTimestamp);
     }
 }

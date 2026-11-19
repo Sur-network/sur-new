@@ -18,16 +18,25 @@ async function fixture() {
   await setCodeOf("MockDistributor", ADDR.BLOCK_REWARD_DISTRIBUTOR);
   const t0 = await now();
   const founders = S.slice(0, 7);
-  const reg = await deployAtFixed("ValidatorsRegistry", "ValidatorsRegistry_GenesisSeed", ADDR.VALIDATORS_REGISTRY, [founders.map((s) => s.address), t0]);
+  const idr = await setCodeOf("MockIdentity", ADDR.IDENTITY_REGISTRY);
+  const op = (i) => ethers.Wallet.createRandom().address; // node (operator) keys are plain addresses here
+  const reg = await deployAtFixed("ValidatorsRegistry", "ValidatorsRegistry_GenesisSeed", ADDR.VALIDATORS_REGISTRY,
+    [founders[0].address, op(0), founders.slice(1).map((s) => s.address), t0]);
   const board = await deployAtFixed("ValidatorsBoard", "ValidatorsBoard_GenesisSeed", ADDR.VALIDATORS_BOARD, [S.slice(0, 5).map((s) => s.address), t0]);
   await hre.network.provider.send("hardhat_setBalance", [ADDR.VERIFIER, "0x56BC75E2D63100000"]);
   const verifier = await ethers.getImpersonatedSigner(ADDR.VERIFIER);
+  // the other six founders set their node key and the Verifier activates them (no probation wait for founders)
+  for (const f of founders.slice(1)) {
+    await reg.connect(f).setOperator(op());
+    await reg.connect(verifier).recordActivation(f.address, HASH);
+  }
 
   // one paid validator with real collateral (500,000 + 4% fee)
   const paid = S[10];
+  await idr.setVerified(paid.address, true);
   await hre.network.provider.send("hardhat_setBalance", [paid.address, "0x" + E("1000000").toString(16)]);
   const price = (await reg.currentEntryThreshold()) + (await reg.currentMembershipFee());
-  await reg.connect(paid).requestMembership({ value: price });
+  await reg.connect(paid).requestMembership(op(), { value: price });
   await increaseTime(8 * DAY);
   await reg.connect(verifier).recordActivation(paid.address, HASH);
   return { S, reg, board, verifier, paid, founders };
@@ -60,8 +69,8 @@ describe("Recovery removal - recording", () => {
 
     await remove(f, paid);
     await remove(f, S[0]);
-    expect(await reg.getValidators()).to.not.include(paid.address);
-    expect(await reg.getValidators()).to.not.include(S[0].address);
+    expect(await reg.getActiveOwners()).to.not.include(paid.address);
+    expect(await reg.getActiveOwners()).to.not.include(S[0].address);
     expect((await reg.validators(paid.address)).status).to.equal(ST_REMOVED);
     expect((await reg.validators(paid.address)).lockedStake).to.equal(stake); // no penalty
     expect(await reg.isValidator(paid.address)).to.equal(false);
@@ -75,7 +84,7 @@ describe("Recovery removal - recording", () => {
     expect(r.exitAllowedAt).to.equal(r.recoveryTimestamp + BigInt(90 * DAY));
     expect(r.objectionDeadline).to.equal(r.recordedAt + BigInt(72 * 3600));
     await expect(remove(f, paid)).to.be.revertedWith("ValidatorsRegistry: validator is not active");
-    await expect(reg.connect(paid).requestMembership({ value: 1 })).to.be.reverted; // the ban
+    await expect(reg.connect(paid).requestMembership(ethers.Wallet.createRandom().address, { value: 1 })).to.be.reverted; // the ban
   });
 });
 
@@ -148,7 +157,7 @@ describe("Recovery removal - objection decided by the board", () => {
     for (const i of [0, 1, 2]) await board.connect(S[i]).voteRecoveryRemoval(paid.address, false);
     expect((await reg.recoveryRemovals(paid.address)).state).to.equal(S_CANCELLED);
     expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
-    expect(await reg.getValidators()).to.include(paid.address);
+    expect(await reg.getActiveOwners()).to.include(paid.address);
     expect(await reg.permanentlyExited(paid.address)).to.equal(false);
     expect(await reg.paidValidatorCount()).to.equal(paidBefore);
     expect((await reg.validators(paid.address)).lockedStake).to.equal(E("500000"));
@@ -212,7 +221,7 @@ describe("Recovery removal - fewer than 3 impartial board members: the validator
     expect((await reg.recoveryRemovals(S[1].address)).state).to.equal(S_REFERRED);
     await board.connect(S[4]).voteRecoveryAssembly(S[1].address, false); // 2 cancel > 5 - 4
     expect((await reg.recoveryRemovals(S[1].address)).state).to.equal(S_CANCELLED);
-    expect(await reg.getValidators()).to.include(S[1].address);
+    expect(await reg.getActiveOwners()).to.include(S[1].address);
     expect(await reg.permanentlyExited(S[1].address)).to.equal(false);
   });
 

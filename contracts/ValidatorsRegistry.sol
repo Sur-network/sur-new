@@ -11,6 +11,10 @@ interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
 }
 
+interface IIdentityFullyVerified {
+    function isFullyVerified(address who) external view returns (bool);
+}
+
 /// @title ValidatorsRegistry
 /// @notice Deployed at the fixed genesis address SurAddresses.VALIDATORS_REGISTRY (0x3333...3333). Serves two roles:
 ///
@@ -162,51 +166,30 @@ contract ValidatorsRegistry {
     // not a full-validator vote). The initial entryThresholdBase is 500,000 Suren.
     // ------------------------------------------------------------------
 
-    /// @notice Hard bounds and a shared cooldown for ValidatorsBoard's authority over the three economic entry parameters
-    ///         (entryThresholdBase, growthFactorPerValidator, membershipFeeBps). The bounds close off extreme values (free
-    ///         entry, impossibly steep growth, a fee of up to 100%); one cooldown shared by all three prevents several
-    ///         rapid changes from combining into an extreme effect.
-    uint256 public constant ENTRY_THRESHOLD_BASE_MIN = 100_000 ether;
-    uint256 public constant ENTRY_THRESHOLD_BASE_MAX = 2_000_000 ether;
+    /// @notice v2.5: the entry collateral is FIXED for every paying entrant (the v2.2 growth curve with the number of paid
+    ///         validators is gone). Only ValidatorsBoard (3 of 5) can change it and the membership fee, within hard bounds:
+    ///         each change at most +-10% relative to the current value, collateral between 100,000 and 2,000,000 Suren, fee
+    ///         between 1% and 10% of the collateral, and one shared 180-day timer between any two changes. A change affects
+    ///         only later entrants.
+    uint256 public constant ENTRY_COLLATERAL_MIN = 100_000 ether;
+    uint256 public constant ENTRY_COLLATERAL_MAX = 2_000_000 ether;
     uint256 public constant MEMBERSHIP_FEE_BPS_MIN = 100; // 1%
     uint256 public constant MEMBERSHIP_FEE_BPS_MAX = 1000; // 10%
-    /// @dev Bounds are expressed as the doubling period they imply: the factor for a period p is 2^(1/p). Fastest
-    ///      allowed: doubles every 20 paid validators. Slowest allowed: every 80.
-    uint256 public constant GROWTH_FACTOR_MIN = 1_008701983790398976; // 2^(1/80), doubling every 80
-    uint256 public constant GROWTH_FACTOR_MAX = 1_035264923841377536; // 2^(1/20), doubling every 20
     uint256 public constant ECONOMIC_PARAM_CHANGE_MIN_INTERVAL = 180 days;
     uint256 public lastEconomicParamChangeTime;
 
-    /// @notice Base stake required to request membership when there are 0 paid validators (the first person to call
-    ///         requestMembership(), regardless of how many free genesis founders are active).
-    uint256 public entryThresholdBase = 500_000 ether; // 500,000 Suren (18 decimals, like ETH)
+    /// @notice Collateral every paying entrant locks here (refundable on exit, slashable). Initial value 500,000 Suren.
+    uint256 public entryCollateral = 500_000 ether;
 
-    /// @notice The entry threshold grows continuously, compounding per additional paid validator:
-    ///         current threshold = entryThresholdBase * growthFactorPerValidator^paidValidatorCount. Founders do not count
-    ///         toward the exponent. The factor is fixed-point with 18 decimals; 1_017479692102686336 (~1.017480) multiplies
-    ///         the threshold by 2 every 40 paid validators. The curve makes buying more than a third of the seats
-    ///         exponentially, not linearly, expensive.
-    uint256 public growthFactorPerValidator = 1_017479692102686336;
-
-    /// @notice Fixed-point precision used by growthFactorPerValidator and _fixedPow (18 decimals,
-    ///         like Suren/ETH itself). 1_000000000000000000 represents 1.0 (no growth).
-    uint256 private constant FIXED_POINT_ONE = 1_000000000000000000;
-
-    /// @notice Safety and gas cap: the paid-validator count is clamped to this value when computing the entry threshold,
-    ///         so the exponent never grows without bound. The largest multiplier it allows depends on the current
-    ///         growthFactorPerValidator, from 2^16 (slowest allowed growth) to 2^64 (fastest), far below any overflow
-    ///         risk in the 18-decimal arithmetic used here.
-    uint256 private constant MAX_GROWTH_VALIDATORS = 1280;
-
-    /// @notice Membership fee, as a fraction of currentEntryThreshold(), paid in addition to the collateral and
-    ///         non-refundable. It is forwarded to BlockRewardDistributor.receiveMembershipFee(), folded into the next
-    ///         distribution epoch and paid pro rata by blocks to active validators (exempt from the ordinary-fee burn).
-    ///         400 = 4% of the collateral.
+    /// @notice Membership fee as a fraction of the collateral, paid on top of it and non-refundable. It is forwarded to
+    ///         BlockRewardDistributor.receiveMembershipFee(), folded into the next distribution epoch and paid pro rata by
+    ///         blocks to active validators (exempt from the ordinary-fee burn). 400 = 4% of the collateral.
     uint256 public membershipFeeBps = 400;
+
 
     /// @notice Maximum number of new membership requests allowed within entryWindowSeconds.
     uint256 public maxEntriesPerWindow = 1;
-    uint256 public entryWindowSeconds = 86400; // 24 hours — at most 1 new validator/day
+    uint256 public entryWindowSeconds = 7 days; // v2.5: at most one new paying validator per week
 
     uint256 public probationPeriod = 604800; // 1 week
 
@@ -478,7 +461,14 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Besu QBFT contract-mode interface — signature is hardcoded in Besu, do not change.
     // ------------------------------------------------------------------
-    function getValidators() external view returns (address[] memory) {
+    /// @notice Operator (node) keys of the Active validators — what Besu reads as the QBFT validator set.
+    function getValidators() external view returns (address[] memory out) {
+        out = new address[](activeValidators.length);
+        for (uint256 i = 0; i < out.length; i++) out[i] = operatorOf[activeValidators[i]];
+    }
+
+    /// @notice Owner addresses of the Active validators.
+    function getActiveOwners() external view returns (address[] memory) {
         return activeValidators;
     }
 
@@ -514,77 +504,34 @@ contract ValidatorsRegistry {
     // Entry threshold / rate limiting
     // ------------------------------------------------------------------
 
-    /// @notice Current stake required to request membership. Grows continuously (compounding
-    ///         per additional PAID validator — see paidValidatorCount — not per discrete jump,
-    ///         and NOT counting free genesis-seeded founders). Capped at MAX_GROWTH_VALIDATORS
-    ///         worth of growth, to avoid overflow/unbounded gas.
+    /// @notice Collateral needed to request membership NOW (fixed; see entryCollateral).
     function currentEntryThreshold() public view returns (uint256) {
-        uint256 n = paidValidatorCount;
-        if (n > MAX_GROWTH_VALIDATORS) n = MAX_GROWTH_VALIDATORS;
-        uint256 multiplier = _fixedPow(growthFactorPerValidator, n);
-        return (entryThresholdBase * multiplier) / FIXED_POINT_ONE;
+        return entryCollateral;
     }
 
-    /// @dev Fixed-point (FIXED_POINT_ONE = 1e18) exponentiation by squaring: returns
-    ///      base1e18^exponent, expressed in the same 1e18 fixed-point representation.
-    ///      O(log2(exponent)) multiplications — cheap even for large exponents.
-    function _fixedPow(uint256 base1e18, uint256 exponent) private pure returns (uint256 result1e18) {
-        result1e18 = FIXED_POINT_ONE; // 1.0
-        uint256 b = base1e18;
-        uint256 e = exponent;
-        while (e > 0) {
-            if (e & 1 == 1) {
-                result1e18 = (result1e18 * b) / FIXED_POINT_ONE;
-            }
-            b = (b * b) / FIXED_POINT_ONE;
-            e >>= 1;
-        }
-    }
-
-    /// @notice Current membership fee: a governed fraction of currentEntryThreshold(), paid on top of the collateral and
-    ///         forwarded to BlockRewardDistributor (paid to active validators in the next epoch).
+    /// @notice Current membership fee = entryCollateral * membershipFeeBps / 10000, paid on top of the collateral.
     function currentMembershipFee() public view returns (uint256) {
-        return (currentEntryThreshold() * membershipFeeBps) / BPS_DENOMINATOR;
+        return (entryCollateral * membershipFeeBps) / BPS_DENOMINATOR;
     }
 
     // ------------------------------------------------------------------
-    // Economic entry parameter setters — ValidatorsBoard only (its own internal board majority
-    // has already approved the change before calling these; see ValidatorsBoard.sol's
-    // proposeSetEntryThresholdBase / proposeSetGrowthFactorPerValidator / proposeSetMembershipFeeBps).
+    // Economic entry parameter setters — ValidatorsBoard only (3 of 5 already approved the change)
     // ------------------------------------------------------------------
-    function setEntryThresholdBase(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= ENTRY_THRESHOLD_BASE_MIN && newValue <= ENTRY_THRESHOLD_BASE_MAX,
-            "ValidatorsRegistry: entryThresholdBase outside allowed bounds"
-        );
+    function setEntryCollateral(uint256 newValue) external onlyBoard {
+        require(newValue >= ENTRY_COLLATERAL_MIN && newValue <= ENTRY_COLLATERAL_MAX, "ValidatorsRegistry: entryCollateral outside allowed bounds");
+        _requireWithinTenPercent(entryCollateral, newValue);
         require(
             block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
             "ValidatorsRegistry: too soon since the last economic-parameter change"
         );
-        emit EconomicParamUpdatedByBoard("entryThresholdBase", entryThresholdBase, newValue);
-        entryThresholdBase = newValue;
-        lastEconomicParamChangeTime = block.timestamp;
-    }
-
-    function setGrowthFactorPerValidator(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= GROWTH_FACTOR_MIN && newValue <= GROWTH_FACTOR_MAX,
-            "ValidatorsRegistry: growthFactorPerValidator outside allowed bounds"
-        );
-        require(
-            block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
-            "ValidatorsRegistry: too soon since the last economic-parameter change"
-        );
-        emit EconomicParamUpdatedByBoard("growthFactorPerValidator", growthFactorPerValidator, newValue);
-        growthFactorPerValidator = newValue;
+        emit EconomicParamUpdatedByBoard("entryCollateral", entryCollateral, newValue);
+        entryCollateral = newValue;
         lastEconomicParamChangeTime = block.timestamp;
     }
 
     function setMembershipFeeBps(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= MEMBERSHIP_FEE_BPS_MIN && newValue <= MEMBERSHIP_FEE_BPS_MAX,
-            "ValidatorsRegistry: membershipFeeBps outside allowed bounds"
-        );
+        require(newValue >= MEMBERSHIP_FEE_BPS_MIN && newValue <= MEMBERSHIP_FEE_BPS_MAX, "ValidatorsRegistry: membershipFeeBps outside allowed bounds");
+        _requireWithinTenPercent(membershipFeeBps, newValue);
         require(
             block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
             "ValidatorsRegistry: too soon since the last economic-parameter change"
@@ -592,6 +539,11 @@ contract ValidatorsRegistry {
         emit EconomicParamUpdatedByBoard("membershipFeeBps", membershipFeeBps, newValue);
         membershipFeeBps = newValue;
         lastEconomicParamChangeTime = block.timestamp;
+    }
+
+    /// @dev Each change is at most +-10% relative to the current value.
+    function _requireWithinTenPercent(uint256 current, uint256 proposed) private pure {
+        require(proposed * 10 >= current * 9 && proposed * 10 <= current * 11, "ValidatorsRegistry: change exceeds +-10%");
     }
 
     function _enforceRateLimit() private {
@@ -610,25 +562,26 @@ contract ValidatorsRegistry {
     //   1. `threshold` (currentEntryThreshold()): kept here as refundable, slashable collateral.
     //   2. `fee` (currentMembershipFee()): forwarded to BlockRewardDistributor.
     // ------------------------------------------------------------------
-    function requestMembership() external payable nonReentrant {
+    function requestMembership(address operator) external payable nonReentrant {
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
+        _claimOperator(msg.sender, operator);
 
-        uint256 threshold = currentEntryThreshold();
+        uint256 collateral = entryCollateral;
         uint256 fee = currentMembershipFee();
-        require(msg.value == threshold + fee, "ValidatorsRegistry: incorrect payment amount");
+        require(msg.value == collateral + fee, "ValidatorsRegistry: incorrect payment amount");
 
         _enforceRateLimit();
 
         if (fee > 0) {
             DISTRIBUTOR.receiveMembershipFee{value: fee}();
         }
-        // `threshold` intentionally stays in this contract's own native balance as locked
-        // collateral — no transfer needed, it arrived with this same call via msg.value.
+        // `collateral` intentionally stays in this contract's own native balance as locked collateral.
 
         validators[msg.sender] = ValidatorInfo({
             status: Status.Probation,
-            lockedStake: threshold,
+            lockedStake: collateral,
             periodStartedAt: block.timestamp,
             pendingSlashEpoch: 0,
             demotedAt: 0,
@@ -636,7 +589,50 @@ contract ValidatorsRegistry {
         });
         paidValidatorCount++;
 
-        emit MembershipRequested(msg.sender, threshold, fee);
+        emit MembershipRequested(msg.sender, collateral, fee);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: two keys per validator. The OWNER holds rewards, collateral, votes, identity and the seat; the OPERATOR is only
+    // the node key that signs blocks. getValidators() returns operator keys.
+    // ------------------------------------------------------------------
+    /// @notice The owner whose operator key this is. Once an address has been an operator it stays attached to that owner
+    ///         forever (it is never freed for someone else), so a block signed by an old operator key can always be mapped
+    ///         to its owner for reward purposes.
+    mapping(address => address) public ownerOfOperator;
+    /// @notice The CURRENT operator (node key) of an owner (zero until set).
+    mapping(address => address) public operatorOf;
+    /// @notice Genesis founders: no collateral, outside the entry rate limit, no probation wait before activation.
+    mapping(address => bool) public isFounder;
+    /// @notice Genesis timestamp (set by the seed helper).
+    uint256 public genesisTime;
+    uint256 public lastEntryWindowChange;
+    /// @notice Total Suren burned by slashing (sent to address(0)).
+    uint256 public totalSlashBurned;
+
+    event OperatorSet(address indexed owner, address indexed operator);
+
+    function _claimOperator(address owner_, address operator) internal {
+        require(operator != address(0), "ValidatorsRegistry: zero operator");
+        address attached = ownerOfOperator[operator];
+        require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
+        require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
+        require(ownerOfOperator[owner_] == address(0) || ownerOfOperator[owner_] == owner_, "ValidatorsRegistry: this address is an operator key");
+        ownerOfOperator[operator] = owner_;
+        operatorOf[owner_] = operator;
+        emit OperatorSet(owner_, operator);
+    }
+
+    /// @notice The owner replaces the node key at once. The new node must be up: the Verifier keeps checking liveness and an
+    ///         Active validator whose new node is down will be suspended like any other.
+    function setOperator(address newOperator) external {
+        Status st = validators[msg.sender].status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted,
+            "ValidatorsRegistry: cannot change the operator in this status"
+        );
+        require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
+        _claimOperator(msg.sender, newOperator);
     }
 
     // ------------------------------------------------------------------
@@ -651,7 +647,8 @@ contract ValidatorsRegistry {
     function recordActivation(address candidate, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
-        require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
+        require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
+        require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
         _notifyBoard(candidate);
@@ -1012,30 +1009,47 @@ contract ValidatorsRegistry {
         if (slashAmount > v.lockedStake) slashAmount = v.lockedStake;
         v.lockedStake -= slashAmount;
         if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
+            totalSlashBurned += slashAmount;
+            (bool success, ) = address(0).call{value: slashAmount}(""); // 100% burned (v2.5), not paid to the treasury
+            require(success, "ValidatorsRegistry: slash burn failed");
         }
         emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
-    /// @dev Genesis seeding of one founding validator. Used ONLY by genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol
-    ///      (which inherits this contract, so the storage layout is identical by construction); never reachable on the real chain.
-    function _seedFounder(address v, uint256 genesisTimestamp) internal {
-        require(v != address(0), "seed: zero address");
-        require(validators[v].status == Status.None, "seed: duplicate founder");
-        validators[v] = ValidatorInfo({
-            status: Status.Active,
+    /// @dev Genesis seeding (used ONLY by genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol, which inherits this contract,
+    ///      so the storage layout is identical by construction; never reachable on the real chain). The FIRST validator (the
+    ///      genesis launcher) is Active with its operator key; the other founders are registered with their owner address,
+    ///      no collateral and status Probation, and become Active after they set an operator key and the Verifier confirms
+    ///      their node is up.
+    function _seedFirstValidator(address owner_, address operator, uint256 genesisTimestamp) internal {
+        require(genesisTime == 0, "seed: first validator already seeded");
+        genesisTime = genesisTimestamp;
+        _seedFounderEntry(owner_, genesisTimestamp, Status.Active);
+        ownerOfOperator[operator] = owner_;
+        operatorOf[owner_] = operator;
+        activeIndex[owner_] = activeValidators.length + 1;
+        activeValidators.push(owner_);
+        everActivated[owner_] = true;
+        activationSeq[owner_] = ++activationCount;
+        activeCheckpoints[owner_].push(ActiveCheckpoint({nonce: 0, active: true}));
+    }
+
+    function _seedFounder(address owner_, uint256 genesisTimestamp) internal {
+        _seedFounderEntry(owner_, genesisTimestamp, Status.Probation);
+    }
+
+    function _seedFounderEntry(address owner_, uint256 genesisTimestamp, Status status) private {
+        require(owner_ != address(0), "seed: zero address");
+        require(validators[owner_].status == Status.None, "seed: duplicate founder");
+        validators[owner_] = ValidatorInfo({
+            status: status,
             lockedStake: 0,
             periodStartedAt: genesisTimestamp,
             pendingSlashEpoch: 0,
             demotedAt: 0,
-            isPaidEntrant: false // founders are free, never paid entrants
+            isPaidEntrant: false
         });
-        activeIndex[v] = activeValidators.length + 1;
-        activeValidators.push(v);
-        everActivated[v] = true; // payable from the first distribution
-        activationSeq[v] = ++activationCount;
-        activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true}));
+        isFounder[owner_] = true;
     }
 
     function _activate(address who) private {
@@ -1203,6 +1217,15 @@ contract ValidatorsRegistry {
         if (key == ParamKey.MaxEntriesPerWindow) {
             maxEntriesPerWindow = value;
         } else if (key == ParamKey.EntryWindowSeconds) {
+            // v2.5: 1..30 days, each change at most +-1 day, at least 6 months between changes, none in the first 6 months
+            require(value >= 1 days && value <= 30 days, "ValidatorsRegistry: entryWindowSeconds outside 1-30 days");
+            require(
+                value + 1 days >= entryWindowSeconds && value <= entryWindowSeconds + 1 days,
+                "ValidatorsRegistry: entryWindowSeconds may change by at most one day"
+            );
+            require(block.timestamp >= genesisTime + 180 days, "ValidatorsRegistry: no change in the first 6 months after genesis");
+            require(block.timestamp >= lastEntryWindowChange + 180 days, "ValidatorsRegistry: at least 6 months between changes");
+            lastEntryWindowChange = block.timestamp;
             entryWindowSeconds = value;
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;

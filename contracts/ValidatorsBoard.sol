@@ -6,8 +6,7 @@ import "./SurAddresses.sol";
 interface IValidatorsRegistry {
     function getValidators() external view returns (address[] memory);
     function isValidator(address who) external view returns (bool);
-    function setEntryThresholdBase(uint256 newValue) external;
-    function setGrowthFactorPerValidator(uint256 newValue) external;
+    function setEntryCollateral(uint256 newValue) external;
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
@@ -138,7 +137,7 @@ contract ValidatorsBoard {
     /// @notice 1-based position of `voter` inside `candidateVoters[candidate]`, for O(1) removal.
     mapping(address => mapping(address => uint256)) private voterIndexInCandidateVoters;
 
-    enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
+    enum ActionType { RotateOracle, ApproveBudget, SetEntryCollateral, SetMembershipFeeBps, RotateVerifier }
 
     /// @dev `requiredVotes` is fixed when the action is created and never recomputed. `expiresAt`
     ///      bounds how long an action stays open. `boardVersionAtCreation` ties the action to the
@@ -605,18 +604,13 @@ contract ValidatorsBoard {
     }
 
     /// @notice Economic entry parameters: majority of the board.
-    function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
-    }
-
-    function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
-        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
+    function proposeSetEntryCollateral(uint256 newValue) external onlyBoardMember returns (uint256 id) {
+        id = _createAction(ActionType.SetEntryCollateral, address(0), newValue, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
-        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
+        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     /// @notice Rotate the `verifier` key on ValidatorsRegistry. Needs at least
@@ -675,11 +669,8 @@ contract ValidatorsBoard {
                 require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
-            } else if (a.atype == ActionType.SetEntryThresholdBase) {
-                REGISTRY.setEntryThresholdBase(a.amount);
-                emit RegistryEconomicParamSet(a.atype, a.amount);
-            } else if (a.atype == ActionType.SetGrowthFactorPerValidator) {
-                REGISTRY.setGrowthFactorPerValidator(a.amount);
+            } else if (a.atype == ActionType.SetEntryCollateral) {
+                REGISTRY.setEntryCollateral(a.amount);
                 emit RegistryEconomicParamSet(a.atype, a.amount);
             } else if (a.atype == ActionType.SetMembershipFeeBps) {
                 REGISTRY.setMembershipFeeBps(a.amount);
