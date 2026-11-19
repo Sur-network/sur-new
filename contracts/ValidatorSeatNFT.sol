@@ -20,8 +20,9 @@ interface ISeatRegistryHook {
 ///           - the buyer must be fully verified (IdentityRegistry.isFullyVerified), must never have been a validator, must not
 ///             hold a seat already and must not be somebody's operator key;
 ///           - the seller is treated as exited and can never become a validator again (agreement 15-6);
-///           - an Active seat becomes SelfSuspended on transfer: the buyer must accept the validators' agreement
-///             (`acceptSeatTransfer` on the Registry) and the Verifier must check the node before it is Active again.
+///           - an Active seat STAYS Active: the buyer takes over the seat, the operator key and the position in the active set
+///             at once; the buyer records the acceptance of the validators' agreement with `acceptSeatTransfer` on the
+///             Registry (a record, not a gate), and the buyer's vote counts from the transfer (a new voter).
 ///         Only ValidatorsRegistry mints (entry, lottery win, genesis founders) and burns (when the owner exits).
 ///         `tokenURI(id)` = baseURI + id; the base URI (initially https://validator-nft.surnet.org/) can be changed only by
 ///         FoundationDAO (an Execute proposal calling `setBaseURI`).

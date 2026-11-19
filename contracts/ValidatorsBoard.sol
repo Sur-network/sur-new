@@ -209,7 +209,7 @@ contract ValidatorsBoard {
     ///         exit without the seat having been cleaned up yet (anyone may call `syncBoard()` for that).
     modifier onlyBoardMember() {
         require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
-        require(_hasAuthority(msg.sender), "ValidatorsBoard: caller has no board authority");
+        require(_canAct(msg.sender), "ValidatorsBoard: caller has no board authority");
         require(!_syncNeeded(), "ValidatorsBoard: a seat holder has requested exit - call syncBoard() first");
         _;
     }
@@ -486,8 +486,19 @@ contract ValidatorsBoard {
 
     /// @notice True while `who` may act as a board member: the board's month is the current month
     ///         and the seat is valid.
+    /// @dev A seat holder may ACT (propose, vote, count in the recovery quorum) only once it is a validator that has left
+    ///      Probation: founders seeded as Probation on the genesis board hold their seat but cannot act until the Verifier
+    ///      activates them. Seat validity (_hasAuthority) is unchanged, so anyone calling syncBoard() does NOT remove a founder
+    ///      who is still in Probation. A suspended member (Demoted or SelfSuspended) keeps acting for the rest of its month, as
+    ///      before (suspension alone does not end authority).
+    function _canAct(address who) private view returns (bool) {
+        if (!_hasAuthority(who)) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
+        return status != 1; // 1 = Probation
+    }
+
     function hasBoardAuthority(address who) external view returns (bool) {
-        return _boardIsCurrent() && _hasAuthority(who);
+        return _boardIsCurrent() && _canAct(who);
     }
 
     function _syncNeeded() private view returns (bool) {
@@ -560,9 +571,13 @@ contract ValidatorsBoard {
     /// @notice Purge every vote `validator` cast and received once it has been Demoted for longer
     ///         than `recoveryPeriod() + STALE_VOTE_CLEAR_DELAY`. Callable by anyone.
     function clearStaleVotes(address validator) external {
-        (uint8 status, , , uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
-        require(status == 3, "ValidatorsBoard: validator is not currently demoted");
-        uint256 threshold = demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY;
+        (uint8 status, , uint256 periodStartedAt, uint256 demotedAt, , ) = REGISTRY.getValidatorInfo(validator);
+        // Demoted (3): the recovery period plus the delay after the suspension. SelfSuspended (6): there is no recovery
+        // period for a voluntary suspension, so the delay counts from the moment it began (Registry stores that in periodStartedAt).
+        require(status == 3 || status == 6, "ValidatorsBoard: validator is not currently suspended");
+        uint256 threshold = status == 3
+            ? demotedAt + REGISTRY.recoveryPeriod() + STALE_VOTE_CLEAR_DELAY
+            : periodStartedAt + STALE_VOTE_CLEAR_DELAY;
         require(block.timestamp >= threshold, "ValidatorsBoard: stale-vote delay not elapsed");
 
         address[] memory given = voterCandidates[validator];
@@ -759,7 +774,7 @@ contract ValidatorsBoard {
     function _impartialAuthorityCount(address subject) private view returns (uint256 n) {
         if (!_boardIsCurrent()) return 0;
         for (uint256 i = 0; i < boardMembers.length; i++) {
-            if (boardMembers[i] != subject && _hasAuthority(boardMembers[i])) n++;
+            if (boardMembers[i] != subject && _canAct(boardMembers[i])) n++;
         }
     }
 

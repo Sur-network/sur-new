@@ -168,7 +168,12 @@ describe("Registry v2.5 - economic parameters (Board only)", () => {
   });
 
   it("the real ValidatorsBoard drives the change with 3 of 5 votes (proposeSetEntryCollateral)", async () => {
-    const { reg, board, founders } = await loadFixture(fixture);
+    const { reg, board, founders, verifier } = await loadFixture(fixture);
+    // board members must be Active to act: activate the first three founders (the first validator already is)
+    for (const x of founders.slice(1, 3)) {
+      await reg.connect(x).setOperator(rnd());
+      await reg.connect(verifier).recordActivation(x.address, HASH);
+    }
     await board.connect(founders[0]).proposeSetEntryCollateral(E("550000"));
     expect(await reg.entryCollateral()).to.equal(E("500000")); // 1 of 3 votes needed
     await board.connect(founders[1]).voteAction(1);
@@ -297,5 +302,42 @@ describe("Registry v2.5 - voluntary suspension (SelfSuspended)", () => {
     await reg.connect(owner).requestExit();
     expect((await reg.validators(owner.address)).status).to.equal(ST.Exiting);
     expect(await reg.permanentlyExited(owner.address)).to.equal(true);
+  });
+});
+
+describe("Board authority needs more than a seat (founders in Probation)", () => {
+  it("a founder still in Probation holds the seat but cannot propose or vote; syncBoard does not remove it; once Active it acts", async () => {
+    const { reg, board, founders, verifier, S } = await loadFixture(fixture);
+    // genesis: only founders[0] is Active; founders[1..4] are Probation but seated
+    expect(await board.getBoardSize()).to.equal(5);
+    expect(await board.hasBoardAuthority(founders[0].address)).to.equal(true);
+    expect(await board.hasBoardAuthority(founders[1].address)).to.equal(false);
+    await expect(board.connect(founders[1]).proposeSetEntryCollateral(E("550000"))).to.be.revertedWith("ValidatorsBoard: caller has no board authority");
+    await board.connect(S[15]).syncBoard(); // anyone: must NOT remove the Probation founders
+    expect(await board.getBoardSize()).to.equal(5);
+    expect(await board.isBoardMember(founders[1].address)).to.equal(true);
+    // activation gives the authority
+    await reg.connect(founders[1]).setOperator(rnd());
+    await reg.connect(verifier).recordActivation(founders[1].address, HASH);
+    expect(await board.hasBoardAuthority(founders[1].address)).to.equal(true);
+  });
+});
+
+describe("clearStaleVotes also covers a long voluntary suspension", () => {
+  it("votes of a SelfSuspended validator are cleared after the delay (counted from the suspension)", async () => {
+    const { reg, board, founders, verifier, buyers, idr } = await loadFixture(fixture);
+    for (const x of founders.slice(1)) {
+      await reg.connect(x).setOperator(rnd());
+      await reg.connect(verifier).recordActivation(x.address, HASH);
+    }
+    const owner = buyers[0];
+    await reg.connect(owner).requestMembership(rnd(), { value: await price(reg) });
+    await increaseTime(8 * DAY);
+    await reg.connect(verifier).recordActivation(owner.address, HASH);
+    await reg.connect(owner).selfSuspend();
+    await expect(board.clearStaleVotes(owner.address)).to.be.revertedWith("ValidatorsBoard: stale-vote delay not elapsed");
+    await expect(board.clearStaleVotes(founders[0].address)).to.be.revertedWith("ValidatorsBoard: validator is not currently suspended");
+    await increaseTime(31 * DAY);
+    await board.clearStaleVotes(owner.address); // no votes were given, but the call is allowed and must not revert
   });
 });

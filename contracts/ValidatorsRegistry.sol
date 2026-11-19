@@ -659,7 +659,6 @@ contract ValidatorsRegistry {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
-        require(!seatTransferPending[candidate], "ValidatorsRegistry: seat transfer not accepted");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
@@ -1531,7 +1530,7 @@ contract ValidatorsRegistry {
 
     function requestResume() external {
         require(validators[msg.sender].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
-        require(!seatTransferPending[msg.sender], "ValidatorsRegistry: accept the seat transfer (sign the agreement) first");
+
         resumeRequested[msg.sender] = true;
         emit ResumeRequested(msg.sender);
     }
@@ -1539,7 +1538,6 @@ contract ValidatorsRegistry {
     function recordResume(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         require(validators[validator].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
         require(resumeRequested[validator], "ValidatorsRegistry: no resume request");
-        require(!seatTransferPending[validator], "ValidatorsRegistry: seat transfer not accepted");
         require(operatorOf[validator] != address(0), "ValidatorsRegistry: operator key not set");
         resumeRequested[validator] = false;
         _activate(validator);
@@ -1551,10 +1549,11 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // v2.5: seat NFT. The owner of ValidatorSeatNFT token = the owner of the seat (reference doc §9).
     // ------------------------------------------------------------------
-    /// @notice True from a seat transfer until the buyer accepts the validators' agreement (acceptSeatTransfer).
+    /// @notice True from a seat transfer until the buyer records the acceptance of the validators' agreement (acceptSeatTransfer).
+    ///         It is a record, NOT a gate: the seat keeps its status (an Active seat stays Active) whether or not it is accepted.
     mapping(address => bool) public seatTransferPending;
     /// @notice Informational: until when the buyer is expected to sign (3 days after the transfer). Nothing happens to the seat
-    ///         when the deadline passes: it simply stays out of the validator set until the agreement is accepted. 🔶
+    ///         when the deadline passes. 🔶 consequence of not signing is an off-chain/legal matter.
     mapping(address => uint256) public seatAcceptDeadline;
 
     uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
@@ -1579,14 +1578,16 @@ contract ValidatorsRegistry {
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
         require(to != from, "ValidatorsRegistry: same owner");
 
-        // if the seat is Active it leaves the validator set until the buyer signs and the Verifier checks the node
+        // An Active seat STAYS Active (decision 2026-11-19): the buyer takes the owner place in the active set at the same
+        // position, with the same operator key, so the node keeps validating without interruption. The seller's vote ends and the
+        // buyer is a new voter from now (fresh checkpoints), so the buyer cannot vote on proposals created before the transfer.
         if (st == Status.Active) {
-            require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - transfer blocked");
-            _removeFromActive(from);
+            uint256 idx = activeIndex[from];
+            activeValidators[idx - 1] = to;
+            activeIndex[to] = idx;
+            delete activeIndex[from];
             _recordActiveCheckpoint(from, false);
-            st = Status.SelfSuspended;
-            v.status = Status.SelfSuspended;
-            v.periodStartedAt = block.timestamp;
+            _recordActiveCheckpoint(to, true);
         }
 
         // move the record
