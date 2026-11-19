@@ -4,6 +4,7 @@ const { ethers } = hre;
 
 const ADDR = {
   FOUNDATION_DAO: "0x1111111111111111111111111111111111111111",
+  VALIDATORS_REGISTRY: "0x3333333333333333333333333333333333333333",
   IDENTITY_REGISTRY: "0x6666666666666666666666666666666666666666",
   FOUNDATION_MEMBERS: "0x7777777777777777777777777777777777777777",
   VALIDATOR_LOTTERY: "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa",
@@ -40,6 +41,10 @@ async function setCodeOf(mockName, address) {
   return ethers.getContractAt(mockName, address);
 }
 
+async function mine(blocks) {
+  await hre.network.provider.send("hardhat_mine", [hex(blocks)]);
+}
+
 async function increaseTime(seconds) {
   await hre.network.provider.send("evm_increaseTime", [seconds]);
   await hre.network.provider.send("evm_mine", []);
@@ -51,4 +56,4 @@ async function now() {
 
 const DAY = 86400;
 
-module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, now, DAY };
+module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, now, DAY };

@@ -31,7 +31,22 @@ contract MockSale {
 contract MockIdentity {
     address public oracle;
     address public lastCaller;
+    mapping(address => bool) public verified;
     function setIdentityOracle(address o) external { oracle = o; lastCaller = msg.sender; }
+    function setVerified(address who, bool v) external { verified[who] = v; }
+    function isFullyVerified(address who) external view returns (bool) { return verified[who]; }
+}
+
+contract MockLotteryRegistry {
+    mapping(address => bool) public entered;
+    uint256 public enteredCount;
+    bool public failing;
+    function setFailing(bool f) external { failing = f; }
+    function enterAsLotteryWinner(address w) external {
+        require(!failing, "MockRegistry: refuses");
+        entered[w] = true;
+        enteredCount++;
+    }
 }
 
 contract MockToken {
