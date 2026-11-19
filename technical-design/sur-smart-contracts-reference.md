@@ -95,6 +95,9 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `setOperator(address newOperator)` | **فقط مالک** | کلید اپراتور تازه | — | تعویض فوری کلید نود؛ یکتایی دائمی؛ تا تأیید روشن‌بودن توسط Verifier برای ولیدیتور `Active` از لحاظ liveness پایش می‌شود. مؤسسان هم با همین تابع کلید نودشان را تعریف می‌کنند و پس از تأیید Verifier وارد فهرست می‌شوند (ورود آن‌ها از فاصلهٔ ورود مستثناست) |
 | `recordActivation(address candidate, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک کاندید + هش بسته‌ی شواهد آف‌چین | `decisionId` | پس از `probationPeriod` (۱ هفته) و نسبت موفقیت ≥۹۵٪ که **آف‌چین** محاسبه شده (برای مؤسسان: تأیید روشن‌بودن نود)، کاندید را `Active` می‌کند (وارد `getValidators()` می‌شود) |
 | `recordSuspension(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک + هش شواهد | `decisionId` | ولیدیتور `Active` را **فوراً و بی‌قید** از `getValidators()` حذف می‌کند (`Demoted`)؛ قفل جریمه‌ی معلق و **مبلغ درگیر** (`slashBps` از وثیقه در همان لحظه) ثبت می‌شود. جریمه خودبه‌خود اجرا و در لحظهٔ ثبت پرونده سوزانده نمی‌شود. در کف `MIN_ACTIVE_VALIDATORS` revert می‌کند. جریمهٔ مالی روی مؤسسان (وثیقهٔ صفر) اثر ندارد |
+| `recordRecoveryRemoval(address validator, uint256 recoveryTimestamp, bytes32 evidenceHash)` | **فقط `verifier`**، فقط پس از بازگشت شبکه به حالت `contract` | آدرس مالک، زمان بازگشت، هش شواهد | `decisionId` | ✅ (تصمیم ۲۰۲۶-۱۱-۱۹؛ در ۲٫۵ نیست و باید افزوده شود) وضعیت `RemovedInRecovery`: بیرون از `getValidators`، بدون جریمه؛ پس از ۷۲ ساعت بدون اعتراض قطعی؛ `exitAllowedAt = recoveryTimestamp + ۹۰ روز` |
+| `objectRecoveryRemoval(uint256 decisionId)` | مالک ولیدیتور | شناسه | — | اعتراض ظرف ۷۲ ساعت؛ تا رسیدگی قطعی نمی‌شود |
+| `resolveRecoveryRemoval(uint256 decisionId, bool uphold)` | `ValidatorsBoard` (دست‌کم ۳ از ۵؛ عضو درگیر رأی نمی‌دهد) | شناسه، تأیید یا لغو | — | تأیید ⇒ حذف قطعی؛ لغو یا نرسیدن به رأی در ۷ روز ⇒ بازگشت به `Active` |
 | `recordPreExitViolation(address validator, bytes32 evidenceHash, uint256 violationAt)` | **فقط `verifier`** | ولیدیتور در وضعیت `Exiting` + هش شواهد + زمان وقوع تخلف | `decisionId` | ✅ **P04.** فقط تا `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) پس از درخواست خروج، فقط اگر پیش از خروج `Active` بوده، فقط اگر `violationAt` **قبل** از درخواست خروج و **بعد** از آخرین تعلیق باشد، و پرونده‌ی معلق دیگری نباشد. غیرفعالی پس از درخواست خروج هرگز تخلف نیست. همان مسیر معافیت جمعی/تحویل/اعتراض/رأی مجمع اجرا می‌شود |
 | `recordRecovery(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک + هش شواهد | `decisionId` | بازگشت `Demoted` → `Active`؛ فقط وقتی `recoveryPeriod` گذشته و **هیچ پرونده‌ی جریمه‌ی معلقی** نمانده. وثیقهٔ جریمه‌شده بازپر نمی‌شود و هیچ اخراجی بر این پایه نیست |
 | `selfSuspend()` | خودِ مالک (ولیدیتور `Active`) | — | — | تعلیق داوطلبانه (`SelfSuspended`): فوراً از `getValidators()` خارج؛ revert اگر در کف ولیدیتور فعال باشد یا مالک عضو هیأت‌مدیرهٔ ولیدیتورها باشد |
@@ -130,6 +133,30 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 
 ### پارامترهای قابل‌تغییر با رأی کامل ولیدیتورها (`ParamKey`)
 `ParamKey` (به ترتیب enum): `MaxEntriesPerWindow`=۰ (مقدار genesis ۱)، `EntryWindowSeconds`=۱ (مقدار genesis ۷ روز)، `ProbationPeriod`=۲، `RecoveryPeriod`=۳، `SlashBps`=۴ (≤۱۰۰۰۰)، `ExitCooldown`=۵. ✅ **قیدهای کد:** `RecoveryPeriod` باید اکیداً بلندتر از `MASS_DEMOTION_WINDOW` (۱ ساعت) باشد؛ `ExitCooldown` باید اکیداً بلندتر از `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) باشد. **قیدهای `EntryWindowSeconds`:** هر تغییر حداکثر ±۱ روز، بازهٔ ۱ تا ۳۰ روز، حداقل ۶ ماه بین دو تغییر، و ۶ ماه اول از genesis ممنوع. ورود مؤسسان (شش نفر پس از اولین) و برندگان لاتاری تابع فاصلهٔ ورود نیستند. فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند. (آستانهٔ غیرفعالی و تأییدهای liveness روی زنجیره نیستند — liveness آف‌چین است.)
+
+### پیشنهادهای تایپ‌شده در `FoundationDAO` (تصمیم ۲۰۲۶-۱۱-۱۹)
+
+نام توابع و نوع‌ها موقت است. قاعده‌ها:
+
+- هیچ مسیر «اجرای دلخواه» وجود ندارد. هر تصمیم بنیاد روی زنجیره یکی از نوع‌های فهرست زیر است و پارامترهایش در قرارداد با نوع مشخص ذخیره می‌شود (نه `bytes data`).
+- پیشنهاد پس از ساخته‌شدن تغییر نمی‌کند. `getProposal(id)` نوع، پیشنهاددهنده، همهٔ پارامترها، زمان ساخت و انقضا، تعداد رأی و وضعیت را برمی‌گرداند؛ رویداد `ProposalCreated` هم همهٔ پارامترها را دارد، تا رابط کاربری و بازرس همان چیزی را ببینند که رأی داده می‌شود.
+- رأی با `vote(id, paramsHash)` است و فقط به همان شناسه اثر دارد؛ اگر هش پارامترها با ذخیره‌شده نخواند، رأی رد می‌شود (عضو ثابت می‌کند همان پارامترها را دیده است).
+- نصاب همهٔ نوع‌ها: اکثریت عددی ۵ عضو اصلی (۳ از ۵). 🔶 مدت انقضای پیشنهاد؛ شمردن رأی پیشنهاددهنده.
+- فهرست نوع‌ها در genesis ثابت است؛ افزودن نوع تازه نسخهٔ تازهٔ قرارداد و مهاجرت می‌خواهد (بخش «سیاست ارتقا» در `sur-onchain-offchain-architecture.md`).
+
+| نوع | پارامترها | اثر |
+|---|---|---|
+| خرج | `token` (`address(0)` = سورن)، `to`، `amount`، `description` | پرداخت از خزانهٔ بنیاد؛ بدون سقف (همان `proposeSpend`). تأمین موجودی `SurenSale` هم با همین نوع است |
+| `ElectOfficers` | `chair`، `treasurer`، `ceo` | انتخاب یا تعویض سمت‌ها |
+| `RegisterExchange` | `account`، `name`، `quota` | ثبت صرافی در `SurenSale`؛ قرارداد `gasDeposit` را از موجودی خودش به `account` می‌فرستد (خارج از سهمیه) |
+| `SetExchangeQuota` | `account`، `newQuota` | تغییر سهمیه |
+| `ChangeExchangeKey` | `oldAccount`، `newAccount` | تغییر حساب صرافی؛ سهمیهٔ باقی‌مانده و آمار به حساب تازه منتقل می‌شود |
+| `ResumeExchange` | `account` | از سرگیری صرافی متوقف‌شده |
+| `RemoveExchange` | `account` | حذف صرافی |
+| `SetSaleTotalCap` | `cap` | سقف کل فروش |
+| `SweepUnsold` | `to` | بازگرداندن سورن فروش‌نرفته |
+| `RotateIdentityOracle` | `newOracle` | چرخش کلید `identityOracle` |
+| `StartLottery` | `ticketPrice`، `winnersCount`، `closeTime` | اجرای لاتاری ولیدیتور |
 
 ### متغیرهای عمومی مهم (خواندنی خودکار)
 `DISTRIBUTOR`, `BOARD`, `IDENTITY_REGISTRY`, `SEAT_NFT`, `LOTTERY` (آدرس‌های ثابت)، `verifier`، `validators(address)`، `entryCollateral`، `membershipFeeBps`، `lastEconomicChangeAt` (تایمر مشترک ۱۸۰ روزه)، `windowStart`، `entriesInWindow`، `entryWindowSeconds`، `paramProposals(id)` (✅ L04: فیلد هشتم `createdAtNonce`)، `statusNonce`، `wasActiveAt(address, nonce)`، `activationCount`، `activationSeq(address)`، `deliveryDisputeNonce(id)`، `appealNonce(id)`، `MIN_ACTIVE_VALIDATORS`، و برای رسیدگی: `statusDecisions(id)`، `pendingSlashDecisionId(validator)`، `decisionSlashAmount(id)`، `decisionViolationAt(id)`، `statusBeforeExit(validator)`، `PRE_EXIT_CLAIM_WINDOW`، `totalSlashBurned`. (نام‌های تازه موقتی‌اند.)
@@ -306,7 +333,9 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `electOfficers(address chair, address treasurer, address ceo)` | هیأت‌مدیره (اکثریت آرای اعضای اصلی) | رئیس، خزانه‌دار (از اعضای هیأت)، مدیرعامل (می‌تواند خارج باشد) | — | انتخاب یا تعویض در هر زمان |
 | `proposeSpend(address token, address to, uint256 amount, string description)` | عضو اصلی هیأت‌مدیره | توکن (`address(0)` = سورن)، مقصد، مبلغ، توضیح | `id` | پیشنهاد خرج از خزانهٔ بنیاد؛ ERC20 هم پشتیبانی می‌شود |
 | `voteSpend(uint256 id)` | عضو اصلی هیأت‌مدیره | شناسه | — | با رسیدن به اکثریت عددی اعضای هیأت‌مدیره، همان لحظه پرداخت می‌شود؛ **بدون سقف** |
-| `proposeExecute(string description, address target, uint256 value, bytes data)` / `voteExecute(uint256 id)` | عضو اصلی هیأت‌مدیره | هدف، مقدار، calldata | `id` | 🔶 مسیر اجرای فراخوانی با اکثریت عددی هیأت؛ برای چرخش `identityOracle` و اعمال سهمیهٔ صرافی‌ها و تعیین‌شده در `SurenSale` لازم است (ابهام ثبت‌شده) |
+| `propose<Type>(…پارامترهای همان نوع…)` / `vote(uint256 id, bytes32 paramsHash)` | عضو اصلی هیأت‌مدیره | پارامترهای مشخص هر نوع (جدول «پیشنهادهای تایپ‌شده» زیر) / شناسه و هش پارامترها | `id` | ✅ جایگزین `proposeExecute`: فراخوانی دلخواه با `bytes data` وجود ندارد |
+| `getProposal(uint256 id)` | هرکسی | شناسه | نوع، پیشنهاددهنده، همهٔ پارامترها، زمان ساخت و انقضا، تعداد رأی، وضعیت، `paramsHash` | پیشنهاد با همهٔ اطلاعاتش از قرارداد قابل‌دریافت است |
+| `pauseExchange(address exchange)` | مدیرعامل یا هر عضو اصلی هیأت (تنهایی) | آدرس صرافی | — | ✅ توقف فوری فروش یک صرافی در `SurenSale` (فقط توقف؛ از سرگیری و تغییر کلید پیشنهاد تایپ‌شده با ۳ از ۵ است) |
 | `proposeMembersResolution(MembersAction action, …)` / `voteResolution(uint256 id, bool approve)` / `executeResolution(uint256 id)` | عضو بنیاد (مجمع فوق‌العاده) | انتقال سهم / ورود یا خروج عضو | `id` | تصمیم مجمع فوق‌العاده با نصاب اساس‌نامه؛ اجرا با فراخوانی `FoundationMembers` |
 | `getMemberCount()` / `getAllMembers()` | هرکسی | — | تعداد / فهرست | از `FoundationMembers` خوانده می‌شود |
 | `getBoard()` / `getAlternates()` / `getInspector()` / `ceo()` / `chair()` / `treasurer()` | هرکسی | — | آدرس(ها) | وضعیت جاری مجمع و هیأت |
