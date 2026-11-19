@@ -611,6 +611,7 @@ contract ValidatorsRegistry {
 
     function _claimOperator(address owner_, address operator) internal {
         require(operator != address(0), "ValidatorsRegistry: zero operator");
+        require(!_reservedForOther(operator, owner_), "ValidatorsRegistry: operator reserved by another owner's pending change");
         address attached = ownerOfOperator[operator];
         require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
         require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
@@ -620,16 +621,92 @@ contract ValidatorsRegistry {
         emit OperatorSet(owner_, operator);
     }
 
-    /// @notice مالک کلید گره را بلافاصله عوض می‌کند. گرهٔ جدید باید بالا باشد: Verifier زنده‌بودن را بررسی می‌کند و
-    ///         ولیدیتور Active که گرهٔ جدیدش خاموش باشد مثل هر ولیدیتور دیگری تعلیق می‌شود.
+    // ------------------------------------------------------------------
+    // تغییر کلید گره.
+    //   * Probation، Demoted، SelfSuspended (خارج از مجموعهٔ QBFT): `setOperator` بلافاصله اعمال می‌شود. اکنون هیچ چیزی
+    //     برای شبکه خراب نمی‌شود؛ Verifier پیش از (باز)ورود ولیدیتور به مجموعه، گره را بررسی می‌کند.
+    //   * ACTIVE (گره بلاک امضا می‌کند): دو مرحله‌ای (تصمیم مالک ۲۰۲۶-۱۱-۱۹، برگرفته از یافتهٔ Besu با شناسهٔ F-5):
+    //       1. proposeOperator(newKey)            مالک کلید جدید را رزرو می‌کند؛ هنوز چیزی در اجماع تغییر نمی‌کند؛
+    //       2. confirmOperatorReady(owner, hash)  Verifier بررسی می‌کند که گرهٔ جدید بالا، همگام و توانای امضا است و سپس
+    //                                             جابه‌جایی را در یک تراکنش اعمال می‌کند.
+    //     به این ترتیب جابه‌جایی به گرهٔ روشن‌نشده هرگز به مجموعهٔ QBFT نمی‌رسد (گرهٔ خاموش در هر نوبت خود یک
+    //     round change بیش از ۱۰ ثانیه هزینه دارد و به تعداد کافی از آن‌ها می‌تواند زنجیره را متوقف کند).
+    //     cancelOperatorChange() پیشنهاد را کنار می‌گذارد؛ پیشنهاد پس از OPERATOR_PROPOSAL_EXPIRY هم منقضی می‌شود.
+    // ------------------------------------------------------------------
+    mapping(address => address) public pendingOperator;
+    mapping(address => uint256) public pendingOperatorExpiresAt;
+    /// @dev کلید جدید => مالکی که آن را در یک پیشنهاد هنوز باز رزرو کرده است
+    mapping(address => address) public operatorReservedBy;
+    uint256 public constant OPERATOR_PROPOSAL_EXPIRY = 7 days;
+
+    event OperatorChangeProposed(address indexed owner, address indexed newOperator, uint256 expiresAt);
+    event OperatorChangeConfirmed(address indexed owner, address indexed newOperator, bytes32 evidenceHash);
+    event OperatorChangeCancelled(address indexed owner, address indexed newOperator);
+
+    function _reservedForOther(address operator, address owner_) private view returns (bool) {
+        address r = operatorReservedBy[operator];
+        return r != address(0) && r != owner_ && pendingOperator[r] == operator && pendingOperatorExpiresAt[r] > block.timestamp;
+    }
+
+    /// @notice تغییر بلافاصلهٔ کلید گره برای مالکی که در مجموعهٔ اجماع نیست (Probation، Demoted، SelfSuspended).
     function setOperator(address newOperator) external {
         Status st = validators[msg.sender].status;
+        require(st != Status.Active, "ValidatorsRegistry: an Active validator changes the node key in two steps (proposeOperator)");
         require(
-            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            st == Status.Probation || st == Status.Demoted || st == Status.SelfSuspended,
             "ValidatorsRegistry: cannot change the operator in this status"
         );
+        require(newOperator != address(0), "ValidatorsRegistry: zero operator");
         require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
         _claimOperator(msg.sender, newOperator);
+    }
+
+    /// @notice مرحلهٔ ۱ برای ولیدیتور ACTIVE: کلید گرهٔ جدید را رزرو می‌کند. تا تأیید Verifier اجماع دست‌نخورده می‌ماند.
+    function proposeOperator(address newOperator) external {
+        require(validators[msg.sender].status == Status.Active, "ValidatorsRegistry: only an Active validator proposes (others use setOperator)");
+        require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
+        require(
+            pendingOperator[msg.sender] == address(0) || pendingOperatorExpiresAt[msg.sender] <= block.timestamp,
+            "ValidatorsRegistry: a proposal is already open"
+        );
+        _checkOperatorFree(msg.sender, newOperator);
+        pendingOperator[msg.sender] = newOperator;
+        pendingOperatorExpiresAt[msg.sender] = block.timestamp + OPERATOR_PROPOSAL_EXPIRY;
+        operatorReservedBy[newOperator] = msg.sender;
+        emit OperatorChangeProposed(msg.sender, newOperator, pendingOperatorExpiresAt[msg.sender]);
+    }
+
+    /// @notice مرحلهٔ ۲، فقط Verifier، پس از بررسی سلامت گرهٔ جدید: جابه‌جایی را اعمال می‌کند (بلافاصله در
+    ///         getValidators() و در نتیجه در QBFT دیده می‌شود).
+    function confirmOperatorReady(address owner_, bytes32 evidenceHash) external onlyVerifier {
+        address newOp = pendingOperator[owner_];
+        require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        require(pendingOperatorExpiresAt[owner_] > block.timestamp, "ValidatorsRegistry: proposal expired");
+        require(validators[owner_].status == Status.Active, "ValidatorsRegistry: owner is no longer Active");
+        require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
+        delete pendingOperator[owner_];
+        delete pendingOperatorExpiresAt[owner_];
+        delete operatorReservedBy[newOp];
+        _claimOperator(owner_, newOp);
+        emit OperatorChangeConfirmed(owner_, newOp, evidenceHash);
+    }
+
+    function cancelOperatorChange() external {
+        address newOp = pendingOperator[msg.sender];
+        require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        delete pendingOperator[msg.sender];
+        delete pendingOperatorExpiresAt[msg.sender];
+        delete operatorReservedBy[newOp];
+        emit OperatorChangeCancelled(msg.sender, newOp);
+    }
+
+    /// @dev همان قواعد یکتایی _claimOperator، بدون نوشتن (هنگام ثبت پیشنهاد به کار می‌رود).
+    function _checkOperatorFree(address owner_, address operator) private view {
+        require(operator != address(0), "ValidatorsRegistry: zero operator");
+        require(!_reservedForOther(operator, owner_), "ValidatorsRegistry: operator reserved by another owner's pending change");
+        address attached = ownerOfOperator[operator];
+        require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
+        require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
     }
 
     // ------------------------------------------------------------------
