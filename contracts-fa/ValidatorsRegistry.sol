@@ -11,6 +11,19 @@ interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
 }
 
+interface IValidatorSeatNFT {
+    function mintSeat(address to) external returns (uint256);
+    function burnSeat(address owner) external;
+}
+
+interface IBoardAuthority {
+    function hasBoardAuthority(address who) external view returns (bool);
+}
+
+interface IIdentityFullyVerified {
+    function isFullyVerified(address who) external view returns (bool);
+}
+
 /// @title ValidatorsRegistry
 /// @notice در آدرس ثابت genesis یعنی SurAddresses.VALIDATORS_REGISTRY (‏0x3333...3333) مستقر است و دو نقش دارد:
 ///
@@ -79,7 +92,8 @@ contract ValidatorsRegistry {
 
     /// @dev RemovedInRecovery (v2.5، در انتها اضافه شده تا مقادیر قبلی رمزگذاری خود را حفظ کنند): پس از خاموش کردن گره
     ///      در جریان بازیابی شبکه از فهرست ولیدیتورها حذف شده است. جریمه نیست: وثیقه تا exitAllowedAt قفل است.
-    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery }
+    ///      SelfSuspended (v2.5، در انتها اضافه شده): تعلیق داوطلبانه و رایگان توسط مالک؛ بدون پاداش، بدون رأی، خارج از getValidators().
+    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery, SelfSuspended }
 
     struct ValidatorInfo {
         Status status;
@@ -158,49 +172,30 @@ contract ValidatorsRegistry {
     // با رأی کامل ولیدیتورها هم تغییر نمی‌کنند). entryThresholdBase اولیه ۵۰۰٬۰۰۰ سورن است.
     // ------------------------------------------------------------------
 
-    /// @notice حدود سخت و یک دورهٔ انتظار مشترک برای اختیار ValidatorsBoard روی سه پارامتر اقتصادی ورود
-    ///         (entryThresholdBase، growthFactorPerValidator، membershipFeeBps). حدود، مقادیر افراطی (ورود رایگان،
-    ///         رشد بی‌نهایت تند، کارمزد تا ۱۰۰٪) را می‌بندد؛ یک دورهٔ انتظار مشترک برای هر سه جلوی ترکیب چند تغییر
-    ///         سریع و رسیدن به اثر افراطی را می‌گیرد.
-    uint256 public constant ENTRY_THRESHOLD_BASE_MIN = 100_000 ether;
-    uint256 public constant ENTRY_THRESHOLD_BASE_MAX = 2_000_000 ether;
+    /// @notice v2.5: وثیقهٔ ورود برای هر واردشوندهٔ پرداخت‌کننده «ثابت» است (منحنی رشد v2.2 با تعداد ولیدیتورهای پرداخت‌کرده
+    ///         حذف شده است). فقط ValidatorsBoard (۳ از ۵) می‌تواند آن و کارمزد عضویت را در حدود سخت تغییر دهد:
+    ///         هر تغییر حداکثر ±۱۰٪ نسبت به مقدار فعلی، وثیقه بین ۱۰۰٬۰۰۰ و ۲٬۰۰۰٬۰۰۰ سورن، کارمزد
+    ///         بین ۱٪ و ۱۰٪ وثیقه، و یک تایمر مشترک ۱۸۰ روزه بین هر دو تغییر. تغییر فقط روی واردشوندگان
+    ///         بعدی اثر می‌گذارد.
+    uint256 public constant ENTRY_COLLATERAL_MIN = 100_000 ether;
+    uint256 public constant ENTRY_COLLATERAL_MAX = 2_000_000 ether;
     uint256 public constant MEMBERSHIP_FEE_BPS_MIN = 100;  // ۱٪
     uint256 public constant MEMBERSHIP_FEE_BPS_MAX = 1000;  // ۱۰٪
-    /// @dev حدود بر حسب دورهٔ دوبرابرشدنی که القا می‌کنند بیان شده‌اند: ضریب برای دورهٔ p برابر 2^(1/p) است. تندترین مجاز:
-    ///      هر ۲۰ ولیدیتور پرداختی دو برابر می‌شود. کندترین مجاز: هر ۸۰ ولیدیتور.
-    uint256 public constant GROWTH_FACTOR_MIN = 1_008701983790398976;  // 2^(1/80)، دوبرابر هر ۸۰
-    uint256 public constant GROWTH_FACTOR_MAX = 1_035264923841377536;  // 2^(1/20)، دوبرابر هر ۲۰
     uint256 public constant ECONOMIC_PARAM_CHANGE_MIN_INTERVAL = 180 days;
     uint256 public lastEconomicParamChangeTime;
 
-    /// @notice استیک پایهٔ لازم برای درخواست عضویت وقتی ۰ ولیدیتور پرداختی وجود دارد (نخستین کسی که
-    ///         requestMembership() را صدا می‌زند، صرف‌نظر از تعداد مؤسسان رایگان فعال).
-    uint256 public entryThresholdBase = 500_000 ether;  // ۵۰۰,۰۰۰ سورن (۱۸ رقم اعشار، مثل ETH)
+    /// @notice وثیقه‌ای که هر واردشوندهٔ پرداخت‌کننده اینجا قفل می‌کند (هنگام خروج قابل‌استرداد، قابل‌جریمه). مقدار اولیه ۵۰۰٬۰۰۰ سورن.
+    uint256 public entryCollateral = 500_000 ether;
 
-    /// @notice آستانهٔ ورود پیوسته و مرکب با هر ولیدیتور پرداختیِ بیشتر رشد می‌کند:
-    ///         آستانهٔ فعلی = entryThresholdBase * growthFactorPerValidator^paidValidatorCount. مؤسسان در توان شمرده نمی‌شوند.
-    ///         ضریب fixed-point با ۱۸ رقم اعشار است؛ ‏1_017479692102686336 (حدود ۱٫۰۱۷۴۸۰) آستانه را با هر ۴۰ ولیدیتور
-    ///         پرداختی دو برابر می‌کند. این منحنی خریدن بیش از یک‌سوم کرسی‌ها را نمایی، نه خطی، گران می‌کند.
-    uint256 public growthFactorPerValidator = 1_017479692102686336;
-
-    /// @notice دقت fixed-point استفاده‌شده توسط growthFactorPerValidator و _fixedPow (۱۸ رقم
-    ///         اعشار، مثل خودِ سورن/ETH). 1_000000000000000000 معادل ۱.۰ (بدون رشد) است.
-    uint256 private constant FIXED_POINT_ONE = 1_000000000000000000;
-
-    /// @notice سقف ایمنی و گس: تعداد ولیدیتورهای پرداختی هنگام محاسبهٔ آستانهٔ ورود به این مقدار محدود می‌شود تا
-    ///         توان بی‌نهایت رشد نکند. بیشترین ضریب مجاز به growthFactorPerValidator فعلی بستگی دارد: از 2^16 (کندترین
-    ///         رشد مجاز) تا 2^64 (تندترین)، که از هر خطر سرریز در حساب ۱۸-رقمی اینجا بسیار دور است.
-    uint256 private constant MAX_GROWTH_VALIDATORS = 1280;
-
-    /// @notice کارمزد عضویت، به‌صورت کسری از currentEntryThreshold()، علاوه بر وثیقه و غیرقابل‌استرداد. به
+    /// @notice کارمزد عضویت به‌صورت کسری از وثیقه، علاوه بر آن پرداخت می‌شود و غیرقابل‌استرداد است. به
     ///         BlockRewardDistributor.receiveMembershipFee() فرستاده می‌شود، در دورهٔ توزیع بعد ادغام می‌شود و به نسبت
-    ///         تعداد بلاک بین ولیدیتورهای فعال پرداخت می‌شود (از سوزاندن کارمزد عادی معاف است).
-    ///         ۴۰۰ یعنی ۴٪ وثیقه.
+    ///         تعداد بلاک بین ولیدیتورهای فعال پرداخت می‌شود (از سوزاندن کارمزد عادی معاف است). ۴۰۰ یعنی ۴٪ وثیقه.
     uint256 public membershipFeeBps = 400;
+
 
     /// @notice حداکثر تعداد درخواست عضویت جدید در بازهٔ entryWindowSeconds.
     uint256 public maxEntriesPerWindow = 1;
-    uint256 public entryWindowSeconds = 86400;  // ۲۴ ساعت — حداکثر ۱ ولیدیتور تازه در روز
+    uint256 public entryWindowSeconds = 7 days; // v2.5: حداکثر یک ولیدیتور پرداخت‌کنندهٔ جدید در هفته
 
     uint256 public probationPeriod = 604800;  // ۱ هفته
 
@@ -268,7 +263,7 @@ contract ValidatorsRegistry {
     //   ۶. اگر ظرف ۷۲ ساعت اعتراضی ثبت نشود، هر کسی می‌تواند executeUncontestedSlash() را صدا بزند.
     // ------------------------------------------------------------------
 
-    enum DecisionType { Activation, Suspension, Recovery }
+    enum DecisionType { Activation, Suspension, Recovery, Resume }
     enum DeliveryStatus { NotApplicable, Pending, Confirmed, Disputed }
     enum SlashOutcome { Undetermined, ExemptMassFailure, VoidedNoDelivery, Confirmed, RejectedByVote, RejectedNoQuorum, ExecutedUncontested }
 
@@ -462,7 +457,14 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // اینترفیس حالت contract-mode در QBFT بسو — امضا در بسو هاردکد شده، تغییرش نده.
     // ------------------------------------------------------------------
-    function getValidators() external view returns (address[] memory) {
+    /// @notice کلیدهای اپراتور (گره) ولیدیتورهای Active — همان چیزی که Besu به‌عنوان مجموعهٔ ولیدیتورهای QBFT می‌خواند.
+    function getValidators() external view returns (address[] memory out) {
+        out = new address[](activeValidators.length);
+        for (uint256 i = 0; i < out.length; i++) out[i] = operatorOf[activeValidators[i]];
+    }
+
+    /// @notice آدرس‌های مالک ولیدیتورهای Active.
+    function getActiveOwners() external view returns (address[] memory) {
         return activeValidators;
     }
 
@@ -495,81 +497,37 @@ contract ValidatorsRegistry {
     }
 
     // ------------------------------------------------------------------
-    // آستانه‌ی ورود / نرخ محدودیت
+    // آستانهٔ ورود / محدودیت نرخ
     // ------------------------------------------------------------------
 
-    /// @notice استیک فعلی موردنیاز برای درخواست عضویت. به‌طور پیوسته رشد می‌کند (مرکب به‌ازای
-    ///         هر ولیدیتور *پرداخت‌کرده* اضافی — paidValidatorCount را ببین — نه پرش گسسته، و
-    ///         بدون شمردن مؤسسین رایگان genesis-seeded). سقف‌گذاری‌شده روی رشد معادل
-    ///         MAX_GROWTH_VALIDATORS، برای جلوگیری از overflow/گس نامحدود.
+    /// @notice وثیقه‌ای که همین حالا برای درخواست عضویت لازم است (ثابت؛ entryCollateral را ببین).
     function currentEntryThreshold() public view returns (uint256) {
-        uint256 n = paidValidatorCount;
-        if (n > MAX_GROWTH_VALIDATORS) n = MAX_GROWTH_VALIDATORS;
-        uint256 multiplier = _fixedPow(growthFactorPerValidator, n);
-        return (entryThresholdBase * multiplier) / FIXED_POINT_ONE;
+        return entryCollateral;
     }
 
-    /// @dev توان‌رسانی fixed-point (FIXED_POINT_ONE = 1e18) با روش exponentiation by squaring:
-    ///      برمی‌گرداند base1e18^exponent، به همان بازنمایی fixed-point با مبنای 1e18.
-    ///      O(log2(exponent)) ضرب — حتی برای توان‌های بزرگ ارزان.
-    function _fixedPow(uint256 base1e18, uint256 exponent) private pure returns (uint256 result1e18) {
-        result1e18 = FIXED_POINT_ONE;  // ۱.۰
-        uint256 b = base1e18;
-        uint256 e = exponent;
-        while (e > 0) {
-            if (e & 1 == 1) {
-                result1e18 = (result1e18 * b) / FIXED_POINT_ONE;
-            }
-            b = (b * b) / FIXED_POINT_ONE;
-            e >>= 1;
-        }
-    }
-
-    /// @notice کارمزد فعلی عضویت: کسری حکمرانی‌شده از currentEntryThreshold()، علاوه بر وثیقه پرداخت می‌شود و به
-    ///         BlockRewardDistributor فرستاده می‌شود (در دورهٔ بعد به ولیدیتورهای فعال می‌رسد).
+    /// @notice کارمزد فعلی عضویت = entryCollateral * membershipFeeBps / 10000، علاوه بر وثیقه پرداخت می‌شود.
     function currentMembershipFee() public view returns (uint256) {
-        return (currentEntryThreshold() * membershipFeeBps) / BPS_DENOMINATOR;
+        return (entryCollateral * membershipFeeBps) / BPS_DENOMINATOR;
     }
 
     // ------------------------------------------------------------------
-    // تنظیم‌کننده‌های پارامتر اقتصادی ورود — فقط ValidatorsBoard (اکثریت داخلی خودِ هیأت قبل
-    // از فراخوانی این‌ها از قبل تغییر را تصویب کرده؛ به
-    // proposeSetEntryThresholdBase / proposeSetGrowthFactorPerValidator / proposeSetMembershipFeeBps
-    // در ValidatorsBoard.sol مراجعه کن).
+    // تنظیم‌کننده‌های پارامتر اقتصادی ورود — فقط ValidatorsBoard (۳ از ۵ از قبل تغییر را تصویب کرده‌اند)
     // ------------------------------------------------------------------
-    function setEntryThresholdBase(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= ENTRY_THRESHOLD_BASE_MIN && newValue <= ENTRY_THRESHOLD_BASE_MAX,
-            "ValidatorsRegistry: entryThresholdBase outside allowed bounds"
-        );
+    function setEntryCollateral(uint256 newValue) external onlyBoard {
+        require(newValue >= ENTRY_COLLATERAL_MIN && newValue <= ENTRY_COLLATERAL_MAX, "ValidatorsRegistry: entryCollateral outside allowed bounds");
+        _requireWithinTenPercent(entryCollateral, newValue);
         require(
             block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
             "ValidatorsRegistry: too soon since the last economic-parameter change"
         );
-        emit EconomicParamUpdatedByBoard("entryThresholdBase", entryThresholdBase, newValue);
-        entryThresholdBase = newValue;
-        lastEconomicParamChangeTime = block.timestamp;
-    }
-
-    function setGrowthFactorPerValidator(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= GROWTH_FACTOR_MIN && newValue <= GROWTH_FACTOR_MAX,
-            "ValidatorsRegistry: growthFactorPerValidator outside allowed bounds"
-        );
-        require(
-            block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
-            "ValidatorsRegistry: too soon since the last economic-parameter change"
-        );
-        emit EconomicParamUpdatedByBoard("growthFactorPerValidator", growthFactorPerValidator, newValue);
-        growthFactorPerValidator = newValue;
+        emit EconomicParamUpdatedByBoard("entryCollateral", entryCollateral, newValue);
+        entryCollateral = newValue;
         lastEconomicParamChangeTime = block.timestamp;
     }
 
     function setMembershipFeeBps(uint256 newValue) external onlyBoard {
-        require(
-            newValue >= MEMBERSHIP_FEE_BPS_MIN && newValue <= MEMBERSHIP_FEE_BPS_MAX,
-            "ValidatorsRegistry: membershipFeeBps outside allowed bounds"
-        );
+        require(newValue >= MEMBERSHIP_FEE_BPS_MIN && newValue <= MEMBERSHIP_FEE_BPS_MAX, "ValidatorsRegistry: membershipFeeBps outside allowed bounds");
+        _requireWithinTenPercent(membershipFeeBps, newValue);
         require(
             block.timestamp >= lastEconomicParamChangeTime + ECONOMIC_PARAM_CHANGE_MIN_INTERVAL,
             "ValidatorsRegistry: too soon since the last economic-parameter change"
@@ -577,6 +535,11 @@ contract ValidatorsRegistry {
         emit EconomicParamUpdatedByBoard("membershipFeeBps", membershipFeeBps, newValue);
         membershipFeeBps = newValue;
         lastEconomicParamChangeTime = block.timestamp;
+    }
+
+    /// @dev هر تغییر حداکثر ±۱۰٪ نسبت به مقدار فعلی است.
+    function _requireWithinTenPercent(uint256 current, uint256 proposed) private pure {
+        require(proposed * 10 >= current * 9 && proposed * 10 <= current * 11, "ValidatorsRegistry: change exceeds +-10%");
     }
 
     function _enforceRateLimit() private {
@@ -595,33 +558,78 @@ contract ValidatorsRegistry {
     //   ۱. `threshold` (currentEntryThreshold()): اینجا به‌عنوان وثیقهٔ قابل‌استرداد و قابل‌جریمه می‌ماند.
     //   ۲. `fee` (currentMembershipFee()): به BlockRewardDistributor فرستاده می‌شود.
     // ------------------------------------------------------------------
-    function requestMembership() external payable nonReentrant {
+    function requestMembership(address operator) external payable nonReentrant {
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
+        _claimOperator(msg.sender, operator);
 
-        uint256 threshold = currentEntryThreshold();
+        uint256 collateral = entryCollateral;
         uint256 fee = currentMembershipFee();
-        require(msg.value == threshold + fee, "ValidatorsRegistry: incorrect payment amount");
+        require(msg.value == collateral + fee, "ValidatorsRegistry: incorrect payment amount");
 
         _enforceRateLimit();
 
         if (fee > 0) {
             DISTRIBUTOR.receiveMembershipFee{value: fee}();
         }
-        // `threshold` عمداً در موجودی بومی همین قرارداد به‌عنوان وثیقه‌ی قفل‌شده می‌ماند — نیازی
-        // به انتقال نیست، همراه همین فراخوانی از طریق msg.value رسیده است.
+        // `collateral` عمداً در موجودی بومی همین قرارداد به‌عنوان وثیقهٔ قفل‌شده می‌ماند.
 
         validators[msg.sender] = ValidatorInfo({
             status: Status.Probation,
-            lockedStake: threshold,
+            lockedStake: collateral,
             periodStartedAt: block.timestamp,
             pendingSlashEpoch: 0,
             demotedAt: 0,
             isPaidEntrant: true
         });
         paidValidatorCount++;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
 
-        emit MembershipRequested(msg.sender, threshold, fee);
+        emit MembershipRequested(msg.sender, collateral, fee);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: دو کلید برای هر ولیدیتور. «مالک» پاداش، وثیقه، رأی، هویت و جایگاه را نگه می‌دارد؛ «اپراتور» فقط کلید گرهٔ
+    // امضاکنندهٔ بلاک‌هاست. getValidators() کلیدهای اپراتور را برمی‌گرداند.
+    // ------------------------------------------------------------------
+    /// @notice مالکی که این کلید اپراتور او را دارد. وقتی آدرسی یک بار اپراتور شد، برای همیشه به همان مالک وصل می‌ماند
+    ///         (هرگز برای شخص دیگری آزاد نمی‌شود)، پس بلاکی که با کلید اپراتور قدیمی امضا شده همیشه برای محاسبهٔ پاداش
+    ///         به مالکش نگاشت می‌شود.
+    mapping(address => address) public ownerOfOperator;
+    /// @notice اپراتور «فعلی» (کلید گره) یک مالک (تا تعیین نشده صفر).
+    mapping(address => address) public operatorOf;
+    /// @notice مؤسسین genesis: بدون وثیقه، خارج از محدودیت نرخ ورود، بدون انتظار probation پیش از فعال‌سازی.
+    mapping(address => bool) public isFounder;
+    /// @notice زمان‌مهر genesis (توسط seed helper تنظیم می‌شود).
+    uint256 public genesisTime;
+    uint256 public lastEntryWindowChange;
+    /// @notice مجموع سورنی که با جریمه سوزانده شده است (به address(0) فرستاده شده).
+    uint256 public totalSlashBurned;
+
+    event OperatorSet(address indexed owner, address indexed operator);
+
+    function _claimOperator(address owner_, address operator) internal {
+        require(operator != address(0), "ValidatorsRegistry: zero operator");
+        address attached = ownerOfOperator[operator];
+        require(attached == address(0) || attached == owner_, "ValidatorsRegistry: operator belongs to another owner");
+        require(operator == owner_ || validators[operator].status == Status.None, "ValidatorsRegistry: operator is another owner");
+        require(ownerOfOperator[owner_] == address(0) || ownerOfOperator[owner_] == owner_, "ValidatorsRegistry: this address is an operator key");
+        ownerOfOperator[operator] = owner_;
+        operatorOf[owner_] = operator;
+        emit OperatorSet(owner_, operator);
+    }
+
+    /// @notice مالک کلید گره را بلافاصله عوض می‌کند. گرهٔ جدید باید بالا باشد: Verifier زنده‌بودن را بررسی می‌کند و
+    ///         ولیدیتور Active که گرهٔ جدیدش خاموش باشد مثل هر ولیدیتور دیگری تعلیق می‌شود.
+    function setOperator(address newOperator) external {
+        Status st = validators[msg.sender].status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            "ValidatorsRegistry: cannot change the operator in this status"
+        );
+        require(operatorOf[msg.sender] != newOperator, "ValidatorsRegistry: same operator");
+        _claimOperator(msg.sender, newOperator);
     }
 
     // ------------------------------------------------------------------
@@ -636,7 +644,9 @@ contract ValidatorsRegistry {
     function recordActivation(address candidate, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
         ValidatorInfo storage v = validators[candidate];
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
-        require(block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
+        require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
+        require(!seatTransferPending[candidate], "ValidatorsRegistry: seat transfer not accepted");
+        require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
         _notifyBoard(candidate);
@@ -994,30 +1004,46 @@ contract ValidatorsRegistry {
         if (slashAmount > v.lockedStake) slashAmount = v.lockedStake;
         v.lockedStake -= slashAmount;
         if (slashAmount > 0) {
-            (bool success, ) = TREASURY.call{value: slashAmount}("");
-            require(success, "ValidatorsRegistry: slash transfer failed");
+            totalSlashBurned += slashAmount;
+            (bool success, ) = address(0).call{value: slashAmount}(""); // ۱۰۰٪ سوزانده می‌شود (v2.5)، به خزانه پرداخت نمی‌شود
+            require(success, "ValidatorsRegistry: slash burn failed");
         }
         emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
-    /// @dev seed کردن genesis برای یک ولیدیتور مؤسس. «فقط» genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol از آن استفاده می‌کند
-    ///      (که از این قرارداد ارث می‌برد، پس چیدمان storage به‌حکم ساختار یکی است)؛ روی زنجیره‌ی واقعی هرگز قابل‌دسترس نیست.
-    function _seedFounder(address v, uint256 genesisTimestamp) internal {
-        require(v != address(0), "seed: zero address");
-        require(validators[v].status == Status.None, "seed: duplicate founder");
-        validators[v] = ValidatorInfo({
-            status: Status.Active,
+    /// @dev seed کردن genesis (فقط توسط genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol استفاده می‌شود که از این قرارداد
+    ///      ارث می‌برد، پس چیدمان storage به‌حکم ساختار یکی است؛ هرگز روی زنجیرهٔ واقعی در دسترس نیست). ولیدیتور «نخست» (راه‌انداز
+    ///      genesis) با کلید اپراتورش Active است؛ مؤسسین دیگر با آدرس مالک، بدون وثیقه و با وضعیت Probation ثبت می‌شوند و
+    ///      پس از تعیین کلید اپراتور و تأیید Verifier مبنی بر بالا بودن گره‌شان Active می‌شوند.
+    function _seedFirstValidator(address owner_, address operator, uint256 genesisTimestamp) internal {
+        require(genesisTime == 0, "seed: first validator already seeded");
+        genesisTime = genesisTimestamp;
+        _seedFounderEntry(owner_, genesisTimestamp, Status.Active);
+        ownerOfOperator[operator] = owner_;
+        operatorOf[owner_] = operator;
+        activeIndex[owner_] = activeValidators.length + 1;
+        activeValidators.push(owner_);
+        everActivated[owner_] = true;
+        activationSeq[owner_] = ++activationCount;
+        activeCheckpoints[owner_].push(ActiveCheckpoint({nonce: 0, active: true}));
+    }
+
+    function _seedFounder(address owner_, uint256 genesisTimestamp) internal {
+        _seedFounderEntry(owner_, genesisTimestamp, Status.Probation);
+    }
+
+    function _seedFounderEntry(address owner_, uint256 genesisTimestamp, Status status) private {
+        require(owner_ != address(0), "seed: zero address");
+        require(validators[owner_].status == Status.None, "seed: duplicate founder");
+        validators[owner_] = ValidatorInfo({
+            status: status,
             lockedStake: 0,
             periodStartedAt: genesisTimestamp,
             pendingSlashEpoch: 0,
             demotedAt: 0,
-            isPaidEntrant: false // مؤسسان رایگان‌اند، هرگز ورودی پولی نیستند
+            isPaidEntrant: false
         });
-        activeIndex[v] = activeValidators.length + 1;
-        activeValidators.push(v);
-        everActivated[v] = true; // از نخستین توزیع قابل‌پرداخت است
-        activationSeq[v] = ++activationCount;
-        activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true}));
+        isFounder[owner_] = true;
     }
 
     function _activate(address who) private {
@@ -1066,7 +1092,7 @@ contract ValidatorsRegistry {
             return;
         }
         require(
-            v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted,
+            v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted || v.status == Status.SelfSuspended,
             "ValidatorsRegistry: nothing to exit"
         );
 
@@ -1093,6 +1119,7 @@ contract ValidatorsRegistry {
         // و membershipEpoch هر کرسی هیأت با epoch قدیمی را باطل می‌کند.
         permanentlyExited[msg.sender] = true;
         membershipEpoch[msg.sender]++;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).burnSeat(msg.sender);
 
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
         _notifyBoard(msg.sender);
@@ -1185,6 +1212,15 @@ contract ValidatorsRegistry {
         if (key == ParamKey.MaxEntriesPerWindow) {
             maxEntriesPerWindow = value;
         } else if (key == ParamKey.EntryWindowSeconds) {
+            // v2.5: ۱ تا ۳۰ روز، هر تغییر حداکثر ±۱ روز، دست‌کم ۶ ماه بین تغییرها، و هیچ تغییری در ۶ ماه نخست
+            require(value >= 1 days && value <= 30 days, "ValidatorsRegistry: entryWindowSeconds outside 1-30 days");
+            require(
+                value + 1 days >= entryWindowSeconds && value <= entryWindowSeconds + 1 days,
+                "ValidatorsRegistry: entryWindowSeconds may change by at most one day"
+            );
+            require(block.timestamp >= genesisTime + 180 days, "ValidatorsRegistry: no change in the first 6 months after genesis");
+            require(block.timestamp >= lastEntryWindowChange + 180 days, "ValidatorsRegistry: at least 6 months between changes");
+            lastEntryWindowChange = block.timestamp;
             entryWindowSeconds = value;
         } else if (key == ParamKey.ProbationPeriod) {
             probationPeriod = value;
@@ -1291,6 +1327,7 @@ contract ValidatorsRegistry {
             demotedAt: 0,
             isPaidEntrant: false
         });
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(winner);
         emit LotteryWinnerEntered(winner);
     }
 
@@ -1428,6 +1465,7 @@ contract ValidatorsRegistry {
         statusBeforeExit[msg.sender] = uint8(Status.RemovedInRecovery);
         v.status = Status.Exiting;
         v.periodStartedAt = block.timestamp;
+        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).burnSeat(msg.sender);
         emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
     }
 
@@ -1440,5 +1478,130 @@ contract ValidatorsRegistry {
     function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount) {
         RecoveryRemoval storage r = recoveryRemovals[validator];
         return (r.referralNonce, r.eligibleCount);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: تعلیق داوطلبانه (SelfSuspended) — رایگان، بدون محدودیت زمانی یا تعدادی
+    //   selfSuspend()      مالک، Active -> SelfSuspended: فوراً از getValidators() خارج می‌شود؛ وثیقه قفل می‌ماند؛ بدون پاداش، بدون رأی
+    //   requestResume()    مالک، SelfSuspended: از Verifier می‌خواهد گره را بررسی کند
+    //   recordResume()     فقط Verifier، پس از بررسی سلامت موفق گره: SelfSuspended -> Active، «بدون» probation
+    // عضو هیأت ولیدیتورها نمی‌تواند داوطلبانه تعلیق شود (نصاب هیأت را بی‌صدا کوچک می‌کند)، و هیچ‌کس نمی‌تواند زیر
+    // MIN_ACTIVE_VALIDATORS تعلیق شود. تعلیق داوطلبانه هرگز تخلف نیست و هرگز به جریمه نمی‌رسد.
+    // ------------------------------------------------------------------
+    mapping(address => bool) public resumeRequested;
+
+    event SelfSuspendedEvent(address indexed validator);
+    event ResumeRequested(address indexed validator);
+    event ResumeRecorded(address indexed validator, bytes32 evidenceHash);
+
+    function selfSuspend() external nonReentrant {
+        ValidatorInfo storage v = validators[msg.sender];
+        require(v.status == Status.Active, "ValidatorsRegistry: not active");
+        require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - suspension blocked");
+        require(!IBoardAuthority(BOARD).hasBoardAuthority(msg.sender), "ValidatorsRegistry: a board member cannot suspend voluntarily");
+        _removeFromActive(msg.sender);
+        _recordActiveCheckpoint(msg.sender, false);
+        v.status = Status.SelfSuspended;
+        v.periodStartedAt = block.timestamp;
+        resumeRequested[msg.sender] = false;
+        emit SelfSuspendedEvent(msg.sender);
+        _notifyBoard(msg.sender);
+    }
+
+    function requestResume() external {
+        require(validators[msg.sender].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
+        require(!seatTransferPending[msg.sender], "ValidatorsRegistry: accept the seat transfer (sign the agreement) first");
+        resumeRequested[msg.sender] = true;
+        emit ResumeRequested(msg.sender);
+    }
+
+    function recordResume(address validator, bytes32 evidenceHash) external onlyVerifier returns (uint256 decisionId) {
+        require(validators[validator].status == Status.SelfSuspended, "ValidatorsRegistry: not self-suspended");
+        require(resumeRequested[validator], "ValidatorsRegistry: no resume request");
+        require(!seatTransferPending[validator], "ValidatorsRegistry: seat transfer not accepted");
+        require(operatorOf[validator] != address(0), "ValidatorsRegistry: operator key not set");
+        resumeRequested[validator] = false;
+        _activate(validator);
+        decisionId = _recordDecision(validator, DecisionType.Resume, evidenceHash, 0);
+        emit ResumeRecorded(validator, evidenceHash);
+        _notifyBoard(validator);
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: NFT جایگاه. مالک توکن ValidatorSeatNFT = مالک جایگاه (سند مرجع §9).
+    // ------------------------------------------------------------------
+    /// @notice از لحظهٔ انتقال جایگاه تا وقتی خریدار توافق‌نامهٔ ولیدیتورها را بپذیرد (acceptSeatTransfer) true است.
+    mapping(address => bool) public seatTransferPending;
+    /// @notice اطلاعاتی: تا چه زمانی انتظار می‌رود خریدار امضا کند (۳ روز پس از انتقال). با گذشتن مهلت هیچ اتفاقی برای جایگاه
+    ///         نمی‌افتد: صرفاً تا پذیرفته‌شدن توافق‌نامه خارج از مجموعهٔ ولیدیتورها می‌ماند. 🔶
+    mapping(address => uint256) public seatAcceptDeadline;
+
+    uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
+
+    event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+    event SeatTransferAccepted(address indexed owner);
+
+    /// @notice ValidatorSeatNFT پس از جابه‌جایی توکن آن را صدا می‌زند؛ اگر انتقال مجاز نباشد revert می‌کند (پس انتقال توکن هم
+    ///         revert می‌شود). کل رکورد ولیدیتور را از `from` به `to` منتقل می‌کند.
+    function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
+        require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
+        ValidatorInfo storage v = validators[from];
+        Status st = v.status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            "ValidatorsRegistry: seat cannot be transferred in this status"
+        );
+        require(v.pendingSlashEpoch == 0 && pendingSlashDecisionId[from] == 0, "ValidatorsRegistry: open penalty case - transfer blocked");
+        // خریدار: هرگز ولیدیتور نبوده، کاملاً احراز هویت شده، کلید اپراتور نیست، مالک جایگاه دیگری نیست
+        require(validators[to].status == Status.None && !permanentlyExited[to] && !everActivated[to], "ValidatorsRegistry: buyer was a validator before");
+        require(ownerOfOperator[to] == address(0) && operatorOf[to] == address(0), "ValidatorsRegistry: buyer is an operator key");
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
+        require(to != from, "ValidatorsRegistry: same owner");
+
+        // اگر جایگاه Active است، تا وقتی خریدار امضا کند و Verifier گره را بررسی کند از مجموعهٔ ولیدیتورها خارج می‌شود
+        if (st == Status.Active) {
+            require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count - transfer blocked");
+            _removeFromActive(from);
+            _recordActiveCheckpoint(from, false);
+            st = Status.SelfSuspended;
+            v.status = Status.SelfSuspended;
+            v.periodStartedAt = block.timestamp;
+        }
+
+        // جابه‌جایی رکورد
+        validators[to] = v;
+        delete validators[from];
+        address op = operatorOf[from];
+        if (op != address(0)) {
+            operatorOf[to] = op;
+            ownerOfOperator[op] = to; // کلید گره با جایگاه می‌ماند
+            delete operatorOf[from];
+        }
+        if (isFounder[from]) {
+            isFounder[to] = true;
+            delete isFounder[from];
+        }
+        everActivated[to] = everActivated[from];
+        activationSeq[to] = activationSeq[from];
+        resumeRequested[to] = false;
+        resumeRequested[from] = false;
+
+        // فروشنده خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود
+        permanentlyExited[from] = true;
+        membershipEpoch[from]++;
+
+        seatTransferPending[to] = true;
+        seatAcceptDeadline[to] = block.timestamp + SEAT_ACCEPT_WINDOW;
+
+        emit SeatTransferred(seatId, from, to, st);
+        _notifyBoard(from);
+        _notifyBoard(to);
+    }
+
+    /// @notice خریدار توافق‌نامهٔ ولیدیتورها را می‌پذیرد (خود امضا آف‌چین است؛ این تابع پذیرش را ثبت می‌کند).
+    function acceptSeatTransfer() external {
+        require(seatTransferPending[msg.sender], "ValidatorsRegistry: no pending seat transfer");
+        seatTransferPending[msg.sender] = false;
+        emit SeatTransferAccepted(msg.sender);
     }
 }

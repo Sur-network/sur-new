@@ -12,9 +12,12 @@ import "../ValidatorsRegistry.sol";
 // به sur-contracts-deploy-notes.md مراجعه کن) و آن‌ها را به‌همراه bytecode runtime «قرارداد واقعی» در `alloc` می‌نویسد.
 // ============================================================================
 contract ValidatorsRegistry_GenesisSeed is ValidatorsRegistry {
-    /// @param founders ولیدیتورهای مؤسس (Active، وثیقه ۰، ورودی آزاد)
+    /// @param firstOwner راه‌انداز genesis: تنها ولیدیتوری که در genesis فعال (Active) است
+    /// @param firstOperator کلید گره (اپراتور) آن، همان که در genesis کلید QBFT نوشته می‌شود
+    /// @param otherFounders مالکان مؤسس دیگر: بدون وثیقه، در Probation تا وقتی اپراتور تعیین کنند و Verifier فعالشان کند
     /// @param genesisTimestamp باید برابر `timestamp` فایل genesis.json باشد
-    constructor(address[] memory founders, uint256 genesisTimestamp) {
-        for (uint256 i = 0; i < founders.length; i++) _seedFounder(founders[i], genesisTimestamp);
+    constructor(address firstOwner, address firstOperator, address[] memory otherFounders, uint256 genesisTimestamp) {
+        _seedFirstValidator(firstOwner, firstOperator, genesisTimestamp);
+        for (uint256 i = 0; i < otherFounders.length; i++) _seedFounder(otherFounders[i], genesisTimestamp);
     }
 }

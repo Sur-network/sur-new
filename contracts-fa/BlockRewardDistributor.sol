@@ -583,9 +583,11 @@ contract BlockRewardDistributor {
         // ۴ مقدار نتیجه در یک struct حافظه (`prep`) جمع می‌شوند، نه ۴ متغیر local جدا.
         EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
         _settleRange(range, prep.totalBlocks);
-        // totalRewards نباید از پاداش مصوب بلاک‌های این بازه (که پیوستگی‌اش تأیید شده) بیشتر باشد.
-        // کارمزد عادی و کارمزد عضویت خارج از این سقف‌اند؛ قواعد تقسیم و سوزاندن بدون تغییر است.
-        require(totalRewards <= maxRewardsForRange(range.fromBlock, range.toBlock), "BlockRewardDistributor: totalRewards exceed approved reward for range");
+        // v2.5: پاداش گزارش‌شده (واقعی) بازه ممکن است از پاداش مصوب بلاک‌هایش بیشتر باشد (تغییر بی‌رأی پیکربندی Besu، یا
+        // کاهش مصوبی که هنوز در Besu اعمال نشده). فقط مقدار «مصوب» سه‌طرفه تقسیم می‌شود؛ مازاد بلافاصله سوزانده می‌شود
+        // (بدون سقف، توزیع هرگز متوقف نمی‌شود، هیچ مسیر دستی یا اضطراری برای تقسیم آن وجود ندارد).
+        // کارمزد عادی و کارمزد عضویت خارج از این قاعده‌اند؛ تقسیم و سوزاندن آن‌ها بدون تغییر است.
+        totalRewards = _capAndBurnExcess(range, totalRewards);
 
         epochCount++;
         uint256 epochId = epochCount;
@@ -629,6 +631,25 @@ contract BlockRewardDistributor {
             distributedRewards,
             distributedFees
         );
+    }
+
+    /// @notice مجموع تجمعی سورنی که سوزانده شده چون پاداش واقعی یک بازهٔ تسویه‌شده از پاداش مصوب بیشتر بود.
+    uint256 public totalExcessBurned;
+
+    /// @dev هشدار عمومی روی زنجیره برای پایشگرهای آف‌چین (RewardRouter با ایمیل و غیره هشدار می‌دهد).
+    event RewardExcessBurned(uint256 indexed epochId, uint256 fromBlock, uint256 toBlock, uint256 approvedRewards, uint256 excessBurned);
+
+    /// @dev مقداری را برمی‌گرداند که سه‌طرفه تقسیم می‌شود: min(گزارش‌شده، مصوب برای بازه). هر مازادی همین‌جا سوزانده
+    ///      می‌شود (پیش از پرداخت‌ها؛ بررسی موجودی در _prepareEpoch از قبل گزارش‌شده + کارمزدها را پوشش داده است).
+    ///      شناسهٔ دوره‌ای که event می‌آورد همان است که این توزیع در شرف گرفتن آن است.
+    function _capAndBurnExcess(BlockRange calldata range, uint256 reportedRewards) private returns (uint256 approved) {
+        approved = maxRewardsForRange(range.fromBlock, range.toBlock);
+        if (reportedRewards <= approved) return reportedRewards;
+        uint256 excess = reportedRewards - approved;
+        totalExcessBurned += excess;
+        emit RewardExcessBurned(epochCount + 1, range.fromBlock, range.toBlock, approved, excess);
+        (bool ok, ) = BURN_ADDRESS.call{value: excess}("");
+        require(ok, "BlockRewardDistributor: excess burn transfer failed");
     }
 
     /// @notice پیشنهاد تغییر نرخ مصوب که در `activationTime` (ثانیه‌ی یونیکس، زمان transition ی Besu) اثر می‌کند، همراه با برآورد

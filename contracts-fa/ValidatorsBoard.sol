@@ -6,8 +6,7 @@ import "./SurAddresses.sol";
 interface IValidatorsRegistry {
     function getValidators() external view returns (address[] memory);
     function isValidator(address who) external view returns (bool);
-    function setEntryThresholdBase(uint256 newValue) external;
-    function setGrowthFactorPerValidator(uint256 newValue) external;
+    function setEntryCollateral(uint256 newValue) external;
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
@@ -126,7 +125,7 @@ contract ValidatorsBoard {
     /// @notice جایگاه ۱-پایهٔ `voter` درون `candidateVoters[candidate]` برای حذف O(1).
     mapping(address => mapping(address => uint256)) private voterIndexInCandidateVoters;
 
-    enum ActionType { RotateOracle, ApproveBudget, SetEntryThresholdBase, SetGrowthFactorPerValidator, SetMembershipFeeBps, RotateVerifier }
+    enum ActionType { RotateOracle, ApproveBudget, SetEntryCollateral, SetMembershipFeeBps, RotateVerifier }
 
     /// @dev `requiredVotes` هنگام ساخت اقدام ثابت می‌شود و هرگز بازمحاسبه نمی‌شود. `expiresAt` مدت باز‌ماندن اقدام را
     ///      محدود می‌کند. `boardVersionAtCreation` اقدام را به ترکیب هیأتی می‌بندد که آن را پیشنهاد داد: وقتی ترکیب عوض شود
@@ -585,18 +584,13 @@ contract ValidatorsBoard {
     }
 
     /// @notice پارامترهای اقتصادی ورود: اکثریت هیأت.
-    function proposeSetEntryThresholdBase(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        id = _createAction(ActionType.SetEntryThresholdBase, address(0), newValue, "", 0);
-    }
-
-    function proposeSetGrowthFactorPerValidator(uint256 newValue) external onlyBoardMember returns (uint256 id) {
-        require(newValue > 1_000000000000000000, "ValidatorsBoard: growth factor must be > 1.0");
-        id = _createAction(ActionType.SetGrowthFactorPerValidator, address(0), newValue, "", 0);
+    function proposeSetEntryCollateral(uint256 newValue) external onlyBoardMember returns (uint256 id) {
+        id = _createAction(ActionType.SetEntryCollateral, address(0), newValue, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     function proposeSetMembershipFeeBps(uint256 newValue) external onlyBoardMember returns (uint256 id) {
         require(newValue <= 10000, "ValidatorsBoard: membershipFeeBps too high");
-        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", 0);
+        id = _createAction(ActionType.SetMembershipFeeBps, address(0), newValue, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
     /// @notice چرخاندن کلید `verifier` در ValidatorsRegistry. دست‌کم MIN_VOTES_SENSITIVE_ACTION رأی می‌خواهد و
@@ -655,11 +649,8 @@ contract ValidatorsBoard {
                 require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - spending halted");
                 IValidatorsTreasury(TREASURY).boardApproveExpenditure(a.target, a.amount, a.description);
                 emit BudgetApproved(a.target, a.amount, a.description);
-            } else if (a.atype == ActionType.SetEntryThresholdBase) {
-                REGISTRY.setEntryThresholdBase(a.amount);
-                emit RegistryEconomicParamSet(a.atype, a.amount);
-            } else if (a.atype == ActionType.SetGrowthFactorPerValidator) {
-                REGISTRY.setGrowthFactorPerValidator(a.amount);
+            } else if (a.atype == ActionType.SetEntryCollateral) {
+                REGISTRY.setEntryCollateral(a.amount);
                 emit RegistryEconomicParamSet(a.atype, a.amount);
             } else if (a.atype == ActionType.SetMembershipFeeBps) {
                 REGISTRY.setMembershipFeeBps(a.amount);
