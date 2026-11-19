@@ -1,6 +1,6 @@
 # فهرست نرم‌افزارهای موردنیاز پروژه‌ی سور
 
-> **وضعیت پیاده‌سازی:** کد مخزن هنوز نسخهٔ ۲.۲ است؛ این سند طرح نسخهٔ ۲.۵ را شرح می‌دهد و نام تابع‌ها و پارامترهای تازه در آن موقتی است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). فهرست زیر دربارهٔ نرم‌افزارهای آف‌چین و ابزارهاست؛ برنامه‌های آف‌چین (RewardRouter، Verifier، Identity Service، ابزار genesis، اپ‌ها، داشبورد) هنوز هیچ‌کدام نوشته نشده‌اند. 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
 
 > این سند همه‌ی نرم‌افزارهای آف‌چین/جانبی پروژه (غیر از خودِ قراردادهای هوشمند ساختاری) را فهرست می‌کند، همراه با توضیح مختصر، اولویت، مسئول و وضعیت فعلی.
 
@@ -30,7 +30,7 @@
 | ۵ | بلاک اکسپلورر | 🟡 مهم، نه فوری | ✅ **حل شد: Blockscout** (پیکربندی، نه توسعه) |
 | ۶ | داشبورد حکمرانی (بنیاد/ولیدیتورها + پارامترهای امنیتی) | 🟡 مهم، نه فوری | ✅ سند کامل — `sur-governance-dashboard-claudecode-brief.md` |
 | ۷ | پرتال آماری فروش سورن + اتصال صرافی‌ها | 🟢 بخش آماری قابل‌تعویق، 🔴 اتصال صرافی‌ها ضروری | 🔶 سند پرتال: `sur-suren-sale-portal-claudecode-brief.md` (بخش آماری)؛ اتصال صرافی‌ها: بخش ۱۴ همین سند |
-| ۸ | قرارداد `SurenSale` (بدون سرویس آف‌چین دارای کلید) | 🔴 ضروری قبل از شروع فروش | ✅ سند کامل — `sur-suren-sale-spec.md` + `contracts/SurenSale.sol` |
+| ۸ | قرارداد `SurenSale` (بدون سرویس آف‌چین دارای کلید) | 🔴 ضروری قبل از شروع فروش | ✅ سند کامل — `sur-suren-sale-spec.md` + `contracts/SurenSale.sol`؛ ✅ کد و ۱۱ آزمون Hardhat (آزموده‌نشده روی Besu 🔶) |
 | ۹ | قرارداد `IdentityRegistry` + سرویس Identity Service + eKYC (فقط شخص حقیقی ایرانی) | 🔴 ضروری برای راه‌اندازی — نسخهٔ اولیه از روز اول (پیش‌نیاز ورود ولیدیتورهای غیرمؤسس) | ✅ سند کامل — `sur-identity-registry-spec.md` + `contracts/IdentityRegistry.sol` |
 | ۱۰ | اپلیکیشن احراز هویت عمومی (فرانت‌اند `IdentityRegistry`) | 🟡 مهم، نه فوری | ❌ **سند موجود نیست** — `sur-identity-app-claudecode-brief.md` در پوشهٔ پروژه پیدا نشد؛ نوشتن آن باز است. مرجع موقت: `sur-identity-registry-spec.md` |
 | ۱۱ | ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) | 🟡 باید پیش از راه‌اندازی آماده باشد، ولی فقط در اضطرار اجرا می‌شود | 🔶 **مشخصات همین سند؛ برنامه هنوز نوشته نشده** — سیاست بازیابی: `governance/sur-emergency-consensus-recovery.md` |
@@ -54,7 +54,7 @@
 
 ## ۲. ابزار ساخت genesis.json
 
-**چه‌کار می‌کند:** قراردادهای ساختاری (از جمله `IdentityRegistry`، `FoundationMembers`، `FoundationDAO`، `GenesisClaimsVault`، `ValidatorSeatNFT` و ...) را روی یک زنجیره‌ی محلی/موقت دیپلوی می‌کند، `code` و `storage` نهایی هرکدام را استخراج می‌کند، و آن‌ها را در بخش `alloc` یک فایل `genesis.json` نهایی می‌نویسد.
+**چه‌کار می‌کند:** قراردادهای ساختاری (از جمله `IdentityRegistry`، `FoundationMembers`، `FoundationDAO`، `GenesisClaimsVault`، `ValidatorSeatNFT` و ...) را روی یک زنجیره‌ی محلی/موقت دیپلوی می‌کند (برای `FoundationDAO`، `FoundationMembers`، `ValidatorsRegistry` و `ValidatorsBoard` از کمکی‌های seed که قرارداد اصلی را ارث می‌برند، پس ساختار storage به‌ساخت یکی است؛ 🔶 `ValidatorSeatNFT` و `GenesisClaimsVault` و کمکی‌هایشان هنوز نوشته نشده‌اند)، `code` و `storage` نهایی هرکدام را استخراج می‌کند، و آن‌ها را در بخش `alloc` یک فایل `genesis.json` نهایی می‌نویسد.
 
 📄 جزئیات کامل: `sur-genesis-builder-tool-spec.md`.
 
@@ -112,7 +112,7 @@
 
 **چه‌کار می‌کند:** قراردادی که قیمت (طبق دورهٔ قیمت ثابت/گذار) را تعیین می‌کند و دستور واریز سورن صرافی‌های مجاز به حساب مشتری را اجرا می‌کند (جزئیات اتصال: بخش ۱۴). سهمیهٔ هر صرافی/سقف کل که هیأت‌مدیرهٔ بنیاد تعیین می‌کند.
 
-📄 جزئیات کامل: `sur-suren-sale-spec.md` + کد قرارداد در `contracts/SurenSale.sol`. فروش از طریق صرافی‌های مجاز انجام می‌شود و سرویس آف‌چین دارای کلید ندارد؛ هر صرافی با آدرس خودش `sellTo` را صدا می‌زند.
+📄 جزئیات کامل: `sur-suren-sale-spec.md` + کد قرارداد در `contracts/SurenSale.sol`. فروش از طریق صرافی‌های مجاز انجام می‌شود و سرویس آف‌چین دارای کلید ندارد؛ هر صرافی با آدرس خودش `sellTo(customer, tomanAmount, minSurenOut, orderRef)` را صدا می‌زند. قرارداد با پیشنهاد `SetSaleContract` به `FoundationDAO` معرفی می‌شود و پایان فروش با `EndSale` است.
 
 🔴 **اولویت:** ضروری، قبل از شروع رسمی دوره‌ی فروش.
 

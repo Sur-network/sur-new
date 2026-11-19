@@ -1,6 +1,6 @@
 # مشخصات فنی کامل سرویس آف‌چین RewardRouter
 
-> **وضعیت پیاده‌سازی:** کد مخزن هنوز نسخهٔ ۲.۲ است؛ این سند طرح نسخهٔ ۲.۵ را شرح می‌دهد و نام تابع‌ها و پارامترهای تازه در آن موقتی است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
 >
 > این سند رفتار دقیق سرویس RewardRouter (سرویس ۱ در `sur-blockchain-design-doc.md`، بخش ۷) را توصیف می‌کند — سرویسی که کلید `distributionOracle` را در اختیار دارد و مسئول محاسبه و توزیع دوره‌ای بلاک‌ریوارد/فی بین ولیدیتورهاست. برای قرارداد مرتبط به `BlockRewardDistributor.sol` و برای تصمیمات معماری به `sur-blockchain-design-doc.md` مراجعه کن.
 

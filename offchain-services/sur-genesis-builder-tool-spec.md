@@ -1,12 +1,12 @@
 # مشخصات فنی کامل — ابزار ساخت genesis.json
 
-> **وضعیت پیاده‌سازی:** کد مخزن هنوز نسخهٔ ۲.۲ است؛ این سند طرح نسخهٔ ۲.۵ را شرح می‌دهد و نام تابع‌ها و پارامترهای تازه در آن موقتی است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). خودِ ابزار genesis هنوز نوشته نشده است؛ 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
 
-> این سند به‌تنهایی برای پیاده‌سازی کافی است. هر ورودی، الگوریتم، و تصمیم فنی‌ای که لازم است، همین‌جا مشخص شده. 🔶 نام تابع‌ها، متغیرها و فایل‌های کمکی قراردادهای تازه (`ValidatorSeatNFT`، `GenesisClaimsVault`، `FoundationMembers`، `ValidatorLottery` و بازطراحی `FoundationDAO`) موقتی است و هنگام پیاده‌سازی قراردادها نهایی می‌شود.
+> این سند به‌تنهایی برای پیاده‌سازی کافی است. هر ورودی، الگوریتم، و تصمیم فنی‌ای که لازم است، همین‌جا مشخص شده. 🔶 نام تابع‌ها، متغیرها و فایل‌های کمکی `ValidatorSeatNFT`، `GenesisClaimsVault` و بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` موقتی است و هنگام نوشتن آن‌ها نهایی می‌شود؛ `FoundationDAO`، `FoundationMembers`، `ValidatorLottery` و کمکی‌های seed چهار قرارداد نوشته‌شده نام‌هایشان همان نام کد است.
 
 ## ۱. نقش کلی — این ابزار دقیقاً چه مشکلی را حل می‌کند
 
-ده قرارداد ساختاری سور (`FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
+ده قرارداد ساختاری سور (`FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`؛ آدرس‌های پیشنهادی چهار قرارداد تازه: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xAaAa…AaAa`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
 
 این ابزار یک برنامه‌ی خط‌فرمان (CLI) اجراشونده **یک‌بار** است که:
 1. مقادیر واقعی (آدرس اوراکل‌ها، پارامترهای امنیتی، فهرست ولیدیتور اولیه و صندلی‌های مؤسسان، اعضا و هیأت‌مدیرهٔ بنیاد، فهرست طلبکاران) را از یک فایل پیکربندی می‌خواند.
@@ -101,50 +101,49 @@
 
 این قراردادها فقط مقادیر مقیاسی ساده (address/uint256) دارند که مستقیم در بدنه‌شان مقداردهی شده‌اند (نه mapping/آرایه)؛ `ValidatorLottery` وضعیت اولیهٔ خاصی ندارد (مجری را از `FoundationDAO` می‌خواند). برای این‌ها:
 
-1. یک نسخه‌ی موقت از سورس قرارداد بساز که در آن، هر مقدار `🔶 FILL_IN` با مقدار واقعی از فایل پیکربندی جایگزین شده باشد (مثلاً `address public identityOracle = address(0);` بشود `address public identityOracle = 0xABCD...;`).
+1. (در کد جاری مقدار اولیهٔ اوراکل‌ها از `SurAddresses.sol` می‌آید و `ValidatorLottery` وضعیت اولیه ندارد؛ جایگزینی سورس فقط وقتی لازم است که پیکربندی با مقدار داخل کد فرق کند.) یک نسخه‌ی موقت از سورس قرارداد بساز که در آن، هر مقدار `🔶 FILL_IN` با مقدار واقعی از فایل پیکربندی جایگزین شده باشد (مثلاً `address public identityOracle = address(0);` بشود `address public identityOracle = 0xABCD...;`).
 2. این سورس را با `solc` کامپایل کن. ⚠️ برداشتن خام `evm.deployedBytecode.object` فقط وقتی درست است که قرارداد **هیچ متغیر `immutable` نداشته باشد**؛ در خروجی solc محل immutableها خالی/صفر است و creation code آن‌ها را هنگام دیپلوی پر می‌کند. `BlockRewardDistributor` immutable ندارد؛ ابزار باید خالی‌بودن `immutableReferences` آن را assert کند. تنها immutable پروژه `SurenSale.saleStartTime` است (که genesis نیست)؛ اگر قرارداد genesis دارای immutable شود، دو راه زیر الزامی است. مشخصات کامل: `technical-design/sur-audit-2026-09-30-stage1-report.md` بخش ۶. دو راه مجاز: **(الف، ترجیحی)** creation code را روی یک زنجیره‌ی موقت که timestamp بلاکش برابر `network.genesisTimestamp` تنظیم شده واقعاً اجرا کن و `code` را با `eth_getCode` بخوان (immutable درست جایگزین شده)؛ یا **(ب)** محل‌های immutable را از `immutableReferences` خروجی solc بخوان، با `genesisTimestamp` patch کن، و آزمون کن.
 3. با `solc --storage-layout` (یا فیلد `storageLayout` در خروجی JSON استاندارد) شماره‌ی دقیق slot هر متغیر ساده را بگیر.
 4. مقدار واقعی هرکدام را مستقیم در همان slot در بخش `alloc.storage` genesis بنویس.
 
 ⚠️ نکته‌ی فنی حیاتی: بایت‌کد deploy‌شده (runtime) هرگز شامل منطق «مقداردهی اولیه» نیست — آن منطق فقط بخشی از creation bytecode است. برای همین **هر** scalar غیرconstant با مقدار غیرپیش‌فرض (آدرس اوراکل‌ها، سقف‌ها، پارامترهای زمانی و…) باید با overlay صریح slot نوشته شود — نوشتن نشدنش یعنی مقدار صفر. حذف constructor صریح از سورس به‌معنای بی‌نیازی از این مرحله نیست. و طبق تصحیح بالا، immutableها را جداگانه مدیریت کن.
 
-### ۴.۲ روش شبیه‌سازی (نیازمند زنجیره‌ی محلی موقت) — برای `FoundationDAO`, `FoundationMembers`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorSeatNFT`, `GenesisClaimsVault`
+### ۴.۲ روش شبیه‌سازی-و-استخراج (simulate-and-extract؛ نیازمند زنجیره‌ی محلی موقت) — برای `FoundationDAO`, `FoundationMembers`, `ValidatorsRegistry`, `ValidatorsBoard` (و پس از نوشته‌شدن: `ValidatorSeatNFT`, `GenesisClaimsVault`)
 
-این شش قرارداد `mapping` یا آرایه‌ی پویا دارند (فهرست اعضا، ولیدیتورها، صندلی‌ها و توکن‌ها، طلبکاران و زمان‌بندی طلب‌ها) که هیچ syntax سطح-قرارداد Solidity برای پرکردنشان خارج از یک تابع وجود ندارد. برای این‌ها، از قراردادهای کمکی آماده‌ی زیر استفاده کن (در `contracts/genesis-seed-helpers/`؛ 🔶 سه فایل نخست در کد ۲.۲ موجودند و بازنویسی می‌شوند، سه فایل آخر تازه نوشته می‌شوند):
+این قراردادها `mapping` یا آرایه‌ی پویا دارند (فهرست اعضا، ولیدیتورها، صندلی‌ها و توکن‌ها، طلبکاران و زمان‌بندی طلب‌ها) که هیچ syntax سطح-قرارداد Solidity برای پرکردنشان خارج از یک تابع وجود ندارد. برای این‌ها از قراردادهای کمکی `contracts/genesis-seed-helpers/` استفاده کن:
 
-- `FoundationDAO_GenesisSeed.sol`
-- `ValidatorsRegistry_GenesisSeed.sol`
-- `ValidatorsBoard_GenesisSeed.sol`
-- `FoundationMembers_GenesisSeed.sol` 🔶
-- `ValidatorSeatNFT_GenesisSeed.sol` 🔶
-- `GenesisClaimsVault_GenesisSeed.sol` 🔶
+- `FoundationDAO_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] principalsAndAlternates, address inspector_, address chair_, address treasurer_, address ceo_, uint256 termEnd)`؛ ۵ تا ۷ آدرس (۵ اصلی، سپس حداکثر ۲ علی‌البدل)؛ نسخهٔ هیأت seed‌شده ۰ است.
+- `FoundationMembers_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] accounts, string[] names, PersonType[] types, address[] representatives, uint256[] shares)` (پنج آرایهٔ هم‌طول).
+- `ValidatorsRegistry_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] founders, uint256 genesisTimestamp)`؛ کد فعلی هر آدرس فهرست را `Active` و `everActivated` می‌کند (وثیقهٔ صفر، نه پرداخت‌کننده)؛ طبق طرح ۲٫۵ فقط اولین ولیدیتور باید در این فهرست باشد.
+- `ValidatorsBoard_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] members, uint256 genesisTimestamp)`؛ دقیقاً ۵ عضو؛ `boardMonthId` را برابر ماهِ `genesisTimestamp` و `boardVersion` را ۱ می‌گذارد.
+- `ValidatorSeatNFT_GenesisSeed.sol` 🔶 و `GenesisClaimsVault_GenesisSeed.sol` 🔶 — هنوز نوشته نشده‌اند (خود دو قرارداد هم نوشته نشده‌اند).
 
-هرکدام یک `constructor` واقعی دارند که دقیقاً همان منطق seed کردن قرارداد اصلی را پیاده می‌کنند. ⚠️ **نکتهٔ مهم:** ساختار storage باید با قرارداد اصلی یکی باشد. برای **`ValidatorsRegistry_GenesisSeed`** این‌طور نیست — قرارداد اصلی چند متغیر اسکالر (`verifier`, `entryCollateral`, `membershipFeeBps` و پارامترهای امنیتی) دارد که فایل کمکی یا اصلاً ندارد یا فقط به‌عنوان placeholder برای حفظ ترتیب صحیح slot نگه داشته (بدون این‌که constructor کمکی مقدار واقعی‌شان را بنویسد). یعنی برای `ValidatorsRegistry` به‌تنهایی، **روش ۴.۱ و ۴.۲ باید ترکیب شوند** — به بخش ۴.۲.۱ مراجعه کن.
+✅ هر چهار کمکیِ نوشته‌شده، قرارداد اصلی را **ارث می‌برند** (`contract X_GenesisSeed is X`) و فقط در constructor‌شان وضعیت اولیه را seed می‌کنند؛ پس ساختار storage با قرارداد اصلی **به‌ساخت یکی است**. قاعدهٔ قدیمی «کپی کمکی با placeholder/`__gap` که باید دستی با اصلی هم‌ترازش کرد» و اسکریپت `check_genesis_helper_layout.js` برای این چهار دیگر کاربرد ندارد. به‌علاوه چون initializerهای متغیرهای state قرارداد اصلی (مثلاً `verifier = SurAddresses.VERIFIER`، `slashBps = 100`) در constructor کمکی هم اجرا می‌شوند، در خروجی dump خودبه‌خود می‌آیند. 🔶 برای `ValidatorSeatNFT` و `GenesisClaimsVault` که هنوز نوشته نشده‌اند، انتخاب همین الگوی ارث‌بری پیشنهاد است.
 
-⚠️ **وابستگی بین‌قراردادی هنگام seed:** `ValidatorsRegistry` هنگام seed، صندلی‌های مؤسسان را در `ValidatorSeatNFT` ثبت (mint) می‌کند و `FoundationDAO` و `ValidatorLottery` حساب اعضا را از `FoundationMembers` می‌خوانند. قراردادها به آدرس‌های ثابت `SurAddresses` ارجاع دارند؛ پس ابزار باید قراردادهای کمکی را روی **همان آدرس‌های نهایی genesis** (و به ترتیب وابستگی: `FoundationMembers` و `ValidatorSeatNFT` پیش از `ValidatorsRegistry` و `FoundationDAO`) روی زنجیره‌ی موقت قرار دهد تا فراخوانی‌های بین‌قراردادی هنگام seed درست کار کنند. 🔶 روش دقیق (قراردادن بایت‌کد روی آدرس ثابت و اجرای seed) هنگام پیاده‌سازی ابزار نهایی می‌شود.
+✅ **وابستگی بین‌قراردادی هنگام seed:** constructor کمکی‌های نوشته‌شده هیچ قراردادی را فراخوانی نمی‌کنند (فقط state خودشان را می‌نویسند)، پس کافی است هرکدام روی زنجیره‌ی موقت جداگانه deploy شود و ترتیب یا آدرس نهایی اهمیتی ندارد (آدرس‌های ثابت `SurAddresses` در بایت‌کد‌اند و در storage ذخیره نمی‌شوند). 🔶 وقتی `ValidatorsRegistry` بازطراحی‌شدهٔ ۲٫۵ صندلی مؤسسان را در `ValidatorSeatNFT` ثبت (mint) کند، این وابستگی برمی‌گردد و ابزار باید قراردادها را روی همان آدرس‌های نهایی و به ترتیب وابستگی قرار دهد؛ روش دقیق آن هنگام نوشتن آن قراردادها نهایی می‌شود.
 
-**الگوریتم دقیق (قراردادهای کمکی آرگومان constructor نمی‌گیرند):**
+⚠️ **محدودیت اندازهٔ کد (🔶 ثبت‌شده):** بایت‌کد runtime قرارداد `FoundationDAO` حدود ۲۷٫۹ کیلوبایت و `ValidatorsRegistry` حدود ۲۶٫۹ کیلوبایت است، یعنی بالاتر از سقف ۲۴٬۵۷۶ بایتی که فقط برای `CREATE` اعمال می‌شود. روی زنجیره‌ی واقعی مشکلی نیست، چون این قراردادها مستقیم در `alloc` genesis تزریق می‌شوند (CREATE در کار نیست). ولی دیپلوی کمکی‌هایشان روی زنجیره‌ی موقت (Anvil) با CREATE است و باید سقف اندازه برداشته شود (در Anvil پرچم `--disable-code-size-limit` یا `--code-size-limit`؛ 🔶 نام دقیق پرچم با نسخهٔ نصب‌شده تأیید شود)؛ آزمون‌های Hardhat هم همین کار را فقط برای شبکهٔ درون‌فرایندی می‌کنند (`allowUnlimitedContractSize`).
 
-⚠️ هر قرارداد `_GenesisSeed` آرگومان constructor نمی‌گیرد — مقادیر اولیه (فهرست اعضا/صندلی‌ها/هیأت/طلبکاران) مستقیم و هاردکد داخل خودِ فایل سورس، با علامت `🔶 FILL_IN`، نوشته شده‌اند. این یعنی ابزار genesis باید یک مرحله‌ی «جایگزینی سورس» قبل از کامپایل انجام دهد، نه صرفاً پاس‌دادن آرگومان زمان دیپلوی:
+**الگوریتم دقیق (کمکی‌ها آرگومان constructor می‌گیرند؛ جایگزینی سورس لازم نیست):**
 
-1. از فایل `genesis-config.json` (بخش ۳ بالا)، مقادیر `foundationMembers.members`، `foundationDAO.initialBoard`/`initialInspector`، `validatorsRegistry.firstValidator`/`founderSeats`، `validatorsBoard.initialBoardMembers` و `genesisClaimsVault.claims` را بخوان.
-2. برای هرکدام از شش قرارداد `_GenesisSeed.sol`، یک نسخه‌ی «جایگزینی‌شده» از سورس تولید کن: هر placeholder (`"Member N"`, `address(0)`, `genesisTimestamp = 0`) را با مقدار واقعی متناظر از پیکربندی جایگزین کن. ⚠️ اندازه‌ی آرایه‌ها (۱۵ عضو، ۷ صندلی، ۵+۲ هیأت‌مدیرهٔ بنیاد، تعداد طلبکاران) باید با پیکربندی بخوانند؛ اگر تعداد در پیکربندی با نمونه فرق داشت، بدنه‌ی آرایه (هم نوعش هم فهرست مقادیرش) باید متناسب بازتولید شود.
-3. این سورسِ جایگزینی‌شده را کامپایل کن.
-4. روی یک نمونه‌ی Anvil محلی (`anvil --silent`) روی آدرس‌های نهایی (طبق بالا) قرار بده و اجرا کن — چون `constructor` هیچ آرگومانی نمی‌گیرد، نیازی به ABI-encode کردن هیچ پارامتری نیست.
-5. آدرس‌های روی Anvil را نگه دار.
-6. با `anvil_dumpState` (متد RPC اختصاصی Anvil) کل state زنجیره را بگیر — این شامل کد و **تمام** storage slotهای هرکدام از قراردادها می‌شود، دقیقاً محاسبه‌شده توسط خودِ EVM (شامل هر `keccak256` لازم برای mapping/آرایه، بدون نیاز به محاسبه‌ی دستی).
-7. از خروجی `anvil_dumpState`، فقط `storage` مربوط به آدرس هرکدام از قراردادهای `_GenesisSeed` را استخراج کن.
-8. ⚠️ برای `code` این شش قرارداد در genesis نهایی، **از بایت‌کد deploy‌شده‌ی قرارداد اصلی** (مثلاً `FoundationDAO.sol`، نه `FoundationDAO_GenesisSeed.sol`) استفاده کن — چون قرارداد کمکی فقط برای محاسبه‌ی storage است، نباید خودش روی زنجیره‌ی واقعی برود. بایت‌کد قرارداد اصلی را طبق روش ۴.۱ (کامپایل استاتیک، بدون نیاز به دیپلوی) به دست بیاور.
-9. Anvil را متوقف و state موقتش را کاملاً دور بینداز. نسخه‌ی «جایگزینی‌شده»ی سورس هم (که مقادیر واقعی داخلش هاردکد شده) باید بعد از این مرحله امن نگه‌داری یا دور انداخته شود؛ خودِ فایل اصلی (با placeholderهای `🔶 FILL_IN`) در ریپو دست‌نخورده می‌ماند.
+1. از فایل `genesis-config.json` (بخش ۳ بالا)، مقادیر `foundationMembers.members`، `foundationDAO.initialBoard`/`initialInspector`، `validatorsRegistry.firstValidator` و `validatorsBoard.initialBoardMembers` (و بعداً `founderSeats` و `genesisClaimsVault.claims`) را بخوان.
+2. قراردادهای اصلی و کمکی‌ها را با همان نسخهٔ `solc` و همان تنظیمات بهینه‌سازی که برای بایت‌کد نهایی استفاده می‌شود (فعلاً `0.8.24`، `evmVersion: paris`) کامپایل کن. ⚠️ این‌ها یک مرحلهٔ «جایگزینی سورس» ندارند: مقدار اولیه با آرگومان constructor داده می‌شود.
+3. روی یک نمونه‌ی Anvil محلی (`anvil --silent`، با سقف اندازهٔ کد برداشته‌شده طبق بالا) هر کمکی را با آرگومان‌های بند ۱ (ABI-encode‌شده) deploy کن. `ValidatorsBoard_GenesisSeed` و `ValidatorsRegistry_GenesisSeed` باید `genesisTimestamp` را برابر `network.genesisTimestamp` بگیرند.
+4. آدرس‌های روی Anvil را نگه دار.
+5. با `anvil_dumpState` (متد RPC اختصاصی Anvil) کل state زنجیره را بگیر — این شامل کد و **تمام** storage slotهای هر قرارداد می‌شود، دقیقاً محاسبه‌شده توسط خودِ EVM (شامل هر `keccak256` لازم برای mapping/آرایه و شامل مقدارهای initializer، بدون محاسبهٔ دستی).
+6. از خروجی `anvil_dumpState`، **همهٔ** `storage` مربوط به آدرس هر کمکی را استخراج کن.
+7. ⚠️ برای `code` هر قرارداد در genesis نهایی، **از بایت‌کد deploy‌شده‌ی قرارداد اصلی** (مثلاً `FoundationDAO.sol`، نه `FoundationDAO_GenesisSeed.sol`) استفاده کن — کمکی فقط برای محاسبه‌ی storage است و نباید روی زنجیره‌ی واقعی برود. بایت‌کد قرارداد اصلی را طبق روش ۴.۱ (کامپایل استاتیک) به دست بیاور؛ ابزار باید خالی‌بودن `immutableReferences` هر یک را assert کند (در کد فعلی هیچ‌کدام immutable ندارند).
+8. Anvil را متوقف و state موقتش را کاملاً دور بینداز. (دیگر نسخهٔ «جایگزینی‌شده»ای از سورس وجود ندارد که نگه‌داری/دورانداختنش لازم باشد.)
+
 
 ### ✅ ۴.۲.۱ مرحله‌ی Overlay اسکالرهای `ValidatorsRegistry`
 
-مراحل ۱ تا ۹ بالا فقط `mapping`/آرایه‌های پیچیده (ولیدیتورها، فهرست فعال، نگاشت مالک↔اپراتور، checkpointها) را از طریق شبیه‌سازی پر می‌کنند. اما `ValidatorsRegistry.sol` چند متغیر اسکالر مهم هم دارد که در همان محدوده‌ی storage قرار گرفته‌اند و **هیچ‌کدام از این مقادیر توسط `anvil_dumpState` به‌درستی مقداردهی نمی‌شوند** — چون constructor فایل کمکی هرگز آن‌ها را لمس نمی‌کند. این ابزار باید یک مرحله‌ی سوم و جداگانه (بعد از مرحله‌ی ۷، قبل از نوشتن نهایی storage در genesis) اجرا کند:
+چون `ValidatorsRegistry_GenesisSeed` قرارداد اصلی را ارث می‌برد، initializerهای اسکالرهای اصلی (مثلاً `verifier`، `membershipFeeBps`، `slashBps`، `exitCooldown`) هنگام اجرای constructor کمکی نوشته می‌شوند و در dump هستند. بنابراین overlay فقط برای مقدارهایی لازم است که در `genesis-config.json` با **مقدار اولیهٔ داخل کد** فرق دارند، یا اصلاً در کد جاری نیستند. این مرحله (بعد از بند ۶، قبل از نوشتن نهایی storage در genesis) اجرا می‌شود:
 
 1. **الگوریتم سه‌مرحله‌ای برای storage نهایی `ValidatorsRegistry`:**
    - **(الف)** بایت‌کد deploy‌شده‌ی قرارداد اصلی — طبق روش ۴.۱.
-   - **(ب)** storage پیچیده (mapping/آرایه) از خروجی `anvil_dumpState` روی `ValidatorsRegistry_GenesisSeed` — طبق مراحل ۱ تا ۷ بالا.
-   - **(پ)** ✅ **overlay اسکالرها:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` **اصلی** (نه فایل کمکی)، شماره‌ی دقیق slot هر یک از این متغیرها را پیدا کن، و مقدار واقعی‌شان را از `genesis-config.json` مستقیم در همان slotها بنویس — دقیقاً مثل روش ۴.۱، ولی به‌عنوان یک لایه‌ی *اضافه*، نه جایگزین، روی storage مرحله‌ی (ب). ⚠️ **فهرست کامل:**
+   - **(ب)** storage کامل (mapping/آرایه و initializerها) از خروجی `anvil_dumpState` روی `ValidatorsRegistry_GenesisSeed` — طبق مراحل ۱ تا ۶ بالا.
+   - **(پ)** ✅ **overlay اسکالرهای متفاوت:** با `solc --storage-layout` روی خودِ `ValidatorsRegistry.sol` (نه فایل کمکی)، شماره‌ی دقیق slot هر متغیری را که مقدارش در `genesis-config.json` با مقدار اولیهٔ کد فرق دارد پیدا کن و مقدار پیکربندی را مستقیم در همان slot بنویس — به‌عنوان یک لایه‌ی *اضافه* روی storage مرحله‌ی (ب). ⚠️ **فهرست مقادیر مرجع طرح ۲٫۵ (🔶 کد جاری `ValidatorsRegistry` هنوز بازطراحی ۲٫۵ را ندارد):** در کد فعلی متغیر `entryCollateral` وجود ندارد (به‌جایش `entryThresholdBase` و `growthFactorPerValidator` هست) و `entryWindowSeconds` اولیه‌اش ۸۶۴۰۰ (یک روز) است؛ پس تا نوشتن بازطراحی، این دو مقدار طرح (وثیقهٔ ثابت و ۷ روز) با overlay قابل اعمال نیستند و باید همراه بازطراحی نهایی شوند.
      - `verifier` (از `genesis-config.json`، آدرس کلید عملیاتی وریفای)
      - `entryCollateral` (۵۰۰٬۰۰۰ سورن؛ وثیقهٔ ثابت برای همهٔ ورودی‌های پرداخت‌کننده)
      - `membershipFeeBps` (۴۰۰)
@@ -207,6 +206,7 @@
    # FoundationMembers / FoundationDAO
    FoundationMembers.getMemberCount() == 15 و حساب و shareWeight هر عضو مطابق config
    FoundationDAO.getBoard() == initialBoard (۵ اصلی + ۲ علی‌البدل) و getInspector() == initialInspector
+   FoundationDAO.boardVersion() == 0 و saleContract() == address(0)   # SurenSale بعد از genesis با پیشنهاد SetSaleContract معرفی می‌شود
    FoundationDAO.getEthBalance() == 20000000 ether
    FoundationDAO از FoundationMembers می‌خواند: مرجع آدرس ثابت و برابر آدرس genesis
 
@@ -271,16 +271,16 @@
     "0x4444444444444444444444444444444444444444": { "code": "0x...", "storage": { "...": "..." } },
     "0x5555555555555555555555555555555555555555": { "code": "0x...", "storage": { "...": "..." } },
     "0x6666666666666666666666666666666666666666": { "code": "0x...", "storage": { "...": "..." } },
-    "<ValidatorSeatNFT>": { "code": "0x...", "storage": { "...": "..." } },
-    "<GenesisClaimsVault>": { "balance": "...", "code": "0x...", "storage": { "...": "..." } },
-    "<FoundationMembers>": { "code": "0x...", "storage": { "...": "..." } },
-    "<ValidatorLottery>": { "code": "0x..." },
+    "0x8888888888888888888888888888888888888888": { "code": "0x...", "storage": { "...": "..." } },
+    "0x9999999999999999999999999999999999999999": { "balance": "...", "code": "0x...", "storage": { "...": "..." } },
+    "0x7777777777777777777777777777777777777777": { "code": "0x...", "storage": { "...": "..." } },
+    "0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa": { "code": "0x..." },
     "<هر طلبکار>": { "balance": "100000000000000000000" }
   }
 }
 ```
 
-🔶 آدرس چهار قرارداد تازه (`ValidatorSeatNFT`، `GenesisClaimsVault`، `FoundationMembers`، `ValidatorLottery`) در `SurAddresses` طرح ۲.۵ تعیین می‌شود. `validatorcontractaddress` همان `ValidatorsRegistry` است و در لحظهٔ genesis فقط آدرس اپراتور اولین ولیدیتور را برمی‌گرداند.
+🔶 آدرس چهار قرارداد تازه در `SurAddresses.sol` پیشنهاد شده است (هنوز نهایی نشده): `FoundationMembers` = `0x7777…7777`، `ValidatorSeatNFT` = `0x8888…8888` (قرارداد نوشته نشده)، `GenesisClaimsVault` = `0x9999…9999` (قرارداد نوشته نشده)، `ValidatorLottery` = `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa` (با چک‌سام EIP-55). `PAYMENT_ORACLE` از `SurAddresses` حذف شده است: فقط سه اوراکل (`verifier`، `distributionOracle`، `identityOracle`) مانده‌اند. `validatorcontractaddress` همان `ValidatorsRegistry` است و در لحظهٔ genesis فقط آدرس اپراتور اولین ولیدیتور را برمی‌گرداند.
 
 `min-gas-price` جزو `genesis.json` نیست — این تنظیمات سطح Besu است (`config.toml` هر نود یا آرگومان خط‌فرمان `--min-gas-price`)، باید جدا از این فایل، در پیکربندی هر نود اعمال شود. 🔶 ابزار عملیاتی تنظیم قیمت گس برای اپراتور نود فعلاً اجرا نمی‌شود (ظرفیت آینده؛ `sur-master-open-items.md`)؛ ساختار genesis نباید مانع آن شود.
 
@@ -323,11 +323,12 @@
 
 | # | مورد |
 |---|---|
-| ۱ | 🔶 آدرس‌های ثابت `ValidatorSeatNFT`، `GenesisClaimsVault`، `FoundationMembers`، `ValidatorLottery` در `SurAddresses` ۲.۵. |
+| ۱ | 🔶 تأیید نهایی آدرس‌های پیشنهادیِ `FoundationMembers` (`0x7777…7777`)، `ValidatorSeatNFT` (`0x8888…8888`)، `GenesisClaimsVault` (`0x9999…9999`) و `ValidatorLottery` (`0xaAaA…aAaa`) در `SurAddresses`. |
 | ۲ | 🔶 ترکیب و اختیار هیأت‌مدیرهٔ اولیهٔ ولیدیتورها در لحظهٔ genesis، وقتی فقط یک ولیدیتور فعال است و شش مؤسس دیگر هنوز وارد مجموعه نشده‌اند. |
 | ۳ | 🔶 اینکه رئیس هیأت‌مدیره، خزانه‌دار و مدیرعامل بنیاد در genesis مقدار اولیه داشته باشند یا پس از راه‌اندازی انتخاب شوند. |
 | ۴ | 🔶 گرد کردن قسط ماهانهٔ طلب وقتی `(طلب − ۱۰۰)` بر ۲۴ بخش‌پذیر نیست (مثلاً باقی‌مانده در قسط آخر) و مرز ماه میلادی (UTC). |
-| ۵ | 🔶 روش دقیق قراردادن قراردادهای کمکی روی آدرس‌های ثابت هنگام seed (بخش ۴.۲). |
+| ۵ | 🔶 وقتی `ValidatorsRegistry` بازطراحی‌شده صندلی مؤسسان را در `ValidatorSeatNFT` ثبت کند، روش قراردادن قراردادهای کمکی روی آدرس‌های ثابت هنگام seed (بخش ۴.۲)؛ برای کمکی‌های نوشته‌شدهٔ فعلی لازم نیست. |
+| ۵-ب | 🔶 برداشتن سقف اندازهٔ کد برای deploy کمکی‌های `FoundationDAO` و `ValidatorsRegistry` روی Anvil (بخش ۴.۲). |
 | ۶ | 🔶 رفتار ورود شش مؤسس (ثبت کلید نود، تأیید Verifier، ثبت `everActivated` و `activationSeq`) و اثر آن بر حق رأی و شکستن تساوی هیأت. |
 
 🔶 **تصمیم باز (آزمون Besu v4، ۲۰۲۶-۱۰-۰۳):** فایل پیکربندی بخش ۳ و خروجی ابزار هیچ ورودی یا خروجی برای `transitions.qbft` ندارد. آزمون v4 نشان داد همهٔ نودها، از جمله نودهای تازه‌وارد، باید همان transition پاداش را در genesis خود داشته باشند (وگرنه در بلاک گذار رد می‌شوند؛ در حالت Shanghai/Cancun مقدار `block` یک timestamp است). اینکه ابزار genesis این را تولید کند یا رویهٔ جداگانه‌ای انجام دهد، **انتخاب نشده است** (`sur-reward-router-spec.md` بخش ۱۰.۳). دور ششم Besu (۲۰۲۶-۱۰-۰۷، release ۲۶.۹.۰، Shanghai/Cancun) نشان داد گذار `blockreward` با کلید timestamp پاداش را دقیقاً در نخستین بلاکِ `timestamp ≥ کلید` عوض می‌کند؛ ولی گذار `validatorselectionmode: blockheader` با کلید timestamp (فهرست صریح ۵ از ۷) زنجیره را متوقف کرد (`governance/sur-emergency-consensus-recovery.md` بخش ۳). پس هر تصمیم برای تولید `transitions.qbft` باید گذار پاداش را از گذار انتخاب ولیدیتور جدا کند و هیچ گذار `blockheader`ای را قبل از آزمودن یک پیکربندی کارکننده تولید نکند.

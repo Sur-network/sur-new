@@ -6,7 +6,7 @@
 >
 > **آخرین دور آزمون Besu: دور ششم (۷ اکتبر ۲۰۲۶، کد نسخهٔ ۲.۲، Shanghai/Cancun، Besu release ۲۶.۹.۰).** مهم‌ترین نتیجه برای این فهرست: گذار `blockheader` با timestamp زنجیره را متوقف کرد (ردیف بخش ۵).
 
-> **مبنای طرح:** کد قراردادها در مخزن نسخهٔ ۲.۲ است. طرح نهایی نسخهٔ ۲.۵ (وثیقهٔ ثابت، KYC ولیدیتور، تعلیق داوطلبانه، مالک/اپراتور، NFT صندلی، لاتاری، FoundationDAO مطابق اساس‌نامه، صندوق طلب‌های genesis، سوزاندن جریمه و مازاد پاداش، برنامهٔ فروش ۹۰ روزه از طریق صرافی‌ها) تصمیم قطعی است ولی هنوز در کد پیاده و روی Besu آزموده نشده؛ ردیف‌های آن در بخش ۳ و ۵ و ۹ آمده است.
+> **مبنای طرح و وضعیت کد (۲۰۲۶-۱۱-۱۹):** پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). از طرح نهایی نسخهٔ ۲.۵ این‌ها اکنون نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (۱۴ نوع پیشنهاد از جمله `Execute` و `EndSale`، مجمع، انتخابات، تصمیم‌های دفتر اعضا)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه و تغییرات `IdentityRegistry`. هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش، تغییر `BlockRewardDistributor`). هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است؛ ردیف‌های آن در بخش ۳ و ۴ و ۵ و ۹ آمده است.
 
 ## ۱. تصمیم‌های لازم از مالک
 
@@ -27,6 +27,10 @@
 | فروش سورن در دورهٔ آزادسازی (پس از گذار): جدا تصمیم گرفته می‌شود | `economics/sur-tokenomics.md` |
 | متن نهایی توافق‌نامهٔ ولیدیتورها: پیش‌نویس نوشته شده؛ باید هیأت‌مدیرهٔ مجمع ولیدیتورها نهایی کند، هیأت‌مدیرهٔ بنیاد تأیید کند و مشاور حقوقی بازبینی کند (بخش پایانی پیش‌نویس موارد باز را فهرست می‌کند) | `governance/sur-validator-agreement.md` |
 | زمان دقیق ۶ ماه اولِ ممنوعیت تغییر ریوارد و فاصلهٔ ورود (مبدأ: genesis) و تاریخ اولین ماه میلادی آزادسازی قسط صندوق طلب‌ها | `economics/sur-tokenomics.md` |
+| 🔶 `VOTING_PERIOD` مجمع عمومی: مدت رأی‌گیری پس از زمان جلسه در کد ۳ روز است و در اساس‌نامه نیامده؛ باید مالک/مجمع تأیید کند | `contracts/FoundationDAO.sol`؛ تصمیم ۹۹ |
+| 🔶 خوانش سخت‌گیرانهٔ نصاب تصمیم مجمع فوق‌العاده (ماده ۱۸ اساس‌نامه): در کد، تصمیم‌های دفتر اعضا (ورود/خروج، انتقال سهم، تعویض نماینده) ۳/۴ **کل** سهم‌ها و اکثریت عددی **کل** اعضا می‌خواهند، نه فقط حاضران؛ نصاب جلسه بیش از نصف سهم‌ها (نشست دوم بیش از یک‌سوم). باید با متن اساس‌نامه و مشاور حقوقی تطبیق داده شود | `contracts/FoundationDAO.sol`؛ `governance/sur-foundation-articles-of-association.md`؛ تصمیم ۹۹ |
+| 🔶 `RECOVERY_RECORD_MAX_AGE` = ۳۰ روز: حداکثر قدمت `recoveryTimestamp` هنگام ثبت حذف در بازیابی شبکه (تصمیم مالک نیست؛ پیشنهاد کد) | `contracts/ValidatorsRegistry.sol`؛ تصمیم ۱۰۳ |
+| ✅ تصمیم مالک ۲۰۲۶-۱۱-۱۹ (دیرهنگام) ثبت شد: نوع آزاد و آشکار `Execute` در `FoundationDAO` (تصمیم ۱۰۴ را اصلاح می‌کند)؛ 🔶 باز: بررسی اثر آن در ممیزی امنیتی مستقل (۳ از ۵ هیأت می‌تواند به هر قراردادی جز `FoundationDAO` و `FoundationMembers` فراخوانی بزند) | تصمیم ۱۰۸؛ `technical-design/sur-security-audit-plan.md` |
 
 ## ۲. سرویس‌دهنده‌های خارجی — انتخاب نشده‌اند
 
@@ -50,20 +54,18 @@
 | ابزار بازیابی اضطراری | `governance/sur-emergency-consensus-recovery.md` |
 | سرویس همراه نود برای `SUR_NODE_CHECK_V1` (فقط مشخصات) | `offchain-services/sur-node-check-protocol-spec.md` |
 | صفحه‌ی حکمرانی نرخ پاداش در داشبورد | `offchain-services/sur-governance-dashboard-claudecode-brief.md` |
-| قراردادهای نسخهٔ ۲.۵: بازنویسی `FoundationDAO` (مجمع، هیأت‌مدیره، بازرس، انتخابات، خرج بدون سقف) و `FoundationMembers`؛ `ValidatorsRegistry` (وثیقهٔ ثابت، `SelfSuspended`، مالک/اپراتور، خروج دائم، فاصلهٔ ورود ۷ روز، سوزاندن جریمه، ورود مؤسسان پس از ثبت کلید نود)؛ `ValidatorsBoard` (تغییر وثیقه با ۳ از ۵)؛ `BlockRewardDistributor` (حد ±۱۰٪ و ۶ ماه، سوزاندن مازاد پاداش و رویداد)؛ `SurenSale` (۹۰ روز ۱۰۰/۱۰۵/۱۱۰، تمدید مدیرعامل، فروش از طریق صرافی‌ها با سهمیه)؛ `IdentityRegistry` (فقط حقیقی ایرانی)؛ قراردادهای تازه `ValidatorSeatNFT`، `GenesisClaimsVault`، `ValidatorLottery`؛ آزمون Hardhat و دور هفتم Besu برای همه | `technical-design/sur-smart-contracts-reference.md` |
+| قراردادها و بخش‌های نانوشتهٔ نسخهٔ ۲.۵: `ValidatorsRegistry` (وثیقهٔ ثابت، `SelfSuspended`، مالک/اپراتور، خروج دائم، فاصلهٔ ورود ۷ روز، سوزاندن جریمه، ورود مؤسسان پس از ثبت کلید نود، استفادهٔ `requestMembership` از `isFullyVerified`)؛ `ValidatorsBoard` (تغییر وثیقه با ۳ از ۵)؛ `BlockRewardDistributor` (حد ±۱۰٪ و ۶ ماه، سوزاندن مازاد پاداش و رویداد)؛ 🔶 `ValidatorSeatNFT` (آدرس پیشنهادی `0x8888…8888`) و `GenesisClaimsVault` (آدرس پیشنهادی `0x9999…9999`) هنوز نوشته نشده‌اند؛ 🔶 `RewardRouter` (آف‌چین) هنوز نوشته نشده. (نوشته‌شده و آزموده روی Hardhat: `FoundationDAO`، `FoundationMembers`، `SurenSale`، `ValidatorLottery`، حذف در بازیابی شبکه، `IdentityRegistry`؛ ردیف آزمون Besu آن‌ها در بخش ۵) | `technical-design/sur-smart-contracts-reference.md` |
 | Verifier: `personKey` آف‌چین (HMAC کد ملی)، سرویس دسترسی کلید، فعال‌سازی مؤسسان پس از ثبت کلید اپراتور، ازسرگیری از تعلیق داوطلبانه، راستی‌آزمایی نود پس از انتقال NFT یا تغییر اپراتور؛ سیستم eKYC نسخهٔ اولیه (از روز اول) | `offchain-services/sur-verifier-service-spec.md`، `offchain-services/sur-identity-registry-spec.md` |
 | گزارش‌های دورهٔ آزادسازی (عرضهٔ روزانهٔ ماشینی، شاخص‌های روزانه، سند تحلیلی هفتگی؛ نمای مجموع وثیقهٔ قفل‌شده) | `economics/sur-tokenomics.md` |
 | اتصال صرافی‌ها به `SurenSale` و صفحهٔ عمومی قیمت/وضعیت فروش | `offchain-services/sur-suren-sale-spec.md` |
-| `FoundationDAO` با پیشنهادهای تایپ‌شده (بدون `bytes data`؛ رأی با `paramsHash`؛ انقضای یک ماه) | `technical-design/sur-smart-contracts-reference.md` |
-| `ValidatorLottery` با commit–reveal + `blockhash`: `startLottery` (فقط `FoundationDAO`)، `commitSecret`/`reveal` (مدیرعامل؛ `REVEAL_WINDOW` = ۲۵۰ بلوک)، `closeLottery`، `drawBatch`، `cancelLottery`، `claimRefund`؛ ردّ ۵ عضو اصلی و مدیرعامل؛ ارسال مبلغ به `FoundationDAO`؛ آزمون ریسک «عدم‌افشای مدیرعامل» | `technical-design/sur-smart-contracts-reference.md` §۱۱؛ تصمیم ۱۰۷ |
-| `SurenSale` نسخهٔ ۲٫۵: ثبت صرافی با سپردهٔ گس ۱۰۰ سورن، آمار هر صرافی، `minSurenOut`، توقف فوری، تغییر کلید | `offchain-services/sur-suren-sale-spec.md` |
-| حذف در بازیابی شبکه: `recordRecoveryRemoval`، اعتراض، رسیدگی `ValidatorsBoard`، قفل ۹۰ روزهٔ وثیقه | `governance/sur-emergency-consensus-recovery.md` بخش ۴-ب |
+| ابزار آف‌چین ثبت حذف در بازیابی شبکه (بخش Verifier: تشخیص ولیدیتور خاموش‌کننده و ساخت بستهٔ شواهد برای `recordRecoveryRemoval`؛ قرارداد نوشته شده است) | `governance/sur-emergency-consensus-recovery.md` بخش ۴-ب |
 
 ## ۴. جزئیات فنی باقی‌مانده
 
 | مورد | سند مبدأ |
 |---|---|
 | مقدار تولیدی `gasLimit` شبکه؛ هزینه‌ی توزیع باید با آن تطبیق داده شود | `technical-design/sur-audit-2026-09-30-final-status.md` |
+| 🔶 اندازهٔ runtime: `FoundationDAO` حدود ۲۷٫۹ KB و `ValidatorsRegistry` حدود ۲۶٫۹ KB (هر دو بیش از حد ۲۴٬۵۷۶ بایتِ `CREATE`)؛ چون در `alloc` genesis تزریق می‌شوند این حد روی زنجیرهٔ واقعی اعمال نمی‌شود و آزمون‌های Hardhat آن را فقط برای شبکهٔ درون‌فرایندی برمی‌دارند؛ باید روی Besu واقعی (ساخت genesis از bytecode بزرگ‌تر از حد) راستی‌آزمایی شود | `technical-design/sur-contracts-deploy-notes.md` |
 | مسیر رفع «پاداش واقعی بیش از سقف» برای بازه‌ی گذشته (مسیر دورزدن اضطراری وجود ندارد). دور ششم (R6) مصداق واقعی آن را نشان داد: پس از اعمال پاداش جدید Besu در زمانی بدون ورودی مصوب، ۳۶۴ بلاکی که ۵ SUR پرداخت‌اند برای همیشه با سقف ۴ SUR سنجیده می‌شوند و توزیع آن بازه فقط با گزارش کمتر از واقع پذیرفته می‌شود | `offchain-services/sur-reward-router-spec.md`؛ `testing-evidence/besu-live-test-v6-2026-10-07/FINDINGS.md` بند ۵ |
 | طراحی هشدار «پاداش واقعی کمتر از نرخ مصوب» (قرارداد آن را نمی‌بیند) | `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۲ و ۱۰.۴ |
 | رویه‌ی اپراتوری هماهنگی transition پاداش در همه‌ی نودها و نودهای تازه‌وارد؛ مسئول بررسی. دور ششم نشان داد کلید timestamp در Besu باید دقیقاً با زمان اثر مصوب برابر باشد تا بلاک تغییر پاداش با بلاک شروع قرارداد یکی شود | `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۳ و ۱۰.۴ |
@@ -79,6 +81,7 @@
 
 | مورد | وضعیت | مرجع |
 |---|---|---|
+| آزمون Besu/QBFT برای بخش‌های نوشته‌شدهٔ ۲.۵ (`FoundationDAO` و `FoundationMembers`، `SurenSale`، `ValidatorLottery` با commit–reveal و `blockhash` در زمان بلاک واقعی، حذف در بازیابی شبکه، `IdentityRegistry` جدید) | ۵۷ آزمون Hardhat (۶ فایل) گذشته؛ آزمون Besu هنوز انجام نشده؛ دور هفتم Besu برای ۲.۵ باقی است | `contracts-tests/` (`npm install` و سپس `npm test`)؛ `sur-besu-live-test-brief-v6.md` برای قالب |
 | اجرای ترکیبی زمان واقعی مسیر L (مرحله‌ی L4: پیشنهاد، تأخیر واقعی ۷روزه، اجرا، ۲۰۱٬۶۰۰ بلاک، عبور از `startBlock`، تسویه) | اجرا نشده (حدود ۱۴ روز)؛ برنامه نوشته شده و منتظر مجوز جداگانه‌ی مالک است | `testing-evidence/besu-live-test-v4-2026-10-03/PLAN-path-L-real-time.md` |
 | عملکرد نود و شبکه‌ی چندمیزبان | همه‌ی آزمون‌ها تک‌میزبان بودند | `testing-evidence/besu-live-test-v4-2026-10-03/LIMITATIONS.md` |
 | ثابت‌های زمانی واقعی (۲۳ ساعت، ۱۸۰ روز، ۷ روز، ۲۰۱٬۶۰۰ بلاک، ۳۰ روز، **۱۰٬۰۰۰ بلاک tolerance**) | فقط روی fork آزمایشی فشرده‌شده آزموده شدند؛ در دور ششم `RATE_START_TOLERANCE_BLOCKS` از ۱۰٬۰۰۰ به ۶۰ فشرده شد و ردیف‌های «بازهٔ پیش از پنجره» و «بیرون از پنجره» فقط با همین مقدار ساخته شدند | `testing-evidence/besu-live-test-v6-2026-10-07/DEVIATIONS.md` بند ۳؛ `LIMITATIONS.md` |
@@ -127,7 +130,7 @@
 |---|---|
 | آیا نصاب‌های داخلی هیأت‌مدیره‌ی ولیدیتورها برای اختیارات حساس‌تر باید بالاتر از اکثریت ساده باشد | `governance/sur-organizational-structure.md` |
 | راستی‌آزمایی `expected_turns` (انتخاب پیشنهاددهنده) روی نسخه‌ی دقیق Besu | `offchain-services/sur-verifier-service-spec.md` |
-| پوشش آزمون خودکار برای `FoundationDAO`، `IdentityRegistry`، `ServiceStaking`، `SurenSale` (آزمون Besu آن‌ها را پوشش داده، آزمون Hardhat ندارد) | `testing-evidence/hardhat-regression/` |
+| پوشش آزمون خودکار: نسخهٔ ۲.۵ `FoundationDAO`، `IdentityRegistry`، `SurenSale` اکنون آزمون Hardhat دارند (آزمون‌های قدیمی ۲.۲ در `testing-evidence/hardhat-regression/` هستند)؛ `ServiceStaking` هنوز آزمون Hardhat جدا ندارد (آزمون Besu پوشش داده) | `contracts-tests/`؛ `testing-evidence/hardhat-regression/` |
 | نیاز به بازبینی `sur-contracts-ui-review.md` و `business/sur-dapp-business-ideas.md` برای تصمیم‌های بعد از ۲۸ سپتامبر؛ احتمال ارجاع باقی‌مانده به مدل قدیمی | همان دو سند |
 | نبود سند `offchain-services/sur-identity-app-claudecode-brief.md` در پوشه، در حالی که اسناد دیگر به آن ارجاع می‌دهند | — |
 | بازیابی سقوط زیر نصاب BFT و اثر مالی واقعی جریمه روی عضو پرداخت‌کننده (در دور اول آزموده نشده بود) | `_archive/sur-master-open-items-2026-10-03.md` بخش ۲۴ |

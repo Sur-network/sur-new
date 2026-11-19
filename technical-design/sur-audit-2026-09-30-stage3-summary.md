@@ -10,8 +10,8 @@
 | D05 (مسیر خرج خزانه) | مدل P06: مجمع فقط سقف را تعیین می‌کند | مسیر «پیشنهاد/رأی خرج» از بخش‌های ۰ و ۲ داشبورد و از UI review حذف شد | ✅ بسته |
 | D05 (نصاب ذخیره‌شده) | `FoundationDAO.proposals` خصوصی است؛ `getProposal` چهار فیلد لازم را برنمی‌گرداند؛ `ValidatorsRegistry.paramProposals` عمومی است و فیلدها را دارد | getter فقط‌خواندنی `FoundationDAO.getProposalMeta(id)` در هر دو زبان (`getProposal` بدون تغییر)؛ داشبورد از آن و از `paramProposals(id)` می‌خواند | ✅ بسته — آزمون روی قرارداد واقعی ۱۸/۱۸ در EN و FA و هر دو کامپایلر؛ سورس پیش از تغییر در F2 شکست |
 | D05 (اختیار هیأت در UI) | `hasBoardAuthority` تعریف زنده است | دو محل `isBoardMember` در داشبورد اصلاح شد | ✅ بسته |
-| D06 | `setPhoneVerified`/`setTelegramVerified` در `IdentityRegistry` با `onlyIdentityOracle` | verifier spec اصلاح شد؛ inventory چهار کلید سرویس را می‌شمارد (`distributionOracle`، `verifier`، `identityOracle`، `paymentOracle`) | ✅ بسته در اسناد؛ اسلاید ۲۳ ارائهٔ فنی در مرحلهٔ ۵ |
-| D15 | تسویه با `currentPriceMilliToman()` | برآورد portal با فرمول `reportPayment`؛ عدد صحیح فقط برای نمایش | ✅ بسته |
+| D06 | `setPhoneVerified`/`setTelegramVerified` در `IdentityRegistry` با `onlyIdentityOracle` | verifier spec اصلاح شد؛ inventory چهار کلید سرویس را می‌شمارد (`distributionOracle`، `verifier`، `identityOracle`، `paymentOracle`؛ v2.2 — در ۲٫۵ `paymentOracle` حذف شد و سه اوراکل می‌ماند) | ✅ بسته در اسناد؛ اسلاید ۲۳ ارائهٔ فنی در مرحلهٔ ۵ |
+| D15 | تسویه با `currentPriceMilliToman()` | برآورد portal با فرمول `reportPayment` (v2.2؛ در ۲٫۵ حذف شد)؛ عدد صحیح فقط برای نمایش | ✅ بسته |
 | D16 | `sur-identity-app-claudecode-brief.md` در Plan وجود ندارد | در inventory و UI review «موجود نیست» با مرجع موقت | ✅ ارجاع‌ها اصلاح شد؛ **نوشتن خود brief باز**؛ سند جامع هنوز بررسی نشده |
 
 ## ۲. پیگیری ABI مرحلهٔ ۱

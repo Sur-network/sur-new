@@ -25,10 +25,11 @@
 ## ۴. ساختار فعلی پوشه‌ها (داخل zip / ریشه‌ی پروژه)
 
 ```
-contracts/                       ← قراردادهای Solidity، کامنت انگلیسی (منبع صحت برای دیپلوی)
+contracts/                       ← قراردادهای Solidity نسخهٔ جاری (۲٫۵ نیمه‌کاره)، کامنت انگلیسی (منبع صحت برای دیپلوی)؛ نسخه‌های قدیمی فقط در git (برچسب v2.2.0)
   genesis-seed-helpers/           ← قراردادهای کمکی موقت (فقط برای استخراج storage اولیه‌ی genesis)
   reference-dapps/                ← قراردادهای غیر-genesis اختیاری (SurZether و مشابه)
-contracts-fa/                    ← همان فایل‌ها، فقط کامنت فارسی (برای خواندن انسانی)
+contracts-fa/                    ← همان فایل‌ها، فقط کامنت فارسی (برای خواندن انسانی)؛ آن هم فقط نسخهٔ جاری
+contracts-tests/                 ← آزمون‌های Hardhat برای قراردادهای ۲٫۵ (۵۷ آزمون در ۶ فایل؛ روی EVM درون‌فرایندی، نه Besu/QBFT؛ `npm install` و سپس `npm test`)
 technical-design/                ← معماری، مرجع قراردادها، یادداشت دیپلوی، تصمیم‌های نهایی فنی
 offchain-services/               ← اسپک سرویس‌های آف‌چین + بریف‌های رابط کاربری
 governance/                      ← ساختار سازمانی + سیاست بازیابی اضطراری اجماع (N04)
@@ -73,17 +74,17 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 
 11. **دور ششم Besu (۷ اکتبر ۲۰۲۶، کد `BlockRewardDistributor` نسخهٔ ۲.۲، genesis حالت Shanghai/Cancun، Besu release ۲۶.۹.۰):** ۵۲ ردیف: ۳۶ PASS، ۹ OBSERVATION، ۲ SUPERSEDED، ۱ BLOCKED، ۴ NOT-RUN، ۰ FAIL. تأییدشده: شبکه با Shanghai/Cancun (۰ و ۰، بدون `blobSchedule`) بالا می‌آید؛ گذار `blockreward` با کلید timestamp پاداش را در نخستین بلاکِ `timestamp ≥ کلید` عوض می‌کند؛ حکمرانی، گواهی نرخ و سقف نسخهٔ ۲.۲ و پذیرش `distributeRewards` با پاداش واقعی در هر مرز مصوب کار کرد (روی test-fork با چهار ثابت فشرده، از جمله tolerance ۶۰ بلاک). **یافتهٔ مهم: گذار `blockheader` با کلید timestamp (فهرست صریح ۵ از ۷) روی دو شبکه زنجیره را متوقف کرد؛ راه‌اندازی دوباره کمک نکرد؛ زنجیره ۳۸۴ ثانیه پس از زمان بازگشت ادامه یافت.** علت بررسی نشد؛ روش بازیابی اضطراری N04 در Shanghai/Cancun تا پیداشدن پیکربندی کارکننده تأییدشده نیست. دو انحراف از brief: Besu release به‌جای image توسعه؛ فشرده‌شدن tolerance به ۶۰. اجرانشده: گروه X؛ جهت «Besu دیرتر» در R6؛ مسیر L. شواهد: `testing-evidence/besu-live-test-v6-2026-10-07/`.
 
-12. **تصمیم‌های طرح‌های اصلاحی (نوامبر ۲۰۲۶):** ۳۲ طرح پیشنهادی بررسی و تصمیم نهایی گرفته شد؛ متن تصمیم‌ها در `proposals/sur-change-proposals-decisions.md` و ثبت تحول در `sur-progress-and-decisions-history.md`. خلاصهٔ طرح فعلی: وثیقهٔ ثابت ۵۰۰٬۰۰۰ سورن؛ KYC فقط اشخاص حقیقی ایرانی و یک شخص یک صندلی؛ تعلیق داوطلبانه؛ مالک/اپراتور؛ NFT صندلی؛ لاتاری؛ جریمهٔ سوزانده‌شده و سوزاندن مازاد پاداش؛ FoundationDAO مطابق اساس‌نامه؛ صندوق قفل برای طلب‌های genesis (۲۴ قسط)؛ فروش ۹۰ روزه ۱۰۰/۱۰۵/۱۱۰ تومان و گذار ۴۵ روزه از طریق صرافی‌ها. اسناد طراحی به همین طرح (نسخهٔ ۲.۵) به‌روز شده‌اند ولی کد قراردادها هنوز ۲.۱.۰ / ۲.۲ است و هیچ‌کدام از ویژگی‌های ۲.۵ روی Hardhat یا Besu آزموده نشده است.
+12. **تصمیم‌های طرح‌های اصلاحی (نوامبر ۲۰۲۶):** ۳۲ طرح پیشنهادی بررسی و تصمیم نهایی گرفته شد؛ متن تصمیم‌ها در `proposals/sur-change-proposals-decisions.md` و ثبت تحول در `sur-progress-and-decisions-history.md`. خلاصهٔ طرح فعلی: وثیقهٔ ثابت ۵۰۰٬۰۰۰ سورن؛ KYC فقط اشخاص حقیقی ایرانی و یک شخص یک صندلی؛ تعلیق داوطلبانه؛ مالک/اپراتور؛ NFT صندلی؛ لاتاری؛ جریمهٔ سوزانده‌شده و سوزاندن مازاد پاداش؛ FoundationDAO مطابق اساس‌نامه؛ صندوق قفل برای طلب‌های genesis (۲۴ قسط)؛ فروش ۹۰ روزه ۱۰۰/۱۰۵/۱۱۰ تومان و گذار ۴۵ روزه از طریق صرافی‌ها. اسناد طراحی به همین طرح (نسخهٔ ۲.۵) به‌روز شده‌اند. کد: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`، تصمیم ۱۰۸)، `FoundationMembers`، `SurenSale` (مدل صرافی)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه و تغییرات `IdentityRegistry` اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (EVM درون‌فرایندی، نه Besu) آزموده شده‌اند؛ هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی Registry/Board (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن). آزمون Besu برای ۲.۵ انجام نشده است.
 
 ## ۶. تصمیمات معماری کلیدی (باید همیشه رعایت شوند — بدون تغییر از قبل)
 
-1. ده قرارداد ساختاری genesis مستقیم در `alloc` بلاک genesis تزریق می‌شوند: شش قرارداد پایه (`FoundationDAO`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`) در آدرس‌های ثابت `0x1111...` تا `0x6666...`، و چهار قرارداد تازه (`FoundationMembers`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`) با 🔶 آدرس تعیین‌نشده (در `SurAddresses` نسخهٔ ۲.۵ تعیین می‌شود).
+1. ده قرارداد ساختاری genesis مستقیم در `alloc` بلاک genesis تزریق می‌شوند: شش قرارداد پایه (`FoundationDAO`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`) در آدرس‌های ثابت `0x1111...` تا `0x6666...`، و چهار قرارداد تازه (`FoundationMembers`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`) با آدرس‌های پیشنهادی در `SurAddresses.sol`: `0x7777…7777` (`FoundationMembers`)، `0x8888…8888` (`ValidatorSeatNFT`)، `0x9999…9999` (`GenesisClaimsVault`)، `0xAaAa…AaAa` (`ValidatorLottery`).
 2. هیچ‌کدام از این ده قرارداد `constructor` ندارند (وریفای‌شدن روی Blockscout). برای mapping/آرایه (اعضای اولیه)، از `genesis-seed-helpers/` استفاده می‌شود.
 3. کامپایل همیشه **بدون `viaIR`** — هر «Stack too deep» با تقسیم به توابع کوچک‌تر (`struct` + توابع خصوصی) حل می‌شود، نه با فعال‌کردن `viaIR`. این الگو چند بار در این نشست هم تکرار شد (`RefreshCtx`، `EpochPrep`).
 4. `SurenSale.sol` تنها قرارداد غیر-genesis اصلی است.
 5. سورن ارز بومی زنجیره است (مثل ETH)، نه ERC20.
-6. حکمرانی دوشاخه: بنیاد (`FoundationDAO` مطابق اساس‌نامه: مجمع عمومی، هیأت‌مدیره ۵+۲، بازرس؛ خرج خزانه با اکثریت هیأت و بدون سقف) بدون کنترل بر شبکه؛ ولیدیتورها با `ValidatorsRegistry` + `ValidatorsBoard` (۵ عضو) + `ValidatorsTreasury`. هر ولیدیتور دو کلید دارد (مالک و اپراتور) و هر صندلی یک NFT است (طرح نسخهٔ ۲.۵).
-7. سه اوراکل عملیاتی مجزا، هرکدام کلید جدا: `verifier`, `distributionOracle`, `identityOracle` (فروش از طریق صرافی‌های مجاز است و اوراکل پرداخت ندارد). 🔶 دارندهٔ کلید `identityOracle` پس از بازطراحی `FoundationDAO` تعیین می‌شود.
+6. حکمرانی دوشاخه: بنیاد (`FoundationDAO` مطابق اساس‌نامه: مجمع عمومی، هیأت‌مدیره ۵+۲، بازرس؛ هر تصمیم هیأت یکی از ۱۴ نوع پیشنهاد تایپ‌شده با رأی `vote(id, paramsHash)` و اکثریت ۳ از ۵ است، از جمله خرج خزانه بدون سقف و نوع آزاد و آشکار `Execute`؛ هیچ اجرای پنهان وجود ندارد) بدون کنترل بر شبکه؛ ولیدیتورها با `ValidatorsRegistry` + `ValidatorsBoard` (۵ عضو) + `ValidatorsTreasury`. هر ولیدیتور دو کلید دارد (مالک و اپراتور) و هر صندلی یک NFT است (طرح نسخهٔ ۲.۵).
+7. سه اوراکل عملیاتی مجزا، هرکدام کلید جدا: `verifier`, `distributionOracle`, `identityOracle` (فروش از طریق صرافی‌های مجاز است و اوراکل پرداخت ندارد). ✅ چرخش کلید `identityOracle` با پیشنهاد تایپ‌شدهٔ `RotateIdentityOracle` در `FoundationDAO` است.
 8. **هر قرارداد و هر آزمون، هم به انگلیسی هم به فارسی نگه داشته می‌شود** (`contracts/` و `contracts-fa/`)، با برابری منطقیِ تأییدشده (نه صرفاً ترجمه‌ی دستی بدون بررسی).
 
 ## ۷. وضعیت فعلی نرم‌افزارهای جانبی — هیچ‌کدام هنوز کدنویسی نشده
@@ -112,7 +113,7 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 - 🔶 هویت ۷ مسئول بازیابی اضطراری N04، و مسیر انتشار برنامه‌ها.
 - سه سناریوی کم‌ریسکِ اختیاریِ دور سوم Besu که امتحان نشدند (خروج بدون پرونده، تساوی رأی هیأت، جداسازی P05).
 - انتخاب سرویس‌دهنده‌های خارجی (eKYC، پیامک/تلگرام/بله/ایمیل OTP) و توافق نهایی با صرافی‌های رمزارزی برای فروش — هنوز نشده.
-- 🔶 پیاده‌سازی و آزمون نسخهٔ ۲.۵ قراردادها (FoundationDAO جدید، ValidatorSeatNFT، GenesisClaimsVault، ValidatorLottery و تغییرات Registry/Board/Distributor/SurenSale) و به‌روزرسانی ابزار genesis — هنوز انجام نشده.
+- 🔶 پیاده‌سازی نسخهٔ ۲.۵ قراردادها: نوشته و با Hardhat آزموده‌شده: FoundationDAO، FoundationMembers، SurenSale، ValidatorLottery، حذف در بازیابی، IdentityRegistry. نانوشته: ValidatorSeatNFT، GenesisClaimsVault، RewardRouter، باقی Registry/Board/Distributor (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، سوزاندن). آزمون Besu و به‌روزرسانی ابزار genesis — هنوز انجام نشده.
 - اجرای واقعی ابزار genesis، RewardRouter، Verifier، سرویس همراه نود — هیچ‌کدام کدنویسی نشده‌اند.
 
 ## ۹. سبک کاری که در این پروژه جواب داده — ادامه بده

@@ -1,10 +1,10 @@
 # سند مرجع قراردادهای هوشمند شبکه‌ی سور
 
-> **وضعیت پیاده‌سازی:** کد مخزن هنوز نسخهٔ ۲.۲ است؛ این سند طرح نسخهٔ ۲.۵ را شرح می‌دهد و نام تابع‌ها و پارامترهای تازه در آن موقتی است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). **دامنهٔ واقعی (صادقانه):** بقیهٔ بازطراحی ۲٫۵ — وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، `ValidatorSeatNFT`، `GenesisClaimsVault`، تغییر سوزاندن کارمزد و پاداش، `RewardRouter` — هنوز در کد **نیست**؛ هر جای این سند که آن‌ها را نشان می‌دهد «طرح» است، نه کد. نام تابع‌ها و پارامترهای بخش‌های پیاده‌شده همان نام کد است و برای بقیه موقتی.
 
 > این سند نقش هر قرارداد، هر فانکشن آن (کی صداش می‌زند، ورودی/خروجی‌اش چیست، دقیقاً چه کاری انجام می‌دهد) را مستند می‌کند. برای منطق کلی معماری و تصمیمات، به `sur-blockchain-design-doc.md` مراجعه کن؛ برای دستورالعمل دیپلوی genesis به `sur-contracts-deploy-notes.md`.
 
-> 🔶 **آزموده‌نشده:** ویژگی‌های نسخهٔ ۲.۵ (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، NFT صندلی، صندوق طلب‌ها، لاتاری، `FoundationDAO` بازطراحی‌شده، سوزاندن مازاد پاداش و جریمه، فروش از طریق صرافی‌ها) هنوز پیاده‌سازی و روی Besu آزموده نشده‌اند. هر جا «✅» آمده یعنی تصمیم قطعی طرح است، نه نتیجهٔ آزمون.
+> 🔶 **آزموده‌نشده روی Besu:** هیچ‌یک از ویژگی‌های نسخهٔ ۲.۵ هنوز روی Besu/QBFT آزموده نشده است. بخش‌های پیاده‌شده (فهرست بالا) فقط با ۵۷ آزمون Hardhat در ۶ فایل از `contracts-tests/` (`FoundationDAO` ۱۶، `IdentityRegistry` ۵، `LotteryRegistry` ۳، `RecoveryRemoval` ۱۲، `SurenSale` ۱۱، `ValidatorLottery` ۱۰؛ Hardhat 2.29.1، solc 0.8.24، `evmVersion` paris؛ `npm install` و سپس `npm test` که هر فایل آزمون را در فرایند جدا اجرا می‌کند؛ mockها در `contracts-tests/mocks`) روی EVM درون‌فرایندی Hardhat آزموده شده‌اند؛ آزمون زنده روی Besu برای ۲.۵ هنوز انجام نشده است. بخش‌های ننوشته (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، NFT صندلی، صندوق طلب‌ها، سوزاندن مازاد پاداش و جریمه، `RewardRouter`) نه پیاده‌اند و نه آزموده. هر جا «✅» آمده یعنی تصمیم قطعی طرح است، نه نتیجهٔ آزمون.
 
 ---
 
@@ -20,12 +20,12 @@
 | `0x4444...4444` | **ValidatorsBoard** | هیأت ۵نفره‌ی ولیدیتورها؛ اختیارات تفویضی محدود (از جمله تغییر وثیقه و کارمزد عضویت با رأی ۳ از ۵) |
 | `0x5555...5555` | **ValidatorsTreasury** | خزانه‌ی ولیدیتورها؛ فقط گیرنده‌ی سهم باقی‌مانده‌ی ریوارد پس از کسر ۱۵٪ ثابت بنیاد و سهم مستقیم حکمرانی‌شونده‌ی ولیدیتورها (۴۰٪–۶۵٪) |
 | `0x6666...6666` | **IdentityRegistry** | مرجع هویت و وضعیت احراز (هویت/KYC، تلفن، تلگرام، بله، ایمیل) — فعلاً فقط شخص حقیقی ایرانی؛ کنترل کلید دست `FoundationDAO` |
-| 🔶 تعیین‌نشده | **FoundationMembers** | ثبت اعضای بنیاد و حساب سهم‌الشرکهٔ آن‌ها؛ قراردادهای دیگر از آن می‌خوانند |
-| 🔶 تعیین‌نشده | **ValidatorSeatNFT** | صندلی ولیدیتوری به‌شکل NFT (ERC-721)، قابل خرید و فروش؛ مالک NFT = مالک وثیقه |
-| 🔶 تعیین‌نشده | **GenesisClaimsVault** | صندوق مطالبات genesis با برداشت ماهانهٔ محدود (موجودی در alloc همان بلاک genesis) |
-| 🔶 تعیین‌نشده | **ValidatorLottery** | لاتاری ولیدیتور (مجری: هیأت‌مدیرهٔ بنیاد؛ حداقل یک سال فاصله بین دو لاتاری) |
+| `0x7777...7777` (پیشنهادی) | **FoundationMembers** | ثبت اعضای بنیاد و حساب سهم‌الشرکهٔ آن‌ها؛ قراردادهای دیگر از آن می‌خوانند (✅ کد و آزمون Hardhat) |
+| `0x8888...8888` (پیشنهادی؛ 🔶 هنوز نوشته نشده) | **ValidatorSeatNFT** | صندلی ولیدیتوری به‌شکل NFT (ERC-721)، قابل خرید و فروش؛ مالک NFT = مالک وثیقه |
+| `0x9999...9999` (پیشنهادی؛ 🔶 هنوز نوشته نشده) | **GenesisClaimsVault** | صندوق مطالبات genesis با برداشت ماهانهٔ محدود (موجودی در alloc همان بلاک genesis) |
+| `0xAaAa...AaAa` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | **ValidatorLottery** | لاتاری ولیدیتور (مجری: هیأت‌مدیرهٔ بنیاد؛ حداقل یک سال فاصله بین دو لاتاری) |
 
-آدرس چهار قرارداد ساختاری تازه هنوز تعیین نشده است؛ بنا بر هماهنگی با طرح‌های ۲۸–۳۲ در ابزار genesis تثبیت می‌شود (پیشنهاد: ادامهٔ الگوی آدرس‌های ثابت). به‌علاوه `SurenSale` ساختاری نیست و بعد از genesis دیپلوی می‌شود (بخش ۷).
+آدرس چهار قرارداد ساختاری تازه در `SurAddresses.sol` **پیشنهاد** شده است (ادامهٔ الگوی آدرس‌های ثابت): `FoundationMembers` = `0x7777…7777`، `ValidatorSeatNFT` = `0x8888…8888` (هنوز نوشته نشده)، `GenesisClaimsVault` = `0x9999…9999` (هنوز نوشته نشده)، `ValidatorLottery` = `0xAaAa…AaAa` (در کد با چک‌سام EIP-55: `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa`). تثبیت نهایی با ابزار genesis است. اوراکل پرداخت (`paymentOracle`) از `SurAddresses` حذف شده است: سه اوراکل داریم (`verifier`، `distributionOracle`، `identityOracle`). به‌علاوه `SurenSale` ساختاری نیست و بعد از genesis دیپلوی می‌شود (بخش ۷).
 
 جهت وابستگی‌ها (چه کسی آدرس چه کسی را هاردکد کرده):
 
@@ -34,7 +34,7 @@ ValidatorsRegistry     → می‌شناسد: Distributor (کارمزد عضوی
 ValidatorsBoard        → می‌شناسد: Registry, Distributor, Treasury, IdentityRegistry
 ValidatorsTreasury     → می‌شناسد: Registry, Board
 BlockRewardDistributor → می‌شناسد: Registry, Treasury, Board, FoundationDAO
-FoundationDAO          → می‌شناسد: FoundationMembers
+FoundationDAO          → می‌شناسد: FoundationMembers, IdentityRegistry (چرخش کلید), ValidatorLottery (آغاز لاتاری)؛ آدرس SurenSale را با پیشنهاد SetSaleContract می‌گیرد
 FoundationMembers      → می‌شناسد: FoundationDAO (تنها تغییردهندهٔ فهرست)
 IdentityRegistry       → می‌شناسد: FoundationDAO (فقط برای چرخش کلید identityOracle)
 ValidatorSeatNFT       → می‌شناسد: Registry, IdentityRegistry
@@ -73,9 +73,10 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 `setOperator(newOperator)` فقط به‌دست مالک و **فوری** است؛ نود تازه وارد چرخهٔ بررسی سلامت (روشن‌بودن) توسط سرویس Verifier می‌شود و از liveness معاف نیست. گم‌شدن کلید مالک: `IdentityRegistry.migrateIdentity` با تأیید هویت.
 
 ### وضعیت‌های یک ولیدیتور (enum `Status`)
-`None → Probation → Active ↔ Demoted`؛ `Active ↔ SelfSuspended`؛ و `Exiting` (از `Active`، `Probation`، `Demoted` یا `SelfSuspended`).
+`None → Probation → Active ↔ Demoted`؛ `Active ↔ SelfSuspended`؛ و `Exiting` (از `Active`، `Probation`، `Demoted` یا `SelfSuspended`)؛ و `RemovedInRecovery` (از `Active`، فقط با ثبت Verifier در بازیابی شبکه؛ بازگشت به `Active` فقط با لغو حذف؛ خروج بعدی از مسیر `Exiting`).
 - **`Demoted`** فقط برای تعلیق ناشی از تخلف یا غیرفعالی است (با `recordSuspension`).
-- **`SelfSuspended` («تعلیق داوطلبانه»)**: بی‌هزینه، با `selfSuspend()`؛ وثیقه قفل می‌ماند، پاداش و حق رأی ندارد، از `getValidators()` خارج است. بدون محدودیت مدت یا دفعات. بازگشت با `requestResume()` و فقط با تأیید Verifier (بررسی سلامت نود)، **بدون دورهٔ آزمایشی**. عضو هیأت‌مدیرهٔ ولیدیتورها نمی‌تواند تعلیق داوطلبانه کند. در کف حداقل ولیدیتور فعال (`MIN_ACTIVE_VALIDATORS = 1`) ممنوع است.
+- **`RemovedInRecovery`** (مقدار ۵ در enum؛ در انتهای فهرست افزوده شده تا مقدارهای قبلی تغییر نکنند؛ ✅ پیاده‌شده و آزموده روی Hardhat): ولیدیتوری که با خاموش‌کردن نودش شبکه را متوقف کرده و پس از بازگشت شبکه به حالت `contract` با ثبت Verifier از فهرست حذف شده است. جریمه نیست: وثیقه تا `recoveryTimestamp + ۹۰ روز` قفل می‌ماند؛ ممنوعیت دائمی ولیدیتورشدن اعمال می‌شود. جزئیات در جدول زیر (`recordRecoveryRemoval` و توابع هم‌خانواده).
+- **`SelfSuspended` («تعلیق داوطلبانه»)**: بی‌هزینه، با `selfSuspend()`؛ وثیقه قفل می‌ماند، پاداش و حق رأی ندارد، از `getValidators()` خارج است. بدون محدودیت مدت یا دفعات. بازگشت با `requestResume()` و فقط با تأیید Verifier (بررسی سلامت نود)، **بدون دورهٔ آزمایشی**. عضو هیأت‌مدیرهٔ ولیدیتورها نمی‌تواند تعلیق داوطلبانه کند. در کف حداقل ولیدیتور فعال (`MIN_ACTIVE_VALIDATORS = 1`) ممنوع است. (🔶 طرح؛ هنوز در کد نیست.)
 - ✅ (P04) درخواست خروج فوراً وظیفه‌ی اعتبارسنجی را پایان می‌دهد؛ **خروج دائم** است: هر کس خودش خارج شود یا در بازیابی شبکه از فهرست حذف شود، برای همیشه نمی‌تواند ولیدیتور شود (فقط `migrateIdentity` برای گم‌شدن کلید مالک هویت را به آدرس تازه منتقل می‌کند). در حین تعلیق (داوطلبانه یا ناشی از جریمه/غیرفعالی) درخواست خروج مجاز است.
 
 مجموعهٔ فعال هرگز از `MIN_ACTIVE_VALIDATORS = 1` کمتر نمی‌شود: در این کف، `requestExit` (از وضعیت Active)، `selfSuspend` و `recordSuspension` revert می‌کنند. هر تغییر فعال‌بودن (فعال‌سازی، تعلیق، تعلیق داوطلبانه، بازگشت، درخواست خروج) `ValidatorsBoard.syncVoter` را صدا می‌زند تا شمارنده‌های رأی هیأت هماهنگ بماند؛ این فراخوان بهترین‌تلاش با سقف گس ۶۰۰٬۰۰۰ است و شکستش تغییر وضعیت را مسدود نمی‌کند.
@@ -95,9 +96,11 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `setOperator(address newOperator)` | **فقط مالک** | کلید اپراتور تازه | — | تعویض فوری کلید نود؛ یکتایی دائمی؛ تا تأیید روشن‌بودن توسط Verifier برای ولیدیتور `Active` از لحاظ liveness پایش می‌شود. مؤسسان هم با همین تابع کلید نودشان را تعریف می‌کنند و پس از تأیید Verifier وارد فهرست می‌شوند (ورود آن‌ها از فاصلهٔ ورود مستثناست) |
 | `recordActivation(address candidate, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک کاندید + هش بسته‌ی شواهد آف‌چین | `decisionId` | پس از `probationPeriod` (۱ هفته) و نسبت موفقیت ≥۹۵٪ که **آف‌چین** محاسبه شده (برای مؤسسان: تأیید روشن‌بودن نود)، کاندید را `Active` می‌کند (وارد `getValidators()` می‌شود) |
 | `recordSuspension(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک + هش شواهد | `decisionId` | ولیدیتور `Active` را **فوراً و بی‌قید** از `getValidators()` حذف می‌کند (`Demoted`)؛ قفل جریمه‌ی معلق و **مبلغ درگیر** (`slashBps` از وثیقه در همان لحظه) ثبت می‌شود. جریمه خودبه‌خود اجرا و در لحظهٔ ثبت پرونده سوزانده نمی‌شود. در کف `MIN_ACTIVE_VALIDATORS` revert می‌کند. جریمهٔ مالی روی مؤسسان (وثیقهٔ صفر) اثر ندارد |
-| `recordRecoveryRemoval(address validator, uint256 recoveryTimestamp, bytes32 evidenceHash)` | **فقط `verifier`**، فقط پس از بازگشت شبکه به حالت `contract` | آدرس مالک، زمان بازگشت، هش شواهد | `decisionId` | ✅ (تصمیم ۲۰۲۶-۱۱-۱۹؛ جزو طرح ۲٫۵) وضعیت `RemovedInRecovery`: بیرون از `getValidators`، بدون جریمه؛ پس از ۷۲ ساعت بدون اعتراض قطعی؛ `exitAllowedAt = recoveryTimestamp + ۹۰ روز` |
-| `objectRecoveryRemoval(uint256 decisionId)` | مالک ولیدیتور | شناسه | — | اعتراض ظرف ۷۲ ساعت؛ تا رسیدگی قطعی نمی‌شود |
-| `resolveRecoveryRemoval(uint256 decisionId, bool uphold)` | `ValidatorsBoard` (دست‌کم ۳ از ۵؛ عضو درگیر رأی نمی‌دهد) | شناسه، تأیید یا لغو | — | تأیید ⇒ حذف قطعی؛ لغو یا نرسیدن به رأی در ۷ روز ⇒ بازگشت به `Active` |
+| `recordRecoveryRemoval(address validator, uint256 recoveryTimestamp, bytes32 evidenceHash)` | **فقط `verifier`**، فقط پس از بازگشت شبکه به حالت `contract` | آدرس مالک، زمان بازگشت شبکه، هش شواهد | — (بدون خروجی) | ✅ پیاده‌شده (تصمیم ۲۰۲۶-۱۱-۱۹؛ آزموده روی Hardhat). پیش‌شرط‌ها: ولیدیتور `Active` باشد؛ `recoveryTimestamp` ≤ اکنون و حداکثر ۳۰ روز قدیمی (🔶 ثابت `RECOVERY_RECORD_MAX_AGE` که تصمیم مالک نیست)؛ هش شواهد غیرتهی؛ مجموعهٔ فعال بالاتر از `MIN_ACTIVE_VALIDATORS` بماند؛ پروندهٔ باز دیگری برای او نباشد. اثر: `RemovedInRecovery`، بیرون از `getValidators` و اختیار هیأت؛ بدون جریمه؛ `permanentlyExited`؛ `exitAllowedAt = recoveryTimestamp + ۹۰ روز` (`RECOVERY_COLLATERAL_LOCK`)؛ مهلت اعتراض ۷۲ ساعت (`RECOVERY_OBJECTION_WINDOW`) |
+| `objectRecoveryRemoval()` | خودِ مالکِ حذف‌شده | — (بدون ورودی) | — | اعتراض ظرف ۷۲ ساعت؛ پرونده `Objected` می‌شود و پنجرهٔ تصمیم ۷ روزه (`RECOVERY_RESOLUTION_WINDOW`) شروع می‌شود؛ تا آن موقع حذف قطعی نمی‌شود |
+| `setRecoveryCaseReferred(address validator)` | **فقط `ValidatorsBoard`** (از `referRecoveryRemovalToAssembly`) | آدرس ولیدیتور | — | وقتی کمتر از ۳ عضو هیأت (غیر از موضوع) اختیار دارند، پروندهٔ معترض‌شده به ولیدیتورها ارجاع می‌شود؛ پنجرهٔ ۷ روزهٔ تازه؛ تعداد ولیدیتورهای فعال لحظهٔ ارجاع (`eligibleCount`) برای شمارش دوسوم نگه داشته می‌شود |
+| `resolveRecoveryRemoval(address validator, bool upheld)` | **فقط `ValidatorsBoard`** (پس از رأی هیأت یا ولیدیتورها) | آدرس ولیدیتور، تأیید یا لغو | — | تأیید ⇒ حذف قطعی (`Upheld`)؛ لغو ⇒ بازگشت به `Active` و رفع ممنوعیت دائمی |
+| `expireRecoveryRemoval(address validator)` | **هرکسی** | آدرس ولیدیتور | — | پس از پایان پنجرهٔ تصمیم بدون تصمیم: حذف **لغو** می‌شود و ولیدیتور به `Active` برمی‌گردد (نبود تصمیم = لغو) |
 | `recordPreExitViolation(address validator, bytes32 evidenceHash, uint256 violationAt)` | **فقط `verifier`** | ولیدیتور در وضعیت `Exiting` + هش شواهد + زمان وقوع تخلف | `decisionId` | ✅ **P04.** فقط تا `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) پس از درخواست خروج، فقط اگر پیش از خروج `Active` بوده، فقط اگر `violationAt` **قبل** از درخواست خروج و **بعد** از آخرین تعلیق باشد، و پرونده‌ی معلق دیگری نباشد. غیرفعالی پس از درخواست خروج هرگز تخلف نیست. همان مسیر معافیت جمعی/تحویل/اعتراض/رأی مجمع اجرا می‌شود |
 | `recordRecovery(address validator, bytes32 evidenceHash)` | **فقط `verifier`** | آدرس مالک + هش شواهد | `decisionId` | بازگشت `Demoted` → `Active`؛ فقط وقتی `recoveryPeriod` گذشته و **هیچ پرونده‌ی جریمه‌ی معلقی** نمانده. وثیقهٔ جریمه‌شده بازپر نمی‌شود و هیچ اخراجی بر این پایه نیست |
 | `selfSuspend()` | خودِ مالک (ولیدیتور `Active`) | — | — | تعلیق داوطلبانه (`SelfSuspended`): فوراً از `getValidators()` خارج؛ revert اگر در کف ولیدیتور فعال باشد یا مالک عضو هیأت‌مدیرهٔ ولیدیتورها باشد |
@@ -108,7 +111,7 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `assertDeliveryDisputed(uint256 decisionId)` / `voteOnDelivery(id, bool)` / `resolveDeliveryDisputeIfExpired(id)` | هرکسی / ولیدیتور `Active` / هرکسی | شناسه‌ی پرونده | — | مسیر «ولیدیتور تحویل را تأیید نمی‌کند»: پس از `DELIVERY_DISPUTE_GRACE_PERIOD` مجمع درباره‌ی «آیا تحویل شده» رأی می‌دهد. روی **پرونده‌ی از قبل نهایی‌شده** (مثلاً معافیت جمعی) باز نمی‌شود؛ فقط ولیدیتورهایی که هنگام ثبت اختلاف Active بودند رأی می‌دهند (`deliveryDisputeNonce`) |
 | `fileAppeal(uint256 decisionId)` / `confirmSlash(id)` / `resolveAppealIfExpired(id)` | فقط مالکِ موضوع / ولیدیتور `Active` (غیر از موضوع) / هرکسی | شناسه‌ی پرونده | — | اعتراض ظرف ۷۲ ساعت از تحویل؛ رأی مجمع (اکثریت ساده، مهلت ۷ روز)؛ **نبود نصاب = رد جریمه**، ولی تعلیق اجماعی دست‌نخورده می‌ماند؛ رأی‌دهنده باید هنگام ثبت اعتراض Active بوده باشد (`appealNonce`). اگر مجمع جریمه را تأیید کند، مبلغ ثابت‌شدهٔ پرونده **سوزانده** می‌شود |
 | `executeUncontestedSlash(uint256 decisionId)` | **هرکسی** | شناسه‌ی پرونده | — | اگر تحویل ثابت شده و مهلت اعتراض ۷۲ ساعته بدون اعتراض گذشته، مبلغ درگیرِ ثابت‌شده‌ی پرونده را با `.call{value:...}` به `address(0)` می‌فرستد (**۱۰۰٪ سوزانده می‌شود**، نه به خزانه‌ی ولیدیتورها) و رویداد سوزاندن جریمه می‌زند |
-| `requestExit()` | خودِ مالک | — | — | ✅ **P04.** اگر `Active` بود **فوراً** از `getValidators()` (و از اختیار هیأت‌مدیره) خارج می‌شود (در کف ۱ ولیدیتور فعال revert می‌کند)؛ از `Probation`، `Demoted` و `SelfSuspended` هم مجاز است؛ وضعیت قبلی را ثبت می‌کند؛ `Exiting` و انتظار `exitCooldown` (۷ روز) شروع می‌شود. خروج **دائم** است. در حین `Exiting` یا با پروندهٔ جریمهٔ باز، NFT صندلی قابل انتقال نیست |
+| `requestExit()` | خودِ مالک | — | — | ✅ **P04.** اگر `Active` بود **فوراً** از `getValidators()` (و از اختیار هیأت‌مدیره) خارج می‌شود (در کف ۱ ولیدیتور فعال revert می‌کند)؛ از `Probation`، `Demoted` و `SelfSuspended` هم مجاز است؛ وضعیت قبلی را ثبت می‌کند؛ `Exiting` و انتظار `exitCooldown` (۷ روز) شروع می‌شود. خروج **دائم** است. در حین `Exiting` یا با پروندهٔ جریمهٔ باز، NFT صندلی قابل انتقال نیست. برای ولیدیتور `RemovedInRecovery`: فقط پس از تعیین تکلیف پرونده (تأیید، یا گذشتن ۷۲ ساعت بدون اعتراض) و پس از `exitAllowedAt` (۹۰ روز پس از `recoveryTimestamp`)؛ سپس `Exiting` و انتظار معمول `exitCooldown` |
 | `withdrawStake()` | خودِ مالک | — | — | ✅ **P04.** پس از `exitCooldown`: اگر پرونده‌ی حل‌نشده نیست، کل وثیقه را پس می‌دهد و رکورد را پاک می‌کند. اگر پرونده‌ی معلق هست، **فقط مبلغ درگیر محفوظ می‌ماند** و بقیه پرداخت می‌شود؛ مانده‌ی محفوظ پس از تعیین تکلیف (و سوزاندن جریمه، اگر تأیید شد) با فراخوان دوباره قابل برداشت است. آدرس مالک و شخص برای همیشه از ورود مجدد منع می‌شوند |
 | `proposeParameterChange(ParamKey key, uint256 newValue)` | فقط ولیدیتور `Active` | کلید پارامتر (enum) + مقدار جدید | `id` پیشنهاد | پیشنهاد جدید می‌سازد و رأی پیشنهاددهنده را هم ثبت می‌کند |
 | `voteParameterChange(uint256 id)` | فقط ولیدیتور `Active` | شناسه‌ی پیشنهاد | — | رأی می‌دهد؛ با رسیدن به نصاب، پارامتر بلافاصله اعمال می‌شود |
@@ -118,7 +121,7 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `requiredVotesNow()` | هرکسی | — | `uint256` | نصاب فعلی رأی (بر اساس تعداد ولیدیتور فعال الان) |
 | `setVerifier(address newVerifier)` | **فقط قرارداد `ValidatorsBoard`** | آدرس جدید | — | این `verifier` (کلید تصمیم‌های `record…`) با هویت ربطی ندارد. چرخش بعد از رأی داخلی هیأت (`ValidatorsBoard.proposeRotateVerifier`). یک Verifier کافی است (P03) |
 | `onSeatTransferred(uint256 seatId, address from, address to)` | **فقط `ValidatorSeatNFT`** | شناسهٔ صندلی، مالک قبلی/جدید | — | 🔶 همگام‌سازی مالک پس از انتقال NFT: مالکیت وثیقه، حق رأی و پاداش به مالک جدید می‌رسد (بخش ۹) |
-| `enterAsLotteryWinner(address winner)` | **فقط `ValidatorLottery`** | آدرس برندهٔ احرازشده | — | 🔶 صندلی بدون وثیقه و کارمزد؛ تابع فاصلهٔ ورود نیست (بخش ۱۱) |
+| `enterAsLotteryWinner(address winner)` | **فقط `ValidatorLottery`** (در `drawBatch`، با try/catch) | آدرس برنده | — | ✅ پیاده‌شده و آزموده روی Hardhat. صندلی در `Probation`، بدون وثیقه و کارمزد (`isPaidEntrant = false`)، خارج از فاصلهٔ ورود؛ revert اگر آدرس قبلاً ثبت شده یا پیش‌تر خارج شده باشد (در این حالت قرعه‌کشی بلاک نمی‌شود و `ValidatorLottery.entryFailed` ثبت می‌شود). رأی از وقتی فعال است که Verifier پس از بررسی نود و امضای توافق‌نامه فعالش کند (بخش ۱۱) |
 | `receive()` | هرکسی (ولی همیشه **revert** می‌کند) | — | — | عمداً هر واریز مستقیمی را رد می‌کند؛ تنها راه ورود پول همان `requestMembership()` است، تا موجودی قرارداد همیشه دقیقاً برابر جمع وثیقه‌های قفل‌شده بماند |
 
 ### پارامترهای اقتصادی ورود
@@ -134,29 +137,33 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 ### پارامترهای قابل‌تغییر با رأی کامل ولیدیتورها (`ParamKey`)
 `ParamKey` (به ترتیب enum): `MaxEntriesPerWindow`=۰ (مقدار genesis ۱)، `EntryWindowSeconds`=۱ (مقدار genesis ۷ روز)، `ProbationPeriod`=۲، `RecoveryPeriod`=۳، `SlashBps`=۴ (≤۱۰۰۰۰)، `ExitCooldown`=۵. ✅ **قیدهای کد:** `RecoveryPeriod` باید اکیداً بلندتر از `MASS_DEMOTION_WINDOW` (۱ ساعت) باشد؛ `ExitCooldown` باید اکیداً بلندتر از `PRE_EXIT_CLAIM_WINDOW` (۷۲ ساعت) باشد. **قیدهای `EntryWindowSeconds`:** هر تغییر حداکثر ±۱ روز، بازهٔ ۱ تا ۳۰ روز، حداقل ۶ ماه بین دو تغییر، و ۶ ماه اول از genesis ممنوع. ورود مؤسسان (شش نفر پس از اولین) و برندگان لاتاری تابع فاصلهٔ ورود نیستند. فقط با رأی کامل ولیدیتورهای فعال تغییر می‌کنند. (آستانهٔ غیرفعالی و تأییدهای liveness روی زنجیره نیستند — liveness آف‌چین است.)
 
-### پیشنهادهای تایپ‌شده در `FoundationDAO` (تصمیم ۲۰۲۶-۱۱-۱۹)
+### پیشنهادهای تایپ‌شده در `FoundationDAO` (تصمیم ۲۰۲۶-۱۱-۱۹؛ ✅ پیاده‌شده و آزموده روی Hardhat)
 
-نام توابع و نوع‌ها موقت است. قاعده‌ها:
+نام توابع و نوع‌ها همان کد `FoundationDAO.sol` است. قاعده‌ها:
 
-- هیچ مسیر «اجرای دلخواه» وجود ندارد. هر تصمیم بنیاد روی زنجیره یکی از نوع‌های فهرست زیر است و پارامترهایش در قرارداد با نوع مشخص ذخیره می‌شود (نه `bytes data`).
-- پیشنهاد پس از ساخته‌شدن تغییر نمی‌کند. `getProposal(id)` نوع، پیشنهاددهنده، همهٔ پارامترها، زمان ساخت و انقضا، تعداد رأی و وضعیت را برمی‌گرداند؛ رویداد `ProposalCreated` هم همهٔ پارامترها را دارد، تا رابط کاربری و بازرس همان چیزی را ببینند که رأی داده می‌شود.
-- رأی با `vote(id, paramsHash)` است و فقط به همان شناسه اثر دارد؛ اگر هش پارامترها با ذخیره‌شده نخواند، رأی رد می‌شود (عضو ثابت می‌کند همان پارامترها را دیده است).
-- نصاب همهٔ نوع‌ها: اکثریت عددی ۵ عضو اصلی (۳ از ۵). ✅ مدت انقضای هر پیشنهاد یک ماه (۳۰ روز). 🔶 شمردن رأی پیشنهاددهنده.
-- فهرست نوع‌ها در genesis ثابت است؛ افزودن نوع تازه نسخهٔ تازهٔ قرارداد و مهاجرت می‌خواهد (بخش «سیاست ارتقا» در `sur-onchain-offchain-architecture.md`).
+- **هیچ اجرای پنهان یا بی‌نوع وجود ندارد.** هر تصمیم بنیاد روی زنجیره یکی از **۱۴ نوع** فهرست زیر است و پارامترهایش در قرارداد ذخیره و قابل‌خواندن است. تنها اجرای آزاد، نوع `Execute` است که `target`، `value`، `data` و `description` را **آشکار** در خود پیشنهاد ذخیره می‌کند و مثل همهٔ نوع‌ها با `vote(id, paramsHash)` رأی داده می‌شود (✅ تصمیم مالک، ۲۰۲۶-۱۱-۱۹ دیرهنگام؛ تصمیم ۱۰۴ را اصلاح می‌کند: «بدون `bytes data`» اکنون یعنی «بدون اجرای پنهان یا بی‌نوع»؛ `proposeExecute` فقط همین نوع آشکار است؛ تصمیم ۱۰۸). هدف ممنوع: خود `FoundationDAO` و `FoundationMembers` (ورود/خروج عضو و جابه‌جایی سهم فقط با رأی مجمع فوق‌العاده، هرگز با رأی هیأت)؛ `value` مجاز است؛ نصاب همان ۳ از ۵.
+- پیشنهاد پس از ساخته‌شدن تغییر نمی‌کند. `getProposal(id)` نوع، پیشنهاددهنده، همهٔ پارامترها (`addrA..addrC`، `numA..numC`، `text`، `data`)، `paramsHash`، تعداد رأی و رأی لازم، زمان ساخت و انقضا، `boardVersionAtCreation` و وضعیت (`Pending` یا `Executed`) را برمی‌گرداند؛ رویدادهای `ProposalCreated` و `ProposalParams` هم همهٔ پارامترها را دارند، تا رابط کاربری و بازرس همان چیزی را ببینند که رأی داده می‌شود.
+- رأی فقط با `vote(id, paramsHash)` است (`voteSpend` دیگر وجود ندارد) و فقط به همان شناسه اثر دارد؛ اگر هش پارامترها با ذخیره‌شده نخواند، رأی رد می‌شود (عضو ثابت می‌کند همان پارامترها را دیده است). `computeParamsHash` همان هش را برای رابط کاربری و بازرس محاسبه می‌کند.
+- نصاب همهٔ نوع‌ها: اکثریت عددی ۵ عضو اصلی (۳ از ۵). ✅ **رأی پیشنهاددهنده خودکار شمرده می‌شود.** ✅ هر پیشنهاد ۳۰ روز اعتبار دارد (`PROPOSAL_EXPIRY`). ✅ با هر تغییر ترکیب هیأت (`boardVersion`) همهٔ پیشنهادهای باز باطل می‌شود. اجرا در همان تراکنشی است که رأی سوم را می‌آورد.
+- فهرست نوع‌ها در genesis ثابت است؛ افزودن نوع تازه نسخهٔ تازهٔ قرارداد و مهاجرت می‌خواهد (بخش «سیاست ارتقا» در `sur-onchain-offchain-architecture.md`). نیازهای پیش‌بینی‌نشده را فقط نوع آشکار `Execute` پوشش می‌دهد.
+- نوع‌های مربوط به `SurenSale` تا وقتی `saleContract` با `SetSaleContract` تنظیم نشده باشد revert می‌کنند.
 
-| نوع | پارامترها | اثر |
+| نوع (تابع پیشنهاد) | پارامترها | اثر |
 |---|---|---|
-| خرج | `token` (`address(0)` = سورن)، `to`، `amount`، `description` | پرداخت از خزانهٔ بنیاد؛ بدون سقف (همان `proposeSpend`). تأمین موجودی `SurenSale` هم با همین نوع است |
-| `ElectOfficers` | `chair`، `treasurer`، `ceo` | انتخاب یا تعویض سمت‌ها |
-| `RegisterExchange` | `account`، `name`، `quota` | ثبت صرافی در `SurenSale`؛ قرارداد `gasDeposit` را از موجودی خودش به `account` می‌فرستد (خارج از سهمیه) |
-| `SetExchangeQuota` | `account`، `newQuota` | تغییر سهمیه |
-| `ChangeExchangeKey` | `oldAccount`، `newAccount` | تغییر حساب صرافی؛ سهمیهٔ باقی‌مانده و آمار به حساب تازه منتقل می‌شود |
-| `ResumeExchange` | `account` | از سرگیری صرافی متوقف‌شده |
-| `RemoveExchange` | `account` | حذف صرافی |
-| `SetSaleTotalCap` | `cap` | سقف کل فروش |
-| `SweepUnsold` | `to` | بازگرداندن سورن فروش‌نرفته |
-| `RotateIdentityOracle` | `newOracle` | چرخش کلید `identityOracle` |
-| `StartLottery` | `ticketPrice`، `winnersCount`، `closeTime` | اجرای لاتاری ولیدیتور |
+| `Spend` (`proposeSpend`) | `token` (`address(0)` = سورن)، `to`، `amount`، `description` | پرداخت از خزانهٔ بنیاد؛ بدون سقف. تأمین موجودی `SurenSale` هم با همین نوع است |
+| `ElectOfficers` (`proposeElectOfficers`) | `chair`، `treasurer` (هر دو عضو اصلی)، `ceo` (نه بازرس) | انتخاب یا تعویض سمت‌ها |
+| `RegisterExchange` (`proposeRegisterExchange`) | `account`، `name`، `quota` | ثبت صرافی در `SurenSale`؛ قرارداد `gasDeposit` (۱۰۰ سورن) را از موجودی خودش به `account` می‌فرستد (خارج از سهمیه) |
+| `SetExchangeQuota` (`proposeSetExchangeQuota`) | `account`، `newQuota` | تغییر سهمیه (سهمیهٔ جدید نباید از فروش‌رفته کمتر باشد) |
+| `ChangeExchangeKey` (`proposeChangeExchangeKey`) | `oldAccount`، `newAccount` | تغییر حساب صرافی؛ سهمیه، آمار، شناسه‌های سفارش مصرف‌شده و وضعیت به حساب تازه منتقل می‌شود |
+| `ResumeExchange` (`proposeResumeExchange`) | `account` | از سرگیری صرافی متوقف‌شده |
+| `RemoveExchange` (`proposeRemoveExchange`) | `account` | حذف صرافی |
+| `SetSaleTotalCap` (`proposeSetSaleTotalCap`) | `cap` | سقف کل فروش (تا وقتی هیأت آن را تعیین نکند صفر است و هیچ فروشی انجام نمی‌شود) |
+| `SweepUnsold` (`proposeSweepUnsold`) | `to` | بازگرداندن سورن فروش‌نرفته؛ فقط وقتی `isSaleOver()` |
+| `RotateIdentityOracle` (`proposeRotateIdentityOracle`) | `newOracle` | چرخش کلید `identityOracle` |
+| `StartLottery` (`proposeStartLottery`) | `ticketPrice`، `winnersCount`، `closeTime` | اجرای لاتاری ولیدیتور |
+| `SetSaleContract` (`proposeSetSaleContract`) | `sale` (باید قرارداد باشد) | به DAO آدرس `SurenSale` (قرارداد غیر-genesis) را می‌دهد؛ می‌توان بعداً عوضش کرد |
+| `Execute` (`proposeExecute`) | `target`، `value`، `data`، `description` | **نوع آزاد و آشکار** (تصمیم ۱۰۸): فراخوانی دلخواه؛ هدف نباید `FoundationDAO` یا `FoundationMembers` باشد |
+| `EndSale` (`proposeEndSale`) | — | `SurenSale.endSale()`: فروش برای همیشه متوقف می‌شود |
 
 ### متغیرهای عمومی مهم (خواندنی خودکار)
 `DISTRIBUTOR`, `BOARD`, `IDENTITY_REGISTRY`, `SEAT_NFT`, `LOTTERY` (آدرس‌های ثابت)، `verifier`، `validators(address)`، `entryCollateral`، `membershipFeeBps`، `lastEconomicChangeAt` (تایمر مشترک ۱۸۰ روزه)، `windowStart`، `entriesInWindow`، `entryWindowSeconds`، `paramProposals(id)` (✅ L04: فیلد هشتم `createdAtNonce`)، `statusNonce`، `wasActiveAt(address, nonce)`، `activationCount`، `activationSeq(address)`، `deliveryDisputeNonce(id)`، `appealNonce(id)`، `MIN_ACTIVE_VALIDATORS`، و برای رسیدگی: `statusDecisions(id)`، `pendingSlashDecisionId(validator)`، `decisionSlashAmount(id)`، `decisionViolationAt(id)`، `statusBeforeExit(validator)`، `PRE_EXIT_CLAIM_WINDOW`، `totalSlashBurned`. (نام‌های تازه موقتی‌اند.)
@@ -198,11 +205,14 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | `hasBoardAuthority(address who)` | هرکسی (در عمل: `ValidatorsRegistry` برای ممنوعیت `selfSuspend`) | آدرس مالک | `bool` | ✅ **P02.** آیا `who` کرسی دارد، ماهِ هیأت همین ماه است، و درخواست خروج نداده (و همچنان ولیدیتور ثبت‌شده است). تعلیق (`Demoted`) اختیار را در طول همان ماه قطع نمی‌کند |
 | `syncBoard()` | **هرکسی** | — | — | ✅ **P02.** کرسی‌هایی را که دارنده‌شان درخواست خروج داده رها می‌کند، `boardVersion` را بالا می‌برد (اقدامات ناتمام باطل)، و برای آن کرسی‌ها جانشینی را تلاش می‌کند. هر تابع هیأت هم آن را خودکار اجرا می‌کند |
 | `fillVacancies()` | **هرکسی** | — | — | ✅ **P02.** جانشینی: بالاترین‌رأی‌ترین کاندیدای **واجد شرایط** (فعلاً `Active`، هنوز عضو نبوده) بر اساس شمارش زنده جای **کرسی‌های آزادشده‌ی ناشی از خروج** را می‌گیرد؛ هرگز یک تغییر عادی اضافه نیست. اگر کاندیدایی نباشد کرسی خالی می‌ماند |
+| `voteRecoveryRemoval(address validator, bool uphold)` | عضو فعلی هیأت (کلید مالک)؛ موضوع پرونده رأی نمی‌دهد | ولیدیتور، تأیید (`true`) یا لغو (`false`) | — | ✅ پیاده‌شده. رأی هیأت درباره معترضِ حذف در بازیابی شبکه (وضعیت `Objected`، ظرف ۷ روز): ۳ رأی تأیید ⇒ `resolveRecoveryRemoval(validator, true)`؛ ۳ رأی لغو ⇒ لغو و بازگشت ولیدیتور |
+| `referRecoveryRemovalToAssembly(address validator)` | **هرکسی**، فقط وقتی کمتر از ۳ عضو هیأت غیر از موضوع اختیار دارند | ولیدیتور | — | پرونده را به ولیدیتورها ارجاع می‌دهد (`ReferredToAssembly`، پنجرهٔ ۷ روزهٔ تازه) |
+| `voteRecoveryAssembly(address validator, bool uphold)` | ولیدیتوری که هنگام ارجاع `Active` بود (غیر از موضوع) | ولیدیتور، تأیید یا لغو | — | تأیید با `⌈2n/3⌉` رأی از `n` ولیدیتور واجد؛ وقتی رسیدن به آن ممکن نباشد، لغو اعلام می‌شود. نبود تصمیم در مهلت = لغو (`ValidatorsRegistry.expireRecoveryRemoval`) |
 | `getVotesOf(address voter)` | هرکسی | آدرس رأی‌دهنده | `address[]` | لیست کاندیداهایی که این آدرس الان بهشون رأی داده |
 | `getVotersFor(address candidate)` | هرکسی | آدرس کاندیدا | `address[]` | لیست کسانی که الان به این کاندیدا رأی داده‌اند |
 
 ### متغیرهای عمومی مهم
-`DISTRIBUTOR`, `TREASURY`, `REGISTRY` (آدرس‌های ثابت)، `BOARD_SIZE=5`, `MAX_VOTES_PER_VOTER=5`, `STALE_VOTE_CLEAR_DELAY=30 days`, `MIN_VOTES_SENSITIVE_ACTION=3`، `BOARD_ACTION_EXPIRY=14 days`، `boardMonthId`، `voteCount(candidate)`، `votesCounted(voter)`، `seatMembershipEpoch(address)`، `pendingVacancies`، `boardVersion`، `isBoardMember(address)`، `hasVotedFor(voter, candidate)`، `actions(id)`.
+`DISTRIBUTOR`, `TREASURY`, `REGISTRY` (آدرس‌های ثابت)، `boardRecoveryTallies(validator, recordedAt)` و `assemblyRecoveryTallies(validator, recordedAt)` (شمارش رأی پرونده‌های حذف در بازیابی)، `BOARD_SIZE=5`, `MAX_VOTES_PER_VOTER=5`, `STALE_VOTE_CLEAR_DELAY=30 days`, `MIN_VOTES_SENSITIVE_ACTION=3`، `BOARD_ACTION_EXPIRY=14 days`، `boardMonthId`، `voteCount(candidate)`، `votesCounted(voter)`، `seatMembershipEpoch(address)`، `pendingVacancies`، `boardVersion`، `isBoardMember(address)`، `hasVotedFor(voter, candidate)`، `actions(id)`.
 
 ### چرا این مدل — و چه Trade-offای دارد
 مدل «رأی تأییدی مستمر + بدون عزل جداگانه» اصلاً «نصاب» یا «عزل» به‌عنوان مفهوم جدا ندارد — فقط «چه کسی الان بیشترین حمایت را دارد» — و این محاسبه با فقط چند رأی معتبر هم قابل‌اجراست؛ نیازی به مشارکت گسترده نیست و نصاب هرچه شبکه بزرگ‌تر شود سخت‌تر نمی‌شود. رقابت باز است و یک گروه کوچک هماهنگ نمی‌تواند بدون مقاومت عضوی را عزل کند.
@@ -307,50 +317,53 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 ## ۵. `FoundationDAO.sol` — آدرس `0x1111...1111`
 
 ### نقش
-حکمرانی بنیاد سور روی زنجیره، **مطابق اساس‌نامه** (اساس‌نامه‌ی امضاشده تغییر نمی‌کند؛ قواعد پیاده‌شده در قرارداد تصمیم‌های پروژه‌اند و در سند ساختار سازمانی شرح شده‌اند): **مجمع عمومی** (اعضا با وزن سهم‌الشرکه)، **هیأت‌مدیره** (۵ عضو اصلی + ۲ علی‌البدل) و **بازرس**. همهٔ مراحل انتخابات و پرداخت در قرارداد است. **هیچ اختیاری روی شبکه، ولیدیتورها، یا اوراکل‌های مرتبط با اجماع/ولیدیتور ندارد** (⚠️ استثنا: کنترل `identityOracle` — مرتبط با عملیات احراز بنیاد و بی‌ربط به اجماع — و اعمال سهمیهٔ صرافی‌ها و مدیرعامل در `SurenSale`). **موجودی اولیه:** در `alloc` بلاک genesis، **۲۰,۰۰۰,۰۰۰ سورن** (ارز بومی) مستقیماً به آدرس این قرارداد تخصیص داده می‌شود — همان توزیع اولیه‌ای که موضوع فعالیت بنیاد (ماده ۳ اساسنامه) و تصمیم پروژه برای تخصیص ۲۰ میلیون سورن از بنیاد خواسته؛ علاوه بر آن ۱۵٪ ثابت بلاک‌ریوارد به این آدرس می‌رسد. اولین هیأت‌مدیره و اعضای بنیاد در مقدار اولیهٔ قرارداد (genesis) قرار دارند. حساب اعضا در `FoundationMembers` (بخش ۸) نگه‌داری می‌شود. بدهی‌های بنیاد در genesis به حساب بنیاد واریز نمی‌شود (مطالبات در `GenesisClaimsVault`، بخش ۱۰).
+حکمرانی بنیاد سور روی زنجیره، **مطابق اساس‌نامه** (اساس‌نامه‌ی امضاشده تغییر نمی‌کند؛ قواعد پیاده‌شده در قرارداد تصمیم‌های پروژه‌اند و در سند ساختار سازمانی شرح شده‌اند): **مجمع عمومی** (اعضا با وزن سهم‌الشرکه)، **هیأت‌مدیره** (۵ عضو اصلی + ۲ علی‌البدل) و **بازرس**. همهٔ مراحل انتخابات و پرداخت در قرارداد است. **هیچ اختیاری روی شبکه، ولیدیتورها، یا اوراکل‌های مرتبط با اجماع/ولیدیتور ندارد** (⚠️ استثنا: کنترل `identityOracle` — مرتبط با عملیات احراز بنیاد و بی‌ربط به اجماع — و اعمال سهمیهٔ صرافی‌ها، مدیرعامل و پایان فروش در `SurenSale` و آغاز لاتاری ولیدیتور). **موجودی اولیه:** در `alloc` بلاک genesis، **۲۰,۰۰۰,۰۰۰ سورن** (ارز بومی) مستقیماً به آدرس این قرارداد تخصیص داده می‌شود — همان توزیع اولیه‌ای که موضوع فعالیت بنیاد (ماده ۳ اساسنامه) و تصمیم پروژه برای تخصیص ۲۰ میلیون سورن از بنیاد خواسته؛ علاوه بر آن ۱۵٪ ثابت بلاک‌ریوارد به این آدرس می‌رسد. اولین هیأت‌مدیره و اعضای بنیاد در مقدار اولیهٔ قرارداد (genesis) قرار دارند. حساب اعضا در `FoundationMembers` (بخش ۸) نگه‌داری می‌شود. بدهی‌های بنیاد در genesis به حساب بنیاد واریز نمی‌شود (مطالبات در `GenesisClaimsVault`، بخش ۱۰).
 
 ### قواعد مجمع و هیأت
 | موضوع | قاعده |
 |---|---|
 | مجمع عادی | رسمیت با حضور بیش از نصف سهم‌الشرکه؛ اگر بار اول نصاب نرسید، در بار دوم نصاب دیگر طبق اساس‌نامه (بیش از یک‌سوم) |
-| مجمع فوق‌العاده | برای انتقال سهم، خروج یا ورود عضو؛ با نصاب‌های اساس‌نامه |
-| دعوت مجمع | رئیس هیأت‌مدیره یا بازرس؛ ۱۰ تا ۴۰ روز پیش از برگزاری |
-| انتخابات هیأت‌مدیره | هر رأی‌دهنده به ۵ نفر رأی می‌دهد (وزن = سهم‌الشرکه)؛ ۵ نفر پررأی = اصلی؛ دو نفر بعدی = علی‌البدل؛ هیأت‌مدیره باید از اعضای بنیاد یا نمایندهٔ عضو حقوقی باشند |
-| انتخابات بازرس | هر رأی‌دهنده به ۱ نفر رأی می‌دهد؛ یک نفر پررأی بازرس است؛ طبق ماده ۲۶ می‌تواند خارج از بنیاد هم باشد |
-| دوره | هیأت‌مدیره و بازرس ۲ سال؛ هیأت‌مدیره تا انتخاب هیأت‌مدیرهٔ جدید مأموریت دارد |
-| رئیس، خزانه‌دار، مدیرعامل | هیأت‌مدیره هر زمان با اکثریت آرای اعضای اصلی انتخاب می‌کند؛ رئیس و خزانه‌دار از اعضای هیأت؛ مدیرعامل می‌تواند خارج از هیأت و بنیاد باشد |
+| مجمع فوق‌العاده | برای انتقال سهم، خروج یا ورود عضو و تعویض نمایندهٔ عضو حقوقی؛ تصمیم‌ها پیش از جلسه با `proposeMembersResolution(assemblyId, …)` در دستور قرار می‌گیرند. نصاب جلسه: بیش از نصف سهم‌ها در نشست اول، بیش از یک‌سوم در نشست‌های بعد. تصمیم: ۳/۴ **کل** سهم‌ها و اکثریت عددی **کل** اعضا (🔶 خوانش سخت‌گیرانهٔ ماده ۱۸ اساس‌نامه: نسبت به همهٔ سهم‌ها و اعضا، نه فقط حاضران؛ این حد برای هر چهار عمل از جمله انتقال سهم یکسان اعمال می‌شود) |
+| دعوت مجمع | رئیس هیأت‌مدیره یا بازرس (`callAssembly(kind, meetingTime, agendaURI)`)؛ ۱۰ تا ۴۰ روز پیش از برگزاری؛ فهرست حق رأی و سهم‌ها در لحظهٔ دعوت منجمد می‌شود. نشست دوم برای مجمع ناموفق: `callSecondSession(prevId, …)` (هر مجمع ناموفق یک‌بار؛ نصاب کمتر) |
+| مدت رأی‌گیری | 🔶 ۳ روز پس از `meetingTime` (`VOTING_PERIOD`؛ در اساس‌نامه نیست) |
+| انتخابات هیأت‌مدیره | شناسهٔ انتخابات = شناسهٔ مجمع عادی؛ هر رأی‌دهنده به ۵ نفر رأی می‌دهد (وزن = سهم‌الشرکهٔ منجمد لحظهٔ دعوت)؛ ۵ نفر پررأی = اصلی؛ دو نفر بعدی = علی‌البدل؛ نامزد باید عضو بنیاد یا نمایندهٔ عضو حقوقی باشد؛ پایان‌دادن (`finalizeElection`) فقط پس از پایان رأی‌گیری و رسیدن نصاب |
+| انتخابات بازرس | هر رأی‌دهنده به ۱ نفر رأی می‌دهد؛ پررأی‌ترین نامزدِ واجد بازرس است؛ عضو جدید هیأت (اصلی یا علی‌البدل) و مدیرعامل نمی‌توانند بازرس شوند (ماده ۲۸) و اگر پررأی‌ترین نامزد یکی از آن‌ها باشد از او می‌گذرند و نفر بعدی بازرس می‌شود؛ طبق ماده ۲۶ می‌تواند خارج از بنیاد هم باشد |
+| دوره | هیأت‌مدیره و بازرس ۲ سال (`BOARD_TERM`)؛ هیأت‌مدیره تا انتخاب هیأت‌مدیرهٔ جدید مأموریت دارد. با انتخاب هیأت تازه رئیس یا خزانه‌دارِ قبلی که دیگر عضو اصلی نیست خالی می‌شود و مدیرعاملی که بازرس شود هم |
+| رئیس، خزانه‌دار، مدیرعامل | هیأت‌مدیره هر زمان با پیشنهاد `ElectOfficers` (اکثریت عددی اعضای اصلی) انتخاب می‌کند؛ رئیس و خزانه‌دار از اعضای اصلی؛ مدیرعامل می‌تواند خارج از هیأت و بنیاد باشد (نه بازرس) |
 | خرج خزانه | سورن و ERC20؛ با تصویب اکثریت عددی اعضای هیأت‌مدیره، هر زمان، **بدون هیچ سقفی** |
 
-### جدول فانکشن‌ها (نام‌های موقت)
+### جدول فانکشن‌ها (نام‌ها همان کد است)
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
 | `(بدون constructor)` | این قرارداد مستقیم در genesis alloc تزریق می‌شود | هیأت‌مدیرهٔ اولیه، بازرس، رئیس، خزانه‌دار، مدیرعامل: از طریق قرارداد کمکی موقت `FoundationDAO_GenesisSeed.sol` (`genesis-seed-helpers/`)؛ اعضا و سهم‌الشرکه در `FoundationMembers` | — | مقدار اولیه توسط ابزار genesis ثبت می‌شود |
 | `receive()` | هرکسی (در عمل: `BlockRewardDistributor`) | — (`msg.value`) | — | سورن می‌پذیرد |
-| `callAssembly(AssemblyKind kind, uint256 meetingTime, string agendaURI)` | رئیس هیأت‌مدیره یا بازرس | نوع (عادی/فوق‌العاده)، زمان برگزاری (۱۰ تا ۴۰ روز بعد)، دستور جلسه | `assemblyId` | مجمع را فراخوان می‌کند؛ فهرست حق رأی (اعضا و سهم‌الشرکه) در این لحظه ثابت می‌شود |
-| `proposeBoardElection(uint256 assemblyId)` / `voteBoard(uint256 id, address[5] picks)` / `voteInspector(uint256 id, address pick)` | عضو بنیاد (وزن = سهم‌الشرکه) | شناسهٔ انتخابات، ۵ نامزد هیأت، ۱ نامزد بازرس | — | رأی انتخابات؛ هر رأی‌دهنده برای هیأت ۵ نفر و برای بازرس ۱ نفر |
-| `finalizeElection(uint256 id)` | هرکسی پس از نصاب و پایان رأی‌گیری | شناسه | — | ۵ نفر پررأی را اصلی، دو نفر بعدی را علی‌البدل و پررأی‌ترین بازرس را می‌نشاند؛ آغاز دورهٔ ۲ ساله؛ شرط عضویت یا نمایندگی عضو بنیاد را از `FoundationMembers` می‌خواند (بازرس معاف) |
-| `electOfficers(address chair, address treasurer, address ceo)` | هیأت‌مدیره (اکثریت آرای اعضای اصلی) | رئیس، خزانه‌دار (از اعضای هیأت)، مدیرعامل (می‌تواند خارج باشد) | — | انتخاب یا تعویض در هر زمان |
-| `proposeSpend(address token, address to, uint256 amount, string description)` | عضو اصلی هیأت‌مدیره | توکن (`address(0)` = سورن)، مقصد، مبلغ، توضیح | `id` | پیشنهاد خرج از خزانهٔ بنیاد؛ ERC20 هم پشتیبانی می‌شود |
-| `voteSpend(uint256 id)` | عضو اصلی هیأت‌مدیره | شناسه | — | با رسیدن به اکثریت عددی اعضای هیأت‌مدیره، همان لحظه پرداخت می‌شود؛ **بدون سقف** |
-| `propose<Type>(…پارامترهای همان نوع…)` / `vote(uint256 id, bytes32 paramsHash)` | عضو اصلی هیأت‌مدیره | پارامترهای مشخص هر نوع (جدول «پیشنهادهای تایپ‌شده» زیر) / شناسه و هش پارامترها | `id` | ✅ جایگزین `proposeExecute`: فراخوانی دلخواه با `bytes data` وجود ندارد |
-| `getProposal(uint256 id)` | هرکسی | شناسه | نوع، پیشنهاددهنده، همهٔ پارامترها، زمان ساخت و انقضا، تعداد رأی، وضعیت، `paramsHash` | پیشنهاد با همهٔ اطلاعاتش از قرارداد قابل‌دریافت است |
+| `callAssembly(AssemblyKind kind, uint256 meetingTime, string agendaURI)` | رئیس هیأت‌مدیره یا بازرس | نوع (عادی/فوق‌العاده)، زمان برگزاری (۱۰ تا ۴۰ روز بعد)، دستور جلسه | `assemblyId` | مجمع را فراخوان می‌کند؛ فهرست حق رأی (اعضا و سهم‌الشرکه) در این لحظه منجمد می‌شود؛ رأی‌گیری بین `meetingTime` و `meetingTime + VOTING_PERIOD` (🔶 ۳ روز) |
+| `callSecondSession(uint256 previousAssemblyId, uint256 meetingTime, string agendaURI)` | رئیس یا بازرس | شناسهٔ مجمع قبلی، زمان، دستور | `assemblyId` | نشست دوم با نصاب کمتر؛ فقط پس از پایان رأی‌گیری مجمع قبلی بدون نتیجه و فقط یک‌بار برای هر مجمع ناموفق |
+| `proposeBoardElection(uint256 assemblyId)` / `voteBoard(uint256 id, address[5] picks)` / `voteInspector(uint256 id, address pick)` | رئیس، بازرس یا عضو بنیاد (باز کردن)؛ عضو بنیاد یا نماینده (رأی؛ وزن = سهم‌الشرکه) | شناسهٔ مجمع عادی (= شناسهٔ انتخابات)، ۵ نامزد هیأت، ۱ نامزد بازرس | — | رأی انتخابات؛ هر رأی‌دهنده برای هیأت ۵ نفر (بدون تکرار) و برای بازرس ۱ نفر؛ عضو حقوقی و نمایندهٔ او هرگز دو رأی نمی‌دهند |
+| `finalizeElection(uint256 id)` | هرکسی پس از پایان رأی‌گیری و رسیدن نصاب | شناسه | — | ۵ نفر پررأی را اصلی، دو نفر بعدی را علی‌البدل و پررأی‌ترین نامزد واجد را بازرس می‌نشاند (بازرس نه عضو جدید هیأت است نه مدیرعامل)؛ آغاز دورهٔ ۲ ساله؛ `boardVersion` بالا می‌رود (پیشنهادهای باز باطل) |
+| `proposeElectOfficers(address chair, address treasurer, address ceo)` | عضو اصلی هیأت‌مدیره | رئیس، خزانه‌دار (هر دو از اعضای اصلی)، مدیرعامل (می‌تواند خارج باشد، نه بازرس) | `id` | پیشنهاد نوع `ElectOfficers`؛ با ۳ از ۵ اجرا می‌شود (انتخاب یا تعویض در هر زمان) |
+| `proposeSpend(address token, address to, uint256 amount, string description)` | عضو اصلی هیأت‌مدیره | توکن (`address(0)` = سورن)، مقصد، مبلغ، توضیح | `id` | پیشنهاد خرج از خزانهٔ بنیاد؛ ERC20 هم پشتیبانی می‌شود؛ رأی پیشنهاددهنده خودکار شمرده می‌شود و با رأی سوم همان لحظه پرداخت می‌شود؛ **بدون سقف** |
+| `propose<Type>(…)` — `proposeRegisterExchange`، `proposeSetExchangeQuota`، `proposeChangeExchangeKey`، `proposeResumeExchange`، `proposeRemoveExchange`، `proposeSetSaleTotalCap`، `proposeSweepUnsold`، `proposeRotateIdentityOracle`، `proposeStartLottery`، `proposeSetSaleContract`، `proposeEndSale`، `proposeExecute` (به‌علاوهٔ `proposeSpend` و `proposeElectOfficers` بالا) | عضو اصلی هیأت‌مدیره | پارامترهای هر نوع (جدول «پیشنهادهای تایپ‌شده») | `id` | ✅ ۱۴ نوع. هیچ اجرای پنهان یا بی‌نوع نیست؛ اجرای آزاد فقط نوع آشکار `Execute` (تصمیم ۱۰۸) است |
+| `vote(uint256 id, bytes32 paramsHash)` | عضو اصلی هیأت‌مدیره | شناسه، هش پارامترها | — | رأی به همان شناسه با اثبات دیدن پارامترها؛ ۳ از ۵ ⇒ اجرا در همان تراکنش؛ پس از ۳۰ روز یا با تغییر ترکیب هیأت رد می‌شود (`voteSpend` و رأی‌های جدا برای هر نوع وجود ندارد) |
+| `getProposal(uint256 id)` / `computeParamsHash(…)` | هرکسی | شناسه / پارامترها | همهٔ فیلدها (نوع، پیشنهاددهنده، `addrA..C`، `numA..C`، `text`، `data`، `paramsHash`، رأی و رأی لازم، `createdAt`، `expiresAt`، `boardVersionAtCreation`، وضعیت) / هش | پیشنهاد با همهٔ اطلاعاتش از قرارداد قابل‌دریافت است |
 | `pauseExchange(address exchange)` | مدیرعامل یا هر عضو اصلی هیأت (تنهایی) | آدرس صرافی | — | ✅ توقف فوری فروش یک صرافی در `SurenSale` (فقط توقف؛ از سرگیری و تغییر کلید پیشنهاد تایپ‌شده با ۳ از ۵ است) |
-| `proposeMembersResolution(MembersAction action, …)` / `voteResolution(uint256 id, bool approve)` / `executeResolution(uint256 id)` | عضو بنیاد (مجمع فوق‌العاده) | انتقال سهم / ورود یا خروج عضو | `id` | تصمیم مجمع فوق‌العاده با نصاب اساس‌نامه؛ اجرا با فراخوانی `FoundationMembers` |
+| `proposeMembersResolution(uint256 assemblyId, MembersAction action, address account, address other, string name, PersonType personType, uint256 amount)` / `voteResolution(uint256 id, bool approve)` / `executeResolution(uint256 id)` | عضو بنیاد یا نماینده (پیشنهاد: فقط پیش از `meetingTime` مجمع فوق‌العاده)؛ رأی‌دهنده؛ هرکسی پس از پایان رأی‌گیری | عمل (ورود/خروج عضو، انتقال سهم، تعویض نماینده) و پارامترهایش | `id` | تصمیم مجمع فوق‌العاده؛ `executeResolution` نصاب (بیش از ۱/۲ سهم‌ها؛ نشست دوم بیش از ۱/۳) و حد تصمیم (۳/۴ کل سهم‌ها + اکثریت عددی کل اعضا؛ 🔶 خوانش سخت‌گیرانه) را می‌سنجد و `FoundationMembers` را صدا می‌زند |
 | `getMemberCount()` / `getAllMembers()` | هرکسی | — | تعداد / فهرست | از `FoundationMembers` خوانده می‌شود |
 | `getBoard()` / `getAlternates()` / `getInspector()` / `ceo()` / `chair()` / `treasurer()` | هرکسی | — | آدرس(ها) | وضعیت جاری مجمع و هیأت |
 | `getEthBalance()` / `getErc20Balance(address token)` | هرکسی | آدرس توکن (برای ERC20) | `uint256` | موجودی سورن / یک ERC20 که بنیاد دارد |
 | `hasVoted(uint256 id, address voter)` | هرکسی | شناسه + آدرس | `bool` | آیا فلان عضو به فلان رأی‌گیری رأی داده |
 
 ### متغیرهای عمومی مهم
-`MEMBERS` (آدرس ثابت `FoundationMembers`)، `boardMembers`، `alternates`، `inspector`، `chair`، `treasurer`، `ceo`، `boardTermEnd`، `assemblyCount`، `proposalCount`. این قرارداد هیچ وابستگی‌ای به `ValidatorsTreasury` ندارد — کاملاً مستقل از خزانه‌ی ولیدیتورهاست.
+`MEMBERS` (آدرس ثابت `FoundationMembers`)، `BOARD_SIZE`، `ALTERNATES_SIZE`، `BOARD_TERM`، `PROPOSAL_EXPIRY`، `MIN_NOTICE`، `MAX_NOTICE`، `VOTING_PERIOD`، `inspector`، `chair`، `treasurer`، `ceo`، `boardTermEnd`، `boardVersion`، `saleContract`، `proposalCount`، `assemblyCount`، `resolutionCount`، `secondSessionCalled(id)`، `electionOpened(id)`، `electionFinalized(id)`، `boardTally`، `inspectorTally`. این قرارداد هیچ وابستگی‌ای به `ValidatorsTreasury` ندارد — کاملاً مستقل از خزانه‌ی ولیدیتورهاست.
 
 ### ویژگی‌های ساختاری
 - این قرارداد `constructor` ندارد (کل قرارداد در genesis تزریق می‌شود).
 - بنیاد هیچ دسترسی به اوراکل‌های مرتبط با اجماع/ولیدیتور ندارد (⚠️ استثنا: `identityOracle`).
 - بنیاد هیچ مسیر رسمی on-chain برای درخواست بودجه از `ValidatorsTreasury` ندارد؛ بنیاد خزانهٔ خودش را دارد (۲۰ میلیون genesis + ۱۵٪ ریوارد) و هیأت‌مدیرهٔ ولیدیتورها در چارچوب سقف‌های ثابت می‌تواند به هر گیرنده‌ای از جمله آدرس بنیاد پرداخت کند.
 - کمیته‌ها (فنی، توسعهٔ کسب‌وکار، ترویج) در اساس‌نامه و قرارداد نیستند؛ بودجهٔ هر کمیته را هیأت‌مدیرهٔ بنیاد از همین مسیر خرج می‌پردازد.
-- 🔶 جزئیات نصاب تصمیم مجمع فوق‌العاده، جانشینی علی‌البدل‌ها هنگام خالی‌شدن کرسی اصلی، و ساختار دقیق سهم‌الشرکه هنگام پیاده‌سازی با اساس‌نامه تطبیق داده می‌شود.
+- 🔶 باز: مدت رأی‌گیری مجمع (`VOTING_PERIOD` = ۳ روز پیشنهاد کد است)؛ خوانش سخت‌گیرانهٔ نصاب تصمیم مجمع فوق‌العاده؛ جانشینی علی‌البدل‌ها هنگام خالی‌شدن کرسی اصلی؛ شرط «سند رسمی» برای انتقال سهم و ساختار دقیق سهم‌الشرکه با اساس‌نامه تطبیق داده می‌شود.
+- 🔶 **اندازهٔ قرارداد:** کد اجرایی `FoundationDAO` حدود ۲۷٫۹ کیلوبایت است و از حد ۲۴٬۵۷۶ بایتِ `CREATE` بیشتر است (`ValidatorsRegistry` هم حدود ۲۶٫۹ کیلوبایت). چون هر دو در `alloc` بلاک genesis تزریق می‌شوند و `CREATE` در کار نیست، این حد روی زنجیرهٔ واقعی اعمال نمی‌شود؛ آزمون‌های Hardhat حد را فقط برای شبکهٔ درون‌فرایندی برمی‌دارند (`allowUnlimitedContractSize`). بازبینی در آزمون Besu لازم است.
 
 ---
 
@@ -359,21 +372,21 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 ### نقش
 مرجع واحد هویت و وضعیت احراز، بدون دفترخانه‌ی اسناد رسمی (جایگزین: eKYC آنلاین) و بدون داده‌ی خام حساس on-chain. **کل سیستم KYC (اجزای آن‌چین و آف‌چین) فعلاً فقط برای اشخاص حقیقی ایرانی است** و ممکن است بعداً توسعه یابد؛ پس `Legal` و خارجی‌ها فعلاً احراز نمی‌شوند. جزئیات معماری در `sur-identity-registry-spec.md`.
 
-⚠️ **پیش‌نیاز ولیدیتورشدن:** هر ولیدیتور غیرمؤسس باید `kycVerified` داشته باشد (eKYC آن‌چین + آف‌چین) و علاوه بر هویت، شماره تلفن، حساب تلگرام، حساب بله و ایمیل او احراز شده باشد. این‌ها فقط **هنگام ورود** (`requestMembership`)، انتقال NFT صندلی و شرکت در لاتاری چک می‌شوند. مؤسسان اولیه از احراز معاف‌اند. پیش‌نیاز رأی‌دادن در `ValidatorsBoard` همان `hasIdentity` است. یکتایی شخص (`personKey`) فقط آف‌چین نگه‌داری می‌شود. سیستم eKYC را کمیتهٔ فنی بنیاد راه می‌برد ولی مستقل عمل می‌کند؛ هزینهٔ KYC با متقاضی است و نسخهٔ اولیه از همان روز اول آماده است.
+⚠️ **پیش‌نیاز ولیدیتورشدن:** هر ولیدیتور غیرمؤسس باید `kycVerified` داشته باشد (eKYC آن‌چین + آف‌چین) و علاوه بر هویت، شماره تلفن، حساب تلگرام، حساب بله و ایمیل او احراز شده باشد. این‌ها فقط **هنگام ورود** (`requestMembership`)، انتقال NFT صندلی و شرکت در لاتاری چک می‌شوند. مؤسسان اولیه از احراز معاف‌اند. پیش‌نیاز رأی‌دادن در `ValidatorsBoard` همان `hasIdentity` است. (در کد فعلی فقط `ValidatorLottery.buyTicket` از `isFullyVerified` استفاده می‌کند؛ استفادهٔ `requestMembership` و NFT صندلی از آن بخشی از بازطراحی نانوشتهٔ Registry است.) یکتایی شخص (`personKey`) فقط آف‌چین نگه‌داری می‌شود. سیستم eKYC را کمیتهٔ فنی بنیاد راه می‌برد ولی مستقل عمل می‌کند؛ هزینهٔ KYC با متقاضی است و نسخهٔ اولیه از همان روز اول آماده است.
 
 ### جدول فانکشن‌ها
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
-| `registerIdentity(PersonType personType, string name)` | هر آدرسی | نوع شخصیت (`Individual`/`Legal`)، نام | — | ثبت/به‌روزرسانی هویت **کاملاً خوداظهاری** (بدون verify). 🔶 `Legal` فقط خوداظهاری است و سترهای احراز برایش revert می‌کنند |
+| `registerIdentity(PersonType personType, string name)` | هر آدرسی | نوع شخصیت (`Individual`/`Legal`)، نام | — | ثبت/به‌روزرسانی هویت **کاملاً خوداظهاری** (بدون verify). ✅ (پیاده‌شده) `Legal` فقط خوداظهاری است و همهٔ سترهای احراز (تلفن، تلگرام، بله، ایمیل، KYC) برایش revert می‌کنند (`only individuals can be verified`)؛ 🔶 اینکه این سیاست نهایی است یا روزی احراز اشخاص حقوقی هم اضافه شود، باز است |
 | `hasIdentity(address who)` | هرکسی (در عمل: `ValidatorsBoard.voteFor`) | آدرس | `bool` | آیا این آدرس نام/نوع شخصیتش را ثبت کرده |
-| `getVerificationStatus(address who)` | هرکسی | آدرس | `(registered, phoneVerified, telegramVerified, baleVerified, emailVerified, kycVerified)` | خلاصه‌ی وضعیت — همه بولی، امن برای افشای عمومی |
-| `isFullyVerified(address who)` | هرکسی (در عمل: `ValidatorsRegistry`، `ValidatorSeatNFT`، `ValidatorLottery`) | آدرس | `bool` | 🔶 `Individual` و هر پنج احراز (KYC، تلفن، تلگرام، بله، ایمیل) |
-| `setPhoneVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ شماره هیچ‌وقت روی زنجیره نمی‌آید |
-| `setTelegramVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ آیدی هیچ‌وقت روی زنجیره نمی‌آید |
-| `setBaleVerified(address who, bool verified)` / `setEmailVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | 🔶 فقط فلگ؛ حساب بله و ایمیل هیچ‌وقت روی زنجیره نمی‌آید |
+| `getVerificationStatus(address who)` | هرکسی | آدرس | `(registered, phoneVerified, telegramVerified, baleVerified, emailVerified, kycVerified)` — شش بولی به همین ترتیب | خلاصهٔ وضعیت — همه بولی، امن برای افشای عمومی؛ برای آدرس مهاجرت‌شده همه `false` |
+| `isFullyVerified(address who)` | هرکسی (در کد فعلی: `ValidatorLottery.buyTicket`؛ `ValidatorsRegistry` و `ValidatorSeatNFT` در بازطراحی نانوشته) | آدرس | `bool` | ✅ پیاده‌شده: ثبت‌شده، `Individual`، مهاجرت‌نکرده، و هر پنج احراز (KYC، تلفن، تلگرام، بله، ایمیل) |
+| `setPhoneVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ شماره هیچ‌وقت روی زنجیره نمی‌آید؛ برای `Legal` revert |
+| `setTelegramVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | فقط فلگ — خودِ آیدی هیچ‌وقت روی زنجیره نمی‌آید؛ برای `Legal` revert |
+| `setBaleVerified(address who, bool verified)` / `setEmailVerified(address who, bool verified)` | **فقط `identityOracle`** | آدرس، وضعیت | — | ✅ پیاده‌شده؛ فقط فلگ؛ حساب بله و ایمیل هیچ‌وقت روی زنجیره نمی‌آید؛ برای `Legal` revert |
 | `setKycVerified(address who, bool verified, bytes32 commitment)` | **فقط `identityOracle`** | آدرس، وضعیت، هش نمکین | — | ✅ احراز کامل eKYC (فقط برای `Individual` ایرانی) — پیش‌نیاز ورود ولیدیتور غیرمؤسس |
-| `migrateIdentity(address oldAddr, address newAddr)` | **فقط `identityOracle`** | آدرس قدیم، آدرس جدید | — | بازیابی هویت بعد از گم‌شدن کلید مالک، پس از تأیید هویت آف‌چین؛ آدرس قدیم سوخته می‌شود: `hasIdentity` و `getVerificationStatus` برایش چیزی گزارش نمی‌کنند، و `registerIdentity` و سترهای oracle روی آن revert می‌کنند؛ مقصد نمی‌تواند با مبدأ یکی باشد یا خودش مهاجرت‌شده باشد |
+| `migrateIdentity(address oldAddr, address newAddr)` | **فقط `identityOracle`** | آدرس قدیم، آدرس جدید | — | بازیابی هویت بعد از گم‌شدن کلید مالک، پس از تأیید هویت آف‌چین؛ همهٔ فلگ‌ها از جمله بله و ایمیل به آدرس جدید کپی می‌شود؛ آدرس قدیم سوخته می‌شود: `hasIdentity` و `getVerificationStatus` برایش چیزی گزارش نمی‌کنند، و `registerIdentity` و سترهای oracle روی آن revert می‌کنند؛ مقصد نمی‌تواند با مبدأ یکی باشد یا خودش مهاجرت‌شده باشد |
 | `setIdentityOracle(address newOracle)` | **فقط `FoundationDAO`** (از طریق تصمیم هیأت‌مدیرهٔ بنیاد) | آدرس جدید | — | ⚠️ چرخش این کلید دست بنیاد است، **نه هیأت‌مدیره‌ی ولیدیتورها** — چون احراز هویت مسئولیت بنیاد است، نه امنیت شبکه‌ی ولیدیتوری |
 
 ### تفاوت کلیدی با `verifier` در `ValidatorsRegistry`
@@ -389,7 +402,7 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 ## ۷. `SurenSale.sol` — قرارداد مستقل (نه جزو قراردادهای ساختاری genesis)
 
 ### نقش
-فروش خودکار و شفاف سورن به قیمت تومانی تعیین‌شده توسط قرارداد، **فقط از طریق صرافی‌های رمزارزی ایرانی مجازِ دارای مجوز** (مشتری مستقیم، نه عمده‌فروش). در `alloc` genesis تزریق نمی‌شود — هر زمان بنیاد آماده بود، با یک تراکنش معمولی دیپلوی می‌شود. جزئیات در `sur-suren-sale-spec.md`.
+فروش خودکار و شفاف سورن به قیمت تومانی تعیین‌شده توسط قرارداد، **فقط از طریق صرافی‌های رمزارزی ایرانی مجازِ دارای مجوز** (مشتری مستقیم، نه عمده‌فروش). در `alloc` genesis تزریق نمی‌شود — هر زمان بنیاد آماده بود، با یک تراکنش معمولی دیپلوی می‌شود و آدرسش با پیشنهاد `SetSaleContract` به `FoundationDAO` معرفی می‌شود (تا آن موقع پیشنهادهای مربوط به فروش revert می‌کنند). هیچ اوراکل پرداختی ندارد (`paymentOracle` و `reportPayment` نسخهٔ ۲.۲ حذف شده‌اند). ✅ کد و آزمون Hardhat (۱۱ آزمون). جزئیات در `sur-suren-sale-spec.md`.
 
 **دوره‌ها:**
 | دوره | مدت | قیمت |
@@ -397,47 +410,50 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 | قیمت ثابت | ۹۰ روز | روز ۱ تا ۳۰: ۱۰۰ تومان؛ روز ۳۱ تا ۶۰: ۱۰۵؛ روز ۶۱ تا ۹۰: ۱۱۰ (۵ تومان افزایش پس از هر ۳۰ روز؛ رشد کل ۱۰٪) |
 | گذار | ۴۵ روز | قاعدهٔ حجم‌محور: ±۰٫۵٪ روزانه، کف ۹۰ و سقف ۱۵۰ تومان، شروع از آخرین قیمت دورهٔ ثابت |
 
-هر دو دوره را **مدیرعامل بنیاد** بدون سقف قابل تمدید می‌کند (رویداد قرارداد `FixedPeriodExtended`/`TransitionExtended`؛ نام‌ها طبق `sur-suren-sale-spec.md` و موقت). قیمت دورهٔ تمدیدشدهٔ قیمت ثابت (پس از ۳ ماه اول) را مدیرعامل تعیین می‌کند و در طول تمدید ثابت است. در دورهٔ قیمت ثابت و گذار تنها کانال فروش صرافی‌هاست (کانال مستقیم پرتال وجود ندارد). برای دورهٔ آزادسازی (از پایان گذار تا ۶ ماه) جداگانه تصمیم گرفته می‌شود.
+هر دو دوره را **مدیرعامل بنیاد** بدون سقفِ تعداد دفعات قابل تمدید می‌کند، فقط پیش از پایان همان دوره: `extendFixedPeriod(extraDays, priceToman)` (قیمت به تومان صحیح، فقط برای همان روزهای افزوده؛ هر تمدید یک قطعهٔ قیمتیِ پیوسته می‌سازد و در طول آن ثابت می‌ماند؛ سقف محافظ غلط‌تایپی ۳۶۵۰ روز برای هر فراخوان، نه برای مجموع) و `extendTransition(extraDays)` (قاعدهٔ حجم روزانهٔ گذار ادامه می‌یابد). رویدادها: `FixedPeriodExtended` و `TransitionExtended`. قیمت شروع گذار = آخرین قیمت دورهٔ ثابت (قیمت تمدید مدیرعامل، اگر باشد)؛ نخستین تنظیم روزانه آن را در بازهٔ ۹۰ تا ۱۵۰ تومان می‌گیرد. در دورهٔ قیمت ثابت و گذار تنها کانال فروش صرافی‌هاست (کانال مستقیم پرتال وجود ندارد). برای دورهٔ آزادسازی (از پایان گذار تا ۶ ماه) جداگانه تصمیم گرفته می‌شود. **پایان رسمی فروش** (✅ بسته‌شدن 🔶 قبلی): `isSaleOver()` = پایان فروش با پیشنهاد `EndSale` **یا** گذشتن پایان گذار (با تمدیدها).
 
-**سازوکار صرافی:** صرافی ریال/تومان را به قیمتی که قرارداد تعیین می‌کند از مشتری می‌گیرد و دستور واریز سورن به حساب مشتری را به قرارداد می‌دهد؛ کارمزد خودش را خودش برمی‌دارد. سهمیهٔ هر صرافی و سقف کل را هیأت‌مدیرهٔ بنیاد تعیین می‌کند. شروط صرافی: موافقت (مشروط اعلام شده)، عضویت در سازمان نظام صنفی رایانه‌ای، گواهی خودتنظیم‌گری انجمن بلاک‌چین، جلب موافقت نهادهای امنیتی و پلیس فتا.
+**سازوکار صرافی:** صرافی تومان را از مشتری می‌گیرد و `sellTo(customer, tomanAmount, minSurenOut, orderRef)` را می‌زند؛ قرارداد قیمت را خودش از `block.timestamp` و پارامترهایش حساب می‌کند و سورن را مستقیم به مشتری می‌فرستد؛ تسویهٔ تومانی صرافی با بنیاد خارج از زنجیره است و کارمزد خودش را خودش برمی‌دارد. سهمیهٔ هر صرافی (کل سورنی که می‌تواند بفروشد، شامل آنچه پیش‌تر فروخته) و سقف کل را هیأت‌مدیرهٔ بنیاد تعیین می‌کند؛ `totalCap` در آغاز صفر است، پس تا وقتی هیأت آن را نگذارد هیچ‌چیز فروخته نمی‌شود. شروط صرافی: موافقت (مشروط اعلام شده)، عضویت در سازمان نظام صنفی رایانه‌ای، گواهی خودتنظیم‌گری انجمن بلاک‌چین، جلب موافقت نهادهای امنیتی و پلیس فتا.
 
-### جدول فانکشن‌ها (نام‌های موقت)
+### جدول فانکشن‌ها (نام‌ها همان کد است)
 
 | فانکشن | چه کسی صدا می‌زند | ورودی | خروجی | کاری که انجام می‌دهد |
 |---|---|---|---|---|
 | `receive()` | هرکسی (در عمل: `FoundationDAO`) | — (فقط `msg.value`) | — | تأمین مالی قرارداد؛ فقط `Funded` event می‌زند |
-| `currentPriceMilliToman()` (موقت، نام مشخصهٔ فروش) / `currentPriceToman()` | هرکسی (view) | — | `uint256` | قیمت فعلی؛ `currentPriceMilliToman()` عدد صحیح با دقت میلی‌تومان و مبنای محاسبهٔ قرارداد است و `currentPriceToman()` مقدار گردشده برای نمایش؛ فقط از زمان و پارامترهای دوره محاسبه می‌شود — هیچ ورودی گزارش‌شده‌ای در آن اثر ندارد |
-| `advanceTransitionPrice()` (موقت، نام مشخصهٔ فروش) | هرکسی (بدون مجوز) | — | — | در دورهٔ گذار قیمت را تا «امروز» جلو می‌برد (حلقهٔ محدود)؛ در ابتدای هر `sellTo` خودکار فراخوانی می‌شود |
-| `currentPeriod()` / `isSaleActive()` | هرکسی (view) | — | دوره / `bool` | دورهٔ جاری (قیمت ثابت، گذار، پایان) و فعال‌بودن فروش |
-| `sellTo(address customer, uint256 tomanAmount, uint256 minSurenOut, bytes32 reference)` | **فقط صرافی مجاز** (و متوقف‌نشده) | مشتری، مبلغ تومانی دریافت‌شده، حداقل سورن دریافتی (کمتر ⇒ revert)، شناسهٔ سفارش (برای هر صرافی یکتا؛ تکراری رد می‌شود) | — | تنها تابعی که سورن واقعی جابه‌جا می‌کند؛ مقدار سورن = مبلغ تومانی ÷ قیمت جاری قرارداد؛ idempotent با `reference`؛ از سهمیهٔ همان صرافی و سقف کل کسر می‌شود؛ بالاتر از سهمیه revert؛ رویداد فروش `SaleExecuted` (نام موقت) |
-| `registerExchange(address account, string name, uint256 quota)` | **فقط `FoundationDAO`** (پیشنهاد `RegisterExchange`) | حساب صرافی، نام، سهمیه (سورن) | — | ثبت صرافی؛ `gasDeposit` = ۱۰۰ سورن از موجودی قرارداد به `account` می‌رود (خارج از سهمیه) |
-| `setExchangeQuota(address account, uint256 newQuota)` / `changeExchangeKey(address oldAccount, address newAccount)` / `resumeExchange(address)` / `removeExchange(address)` / `setTotalCap(uint256 cap)` | **فقط `FoundationDAO`** (پیشنهادهای تایپ‌شدهٔ هم‌نام، ۳ از ۵) | طبق نام | — | تغییر سهمیه، تغییر حساب (سهمیهٔ باقی‌مانده و آمار منتقل می‌شود)، از سرگیری، حذف، سقف کل |
-| `pauseExchange(address account)` | مدیرعامل یا هر عضو اصلی هیأت (تنهایی) | حساب صرافی | — | توقف فوری فروش آن صرافی؛ فقط توقف |
-| `getExchange(address account)` | هرکسی (view) | حساب | وضعیت (فعال/متوقف/حذف‌شده)، سهمیه و باقی‌مانده، مجموع تومان دریافتی، مجموع سورن فروخته‌شده، تعداد فروش، زمان آخرین فروش | آمار هر صرافی در قرارداد |
-| `extendFixedPeriod(uint256 extraDays, uint256 price)` / `extendTransition(uint256 extraDays)` (نام‌های موقت طبق مشخصهٔ فروش) | **فقط مدیرعامل بنیاد** (`FoundationDAO.ceo()`) | روزهای تمدید، قیمت (فقط دورهٔ ثابت) | — | تمدید بدون سقف؛ قیمت دورهٔ تمدیدشده ثابت می‌ماند؛ رویداد تمدید (`FixedPeriodExtended` / `TransitionExtended`) |
-| `sweepUnsold(address to)` | **فقط `FoundationDAO`** | آدرس مقصد | — | فقط بعد از پایان رسمی دوره‌های فروش (🔶 تعریف دقیق پایان با تمدیدها) |
-| `getBalance()` / `timeRemaining()` / `exchangeQuotaLeft(address)` | هرکسی (view) | — | متناسب | برای داشبورد فروش عمومی |
+| `currentPriceMilliToman()` / `currentPriceToman()` | هرکسی (view) | — | `uint256` | قیمت فعلی؛ `currentPriceMilliToman()` عدد صحیح با دقت میلی‌تومان و مبنای محاسبهٔ قرارداد است و `currentPriceToman()` مقدار گردشده برای نمایش؛ فقط از زمان و پارامترهای دوره محاسبه می‌شود — هیچ ورودی گزارش‌شده‌ای در آن اثر ندارد |
+| `advanceTransitionPrice()` | هرکسی (بدون مجوز) | — | — | در دورهٔ گذار قیمت را تا «امروز» جلو می‌برد (حلقهٔ محدود)؛ در ابتدای هر `sellTo` خودکار فراخوانی می‌شود |
+| `currentPeriod()` / `isFixedActive()` / `isTransitionActive()` / `isSaleActive()` / `isSaleOver()` | هرکسی (view) | — | دوره / `bool` | دورهٔ جاری (قیمت ثابت، گذار، پایان)؛ `isSaleActive` یعنی دورهٔ ثابت یا گذار و پایان‌نیافته؛ `isSaleOver` یعنی `EndSale` یا گذشتن پایان گذار |
+| `sellTo(address customer, uint256 tomanAmount, uint256 minSurenOut, bytes32 orderRef)` | **فقط صرافی مجاز** (فعال، نه متوقف یا حذف‌شده) | مشتری، مبلغ تومانی دریافت‌شده (تومان صحیح)، حداقل سورن دریافتی (کمتر ⇒ revert)، شناسهٔ سفارش (در کد `orderRef` چون `reference` کلمهٔ رزروشدهٔ Solidity است؛ یکتا به‌ازای هر شناسهٔ صرافی؛ تکراری ⇒ revert) | — | تنها تابعی که سورن واقعی جابه‌جا می‌کند؛ سورن = مبلغ تومانی ÷ قیمت جاری قرارداد؛ از سهمیهٔ همان صرافی و `totalCap` کسر می‌شود؛ بالاتر از سهمیه یا سقف یا موجودی قرارداد ⇒ revert؛ رویداد `SaleExecuted` (شامل `orderRef`) |
+| `registerExchange(address account, string name, uint256 quota)` | **فقط `FoundationDAO`** (پیشنهاد `RegisterExchange`) | حساب صرافی، نام، سهمیه (سورن) | — | ثبت صرافی با شناسهٔ داخلی؛ `gasDeposit` = ۱۰۰ سورن (`GAS_DEPOSIT`) از موجودی قرارداد به `account` می‌رود (خارج از سهمیه)؛ اگر موجودی قرارداد کمتر از ۱۰۰ سورن باشد ثبت revert می‌کند |
+| `setExchangeQuota(address account, uint256 newQuota)` / `changeExchangeKey(address oldAccount, address newAccount)` / `resumeExchange(address)` / `removeExchange(address)` / `setTotalCap(uint256 cap)` | **فقط `FoundationDAO`** (پیشنهادهای هم‌نام، ۳ از ۵) | طبق نام | — | تغییر سهمیه (سهمیهٔ جدید ≥ فروش‌رفته)؛ تغییر حساب (سهمیه، آمار، شناسه‌های سفارش مصرف‌شده و وضعیت به حساب تازه منتقل می‌شود و حساب قدیم `Removed` است)؛ از سرگیری (فقط برای متوقف‌شده)؛ حذف؛ سقف کل |
+| `pauseExchange(address account)` | **فقط `FoundationDAO`** (که آن را از `FoundationDAO.pauseExchange` می‌گیرد: مدیرعامل یا هر عضو اصلی هیأت، تنهایی) | حساب صرافی | — | توقف فوری فروش آن صرافی؛ فقط توقف (از سرگیری، تغییر کلید و حذف پیشنهاد با ۳ از ۵ است) |
+| `getExchange(address account)` / `getExchanges()` / `exchangeQuotaLeft(address)` | هرکسی (view) | حساب | `getExchange`: `status` (`None/Active/Paused/Removed`)، `name`، `quota`، `quotaLeft`، `sold`، `tomanReceived`، `salesCount`، `lastSaleAt`؛ `getExchanges`: فهرست حساب‌ها | آمار هر صرافی در قرارداد |
+| `extendFixedPeriod(uint256 extraDays, uint256 priceToman)` / `extendTransition(uint256 extraDays)` | **فقط مدیرعامل بنیاد** (`FoundationDAO.ceo()`) | روزهای تمدید، قیمت (فقط دورهٔ ثابت) | — | تمدید بدون سقفِ تعداد دفعات؛ فقط پیش از پایان همان دوره؛ سقف ۳۶۵۰ روز در هر فراخوان (محافظ غلط‌تایپی)؛ قیمت قطعهٔ تمدیدشده ثابت می‌ماند؛ رویدادها `FixedPeriodExtended` / `TransitionExtended`؛ `segmentCount()` و `segmentAt(i)` قطعه‌ها را نشان می‌دهند |
+| `endSale()` | **فقط `FoundationDAO`** (پیشنهاد `EndSale`) | — | — | فروش برای همیشه متوقف می‌شود (`SaleEnded`)؛ پس از آن `sweepUnsold` ممکن است |
+| `sweepUnsold(address to)` | **فقط `FoundationDAO`** (پیشنهاد `SweepUnsold`) | آدرس مقصد | — | فقط وقتی `isSaleOver()` (✅ تعریف پایان رسمی بسته شد: `EndSale` یا پایان گذار با تمدیدها)؛ کل موجودی قرارداد را می‌فرستد |
+| `getBalance()` / `timeRemaining()` / `transitionTimeRemaining()` | هرکسی (view) | — | متناسب | برای داشبورد فروش عمومی |
 
 ### نکته‌ی امنیتی کلیدی
-صرافی فقط می‌تواند در حد سهمیهٔ خودش **سفارش واریز** بدهد (و موجودی فعلی قرارداد را با قیمت رسمی بخرد) — هرگز نمی‌تواند خودِ قیمت را دستکاری کند، چون قیمت (`currentPriceMilliToman()`) کاملاً در قرارداد محاسبه می‌شود. توصیه‌ی امنیتی صریح: بنیاد باید موجودی را **دوره‌ای** (نه یک‌جا) تأمین کند تا سقف زیان یک کلید هک‌شدهٔ صرافی محدود بماند.
+صرافی فقط می‌تواند در حد سهمیهٔ خودش **سفارش واریز** بدهد (و موجودی فعلی قرارداد را با قیمت رسمی بخرد) — هرگز نمی‌تواند خودِ قیمت را دستکاری کند، چون قیمت (`currentPriceMilliToman()`) کاملاً در قرارداد محاسبه می‌شود. توصیه‌ی امنیتی صریح: بنیاد باید موجودی را **دوره‌ای** (نه یک‌جا) تأمین کند تا سقف زیان یک کلید هک‌شدهٔ صرافی محدود بماند. کلید هک‌شده با `pauseExchange` فوراً متوقف می‌شود.
 
 ---
 
-## ۸. `FoundationMembers.sol` — قرارداد ساختاری (آدرس 🔶 تعیین‌نشده)
+## ۸. `FoundationMembers.sol` — قرارداد ساختاری (آدرس پیشنهادی `0x7777...7777`؛ ✅ کد و آزمون Hardhat)
 
 ### نقش
 دفتر اعضای بنیاد و حساب سهم‌الشرکهٔ آن‌ها؛ یک‌جا و فقط‌خواندنی برای قراردادهای دیگر (`FoundationDAO` برای وزن رأی، شرط عضویت در هیأت‌مدیره و غیره). فهرست اولیه در genesis ثبت می‌شود.
 
-| فانکشن (موقت) | چه کسی صدا می‌زند | کار |
+| فانکشن | چه کسی صدا می‌زند | کار |
 |---|---|---|
 | `isMember(address)` / `shareOf(address)` / `totalShares()` | هرکسی | عضویت، سهم‌الشرکه، مجموع سهم‌ها |
 | `memberInfo(address)` / `getAllMembers()` | هرکسی | نام، نوع (حقیقی/حقوقی)، نماینده |
-| `isMemberOrRepresentative(address)` | هرکسی | شرط واجدی هیأت‌مدیره (عضو بنیاد یا نمایندهٔ عضو حقوقی) |
-| `addMember` / `removeMember` / `transferShares` / `setRepresentative` | **فقط `FoundationDAO`** (پس از تصمیم مجمع فوق‌العاده) | تغییر فهرست و سهم‌ها |
+| `isMemberOrRepresentative(address)` / `memberOfVoter(address)` / `representativeOf(address)` | هرکسی | شرط واجدی هیأت‌مدیره (عضو بنیاد یا نمایندهٔ عضو حقوقی)؛ عضوی که این آدرس به‌جایش رأی می‌دهد (تا عضو حقوقی و نمایندهٔ او دو بار رأی ندهند)؛ عضو حقوقیِ نماینده |
+| `addMember` / `removeMember` / `transferShares` / `setRepresentative` | **فقط `FoundationDAO`** (پس از تصمیم مجمع فوق‌العاده؛ هیأت‌مدیره حتی با نوع `Execute` نمی‌تواند) | تغییر فهرست و سهم‌ها |
+
+🔶 با حذف عضو، سهم‌هایش از `totalShares` بیرون می‌رود و انتقال خودکار ندارد؛ تکلیف آن سهم‌ها تصمیم مجمع فوق‌العاده و خارج از زنجیره ثبت می‌شود. فهرست اولیه با `genesis-seed-helpers/FoundationMembers_GenesisSeed.sol` (ارث‌بر از قرارداد اصلی) ثبت می‌شود.
 
 ---
 
-## ۹. `ValidatorSeatNFT.sol` — قرارداد ساختاری (آدرس 🔶 تعیین‌نشده)
+## ۹. `ValidatorSeatNFT.sol` — قرارداد ساختاری (آدرس پیشنهادی `0x8888...8888`؛ 🔶 هنوز نوشته نشده)
 
 ### نقش
 هر صندلی ولیدیتوری (از جمله ۷ مؤسس) یک NFT ERC-721 قابل خرید و فروش آزاد است. **مالک NFT = مالک وثیقه:** حق رأی در مجمع و هیأت، سود و پاداش به مالک می‌رسد و وثیقه همراه NFT منتقل می‌شود. برای هر توکن یک `tokenURI` ثبت می‌شود. بازار فروش در آینده روی همین قرارداد قابل افزودن است (فعلاً بنیاد و بازارساز نقشی ندارند).
@@ -459,7 +475,7 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 
 ---
 
-## ۱۰. `GenesisClaimsVault.sol` — قرارداد ساختاری (آدرس 🔶 تعیین‌نشده)
+## ۱۰. `GenesisClaimsVault.sol` — قرارداد ساختاری (آدرس پیشنهادی `0x9999...9999`؛ 🔶 هنوز نوشته نشده)
 
 ### نقش
 مطالبات ردیف ۲ (۱۱٬۹۸۴٬۰۰۰ سورن) و ردیف ۳ (۲۱٬۳۲۷٬۰۰۰ سورن) در genesis به این قرارداد می‌رود (نه به کیف‌پول). عرضهٔ کل genesis ۵۳٬۳۱۱٬۰۰۰ سورن است ولی عرضهٔ در گردش اولیه کمتر است و در طول ۲۴ ماه به‌تدریج زیاد می‌شود.
@@ -480,12 +496,12 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 
 ---
 
-## ۱۱. `ValidatorLottery.sol` — قرارداد ساختاری (آدرس 🔶 تعیین‌نشده)
+## ۱۱. `ValidatorLottery.sol` — قرارداد ساختاری (آدرس پیشنهادی `0xAaAa...AaAa`؛ ✅ کد و آزمون Hardhat)
 
 ### نقش
-لاتاری ولیدیتور برای جلوگیری از انحصار ولیدیتوری. **مجری: هیأت‌مدیرهٔ بنیاد**؛ آغاز لاتاری پیشنهاد تایپ‌شدهٔ `StartLottery(ticketPrice, winnersCount, closeTime)` در `FoundationDAO` (۳ از ۵) است؛ حداقل یک سال فاصله بین دو لاتاری؛ مجری می‌تواند برگزار نکند. شرکت‌کنندگان باید `isFullyVerified` باشند؛ ۵ عضو اصلی هیأت‌مدیرهٔ بنیاد و مدیرعامل (`ceo()`) نمی‌توانند بلیط بخرند (قرارداد رد می‌کند).
+لاتاری ولیدیتور برای جلوگیری از انحصار ولیدیتوری. **مجری: هیأت‌مدیرهٔ بنیاد**؛ آغاز لاتاری پیشنهاد تایپ‌شدهٔ `StartLottery(ticketPrice, winnersCount, closeTime)` در `FoundationDAO` (۳ از ۵) است؛ حداقل یک سال فاصله بین دو لاتاری؛ مجری می‌تواند برگزار نکند. شرکت‌کنندگان باید `isFullyVerified` باشند؛ هر آدرس حداکثر یک بلیط می‌خرد و سقفی برای تعداد شرکت‌کنندگان نیست؛ برای شروع، لاتاری قبلی باید `Drawn` یا `Cancelled` شده باشد؛ ۵ عضو اصلی هیأت‌مدیرهٔ بنیاد و مدیرعامل (`ceo()`) نمی‌توانند بلیط بخرند (قرارداد رد می‌کند).
 
-**مبلغ بلیط:** به خزانهٔ بنیاد (`FoundationDAO`) می‌رسد؛ حساب یا آدرس مجری جداگانه‌ای وجود ندارد. پول تا پایان کامل قرعه‌کشی داخل قرارداد لاتاری نگه داشته می‌شود و سپس در یک انتقال به `FoundationDAO` فرستاده می‌شود؛ اگر لاتاری لغو شود هر خریدار با `claimRefund()` پول خود را پس می‌گیرد.
+**مبلغ بلیط:** به خزانهٔ بنیاد (`FoundationDAO`) می‌رسد؛ حساب یا آدرس مجری جداگانه‌ای وجود ندارد. پول تا پایان کامل قرعه‌کشی داخل قرارداد لاتاری نگه داشته می‌شود و سپس در یک انتقال به `FoundationDAO` فرستاده می‌شود؛ اگر لاتاری لغو شود هر خریدار با `claimRefund(id)` پول خود را پس می‌گیرد.
 
 **تصادف: commit–reveal + `blockhash`** (نه `prevrandao`):
 
@@ -493,29 +509,29 @@ SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیر
 2. در/پس از `closeTime` هرکسی `closeLottery()` را می‌زند: فهرست شرکت‌کنندگان برای همیشه قفل می‌شود (نه بلیطی اضافه نه کم) و خود قرارداد `targetBlock = block.number + 10` را تعیین می‌کند؛ پس نه مدیرعامل نه دیگری آن را انتخاب یا بستن را متوقف نمی‌کند.
 3. مدیرعامل `reveal(secret)` را فقط بین `targetBlock+1` و `targetBlock+250` می‌زند (`REVEAL_WINDOW = 250` بلوک، کاملاً کمتر از حد ۲۵۶ بلوک `blockhash` در EVM؛ تعداد بلوک است نه زمان). قرارداد `blockhash(targetBlock) != 0` را می‌خواهد و `H(secret)` را با commit تطبیق می‌دهد؛ دانه = `keccak256(secret, blockhash(targetBlock))`.
 4. هرکسی `drawBatch(n)` را چندبار می‌زند: Fisher–Yates جزئی، O(k) برای k برنده (نقشهٔ تُنُک؛ حالت بین دسته‌ها نگه‌داشته می‌شود)، `rand_i = keccak256(seed, i)` با نمونه‌گیری ردی (بدون سوگیری مدول)؛ برندگان = کمینهٔ `winnersCount` و شمار شرکت‌کنندگان.
-5. اگر مدیرعامل در پنجره افشا نکند، هرکسی `cancelLottery()` را می‌زند: لغو کامل، رویداد عمومی، بازپرداخت با `claimRefund()`؛ افشای پس از مهلت ممکن نیست.
+5. اگر مدیرعامل در پنجره افشا نکند، هرکسی `cancelLottery()` را می‌زند: لغو کامل، رویداد عمومی، بازپرداخت با `claimRefund(id)`؛ افشای پس از مهلت ممکن نیست.
 
 commit و reveal را مدیرعامل (نه رأی هیأت) می‌زند چون باید در زمان دقیق انجام شود؛ بقیهٔ گام‌ها بی‌مجوزند. ⚠️ **ریسک باقی‌مانده:** مدیرعامل می‌تواند با افشا نکردن رمز نتیجهٔ نامطلوب را لغو کند؛ کاهش اثر: لغو، بازپرداخت کامل، رویداد عمومی، و ممنوعیت شرکت مدیرعامل و هیأت. مهلت افشا بر حسب بلوک است و زمان واقعی آن به زمان بلوک بستگی دارد؛ مدیرعامل باید آماده باشد.
 
-برندگان **وثیقه نمی‌دهند**؛ رأی آن‌ها فوراً اعمال می‌شود ولی نودها و شرایط نودشان باید راستی‌آزمایی و توافق‌نامه امضا شود؛ ورودشان تابع فاصلهٔ ورود نیست.
+برندگان **وثیقه نمی‌دهند**؛ هر برنده با `ValidatorsRegistry.enterAsLotteryWinner` صندلی `Probation` می‌گیرد: رأی او از وقتی فعال است که نودش راستی‌آزمایی و توافق‌نامه امضا و ولیدیتور فعال شود؛ ورودشان تابع فاصلهٔ ورود نیست. این فراخوانی با try/catch انجام می‌شود: اگر Registry یک برنده را نپذیرد (مثلاً قبلاً ولیدیتور بوده) قرعه‌کشی بلاک نمی‌شود و آن برنده در `entryFailed(id, winner)` و رویداد `WinnerEntryFailed` ثبت می‌شود.
 
-| فانکشن (موقت) | چه کسی صدا می‌زند | کار |
+| فانکشن | چه کسی صدا می‌زند | کار |
 |---|---|---|
-| `startLottery(uint256 ticketPrice, uint256 winnersCount, uint256 closeTime)` | فقط `FoundationDAO` (پیشنهاد تایپ‌شدهٔ `StartLottery`، ۳ از ۵) | آغاز لاتاری؛ revert اگر کمتر از یک سال از لاتاری قبلی گذشته باشد |
-| `buyTicket()` | هر آدرس با `isFullyVerified` (۵ عضو اصلی هیأت و مدیرعامل رد می‌شوند) | خرید بلیط؛ مبلغ در قرارداد نگه داشته می‌شود |
+| `startLottery(uint256 ticketPrice, uint256 winnersCount, uint256 closeTime)` | فقط `FoundationDAO` (پیشنهاد تایپ‌شدهٔ `StartLottery`، ۳ از ۵) | آغاز لاتاری؛ revert اگر کمتر از یک سال از لاتاری قبلی گذشته یا لاتاری قبلی هنوز `Drawn`/`Cancelled` نشده باشد (`MIN_INTERVAL` = ۳۶۵ روز) |
+| `buyTicket()` | هر آدرس با `isFullyVerified` (۵ عضو اصلی هیأت و مدیرعامل رد می‌شوند؛ یک بلیط برای هر آدرس) | خرید بلیط با `msg.value` دقیقاً برابر `ticketPrice`؛ مبلغ در قرارداد نگه داشته می‌شود |
 | `commitSecret(bytes32)` | مدیرعامل | ثبت `H(secret)`؛ یک‌بار، در دورهٔ ثبت‌نام پیش از `closeTime`؛ تغییرناپذیر |
-| `closeLottery()` | هرکسی، در/پس از `closeTime` | قفل دائمی فهرست؛ تعیین `targetBlock = block.number + 10` توسط قرارداد |
+| `closeLottery()` | هرکسی، در/پس از `closeTime` | قفل دائمی فهرست؛ تعیین `targetBlock = block.number + 10` (`TARGET_DELAY`) توسط قرارداد؛ بدون commit ⇒ لاتاری لغو؛ بدون شرکت‌کننده ⇒ بسته‌شدن بی‌برنده |
 | `reveal(bytes32 secret)` | مدیرعامل | فقط بین `targetBlock+1` و `targetBlock+250`؛ نیاز به `blockhash(targetBlock) != 0`؛ ساخت دانه |
 | `drawBatch(uint256 n)` | هرکسی، پس از افشا | دستهٔ n‌تایی Fisher–Yates جزئی؛ پایان: ارسال یک‌جای مبلغ بلیط‌ها به `FoundationDAO` |
 | `cancelLottery()` | هرکسی، اگر افشا در پنجره انجام نشود | لغو کامل و رویداد عمومی |
-| `claimRefund()` | هر خریدار | بازپرداخت بلیط در لاتاری لغوشده یا باطل |
-| `enterAsLotteryWinner(address)` (روی Registry) | `ValidatorLottery` | ساخت صندلی بدون وثیقه برای برنده؛ تابع فاصلهٔ ورود نیست |
+| `claimRefund(uint256 id)` | هر خریدار | بازپرداخت بلیط در لاتاری لغوشده (کشش pull) |
+| `enterAsLotteryWinner(address)` (روی Registry) | `ValidatorLottery` (در `drawBatch`، try/catch) | ساخت صندلی `Probation` بدون وثیقه و کارمزد؛ تابع فاصلهٔ ورود نیست؛ شکست در `entryFailed` ثبت می‌شود |
 
 ---
 
 ## پیوست: چرا این ساختار مشکل circular addressing را حل می‌کند
 
-مشکل «قرارداد A به آدرس B نیاز دارد ولی B هنوز دیپلوی نشده» با دیپلوی همهٔ قراردادهای ساختاری در genesis با آدرس از‌پیش‌تعیین‌شده اصلاً پیش نمی‌آید: چون همه‌ی آدرس‌ها *قبل* از این‌که هیچ‌کدام وجود داشته باشند مشخص‌اند، هر قرارداد می‌تواند آدرس بقیه را مستقیماً به‌صورت `constant` در سورس بنویسد — هیچ‌کدام `constructor` ندارند. (قراردادهای پیچیده‌تر — `FoundationDAO`, `FoundationMembers`, `ValidatorsRegistry`, `ValidatorsBoard`, `GenesisClaimsVault` و `ValidatorSeatNFT` — برای محاسبه‌ی state اولیه‌ی mapping/آرایه‌شان به قراردادهای کمکی موقت در `genesis-seed-helpers/` نیاز دارند؛ آن قراردادهای کمکی، نه خودِ قراردادهای اصلی، `constructor` دارند و فقط برای شبیه‌سازی محلی استفاده می‌شوند، هرگز روی زنجیره‌ی واقعی.) جزئیات فنی دقیق این‌که genesis alloc چطور کار می‌کند در `sur-contracts-deploy-notes.md` آمده. 🔶 چون آدرس‌ها `constant` در سورس‌اند و `ParamKey` برای آن‌ها وجود ندارد، «تغییر آدرس قراردادهای اصلی با رأی مجمع» (ساختار سازمانی، بخش ب) سازوکار تعریف‌شده‌ای ندارد.
+مشکل «قرارداد A به آدرس B نیاز دارد ولی B هنوز دیپلوی نشده» با دیپلوی همهٔ قراردادهای ساختاری در genesis با آدرس از‌پیش‌تعیین‌شده اصلاً پیش نمی‌آید: چون همه‌ی آدرس‌ها *قبل* از این‌که هیچ‌کدام وجود داشته باشند مشخص‌اند، هر قرارداد می‌تواند آدرس بقیه را مستقیماً به‌صورت `constant` در سورس بنویسد — هیچ‌کدام `constructor` ندارند. (قراردادهای پیچیده‌تر — `FoundationDAO`, `FoundationMembers`, `ValidatorsRegistry`, `ValidatorsBoard`, `GenesisClaimsVault` و `ValidatorSeatNFT` — برای محاسبه‌ی state اولیه‌ی mapping/آرایه‌شان به قراردادهای کمکی موقت در `genesis-seed-helpers/` نیاز دارند؛ آن قراردادهای کمکی، نه خودِ قراردادهای اصلی، `constructor` دارند و فقط برای شبیه‌سازی محلی استفاده می‌شوند، هرگز روی زنجیره‌ی واقعی. از ۲.۵ کمکی‌های `FoundationDAO`، `FoundationMembers`، `ValidatorsRegistry` و `ValidatorsBoard` از قرارداد اصلی **ارث می‌برند**؛ پس چینش storage بنا به ساخت یکسان است و قاعدهٔ قدیمی `__gap` و `check_genesis_helper_layout.js` برای این چهار لازم نیست؛ `sur-contracts-deploy-notes.md` دستور دقیق را دارد.) جزئیات فنی دقیق این‌که genesis alloc چطور کار می‌کند در `sur-contracts-deploy-notes.md` آمده. 🔶 چون آدرس‌ها `constant` در سورس‌اند و `ParamKey` برای آن‌ها وجود ندارد، «تغییر آدرس قراردادهای اصلی با رأی مجمع» (ساختار سازمانی، بخش ب) سازوکار تعریف‌شده‌ای ندارد.
 
 ## پیوست: قراردادهای مرجع غیر-genesis
 
@@ -527,4 +543,6 @@ commit و reveal را مدیرعامل (نه رأی هیأت) می‌زند چو
 - ⏸️ ابزار عملیاتی تنظیم قیمت گس برای اپراتور نود (`min-gas-price`) — فعلاً اجرا نمی‌شود؛ زیرساخت نباید مانع آینده شود.
 - ⏸️ بلوکه‌کردن یک حساب در نودهای ولیدیتوری — تأیید نشده؛ زیرساخت نباید مانع آینده شود.
 - 🔶 گسترش KYC به اشخاص حقوقی و خارجی — فعلاً فقط شخص حقیقی ایرانی.
-- 🔶 آزمون Besu برای همهٔ ویژگی‌های ۲.۵ (انتخاب اپراتور/مالک در `getValidators`، `SelfSuspended`، سوزاندن به `address(0)`) انجام نشده است.
+- 🔶 آزمون Besu برای همهٔ ویژگی‌های ۲.۵ (انتخاب اپراتور/مالک در `getValidators`، `SelfSuspended`، سوزاندن به `address(0)`، و بخش‌های پیاده‌شدهٔ `FoundationDAO`، `SurenSale`، `ValidatorLottery` و حذف در بازیابی که فقط روی Hardhat آزموده‌اند) انجام نشده است.
+- 🔶 `ValidatorSeatNFT`، `GenesisClaimsVault` و `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن) هنوز نوشته نشده‌اند.
+- 🔶 اندازهٔ `FoundationDAO` (~۲۷٫۹ KB) و `ValidatorsRegistry` (~۲۶٫۹ KB) از حد ۲۴٬۵۷۶ بایتِ `CREATE` بیشتر است؛ در `alloc` genesis اثر ندارد (بخش ۵).

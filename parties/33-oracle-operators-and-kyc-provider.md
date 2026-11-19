@@ -4,7 +4,7 @@
 
 مرجع واحد «چه کسی پیشنهاد می‌دهد، چه کسی تأیید و اجرا می‌کند، چه کسی نظارت می‌کند»: [`01-interaction-matrix.md`](01-interaction-matrix.md) (به‌ویژه بخش‌های ۱٫۱، ۵، ۱۲، ۱۳ و ب-۲). این سند آن جدول‌ها را تکرار نمی‌کند و فقط به آن‌ها ارجاع می‌دهد. واژه‌نامه: [`00-index-and-glossary.md`](00-index-and-glossary.md) بخش ۳٫۴.
 
-> **وضعیت پیاده‌سازی:** نام توابع موقت است؛ کد فعلی نسخهٔ ۲٫۲ است و طرح ۲٫۵ هنوز پیاده نشده است. 🔶 هیچ‌یک از ویژگی‌های تازهٔ نسخهٔ ۲٫۵ هنوز روی Besu آزموده نشده است. هر سه سرویس آف‌چین (Verifier، RewardRouter، Identity Service) فعلاً فقط مشخصات دارند و برنامهٔ آن‌ها نوشته نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است. هر سه سرویس آف‌چین (Verifier، RewardRouter، Identity Service) فعلاً فقط مشخصات دارند و برنامهٔ آن‌ها نوشته نشده است.
 
 نشانه‌ها: ✅ تصمیم طرح؛ 🔶 مورد باز؛ ⏸️ ظرفیت آینده؛ ⚠️ ریسک پذیرفته‌شده.
 
@@ -18,7 +18,7 @@
 
 | اوراکل (کلید) | سرویس آف‌چین | قرارداد هدف | چه چیزی را ثبت می‌کند | چه کسی اجرا می‌کند | چه کسی چرخش می‌دهد |
 |---|---|---|---|---|---|
-| `verifier` | Verifier (شامل بررسی نود `SUR_NODE_CHECK_V1` و سرویس دسترسی کلید `personKey`) | `ValidatorsRegistry` | تصمیم‌های وضعیت ولیدیتور با `evidenceHash`: فعال‌سازی، تعلیق، بازگشت، ازسرگیری، تخلف پیش از خروج | هیأت‌مدیرهٔ ولیدیتورها (توسعه: کمیتهٔ فنی بنیاد) | هیأت‌مدیرهٔ ولیدیتورها |
+| `verifier` | Verifier (شامل بررسی نود `SUR_NODE_CHECK_V1` و سرویس دسترسی کلید `personKey`) | `ValidatorsRegistry` | تصمیم‌های وضعیت ولیدیتور با `evidenceHash`: فعال‌سازی، تعلیق، بازگشت، ازسرگیری، تخلف پیش از خروج، ثبت حذف در بازیابی شبکه (`recordRecoveryRemoval`، ✅ کد و آزمون Hardhat) | هیأت‌مدیرهٔ ولیدیتورها (توسعه: کمیتهٔ فنی بنیاد) | هیأت‌مدیرهٔ ولیدیتورها |
 | `distributionOracle` | RewardRouter | `BlockRewardDistributor` | توزیع دوره‌ای ریوارد و فی؛ گواهی شروع نرخ مصوب | هیأت‌مدیرهٔ ولیدیتورها (توسعه: کمیتهٔ فنی بنیاد) | هیأت‌مدیرهٔ ولیدیتورها |
 | `identityOracle` | Identity Service (+ اپ احراز هویت) | `IdentityRegistry` | فلگ‌های تلفن، تلگرام، بله، ایمیل و KYC؛ `commitment`؛ مهاجرت هویت | کمیتهٔ فنی بنیاد، در عمل مستقل | هیأت‌مدیرهٔ بنیاد (`FoundationDAO`) |
 
@@ -74,7 +74,7 @@
 |---|---|---|---|
 | چرخش `verifier` | عضو دارای اختیار هیأت ولیدیتورها پیشنهاد می‌دهد؛ هیأت تصویب می‌کند | ≥ ۳ رأی؛ بدون تأخیر | `ValidatorsBoard.proposeRotateVerifier` / `voteAction` ← `ValidatorsRegistry.setVerifier` (فقط `ValidatorsBoard`) |
 | چرخش `distributionOracle` | همان | ≥ ۳ رأی؛ بدون تأخیر | `proposeRotateOracle` / `voteAction` ← `BlockRewardDistributor.setDistributionOracle` |
-| چرخش `identityOracle` | عضو اصلی هیأت بنیاد پیشنهاد می‌دهد؛ هیأت بنیاد تصویب می‌کند | ۳ از ۵ (اکثریت عددی) | پیشنهاد تایپ‌شدهٔ `RotateIdentityOracle(newOracle)` ← `IdentityRegistry.setIdentityOracle` (فقط `FoundationDAO`) |
+| چرخش `identityOracle` | عضو اصلی هیأت بنیاد پیشنهاد می‌دهد؛ هیأت بنیاد تصویب می‌کند | ۳ از ۵ (اکثریت عددی؛ رأی پیشنهاددهنده خودکار) | پیشنهاد تایپ‌شدهٔ `RotateIdentityOracle(newOracle)` (`proposeRotateIdentityOracle` / `vote(id, paramsHash)`) ← `IdentityRegistry.setIdentityOracle` (فقط `FoundationDAO`) |
 | تعویض پیمانکار یا اپراتور اجرا | هیأت ولیدیتورها (برای Verifier و RewardRouter) | تصمیم داخلی هیأت | تعویض سرور/پیمانکار؛ در صورت تغییر کلید، چرخش بالا |
 | تعویض ارائه‌دهندهٔ KYC | کمیتهٔ فنی با تصمیم بنیاد | 🔶 قالب تصمیم و نصاب در اسناد نیست | RFP تازه؛ در صورت لزوم چرخش `identityOracle` |
 
@@ -134,7 +134,7 @@
 | مجمع ولیدیتورها | رسیدگی به اعتراض جریمه؛ رأی بر «آیا تحویل شده» | هش شواهد و بستهٔ شواهد از راه رابط قابل‌اعتماد | `confirmSlash`، `voteOnDelivery`؛ سرویس Verifier |
 | `ValidatorsRegistry` | `record…` با `evidenceHash` (کلید `verifier`) | رویدادها و وضعیت ولیدیتورها برای پایش | تراکنش آن‌چین |
 | `BlockRewardDistributor` | `distributeRewards`، `certifyRateStart` (کلید `distributionOracle`) | ریوارد، فی و کارمزد عضویت برای تقسیم | تراکنش آن‌چین |
-| `IdentityRegistry` | `setKycVerified`، `set…Verified`، `migrateIdentity` (کلید `identityOracle`) | `registerIdentity` خوداظهاری، `isFullyVerified` | تراکنش آن‌چین؛ `getVerificationStatus` عمومی |
+| `IdentityRegistry` | `setKycVerified`، `setPhoneVerified`، `setTelegramVerified`، `setBaleVerified`، `setEmailVerified`، `migrateIdentity` (کلید `identityOracle`؛ همهٔ `set…Verified` برای شخص حقوقی revert می‌کنند 🔶 سیاست نهایی؛ `migrateIdentity` فلگ‌های بله و ایمیل را هم منتقل می‌کند) | `registerIdentity` خوداظهاری، `isFullyVerified` | تراکنش آن‌چین؛ `getVerificationStatus` عمومی (شش بولی: ثبت، تلفن، تلگرام، بله، ایمیل، KYC) |
 | بنیاد و هیأت بنیاد | چرخش `identityOracle`؛ تصمیم دربارهٔ ارائه‌دهندهٔ KYC؛ درخواست کتبی مراجع قضایی را منتقل می‌کند | نتیجهٔ احراز (بولی)؛ بایگانی eKYC یا مرجع جلسه | پیشنهاد تایپ‌شدهٔ `RotateIdentityOracle`؛ رویهٔ آف‌چین |
 | کمیتهٔ فنی بنیاد | بازخورد عملیاتی | نسخهٔ نرم‌افزار | مخزن کد |
 | ارائه‌دهندهٔ KYC | درخواست جلسه، شناسه | نتیجه (تأیید/رد) و شناسهٔ جلسه | API و webhook |
@@ -290,7 +290,7 @@ API دپ‌ها (سطح صفر: `registered`؛ سطح یک: `match` با کلی�
 
 ## ۱۳. وضعیت پیاده‌سازی و موارد باز
 
-**وضعیت:** قراردادها: کد ۲٫۲ برای `ValidatorsRegistry`، `BlockRewardDistributor` و `IdentityRegistry` موجود است؛ تغییرات ۲٫۵ (تعلیق داوطلبانه، `recordResume`، پرداخت به مالک، سوزاندن مازاد، `isFullyVerified`، فلگ‌های بله و ایمیل) برنامه‌ریزی‌شده است. سرویس‌های آف‌چین: مشخصات کامل، برنامه نوشته نشده؛ RewardRouter در نسخهٔ ۲٫۲ روی Besu آزموده شده و ۲٫۵ آزموده نشده؛ 🔶 آزمون Besu برای ۲٫۵ انجام نشده. بررسی نود: ❌ فقط مشخصات. اپ احراز هویت عمومی: ❌ سند ندارد.
+**وضعیت:** قراردادها: ✅ `IdentityRegistry` ۲٫۵ (`isFullyVerified`، فلگ‌های بله و ایمیل) و `recordRecoveryRemoval` در `ValidatorsRegistry` نوشته و با آزمون Hardhat آزموده شده‌اند؛ باقی `ValidatorsRegistry` و `BlockRewardDistributor` همان کد نسخهٔ ۲٫۲ است و تغییرات ۲٫۵ آن‌ها (تعلیق داوطلبانه، `recordResume`، پرداخت به مالک، سوزاندن مازاد) برنامه‌ریزی‌شده و نوشته نشده است. `paymentOracle` حذف شده؛ فقط سه اوراکل (`verifier`، `distributionOracle`، `identityOracle`) مانده است. سرویس‌های آف‌چین: مشخصات کامل، برنامه نوشته نشده؛ RewardRouter در نسخهٔ ۲٫۲ روی Besu آزموده شده و ۲٫۵ آزموده نشده؛ 🔶 آزمون Besu برای ۲٫۵ انجام نشده. بررسی نود: ❌ فقط مشخصات. اپ احراز هویت عمومی: ❌ سند ندارد.
 
 **🔶 موارد باز این سند:**
 1. جزئیات نظارت بازرس بر لاگ تأییدهای `identityOracle` در `FoundationDAO`.
