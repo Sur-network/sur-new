@@ -77,7 +77,9 @@ contract ValidatorsRegistry {
     // وضعیت ولیدیتور
     // ------------------------------------------------------------------
 
-    enum Status { None, Probation, Active, Demoted, Exiting }
+    /// @dev RemovedInRecovery (v2.5، در انتها اضافه شده تا مقادیر قبلی رمزگذاری خود را حفظ کنند): پس از خاموش کردن گره
+    ///      در جریان بازیابی شبکه از فهرست ولیدیتورها حذف شده است. جریمه نیست: وثیقه تا exitAllowedAt قفل است.
+    enum Status { None, Probation, Active, Demoted, Exiting, RemovedInRecovery }
 
     struct ValidatorInfo {
         Status status;
@@ -144,8 +146,8 @@ contract ValidatorsRegistry {
     //   paidValidatorCount برای مؤسسان افزایش نمی‌یابد.
     // ------------------------------------------------------------------
     // مجموعهٔ ولیدیتورهای فعال که با getValidators() عرضه می‌شود. حذف با swap-and-pop از طریق اندیس ۱-پایه انجام می‌شود.
-    address[] private activeValidators;
-    mapping(address => uint256) private activeIndex;
+    address[] internal activeValidators;
+    mapping(address => uint256) internal activeIndex;
 
     // ------------------------------------------------------------------
     // پارامترهای حکمرانی‌شده (فقط با رأی کامل ولیدیتورها قابل تغییر — در ادامه ببینید)
@@ -207,7 +209,7 @@ contract ValidatorsRegistry {
     uint256 public slashBps = 100;  // ۱٪ — عمداً سبک: آستانهٔ ورود پایین نگه داشته شده تا دامنهٔ کسانی که
     // می‌توانند ولیدیتور شوند، پس جریمهٔ سنگین روی آن وثیقهٔ کوچک‌تر یک اشتباه زیرساختی صادقانه را بیش از حد سخت مجازات می‌کند.
     // ۱٪ یک پیامد واقعی است بی‌آنکه برای هیچ اندازه وثیقه‌ای فاجعه‌بار باشد.
-    uint256 public exitCooldown = 604800;  // ۱ هفته
+    uint256 public exitCooldown = 604800;        // ۱ هفته
 
     /// @notice یک پنجرهٔ زمانی ثابت (MASS_DEMOTION_WINDOW) که تعلیق‌ها در آن دسته می‌شوند. جریمهٔ یک تعلیق
     ///         هنگام تعلیق تصمیم‌گیری نمی‌شود: وقتی پنجره بسته شد، یک فراخوان بدون مجوز (resolveMassFailureCheck) برای
@@ -419,7 +421,7 @@ contract ValidatorsRegistry {
         bool active;
     }
     uint256 public statusNonce;
-    mapping(address => ActiveCheckpoint[]) private activeCheckpoints;
+    mapping(address => ActiveCheckpoint[]) internal activeCheckpoints;
 
     // ------------------------------------------------------------------
     // Events
@@ -998,6 +1000,26 @@ contract ValidatorsRegistry {
         emit SlashResolved(decisionId, d.validator, outcome, slashAmount);
     }
 
+    /// @dev seed کردن genesis برای یک ولیدیتور مؤسس. «فقط» genesis-seed-helpers/ValidatorsRegistry_GenesisSeed.sol از آن استفاده می‌کند
+    ///      (که از این قرارداد ارث می‌برد، پس چیدمان storage به‌حکم ساختار یکی است)؛ روی زنجیره‌ی واقعی هرگز قابل‌دسترس نیست.
+    function _seedFounder(address v, uint256 genesisTimestamp) internal {
+        require(v != address(0), "seed: zero address");
+        require(validators[v].status == Status.None, "seed: duplicate founder");
+        validators[v] = ValidatorInfo({
+            status: Status.Active,
+            lockedStake: 0,
+            periodStartedAt: genesisTimestamp,
+            pendingSlashEpoch: 0,
+            demotedAt: 0,
+            isPaidEntrant: false // مؤسسان رایگان‌اند، هرگز ورودی پولی نیستند
+        });
+        activeIndex[v] = activeValidators.length + 1;
+        activeValidators.push(v);
+        everActivated[v] = true; // از نخستین توزیع قابل‌پرداخت است
+        activationSeq[v] = ++activationCount;
+        activeCheckpoints[v].push(ActiveCheckpoint({nonce: 0, active: true}));
+    }
+
     function _activate(address who) private {
         ValidatorInfo storage v = validators[who];
         v.status = Status.Active;
@@ -1007,7 +1029,7 @@ contract ValidatorsRegistry {
             everActivated[who] = true;
             activationSeq[who] = ++activationCount;
         }
-        _recordActiveCheckpoint(who, true);  // L04
+        _recordActiveCheckpoint(who, true); // L04
         emit ValidatorActivated(who);
     }
 
@@ -1039,6 +1061,10 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     function requestExit() external {
         ValidatorInfo storage v = validators[msg.sender];
+        if (v.status == Status.RemovedInRecovery) {
+            _exitAfterRecoveryRemoval(v);
+            return;
+        }
         require(
             v.status == Status.Active || v.status == Status.Probation || v.status == Status.Demoted,
             "ValidatorsRegistry: nothing to exit"
@@ -1051,7 +1077,7 @@ contract ValidatorsRegistry {
             // دربارهٔ رفتار پیشین پرونده بسازد (recordPreExitViolation) و مبلغ در معرض خطر تا تعیین‌تکلیف هر پرونده توسط
             // withdrawStake() رزرو می‌ماند.
             _removeFromActive(msg.sender);
-            _recordActiveCheckpoint(msg.sender, false);  // L04
+            _recordActiveCheckpoint(msg.sender, false); // L04
         }
 
         // ورودی پرداختی که می‌رود جایگاهش را در منحنی رشد آزاد می‌کند. مؤسسان (isPaidEntrant == false) هرگز شمارنده را
@@ -1228,4 +1254,191 @@ contract ValidatorsRegistry {
 
     /// @notice statusNonce هنگام ثبت اعتراض، برای هر تصمیم: فقط ولیدیتورهایی که آن زمان Active بودند می‌توانند روی جریمه رأی دهند.
     mapping(uint256 => uint256) public appealNonce;
+
+    // ------------------------------------------------------------------
+    // v2.5: حذف از فهرست ولیدیتورها در جریان بازیابی شبکه (تصمیم ۲۰۲۶-۱۱-۱۹)
+    //
+    // «اخراج» وجود ندارد. ولیدیتوری که گره‌اش را خاموش کرد و در نتیجه شبکه را متوقف کرد، پس از بازگشت شبکه به
+    // حالت `contract`، با ثبت Verifier از فهرست حذف می‌شود. این یک جریمه نیست:
+    //   * وثیقه هرگز slash نمی‌شود؛ تا recoveryTimestamp + 90 روز قفل می‌ماند، سپس مالک requestExit() را صدا می‌زند
+    //     (و مثل همیشه exitCooldown را صبر می‌کند)؛
+    //   * ممنوعیت دائمی ولیدیتور اعمال می‌شود (permanentlyExited)، دقیقاً مثل پس از خروج داوطلبانه؛
+    //   * ولیدیتورِ حذف‌شده ۷۲ ساعت برای اعتراض فرصت دارد؛ اعتراض‌ها ظرف ۷ روز با ValidatorsBoard (۳ از ۵، موضوع
+    //     رأی ندارد) تصمیم‌گیری می‌شوند؛ با کمتر از ۳ عضو بی‌طرف هیأت، پرونده به ولیدیتورها می‌رود (دو‌سوم
+    //     ولیدیتورهای واجد شرایط در لحظه‌ی ارجاع)؛ نبودِ تصمیم در موعد = حذف لغو می‌شود و ولیدیتور بازگردانده می‌شود.
+    // ------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // v2.5: برندگان قرعه‌کشی (ValidatorLottery.drawBatch برای هر برنده این را صدا می‌زند)
+    // ------------------------------------------------------------------
+    /// @notice تنها فراخواننده‌ی enterAsLotteryWinner(): قرارداد ValidatorLottery.
+    address public constant LOTTERY = SurAddresses.VALIDATOR_LOTTERY;
+
+    event LotteryWinnerEntered(address indexed winner);
+
+    /// @notice برنده‌ی قرعه‌کشی «بدون» وثیقه و «بدون» حق عضویت، خارج از محدودیت نرخ ورود، و بدون شمرده‌شدن به‌عنوان ورودی
+    ///         پولی جایگاه می‌گیرد. جایگاه مثل هر ورودی در Probation شروع می‌شود: گره هنوز باید راستی‌آزمایی شود
+    ///         (و توافق‌نامه امضا شود) تا Verifier آن را فعال کند، پس رأی پیش از آن زنده نیست. آدرسی که
+    ///         قبلاً ثبت شده یا هرگز خارج شده باشد نمی‌تواند جایگاه بگیرد (یک جایگاه برای هر نفر، ممنوعیت دائمی).
+    function enterAsLotteryWinner(address winner) external {
+        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
+        require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
+        require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
+        validators[winner] = ValidatorInfo({
+            status: Status.Probation,
+            lockedStake: 0,
+            periodStartedAt: block.timestamp,
+            pendingSlashEpoch: 0,
+            demotedAt: 0,
+            isPaidEntrant: false
+        });
+        emit LotteryWinnerEntered(winner);
+    }
+
+    enum RecoveryRemovalState { None, Recorded, Objected, ReferredToAssembly, Upheld, Cancelled }
+
+    struct RecoveryRemoval {
+        RecoveryRemovalState state;
+        uint256 recoveryTimestamp;   // زمانی که شبکه به حالت contract بازگشت (توسط Verifier داده می‌شود)
+        bytes32 evidenceHash;        // هش بسته‌ی شواهد (مثلاً خروجی qbft_getSignerMetrics)
+        uint256 recordedAt;
+        uint256 objectionDeadline;   // recordedAt + ۷۲ ساعت
+        uint256 resolutionDeadline;  // وقتی تنظیم می‌شود که یک اعتراض (یا ارجاع به مجمع) بازه‌ی تصمیم ۷روزه را باز کند
+        uint256 exitAllowedAt;       // recoveryTimestamp + ۹۰ روز
+        uint256 referralNonce;       // statusNonce در لحظه‌ی ارجاع به مجمع (فقط ولیدیتورهای آن لحظه Active حق رأی دارند)
+        uint256 eligibleCount;       // ولیدیتورهای فعال در لحظه‌ی ارجاع = اندازه‌ی رأی‌دهندگان مجمع
+    }
+
+    uint256 public constant RECOVERY_OBJECTION_WINDOW = 72 hours;
+    uint256 public constant RECOVERY_RESOLUTION_WINDOW = 7 days;
+    uint256 public constant RECOVERY_COLLATERAL_LOCK = 90 days;
+    /// @dev 🔶 در تصمیم تعیین نشده: recoveryTimestamp هنگام ثبت حذف توسط Verifier حداکثر چقدر می‌تواند قدیمی باشد.
+    uint256 public constant RECOVERY_RECORD_MAX_AGE = 30 days;
+
+    mapping(address => RecoveryRemoval) public recoveryRemovals;
+
+    event RecoveryRemovalRecorded(address indexed validator, uint256 recoveryTimestamp, bytes32 evidenceHash, uint256 exitAllowedAt);
+    event RecoveryRemovalObjected(address indexed validator, uint256 resolutionDeadline);
+    event RecoveryCaseReferredToAssembly(address indexed validator, uint256 referralNonce, uint256 eligibleCount, uint256 resolutionDeadline);
+    event RecoveryRemovalUpheld(address indexed validator);
+    event RecoveryRemovalCancelled(address indexed validator, bool expired);
+
+    /// @notice فقط Verifier، و فقط پس از بازگشت شبکه به حالت contract. یک ولیدیتور Active را از فهرست اجماع حذف
+    ///         می‌کند (بدون پاداش، بدون رأی، بدون اختیار در هیأت) بی‌آن‌که به وثیقه‌اش دست بزند.
+    function recordRecoveryRemoval(address validator, uint256 recoveryTimestamp, bytes32 evidenceHash) external onlyVerifier nonReentrant {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.Active, "ValidatorsRegistry: validator is not active");
+        require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
+        require(
+            recoveryTimestamp <= block.timestamp && block.timestamp - recoveryTimestamp <= RECOVERY_RECORD_MAX_AGE,
+            "ValidatorsRegistry: recoveryTimestamp out of range"
+        );
+        require(activeValidators.length > MIN_ACTIVE_VALIDATORS, "ValidatorsRegistry: at the minimum validator count");
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(r.state == RecoveryRemovalState.None || r.state == RecoveryRemovalState.Cancelled, "ValidatorsRegistry: removal case exists");
+
+        _removeFromActive(validator);
+        _recordActiveCheckpoint(validator, false);
+        if (v.isPaidEntrant) paidValidatorCount--;
+        v.status = Status.RemovedInRecovery;
+        v.periodStartedAt = block.timestamp;
+        permanentlyExited[validator] = true; // ممنوعیت دائمی اعمال می‌شود
+        membershipEpoch[validator]++;        // هر صندلی هیأت را پایان می‌دهد
+
+        r.state = RecoveryRemovalState.Recorded;
+        r.recoveryTimestamp = recoveryTimestamp;
+        r.evidenceHash = evidenceHash;
+        r.recordedAt = block.timestamp;
+        r.objectionDeadline = block.timestamp + RECOVERY_OBJECTION_WINDOW;
+        r.resolutionDeadline = 0;
+        r.exitAllowedAt = recoveryTimestamp + RECOVERY_COLLATERAL_LOCK;
+        r.referralNonce = 0;
+        r.eligibleCount = 0;
+        emit RecoveryRemovalRecorded(validator, recoveryTimestamp, evidenceHash, r.exitAllowedAt);
+        _notifyBoard(validator);
+    }
+
+    /// @notice ولیدیتورِ حذف‌شده ظرف ۷۲ ساعت اعتراض می‌کند؛ این کار بازه‌ی تصمیم ۷روزه را باز می‌کند.
+    function objectRecoveryRemoval() external {
+        RecoveryRemoval storage r = recoveryRemovals[msg.sender];
+        require(validators[msg.sender].status == Status.RemovedInRecovery && r.state == RecoveryRemovalState.Recorded, "ValidatorsRegistry: nothing to object to");
+        require(block.timestamp <= r.objectionDeadline, "ValidatorsRegistry: objection window over");
+        r.state = RecoveryRemovalState.Objected;
+        r.resolutionDeadline = block.timestamp + RECOVERY_RESOLUTION_WINDOW;
+        emit RecoveryRemovalObjected(msg.sender, r.resolutionDeadline);
+    }
+
+    /// @notice فقط ValidatorsBoard: کمتر از ۳ عضو بی‌طرف هیأت هست، پس ولیدیتورها تصمیم می‌گیرند. یک بازه‌ی ۷روزه‌ی جدید آغاز می‌شود.
+    function setRecoveryCaseReferred(address validator) external onlyBoard {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(r.state == RecoveryRemovalState.Objected && block.timestamp <= r.resolutionDeadline, "ValidatorsRegistry: case cannot be referred");
+        r.state = RecoveryRemovalState.ReferredToAssembly;
+        r.referralNonce = statusNonce;
+        r.eligibleCount = activeValidators.length;
+        r.resolutionDeadline = block.timestamp + RECOVERY_RESOLUTION_WINDOW;
+        emit RecoveryCaseReferredToAssembly(validator, r.referralNonce, r.eligibleCount, r.resolutionDeadline);
+    }
+
+    /// @notice فقط ValidatorsBoard، با تصمیم هیأت (۳ از ۵) یا ولیدیتورها (دو‌سوم).
+    ///         upheld = حذف پابرجاست؛ در غیر این صورت ولیدیتور بازگردانده می‌شود.
+    function resolveRecoveryRemoval(address validator, bool upheld) external onlyBoard nonReentrant {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(
+            (r.state == RecoveryRemovalState.Objected || r.state == RecoveryRemovalState.ReferredToAssembly) && block.timestamp <= r.resolutionDeadline,
+            "ValidatorsRegistry: no open case"
+        );
+        if (upheld) {
+            r.state = RecoveryRemovalState.Upheld;
+            emit RecoveryRemovalUpheld(validator);
+        } else {
+            _cancelRecoveryRemoval(validator, false);
+        }
+    }
+
+    /// @notice هر کسی، پس از پایان بازه‌ی تصمیم بدون تصمیم: حذف لغو می‌شود.
+    function expireRecoveryRemoval(address validator) external nonReentrant {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        require(
+            (r.state == RecoveryRemovalState.Objected || r.state == RecoveryRemovalState.ReferredToAssembly) && block.timestamp > r.resolutionDeadline,
+            "ValidatorsRegistry: nothing to expire"
+        );
+        _cancelRecoveryRemoval(validator, true);
+    }
+
+    function _cancelRecoveryRemoval(address validator, bool expired) private {
+        ValidatorInfo storage v = validators[validator];
+        require(v.status == Status.RemovedInRecovery, "ValidatorsRegistry: not removed");
+        recoveryRemovals[validator].state = RecoveryRemovalState.Cancelled;
+        permanentlyExited[validator] = false;
+        if (v.isPaidEntrant) paidValidatorCount++;
+        _activate(validator); // بازگشت به فهرست ولیدیتورها
+        emit RecoveryRemovalCancelled(validator, expired);
+        _notifyBoard(validator);
+    }
+
+    /// @dev requestExit() برای ولیدیتوری که در بازیابی حذف شده: فقط وقتی پرونده بسته شده و قفل ۹۰ روزه‌ی وثیقه
+    ///      گذشته باشد. بقیه (exitCooldown، withdrawStake) همان خروج عادی است.
+    function _exitAfterRecoveryRemoval(ValidatorInfo storage v) private {
+        RecoveryRemoval storage r = recoveryRemovals[msg.sender];
+        require(
+            r.state == RecoveryRemovalState.Upheld ||
+            (r.state == RecoveryRemovalState.Recorded && block.timestamp > r.objectionDeadline),
+            "ValidatorsRegistry: removal case still open"
+        );
+        require(block.timestamp >= r.exitAllowedAt, "ValidatorsRegistry: collateral locked for 90 days after recovery");
+        statusBeforeExit[msg.sender] = uint8(Status.RemovedInRecovery);
+        v.status = Status.Exiting;
+        v.periodStartedAt = block.timestamp;
+        emit ExitRequested(msg.sender, block.timestamp + exitCooldown);
+    }
+
+    /// @notice viewهای باریک برای ValidatorsBoard (رمزگشایی موضعی): state، recordedAt، resolutionDeadline.
+    function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline) {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        return (uint8(r.state), r.recordedAt, r.resolutionDeadline);
+    }
+
+    function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount) {
+        RecoveryRemoval storage r = recoveryRemovals[validator];
+        return (r.referralNonce, r.eligibleCount);
+    }
 }

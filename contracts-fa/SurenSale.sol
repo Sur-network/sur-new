@@ -3,94 +3,134 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
+interface IFoundationCeo {
+    function ceo() external view returns (address);
+}
+
 /// @title SurenSale
-/// @notice قرارداد فروش دوره‌ی قیمت ثابت (۶ ماهه) سورن توسط بنیاد سور.
+/// @notice قرارداد فروش سورن بنیاد سور (v2.5): دوره‌ی قیمت ثابت ۹۰ روزه، سپس یک دوره‌ی گذار ۴۵ روزه
+///         مبتنی بر حجم؛ «تنها» کانال فروش صرافی‌های دارای مجوز است.
+///         به offchain-services/sur-suren-sale-spec.md مراجعه کن.
 ///
-///         چون تومان یک ارز فیات است (نه دارایی on-chain)، پرداخت واقعی همیشه آف‌چین اتفاق
-///         می‌افتد (درگاه پرداخت بانکی). یک سرویس آف‌چین جدا («PaymentReporter» — دقیقاً همان
-///         الگوی `verifier`/`distributionOracle`) پرداخت‌های تأییدشده را با کلید `paymentOracle`
-///         به این قرارداد گزارش می‌دهد؛ خودِ قرارداد قیمت را **مستقل و از روی `block.timestamp`**
-///         محاسبه می‌کند — یعنی حتی اگر کلید `paymentOracle` کاملاً هک شود، مهاجم فقط می‌تواند
-///         *ادعای پرداخت* کند (و موجودی فعلی قرارداد را خالی کند)، هرگز نمی‌تواند خودِ قیمت را
-///         دستکاری کند.
+///         فروش چگونه کار می‌کند: مشتری تومان را به یک صرافی دارای مجوز می‌پردازد و آن صرافی
+///         `sellTo(customer, tomanAmount, minSurenOut, reference)` را صدا می‌زند. قرارداد قیمت را
+///         «خودش» از `block.timestamp` و پارامترهای خودش حساب می‌کند — صرافی فقط می‌تواند یک فروش را،
+///         تا سقف سهمیه‌ی خودش، به قیمت رسمی همان لحظه ادعا کند؛ هرگز نمی‌تواند قیمت را پایین بیاورد.
+///         `minSurenOut` وقتی قیمت بالا می‌رود از مشتری (و صرافی) محافظت می‌کند.
 ///
-///         ⚠️ توصیه‌ی امنیتی حیاتی: بنیاد نباید کل ۲۰ میلیون سورن را یک‌جا به این قرارداد واریز
-///         کند — باید دوره‌ای (مثلاً ماهانه) فقط بخشی از موجودی را منتقل کند، تا سقف زیانِ
-///         احتمالیِ یک کلید `paymentOracle` هک‌شده محدود بماند.
+///         بدون oracle: `paymentOracle` / `reportPayment` سابق در v2.2 حذف شده است.
 ///
-///         این قرارداد یکی از شش قرارداد ساختاری genesis نیست — هر زمانی که بنیاد آماده بود،
-///         با یک تراکنش معمولی دیپلوی می‌شود (نه در `alloc` genesis).
+///         قرارداد genesis «نیست»: هر وقت بنیاد آماده باشد با یک تراکنش معمولی مستقر می‌شود؛ فقط به
+///         آدرس ثابت FoundationDAO وابسته است (برای مدیرعامل و تصمیم‌های هیأت). بنیاد آدرس را با
+///         پیشنهاد SetSaleContract به FoundationDAO اعلام می‌کند.
 ///
-///         ✅ دوره‌ی گذار (تازه اضافه شد — به sur-tokenomics.md بخش ۳ مراجعه کنید): بلافاصله
-///         پس از پایان دوره‌ی ۶ماهه‌ی قیمت ثابت، یک دوره‌ی گذار ۴۵روزه شروع می‌شود که در آن
-///         بنیاد (همچنان تنها فروشنده، از همون موجودی باقی‌مانده) با قیمتی که روزانه بر اساس
-///         تقاضای واقعی تنظیم می‌شود می‌فروشد — ±۰.۵٪ در روز، بسته به این‌که حجم فروش آن روز
-///         بالا یا پایین بازه‌ی [۸۰٪، ۱۲۰٪] میانگین متحرک ۷روزه بوده، با کف ۹۰ تومان و سقف
-///         ۱۵۰ تومان. به advanceTransitionPrice() پایین مراجعه کنید برای مکانیزم دقیق و
-///         این‌که چرا یک تابع «جبرانی» بدون‌مجوز و با حلقه‌ی محدود است، نه چیزی که نیاز به
-///         ربات keeper یا فراخوانی روزانه‌ی اوراکل داشته باشد.
+///         امنیت: بنیاد باید این قرارداد را دوره‌ای شارژ کند، نه یک‌جا، تا زیان ناشی از هک کلید یک
+///         صرافی همیشه به سهمیه‌ی همان صرافی محدود بماند.
+///
+///         🔶 مفروضاتی که مشخصات هنوز درباره‌شان باز است (عمداً دیده می‌مانند): تمدیدها فقط پیش از پایان
+///         دوره‌ی مربوط ممکن‌اند؛ تمدید دوره‌ی گذار همان قاعده‌ی حجم روزانه را ادامه می‌دهد؛ تسویه‌ی
+///         تومانی بین صرافی و بنیاد خارج از زنجیره است.
 contract SurenSale {
     // ------------------------------------------------------------------
-    // آدرس ثابت متقابل بین قراردادها (به SurAddresses.sol مراجعه کن)
+    // آدرس ثابت (به SurAddresses.sol مراجعه کن)
     // ------------------------------------------------------------------
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // جدول قیمت فروش — ۶ ماه، پله‌ی ۳٪ رشد مرکب ماهانه (تصمیم قطعی پروژه؛ جدول از پیش محاسبه و
-    // هاردکد شده، نه محاسبه‌ی توان on-chain — چون فقط ۶ نقطه‌ی ثابت داریم، سادگی و گس کمتر
-    // بهتر از یک فرمول توان عمومی است).
+    // برنامه‌ی زمانی
     // ------------------------------------------------------------------
+    /// @notice قیمت هر سورن به تومان برای ماه‌های ۱ تا ۳ دوره‌ی ثابت (هر ۳۰ روز ۵ تومان اضافه می‌شود).
+    uint256[3] public monthlyPriceToman = [uint256(100), 105, 110];
 
-    /// @notice قیمت هر سورن به تومان، به‌ازای هر ماه (ماه ۱ تا ۶). مقادیر از پیش محاسبه‌شده با
-    ///         ۱۰۰ تومان پایه و ۳٪ رشد مرکب ماهانه، رندشده به نزدیک‌ترین تومان.
-    uint256[6] public monthlyPriceToman = [uint256(100), 103, 106, 109, 113, 116];
-
-    uint256 public constant SALE_DURATION = 180 days; // ~۶ ماه
+    uint256 public constant BASE_FIXED_DURATION = 90 days;
     uint256 public constant SECONDS_PER_MONTH = 30 days;
-
-    /// @notice لحظه‌ی شروع دوره‌ی فروش — در سازنده تنظیم می‌شود، تغییرناپذیر.
-    uint256 public immutable saleStartTime;
-
-    // ------------------------------------------------------------------
-    // ✅ دوره‌ی گذار (تازه) — sur-tokenomics.md بخش ۳: پس از پایان دوره‌ی ۶ماهه‌ی قیمت ثابت،
-    // به‌جای پرش ناگهانی به «هرچه بازار آزاد بگوید»، یک پنجره‌ی ۴۵روزه با قیمت‌گذاری متقارن و
-    // واکنش‌به‌حجم اجرا می‌شود. بنیاد همچنان تنها فروشنده است، از همون موجودی باقی‌مانده —
-    // هیچ فروشنده‌ی تازه‌ای اضافه نمی‌شود.
-    // ------------------------------------------------------------------
-
     uint256 public constant TRANSITION_DURATION = 45 days;
-    uint256 public constant TRANSITION_PRICE_STEP_BPS = 50; // ±۰.۵٪ در هر تعدیل
+    uint256 public constant TRANSITION_PRICE_STEP_BPS = 50; // ±۰٫۵٪ در روز
     uint256 public constant TRANSITION_HIGH_VOLUME_BPS = 12000; // ۱۲۰٪ میانگین متحرک ۷روزه
     uint256 public constant TRANSITION_LOW_VOLUME_BPS = 8000; // ۸۰٪ میانگین متحرک ۷روزه
     uint256 public constant TRANSITION_FLOOR_TOMAN = 90;
     uint256 public constant TRANSITION_CEILING_TOMAN = 150;
     uint256 public constant MOVING_AVERAGE_WINDOW_DAYS = 7;
+    /// @notice دقت داخلی قیمت: قیمت‌ها به‌صورت میلی‌تومان (تومان × ۱۰۰۰) ذخیره می‌شوند.
+    uint256 public constant PRICE_PRECISION = 1000;
+    uint256 private constant BPS_DENOMINATOR = 10000;
+    /// @notice محافظ اشتباه تایپی برای یک فراخوان تمدید (تعداد کل تمدیدها نامحدود است).
+    uint256 public constant MAX_EXTENSION_DAYS_PER_CALL = 3650;
+    /// @notice سپرده‌ی gas که هنگام ثبت‌نام به حساب یک صرافی فرستاده می‌شود (تصمیم ۲۰۲۶-۱۱-۱۹: ۱۰۰ سورن).
+    uint256 public constant GAS_DEPOSIT = 100 ether;
 
-    /// @notice ✅ اصلاح‌شده (باگ بحرانی پیداشده در بازبینی): TRANSITION_PRICE_STEP_BPS (۵۰ =
-    ///         ۰.۵٪) وقتی مستقیم روی یک قیمت صحیح تومانی (۹۰ تا ۱۵۰) اعمال می‌شد، همیشه به
-    ///         `price * 50 / 10000 = 0` می‌رسید — تقسیم صحیح سالیدیتی رند به پایین می‌کند و
-    ///         150*50=7500 هرگز به مخرج 10000 نمی‌رسد. یعنی تعدیل روزانه‌ی ±۰.۵٪ عملاً هرگز
-    ///         فعال نمی‌شد؛ قیمت برای همیشه روی همون عددی که باهاش مقداردهی اولیه شده بود
-    ///         گیر می‌کرد. اصلاح: قیمت دوره‌ی گذار داخلی حالا با دقت ۱۰۰۰برابر («میلی‌تومان» —
-    ///         به transitionPriceMilliToman پایین مراجعه کن) نگه‌داری می‌شود تا یه گام ۰.۵٪
-    ///         روی یه عدد مقیاس‌شده مثل ۱۱۶۰۰۰ بشه ۵۸۰، نه صفر. currentPriceToman() پایین
-    ///         همچنان یه مقدار صحیح تومانی معمولی برمی‌گردونه — هیچ تغییری توی رابط بیرونی
-    ///         برای PaymentReporter یا هر مصرف‌کننده‌ی دیگه‌ای نیست.
-    uint256 public constant TRANSITION_PRICE_PRECISION = 1000;
+    uint256 public immutable saleStartTime;
 
-    /// @notice ✅ تغییرنام از transitionPriceToman (که تومان کامل بود — منشأ باگ بالا) — حالا
-    ///         قیمت × TRANSITION_PRICE_PRECISION رو داخلی نگه می‌داره. هرگز مستقیم توسط
-    ///         فراخوان بیرونی خونده نمی‌شه؛ به‌جاش از currentPriceToman() (تومان کامل) یا
-    ///         currentPriceMilliToman() (دقت کامل) استفاده کن.
+    /// @dev بخش‌های قیمتیِ اضافه‌شده با تمدید مدیرعامل در دوره‌ی ثابت، به‌ترتیب و پیوسته:
+    ///      بخش i بازه‌ی [پایان قبلی، end) را با قیمت `priceMilli` پوشش می‌دهد.
+    struct Segment {
+        uint256 end;
+        uint256 priceMilli;
+    }
+    Segment[] private _segments;
+    /// @notice پایان دوره‌ی قیمت ثابت، شامل همه‌ی تمدیدها.
+    uint256 public fixedEnd;
+    /// @notice روزهای اضافه‌ای که مدیرعامل به دوره‌ی گذار افزوده است.
+    uint256 public transitionExtraDays;
+
+    // state دوره‌ی گذار
     uint256 public transitionPriceMilliToman;
-
-    /// @notice چند روز از دوره‌ی گذار قبلاً حجمشان در یک تعدیل قیمت لحاظ شده. شاخص روزها
-    ///         صفرمبنا و از transitionStartTime() شمرده می‌شود.
     uint256 public lastPricedTransitionDay;
-
-    /// @notice حجم واقعی سورن فروخته‌شده (از طریق reportPayment) در هر روز دوره‌ی گذار.
     mapping(uint256 => uint256) public transitionDailyVolumeSuren;
 
+    /// @notice توسط FoundationDAO تنظیم می‌شود (پیشنهاد EndSale): فروش متوقف می‌شود و باقی‌مانده قابل جمع‌آوری است.
+    bool public saleEnded;
+
+    // ------------------------------------------------------------------
+    // صرافی‌ها
+    // ------------------------------------------------------------------
+    enum ExchangeStatus { None, Active, Paused, Removed }
+
+    struct Exchange {
+        ExchangeStatus status;
+        uint256 id; // همراه صرافی در تغییر کلیدها می‌ماند؛ کلید مجموعه‌ی مرجع‌های هر صرافی است
+        string name;
+        uint256 quota; // کل سورنی که این صرافی اجازه‌ی فروشش را دارد (شامل آنچه قبلاً فروخته)
+        uint256 sold; // سورن
+        uint256 tomanReceived;
+        uint256 salesCount;
+        uint256 lastSaleAt;
+    }
+
+    mapping(address => Exchange) private _ex;
+    address[] private _exchangeList;
+    uint256 public exchangeCount; // شناسه‌هایی که تا الان داده شده‌اند
+    mapping(uint256 => mapping(bytes32 => bool)) private _usedReference; // شناسه‌ی صرافی => مرجع
+
+    /// @notice کل سورنی که همه‌ی صرافی‌ها روی هم اجازه‌ی فروشش را دارند. تا وقتی هیأت آن را تنظیم نکند ۰ است،
+    ///         پس پیش از تصمیم بنیاد درباره‌ی سقف هیچ فروشی انجام نمی‌شود.
+    uint256 public totalCap;
+    uint256 public totalSurenSold;
+    uint256 public totalTomanReceived;
+
+    // ------------------------------------------------------------------
+    // Events
+    // ------------------------------------------------------------------
+    event Funded(address indexed from, uint256 amount);
+    event ExchangeRegistered(address indexed account, uint256 indexed id, string name, uint256 quota, uint256 gasDeposit);
+    event ExchangeQuotaChanged(address indexed account, uint256 newQuota);
+    event ExchangeKeyChanged(address indexed oldAccount, address indexed newAccount, uint256 indexed id);
+    event ExchangePaused(address indexed account);
+    event ExchangeResumed(address indexed account);
+    event ExchangeRemoved(address indexed account);
+    event TotalCapChanged(uint256 newCap);
+    event SaleExecuted(
+        address indexed exchange,
+        address indexed customer,
+        uint256 tomanAmount,
+        uint256 surenAmount,
+        uint256 priceMilliToman,
+        bytes32 orderRef
+    );
+    event FixedPeriodExtended(uint256 extraDays, uint256 newEnd, uint256 priceToman);
+    event TransitionExtended(uint256 extraDays, uint256 newEnd);
+    event SaleEnded();
+    event UnsoldSurenSweeped(address indexed to, uint256 amount);
     event TransitionPriceUpdated(
         uint256 indexed dayIndex,
         uint256 dayVolumeSuren,
@@ -99,307 +139,327 @@ contract SurenSale {
         uint256 newPriceToman
     );
 
-    // ------------------------------------------------------------------
-    // کلید عملیاتی — گزارش‌دهنده‌ی پرداخت‌های تأییدشده. چرخشش از طریق فراخوانی عمومی
-    // `FoundationDAO.proposeExecute` (نوع پیشنهاد اکثریت ساده، نه دوسوم) ممکن است — چون سقف
-    // زیان این کلید با تأمین مالی دوره‌ای (نه یک‌جا) محدود نگه داشته می‌شود؛ اگر بعداً مبالغ
-    // تأمین‌شده در هر دوره بزرگ‌تر شد، این تصمیم باید بازبینی شود (احتمالاً نصاب دوسوم مناسب‌تر
-    // خواهد بود).
-    // ------------------------------------------------------------------
-    /// @dev ✅ پرشده: آدرس اولیه‌ی paymentOracle، خوانده‌شده از SurAddresses.sol (منبع واحد
-    ///      صحت برای هر چهار آدرس اوراکل — دلیلش را در آن فایل ببین). مستقیم هاردکد شده،
-    ///      مطابق همون الگوی سه اوراکل دیگر، نه به‌عنوان آرگومان constructor — این یه تصمیم
-    ///      عمدی پروژه بود، با وجود این‌که این قرارداد genesis-injected نیست و واقعاً یک
-    ///      constructor اجراشونده دارد.
-    address public paymentOracle = SurAddresses.PAYMENT_ORACLE;
-
     modifier onlyFoundation() {
         require(msg.sender == FOUNDATION, "SurenSale: caller is not the Foundation");
         _;
     }
 
-    modifier onlyPaymentOracle() {
-        require(msg.sender == paymentOracle, "SurenSale: caller is not the payment oracle");
+    modifier onlyCeo() {
+        address c = IFoundationCeo(FOUNDATION).ceo();
+        require(c != address(0) && msg.sender == c, "SurenSale: caller is not the CEO");
         _;
     }
 
-    // ------------------------------------------------------------------
-    // Idempotency — هر پرداخت با یک شناسه‌ی یکتا (مثلاً کد پیگیری درگاه پرداخت) فقط یک‌بار
-    // قابل‌پردازش است.
-    // ------------------------------------------------------------------
-    mapping(string => bool) public processedPayments;
-
-    uint256 public totalSurenSold;
-    uint256 public totalTomanReceived;
-
-    // ------------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------------
-    event PaymentOracleUpdated(address indexed oldOracle, address indexed newOracle);
-    event Funded(address indexed from, uint256 amount);
-    event PaymentReported(
-        address indexed buyer,
-        uint256 tomanAmount,
-        uint256 surenAmount,
-        uint256 priceTomanPerSuren,
-        uint256 priceMilliTomanPerSuren, // ✅ تازه — دقت کاملی که واقعاً برای تسویه استفاده شده
-        string paymentReference
-    );
-    event UnsoldSurenSweeped(address indexed to, uint256 amount);
-
-    // ------------------------------------------------------------------
-    // سازنده — اجرای واقعی روی زنجیره (این قرارداد genesis-injected نیست). دیگر paymentOracle
-    // را به‌عنوان آرگومان نمی‌گیرد — طبق تصمیم پروژه، بالا هاردکد شده است.
-    // ------------------------------------------------------------------
     constructor() {
         saleStartTime = block.timestamp;
+        fixedEnd = block.timestamp + BASE_FIXED_DURATION;
     }
 
-    // ------------------------------------------------------------------
-    // تأمین مالی — بنیاد به‌صورت دوره‌ای بخشی از موجودی‌اش را اینجا واریز می‌کند
-    // (`FoundationDAO.proposeSendETH` با نصاب اکثریت ساده — هر نوع پرداخت بنیاد همین نصاب رو
-    // داره؛ به کامنت نصاب‌های حکمرانی در FoundationDAO.sol مراجعه کن).
-    // ------------------------------------------------------------------
+    /// @notice شارژ. بنیاد سورن را از خزانه‌ی خودش می‌پردازد (پیشنهاد Spend).
     receive() external payable {
         emit Funded(msg.sender, msg.value);
     }
 
-    // ------------------------------------------------------------------
-    // قیمت فعلی — دوره‌ی ثابت: مستقیم از block.timestamp. دوره‌ی گذار: متغیر حالتی که
-    // advanceTransitionPrice() تنظیم می‌کند، با آخرین قیمت ثابت مقداردهی اولیه شده.
-    // ------------------------------------------------------------------
-    function currentPriceToman() public view returns (uint256) {
-        if (isSaleActive()) {
-            uint256 elapsed = block.timestamp - saleStartTime;
-            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-            if (monthIndex > 5) monthIndex = 5;
-            return monthlyPriceToman[monthIndex];
-        }
-        // دوره‌ی گذار (یا بعد از پایانش — قرارداد دیگر نقش قیمت‌گذاری ندارد، ولی به‌جای
-        // revert کردن، همچنان آخرین قیمت شناخته‌شده را برمی‌گرداند — برای هر داشبورد آف‌چینی
-        // که این مقدار را می‌خواند، یک قیمت قدیمی‌ولی‌مشخص امن‌تر از خطاست).
-        // ✅ دقت داخلی میلی‌تومان را برای فراخوان بیرونی به یه تومان کامل معمولی تبدیل می‌کنه.
-        return transitionPriceMilliToman == 0
-            ? monthlyPriceToman[5]
-            : transitionPriceMilliToman / TRANSITION_PRICE_PRECISION;
+    // ==================================================================
+    //  دوره‌ها و قیمت
+    // ==================================================================
+    enum Period { FixedPrice, Transition, Ended }
+
+    function transitionStartTime() public view returns (uint256) { return fixedEnd; }
+
+    function transitionEndTime() public view returns (uint256) {
+        return fixedEnd + TRANSITION_DURATION + transitionExtraDays * 1 days;
     }
 
-    /// @notice ✅ تازه: قیمت دوره‌ی گذار با دقت کامل (تومان کامل × ۱۰۰۰)، برای هر مصرف‌کننده‌ی
-    ///         آف‌چین (مثل یه داشبورد) که بخواد حرکت زیرتومانی رو ببینه، نه فقط مقدار
-    ///         رندشده‌ای که currentPriceToman() برمی‌گردونه.
-    /// @notice ✅ اصلاح‌شده (باگ بحرانی دوم پیداشده در بازبینی، هم‌راستا با reportPayment
-    ///         پایین): قبلاً همیشه در دوره‌ی ثابت monthlyPriceToman[5] (آخرین قیمت دوره‌ی
-    ///         ثابت) رو برمی‌گردوند، صرف‌نظر از این‌که واقعاً کدوم ماهیم — چون اصلاً
-    ///         isSaleActive() رو چک نمی‌کرد، برخلاف currentPriceToman() درست بالاش. یه خریدار
-    ///         که مثلاً توی ماه ۲ دوره‌ی ثابت پرداخت می‌کرد، از currentPriceToman() قیمت درست
-    ///         ماه ۲ رو می‌گرفت، ولی این تابع (اگه جایی توی دوره‌ی ثابت استفاده می‌شد) قیمت
-    ///         ماه ۵ رو به‌اشتباه گزارش می‌داد. اصلاح شد تا دقیقاً همون شاخه‌بندی
-    ///         currentPriceToman() رو تکرار کنه، فقط با مقیاس TRANSITION_PRICE_PRECISION.
-    function currentPriceMilliToman() public view returns (uint256) {
-        if (isSaleActive()) {
-            uint256 elapsed = block.timestamp - saleStartTime;
-            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-            if (monthIndex > 5) monthIndex = 5;
-            return monthlyPriceToman[monthIndex] * TRANSITION_PRICE_PRECISION;
-        }
-        return transitionPriceMilliToman == 0
-            ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
-            : transitionPriceMilliToman;
-    }
-
-    function isSaleActive() public view returns (bool) {
-        return block.timestamp < saleStartTime + SALE_DURATION;
-    }
-
-    /// @notice لحظه‌ی شروع دوره‌ی گذار — بلافاصله بعد از پایان دوره‌ی قیمت ثابت. خودش یک
-    ///         متغیر ذخیره‌شده نیست (تابعی خالص از saleStartTime است)، مطابق همون الگوی
-    ///         saleStartTime + SALE_DURATION موجود.
-    function transitionStartTime() public view returns (uint256) {
-        return saleStartTime + SALE_DURATION;
+    function isFixedActive() public view returns (bool) {
+        return !saleEnded && block.timestamp < fixedEnd;
     }
 
     function isTransitionActive() public view returns (bool) {
-        uint256 start = transitionStartTime();
-        return block.timestamp >= start && block.timestamp < start + TRANSITION_DURATION;
+        return !saleEnded && block.timestamp >= fixedEnd && block.timestamp < transitionEndTime();
     }
 
-    /// @notice شاخص روز دوره‌ی گذار (صفرمبنا) برای «همین الان» — روز ۰ اولین روز دوره‌ی
-    ///         گذار است. فقط وقتی isTransitionActive() درست باشد معنا دارد.
-    function currentTransitionDay() public view returns (uint256) {
-        return (block.timestamp - transitionStartTime()) / 1 days;
+    function isSaleActive() public view returns (bool) {
+        return isFixedActive() || isTransitionActive();
     }
 
-    /// @notice بدون‌مجوز — هرکسی (نه فقط paymentOracle) می‌تواند این را فراخوانی کند تا همه‌ی
-    ///         روزهای کاملاً تمام‌شده‌ی دوره‌ی گذار که هنوز قیمت‌گذاری نشده‌اند را، یک تعدیل
-    ///         به‌ازای هر روز و به‌ترتیب، در قیمت لحاظ کند. همچنین به‌طور خودکار در ابتدای هر
-    ///         reportPayment() طی دوره‌ی گذار فراخوانی می‌شود، تا قیمتی که به خریدار اعلام
-    ///         می‌شود همیشه با «امروز» به‌روز باشد، حتی اگر کسی مستقیم این را صدا نزده باشد.
-    ///         حلقه‌ی محدود: حداکثر TRANSITION_DURATION/1 days (۴۵) تکرار در کل عمر دوره‌ی
-    ///         گذار، و معمولاً خیلی کمتر در هر فراخوانی چون بیشتر فراخوان‌ها (reportPayment)
-    ///         حداقل روزانه این را فعال می‌کنند.
-    function advanceTransitionPrice() public {
-        if (block.timestamp < transitionStartTime()) return; // دوره‌ی ثابت هنوز جریان دارد
+    function currentPeriod() public view returns (Period) {
+        if (isFixedActive()) return Period.FixedPrice;
+        if (isTransitionActive()) return Period.Transition;
+        return Period.Ended;
+    }
 
-        if (transitionPriceMilliToman == 0) {
-            transitionPriceMilliToman = monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION; // با آخرین قیمت دوره‌ی ثابت مقداردهی اولیه
+    /// @notice آخرین قیمت دوره‌ی ثابت (قیمت شروع گذار) به میلی‌تومان.
+    function lastFixedPriceMilli() public view returns (uint256) {
+        if (_segments.length > 0) return _segments[_segments.length - 1].priceMilli;
+        return monthlyPriceToman[2] * PRICE_PRECISION;
+    }
+
+    /// @notice قیمت رسمی به میلی‌تومان (تومان × ۱۰۰۰) — مقدار دقیقی که در تسویه استفاده می‌شود.
+    function currentPriceMilliToman() public view returns (uint256) {
+        uint256 t = block.timestamp;
+        if (t < fixedEnd) return _fixedPriceAt(t);
+        return transitionPriceMilliToman == 0 ? lastFixedPriceMilli() : transitionPriceMilliToman;
+    }
+
+    /// @notice قیمت گردشده فقط برای نمایش؛ هرگز در محاسبات از آن استفاده نکن.
+    function currentPriceToman() public view returns (uint256) {
+        return currentPriceMilliToman() / PRICE_PRECISION;
+    }
+
+    function _fixedPriceAt(uint256 t) private view returns (uint256) {
+        uint256 baseEnd = saleStartTime + BASE_FIXED_DURATION;
+        if (t < baseEnd) {
+            uint256 month = (t - saleStartTime) / SECONDS_PER_MONTH;
+            if (month > 2) month = 2;
+            return monthlyPriceToman[month] * PRICE_PRECISION;
         }
+        for (uint256 i = 0; i < _segments.length; i++) {
+            if (t < _segments[i].end) return _segments[i].priceMilli;
+        }
+        return lastFixedPriceMilli();
+    }
 
-        uint256 maxDay = TRANSITION_DURATION / 1 days;
+    function segmentCount() external view returns (uint256) { return _segments.length; }
+
+    function segmentAt(uint256 i) external view returns (uint256 end, uint256 priceMilli) {
+        return (_segments[i].end, _segments[i].priceMilli);
+    }
+
+    // ------------------------------------------------------------------
+    // مدیرعامل: تمدیدها (در مجموع نامحدود؛ قیمت یک دوره‌ی ثابتِ تمدیدشده را مدیرعامل تعیین می‌کند و ثابت می‌ماند)
+    // ------------------------------------------------------------------
+    /// @param extraDays تعداد روزهای افزوده‌شده به دوره‌ی قیمت ثابت
+    /// @param priceToman قیمت (تومان صحیح) دقیقاً برای همین روزهای افزوده‌شده
+    function extendFixedPeriod(uint256 extraDays, uint256 priceToman) external onlyCeo {
+        require(!saleEnded && block.timestamp < fixedEnd, "SurenSale: fixed period already over");
+        require(extraDays > 0 && extraDays <= MAX_EXTENSION_DAYS_PER_CALL, "SurenSale: bad extension length");
+        require(priceToman > 0, "SurenSale: zero price");
+        fixedEnd += extraDays * 1 days;
+        _segments.push(Segment(fixedEnd, priceToman * PRICE_PRECISION));
+        emit FixedPeriodExtended(extraDays, fixedEnd, priceToman);
+    }
+
+    function extendTransition(uint256 extraDays) external onlyCeo {
+        require(!saleEnded && block.timestamp < transitionEndTime(), "SurenSale: transition already over");
+        require(extraDays > 0 && extraDays <= MAX_EXTENSION_DAYS_PER_CALL, "SurenSale: bad extension length");
+        transitionExtraDays += extraDays;
+        emit TransitionExtended(extraDays, transitionEndTime());
+    }
+
+    // ------------------------------------------------------------------
+    // قیمت گذار: بدون نیاز به مجوز، جبران محدود (در آغاز هر فروش هم اجرا می‌شود)
+    // ------------------------------------------------------------------
+    function currentTransitionDay() public view returns (uint256) {
+        return (block.timestamp - fixedEnd) / 1 days;
+    }
+
+    function advanceTransitionPrice() public {
+        if (block.timestamp < fixedEnd) return;
+        if (transitionPriceMilliToman == 0) {
+            transitionPriceMilliToman = lastFixedPriceMilli(); // با آخرین قیمت دوره‌ی ثابت مقداردهی اولیه شده
+        }
+        uint256 maxDay = (TRANSITION_DURATION + transitionExtraDays * 1 days) / 1 days;
         uint256 today = currentTransitionDay();
-        if (today > maxDay) today = maxDay; // بعد از پایان پنجره، دیگر قیمت‌گذاری ادامه پیدا نکند
+        if (today > maxDay) today = maxDay;
 
-        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * TRANSITION_PRICE_PRECISION;
-        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * TRANSITION_PRICE_PRECISION;
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
             uint256 dayVolume = transitionDailyVolumeSuren[dayIndex];
-            uint256 avg = _transitionMovingAverage(dayIndex);
-
+            uint256 avg = _movingAverage(dayIndex);
             if (avg > 0) {
-                uint256 highThreshold = (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
-                uint256 lowThreshold = (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
-
-                if (dayVolume > highThreshold) {
-                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR;
+                if (dayVolume > (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR) {
                     uint256 raised = transitionPriceMilliToman + step;
                     transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
-                } else if (dayVolume < lowThreshold) {
-                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                } else if (dayVolume < (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR) {
                     uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
                     transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
                 }
-                // در غیر این صورت: داخل بازه‌ی [۸۰٪، ۱۲۰٪] میانگین متحرک — امروز بدون تغییر.
             }
-            // avg == 0 (هنوز داده‌ی روز قبلی نیست، مثلاً روز ۰) — بدون تغییر؛ نمی‌توان با
-            // میانگین متحرکی که هنوز وجود ندارد مقایسه کرد.
-
-            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / TRANSITION_PRICE_PRECISION);
+            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / PRICE_PRECISION);
             lastPricedTransitionDay++;
         }
     }
 
-    /// @dev میانگین حجم روزانه طی حداکثر ۷ روز دوره‌ی گذار درست پیش از `uptoExclusiveDay`
-    ///      (یعنی روزهای [uptoExclusiveDay-7, uptoExclusiveDay)). اگر `uptoExclusiveDay` صفر
-    ///      باشد صفر برمی‌گرداند (هنوز هیچ روز قبلی وجود ندارد).
-    function _transitionMovingAverage(uint256 uptoExclusiveDay) private view returns (uint256) {
+    function _movingAverage(uint256 uptoExclusiveDay) private view returns (uint256) {
         if (uptoExclusiveDay == 0) return 0;
-        uint256 windowStart = uptoExclusiveDay > MOVING_AVERAGE_WINDOW_DAYS
-            ? uptoExclusiveDay - MOVING_AVERAGE_WINDOW_DAYS
-            : 0;
+        uint256 windowStart = uptoExclusiveDay > MOVING_AVERAGE_WINDOW_DAYS ? uptoExclusiveDay - MOVING_AVERAGE_WINDOW_DAYS : 0;
         uint256 count = uptoExclusiveDay - windowStart;
         uint256 sum;
-        for (uint256 d = windowStart; d < uptoExclusiveDay; d++) {
-            sum += transitionDailyVolumeSuren[d];
-        }
+        for (uint256 d = windowStart; d < uptoExclusiveDay; d++) sum += transitionDailyVolumeSuren[d];
         return sum / count;
     }
 
-    uint256 private constant BPS_DENOMINATOR_LOCAL = 10000;
+    // ==================================================================
+    //  صرافی‌ها — با FoundationDAO مدیریت می‌شوند (پیشنهادهای تایپ‌شده، ۳ از ۵)
+    // ==================================================================
+    function registerExchange(address account, string calldata name, uint256 quota) external onlyFoundation {
+        require(account != address(0), "SurenSale: zero account");
+        require(_ex[account].status == ExchangeStatus.None, "SurenSale: account already used");
+        require(bytes(name).length > 0, "SurenSale: empty name");
+        require(address(this).balance >= GAS_DEPOSIT, "SurenSale: balance below gas deposit");
+        uint256 id = ++exchangeCount;
+        Exchange storage e = _ex[account];
+        e.status = ExchangeStatus.Active;
+        e.id = id;
+        e.name = name;
+        e.quota = quota;
+        _exchangeList.push(account);
+        emit ExchangeRegistered(account, id, name, quota, GAS_DEPOSIT);
+        // سپرده از موجودی قرارداد خارج می‌شود و بیرون از سهمیه است
+        (bool ok, ) = account.call{value: GAS_DEPOSIT}("");
+        require(ok, "SurenSale: gas deposit failed");
+    }
 
-    // ------------------------------------------------------------------
-    // گزارش پرداخت — تنها نقطه‌ی ورودی که سورن واقعی جابه‌جا می‌کند.
-    // ------------------------------------------------------------------
+    function setExchangeQuota(address account, uint256 newQuota) external onlyFoundation {
+        Exchange storage e = _ex[account];
+        require(e.status == ExchangeStatus.Active || e.status == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        require(newQuota >= e.sold, "SurenSale: quota below what is already sold");
+        e.quota = newQuota;
+        emit ExchangeQuotaChanged(account, newQuota);
+    }
 
-    /// @notice گزارش یک پرداخت تومانی تأییدشده (آف‌چین) و ارسال خودکار سورن معادل به خریدار.
-    /// @param buyer آدرس اتریومی خریدار (از طرف کاربر، همراه با پرداختش اعلام می‌شود)
-    /// @param tomanAmount مبلغ پرداختی، به تومان (عدد صحیح، بدون اعشار)
-    /// @param paymentReference شناسه‌ی یکتای این پرداخت (مثلاً کد پیگیری درگاه) — برای جلوگیری
-    ///        از پردازش دوباره‌ی همان پرداخت
-    function reportPayment(
-        address buyer,
-        uint256 tomanAmount,
-        string calldata paymentReference
-    ) external onlyPaymentOracle {
-        require(isSaleActive() || isTransitionActive(), "SurenSale: sale and transition periods have both ended");
-        require(buyer != address(0), "SurenSale: zero buyer address");
-        require(tomanAmount > 0, "SurenSale: zero amount");
-        require(!processedPayments[paymentReference], "SurenSale: payment already processed");
-
-        processedPayments[paymentReference] = true;
-
-        // طی دوره‌ی گذار، پیش از اعلام قیمت به این پرداخت، اول قیمت را با «امروز» به‌روز کن
-        // (همه‌ی روزهای کاملاً تمام‌شده از آخرین به‌روزرسانی را لحاظ کن) — به
-        // advanceTransitionPrice() مراجعه کن که چرا فراخوانی بی‌قیدوشرط و مکررش امن است.
-        if (isTransitionActive()) {
-            advanceTransitionPrice();
+    /// @notice یک صرافی (سهمیه‌ی باقی‌مانده، آمار، مرجع‌های مصرف‌شده، وضعیت) را به حساب جدید منتقل می‌کند.
+    function changeExchangeKey(address oldAccount, address newAccount) external onlyFoundation {
+        Exchange storage o = _ex[oldAccount];
+        require(o.status == ExchangeStatus.Active || o.status == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        require(newAccount != address(0) && _ex[newAccount].status == ExchangeStatus.None, "SurenSale: new account already used");
+        _ex[newAccount] = o;
+        delete _ex[oldAccount];
+        _ex[oldAccount].status = ExchangeStatus.Removed;
+        for (uint256 i = 0; i < _exchangeList.length; i++) {
+            if (_exchangeList[i] == oldAccount) { _exchangeList[i] = newAccount; break; }
         }
+        emit ExchangeKeyChanged(oldAccount, newAccount, _ex[newAccount].id);
+    }
 
-        // ✅ اصلاح‌شده (باگ بحرانی پیداشده در بازبینی — کل هدف اصلاح دقت میلی‌تومان بالا فقط
-        // وقتی محقق می‌شد که اینجا واقعاً استفاده بشه؛ قبلاً نمی‌شد): قبلاً currentPriceToman()
-        // (تومان کامل، رند به پایین) رو برای محاسبه‌ی *واقعی* تسویه صدا می‌زد — یعنی با این‌که
-        // transitionPriceMilliToman داخلی با گام‌های کسری تومان حرکت می‌کرد، هر خریدار همچنان
-        // با قیمتی تسویه می‌شد که فقط با پله‌های کامل تومان عوض می‌شد (مثلاً ۱۱۶→۱۱۷، یه پرش
-        // واقعی حدود ۰.۸۶٪، نه گام مقصودِ ±۰.۵٪ روزانه). استفاده از currentPriceMilliToman()
-        // اینجا یعنی تعداد سورنی که خریدار واقعاً می‌گیره، حالا قیمت با دقت کامل رو منعکس
-        // می‌کنه، نه مقدار نمایشی رندشده‌اش.
+    /// @notice توقف فوری یک صرافی (FoundationDAO.pauseExchange: مدیرعامل یا هر عضو اصلی هیأت به‌تنهایی).
+    function pauseExchange(address account) external onlyFoundation {
+        require(_ex[account].status == ExchangeStatus.Active, "SurenSale: exchange not active");
+        _ex[account].status = ExchangeStatus.Paused;
+        emit ExchangePaused(account);
+    }
+
+    function resumeExchange(address account) external onlyFoundation {
+        require(_ex[account].status == ExchangeStatus.Paused, "SurenSale: exchange not paused");
+        _ex[account].status = ExchangeStatus.Active;
+        emit ExchangeResumed(account);
+    }
+
+    function removeExchange(address account) external onlyFoundation {
+        ExchangeStatus s = _ex[account].status;
+        require(s == ExchangeStatus.Active || s == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        _ex[account].status = ExchangeStatus.Removed;
+        emit ExchangeRemoved(account);
+    }
+
+    function setTotalCap(uint256 cap) external onlyFoundation {
+        totalCap = cap;
+        emit TotalCapChanged(cap);
+    }
+
+    // ==================================================================
+    //  تنها تابعی که سورن را به مشتریان منتقل می‌کند
+    // ==================================================================
+    /// @param customer سورن را مستقیماً دریافت می‌کند
+    /// @param tomanAmount تومانی که صرافی از مشتری گرفته (تومان صحیح)
+    /// @param minSurenOut حداقل سورنی که مشتری باید بگیرد؛ کمتر => revert
+    /// @param orderRef شناسه‌ی سفارش، یکتا در هر صرافی
+    function sellTo(address customer, uint256 tomanAmount, uint256 minSurenOut, bytes32 orderRef) external {
+        Exchange storage e = _ex[msg.sender];
+        require(e.status == ExchangeStatus.Active, "SurenSale: caller is not an active exchange");
+        require(isSaleActive(), "SurenSale: sale is not active");
+        require(customer != address(0), "SurenSale: zero customer");
+        require(tomanAmount > 0, "SurenSale: zero amount");
+        require(!_usedReference[e.id][orderRef], "SurenSale: reference already used");
+
+        if (isTransitionActive()) advanceTransitionPrice();
+
         uint256 priceMilli = currentPriceMilliToman();
-        uint256 surenAmount = (tomanAmount * 1 ether * TRANSITION_PRICE_PRECISION) / priceMilli;
-
+        uint256 surenAmount = (tomanAmount * 1 ether * PRICE_PRECISION) / priceMilli;
+        require(surenAmount > 0 && surenAmount >= minSurenOut, "SurenSale: below minSurenOut");
+        require(e.sold + surenAmount <= e.quota, "SurenSale: exchange quota exceeded");
+        require(totalSurenSold + surenAmount <= totalCap, "SurenSale: total cap exceeded");
         require(surenAmount <= address(this).balance, "SurenSale: insufficient Suren balance");
 
+        _usedReference[e.id][orderRef] = true;
+        e.sold += surenAmount;
+        e.tomanReceived += tomanAmount;
+        e.salesCount += 1;
+        e.lastSaleAt = block.timestamp;
         totalSurenSold += surenAmount;
         totalTomanReceived += tomanAmount;
+        if (isTransitionActive()) transitionDailyVolumeSuren[currentTransitionDay()] += surenAmount;
 
-        if (isTransitionActive()) {
-            transitionDailyVolumeSuren[currentTransitionDay()] += surenAmount;
-        }
-
-        (bool success, ) = buyer.call{value: surenAmount}("");
-        require(success, "SurenSale: transfer to buyer failed");
-
-        emit PaymentReported(buyer, tomanAmount, surenAmount, priceMilli / TRANSITION_PRICE_PRECISION, priceMilli, paymentReference);
+        emit SaleExecuted(msg.sender, customer, tomanAmount, surenAmount, priceMilli, orderRef);
+        (bool ok, ) = customer.call{value: surenAmount}("");
+        require(ok, "SurenSale: transfer to customer failed");
     }
 
-    // ------------------------------------------------------------------
-    // مدیریت کلید عملیاتی — فقط بنیاد (از طریق FoundationDAO.proposeExecute، اکثریت ساده)
-    // ------------------------------------------------------------------
-    function setPaymentOracle(address newOracle) external onlyFoundation {
-        require(newOracle != address(0), "SurenSale: zero oracle address");
-        emit PaymentOracleUpdated(paymentOracle, newOracle);
-        paymentOracle = newOracle;
+    // ==================================================================
+    //  پایان فروش و جمع‌آوری آنچه فروخته نشده
+    // ==================================================================
+    /// @notice تصمیم هیأت (پیشنهاد EndSale): همه‌ی فروش‌ها را یک‌جا متوقف می‌کند.
+    function endSale() external onlyFoundation {
+        require(!saleEnded, "SurenSale: already ended");
+        saleEnded = true;
+        emit SaleEnded();
     }
 
-    // ------------------------------------------------------------------
-    // جمع‌آوری باقی‌مانده‌ی نفروخته — فقط بعد از پایان رسمی دوره‌ی فروش، فقط توسط بنیاد.
-    // ------------------------------------------------------------------
+    /// @notice وقتی فروش رسماً تمام شده باشد true است: بنیاد آن را پایان داده، یا هر دو دوره سپری شده‌اند.
+    function isSaleOver() public view returns (bool) {
+        return saleEnded || block.timestamp >= transitionEndTime();
+    }
+
     function sweepUnsold(address to) external onlyFoundation {
-        require(!isSaleActive() && !isTransitionActive(), "SurenSale: sale or transition period still active");
-        require(to != address(0), "SurenSale: zero destination address");
-
+        require(isSaleOver(), "SurenSale: sale not officially over");
+        require(to != address(0), "SurenSale: zero destination");
         uint256 amount = address(this).balance;
         require(amount > 0, "SurenSale: nothing to sweep");
-
         emit UnsoldSurenSweeped(to, amount);
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "SurenSale: sweep transfer failed");
+        (bool ok, ) = to.call{value: amount}("");
+        require(ok, "SurenSale: sweep failed");
     }
 
-    // ------------------------------------------------------------------
-    // توابع کمکی view — برای داشبورد فروش عمومی
-    // ------------------------------------------------------------------
-    function getBalance() external view returns (uint256) {
-        return address(this).balance;
+    // ==================================================================
+    //  viewها برای داشبورد عمومی
+    // ==================================================================
+    function getExchange(address account) external view returns (
+        ExchangeStatus status,
+        string memory name,
+        uint256 quota,
+        uint256 quotaLeft,
+        uint256 sold,
+        uint256 tomanReceived,
+        uint256 salesCount,
+        uint256 lastSaleAt
+    ) {
+        Exchange storage e = _ex[account];
+        uint256 left = e.quota > e.sold ? e.quota - e.sold : 0;
+        return (e.status, e.name, e.quota, left, e.sold, e.tomanReceived, e.salesCount, e.lastSaleAt);
     }
 
-    function currentMonthIndex() external view returns (uint256) {
-        uint256 elapsed = block.timestamp - saleStartTime;
-        uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-        return monthIndex > 5 ? 5 : monthIndex;
+    function exchangeQuotaLeft(address account) external view returns (uint256) {
+        Exchange storage e = _ex[account];
+        return e.quota > e.sold ? e.quota - e.sold : 0;
     }
+
+    function getExchanges() external view returns (address[] memory) { return _exchangeList; }
+
+    function getBalance() external view returns (uint256) { return address(this).balance; }
 
     function timeRemaining() external view returns (uint256) {
-        uint256 endTime = saleStartTime + SALE_DURATION;
-        if (block.timestamp >= endTime) return 0;
-        return endTime - block.timestamp;
+        if (saleEnded || block.timestamp >= fixedEnd) return 0;
+        return fixedEnd - block.timestamp;
     }
 
-    /// @notice ثانیه‌های باقی‌مانده تا پایان دوره‌ی گذار؛ اگر هنوز شروع نشده یا قبلاً تمام
-    ///         شده صفر برمی‌گرداند. برای داشبورد فروش عمومی، مشابه timeRemaining() بالا.
     function transitionTimeRemaining() external view returns (uint256) {
-        uint256 start = transitionStartTime();
-        uint256 endTime = start + TRANSITION_DURATION;
-        if (block.timestamp < start || block.timestamp >= endTime) return 0;
-        return endTime - block.timestamp;
+        uint256 end = transitionEndTime();
+        if (saleEnded || block.timestamp < fixedEnd || block.timestamp >= end) return 0;
+        return end - block.timestamp;
     }
 }

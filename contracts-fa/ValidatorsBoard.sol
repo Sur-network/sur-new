@@ -12,6 +12,13 @@ interface IValidatorsRegistry {
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
 
+    // v2.5: حذف در جریان بازیابی شبکه
+    function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline);
+    function recoveryReferral(address validator) external view returns (uint256 referralNonce, uint256 eligibleCount);
+    function setRecoveryCaseReferred(address validator) external;
+    function resolveRecoveryRemoval(address validator, bool upheld) external;
+    function wasActiveAt(address who, uint256 nonce) external view returns (bool);
+
     /// @dev هر بار آدرسی داوطلبانه خارج شود یک واحد زیاد می‌شود؛ کرسی فقط تا وقتی معتبر است که epoch هنوز برابر مقداری باشد
     ///      که هنگام گرفتن کرسی ثبت شد.
     function membershipEpoch(address who) external view returns (uint256);
@@ -20,8 +27,9 @@ interface IValidatorsRegistry {
     ///      برای شکستن تساوی بین نامزدهای هم‌رأی به کار می‌رود: ولیدیتور قدیمی‌تر برنده است.
     function activationSeq(address who) external view returns (uint256);
 
-    /// @dev `status` از رمزگذاری ABI در ValidatorsRegistry.Status استفاده می‌کند:
-    ///      ۰=None، ۱=Probation، ۲=Active، ۳=Demoted، ۴=Exiting. شش خروجی باید دقیقاً با تابع واقعی و با همین ترتیب بخواند.
+    /// @dev `status` از رمزگذاری ABI مربوط به ValidatorsRegistry.Status استفاده می‌کند:
+    ///      0=None, 1=Probation, 2=Active, 3=Demoted, 4=Exiting, 5=RemovedInRecovery. شش خروجی باید دقیقاً با تابع
+    ///      واقعی و به همین ترتیب یکی باشند.
     function getValidatorInfo(address who) external view returns (
         uint8 status,
         uint256 lockedStake,
@@ -103,7 +111,7 @@ contract ValidatorsBoard {
     // ------------------------------------------------------------------
     // storage. ترتیب چند متغیر اول باید با کمک‌کنندهٔ seed genesis یکی باشد.
     // ------------------------------------------------------------------
-    address[] private boardMembers;
+    address[] internal boardMembers;
     mapping(address => bool) public isBoardMember;
 
     /// @notice نامزدهایی که یک رأی‌دهنده اکنون به آن‌ها رأی داده (تا MAX_VOTES_PER_VOTER).
@@ -198,7 +206,21 @@ contract ValidatorsBoard {
     // تقویم
     // ------------------------------------------------------------------
 
-    /// @notice شناسهٔ ماه (UTC) یک timestamp: سال * ۱۲ + (ماه - ۱).
+    /// @notice شناسه‌ی ماه (UTC) برای یک timestamp: year * 12 + (month - 1).
+    /// @dev seed کردن genesis برای هیأت مؤسس. «فقط» genesis-seed-helpers/ValidatorsBoard_GenesisSeed.sol از آن استفاده می‌کند (که
+    ///      از این قرارداد ارث می‌برد). `boardMonthId` باید ماه timestamp مربوط به genesis باشد، وگرنه هیأت مؤسس
+    ///      تا نخستین refreshBoard() هیچ اختیاری ندارد.
+    function _seedBoard(address[] memory members, uint256 genesisTimestamp) internal {
+        require(members.length == BOARD_SIZE, "seed: exactly 5 board members");
+        for (uint256 i = 0; i < members.length; i++) {
+            address m = members[i];
+            require(m != address(0) && !isBoardMember[m], "seed: bad or duplicate member");
+            boardMembers.push(m);
+            isBoardMember[m] = true;
+        }
+        boardMonthId = monthIdOf(genesisTimestamp);
+    }
+
     function monthIdOf(uint256 timestamp) public pure returns (uint256) {
         uint256 z = timestamp / 86400 + 719468;
         uint256 era = z / 146097;
@@ -440,7 +462,8 @@ contract ValidatorsBoard {
         if (!isBoardMember[who]) return false;
         if (REGISTRY.membershipEpoch(who) != seatMembershipEpoch[who]) return false;
         (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(who);
-        return status != 0 && status != 4;
+        // نه None، نه Exiting، و (v2.5) نه حذف‌شده در بازیابی شبکه
+        return status != 0 && status != 4 && status != 5;
     }
 
     /// @notice تا وقتی `who` می‌تواند به‌عنوان عضو هیأت عمل کند true است: ماهِ هیأت همین ماه است و کرسی معتبر است.
@@ -671,5 +694,84 @@ contract ValidatorsBoard {
     /// @notice نامزدهایی که اکنون دست‌کم یک رأی شمرده‌شده دارند.
     function getCandidateList() external view returns (address[] memory) {
         return candidateList;
+    }
+
+    // ------------------------------------------------------------------
+    // v2.5: اعتراض به حذف در جریان بازیابی شبکه (تصمیم ۲۰۲۶-۱۱-۱۹)
+    //
+    // ولیدیتورِ حذف‌شده ظرف ۷۲ ساعت در Registry اعتراض می‌کند. سپس هیأت ظرف ۷ روز تصمیم می‌گیرد: ۳ رأی برای تأیید
+    // یا ۳ رأی برای لغو؛ خودِ موضوع هرگز رأی نمی‌دهد (چون به‌هرحال صندلی‌ای ندارد). اگر کمتر از ۳ عضو بی‌طرف هیأت
+    // اختیار داشته باشند، «هر کسی» می‌تواند پرونده را به ولیدیتورها ارجاع دهد: هر ولیدیتوری که در لحظه‌ی ارجاع Active بوده
+    // می‌تواند رأی بدهد و دو‌سوم آن رأی‌دهندگان تصمیم می‌گیرند. نبودِ تصمیم در موعد = لغو حذف (Registry.expire...).
+    // حالت‌های پرونده در Registry: ۲ = Objected (هیأت)، ۳ = ReferredToAssembly (ولیدیتورها).
+    // ------------------------------------------------------------------
+    struct RecoveryTally {
+        uint256 uphold;
+        uint256 cancel;
+    }
+
+    /// @dev با کلید (validator, recordedAt) تعریف می‌شود تا پرونده‌ی بعدیِ همان آدرس از صفر شروع کند.
+    mapping(address => mapping(uint256 => RecoveryTally)) public boardRecoveryTallies;
+    mapping(address => mapping(uint256 => RecoveryTally)) public assemblyRecoveryTallies;
+    mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryVoted;
+    mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryAssemblyVoted;
+
+    event RecoveryRemovalVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
+    event RecoveryAssemblyVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
+    event RecoveryCaseDecided(address indexed validator, bool upheld, bool byAssembly);
+
+    function voteRecoveryRemoval(address validator, bool uphold) external onlyBoardMember {
+        (uint8 state, uint256 recordedAt, uint256 deadline) = REGISTRY.recoveryCaseInfo(validator);
+        require(state == 2, "ValidatorsBoard: no open board case");
+        require(block.timestamp <= deadline, "ValidatorsBoard: decision window over");
+        require(msg.sender != validator, "ValidatorsBoard: the subject of a case cannot vote");
+        require(!recoveryVoted[validator][recordedAt][msg.sender], "ValidatorsBoard: already voted");
+        recoveryVoted[validator][recordedAt][msg.sender] = true;
+        RecoveryTally storage t = boardRecoveryTallies[validator][recordedAt];
+        if (uphold) t.uphold++; else t.cancel++;
+        emit RecoveryRemovalVote(validator, msg.sender, uphold, t.uphold, t.cancel);
+        if (t.uphold >= MIN_VOTES_SENSITIVE_ACTION) {
+            REGISTRY.resolveRecoveryRemoval(validator, true);
+            emit RecoveryCaseDecided(validator, true, false);
+        } else if (t.cancel >= MIN_VOTES_SENSITIVE_ACTION) {
+            REGISTRY.resolveRecoveryRemoval(validator, false);
+            emit RecoveryCaseDecided(validator, false, false);
+        }
+    }
+
+    /// @notice هر کسی، وقتی کمتر از ۳ عضو هیأت غیر از موضوع اختیار دارند: ولیدیتورها تصمیم می‌گیرند.
+    function referRecoveryRemovalToAssembly(address validator) external {
+        require(_impartialAuthorityCount(validator) < MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: enough impartial board members");
+        REGISTRY.setRecoveryCaseReferred(validator); // بررسی می‌کند پرونده Objected و هنوز باز باشد
+    }
+
+    function _impartialAuthorityCount(address subject) private view returns (uint256 n) {
+        if (!_boardIsCurrent()) return 0;
+        for (uint256 i = 0; i < boardMembers.length; i++) {
+            if (boardMembers[i] != subject && _hasAuthority(boardMembers[i])) n++;
+        }
+    }
+
+    /// @notice ولیدیتوری که هنگام ارجاع پرونده Active بوده رأی می‌دهد؛ دو‌سوم آن رأی‌دهندگان تصمیم می‌گیرند.
+    function voteRecoveryAssembly(address validator, bool uphold) external {
+        (uint8 state, uint256 recordedAt, uint256 deadline) = REGISTRY.recoveryCaseInfo(validator);
+        require(state == 3, "ValidatorsBoard: no open assembly case");
+        require(block.timestamp <= deadline, "ValidatorsBoard: decision window over");
+        require(msg.sender != validator, "ValidatorsBoard: the subject of a case cannot vote");
+        (uint256 referralNonce, uint256 eligible) = REGISTRY.recoveryReferral(validator);
+        require(REGISTRY.isValidator(msg.sender) && REGISTRY.wasActiveAt(msg.sender, referralNonce), "ValidatorsBoard: not an eligible validator");
+        require(!recoveryAssemblyVoted[validator][recordedAt][msg.sender], "ValidatorsBoard: already voted");
+        recoveryAssemblyVoted[validator][recordedAt][msg.sender] = true;
+        RecoveryTally storage t = assemblyRecoveryTallies[validator][recordedAt];
+        if (uphold) t.uphold++; else t.cancel++;
+        emit RecoveryAssemblyVote(validator, msg.sender, uphold, t.uphold, t.cancel);
+        uint256 need = (2 * eligible + 2) / 3; // ceil(2n/3)
+        if (t.uphold >= need) {
+            REGISTRY.resolveRecoveryRemoval(validator, true);
+            emit RecoveryCaseDecided(validator, true, true);
+        } else if (t.cancel > eligible - need) {
+            REGISTRY.resolveRecoveryRemoval(validator, false); // دو‌سومِ لازم برای تأیید دیگر قابل‌دستیابی نیست
+            emit RecoveryCaseDecided(validator, false, true);
+        }
     }
 }

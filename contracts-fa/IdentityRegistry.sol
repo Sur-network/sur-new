@@ -37,6 +37,8 @@ contract IdentityRegistry {
         string name;
         bool phoneVerified;  // موبایل واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
         bool telegramVerified;  // آیدی تلگرام واقعی هرگز اینجا ذخیره نمی‌شود — فقط این فلگ
+        bool baleVerified;       // v2.5: پرچم حساب بله (خودِ حساب هرگز ذخیره نمی‌شود)
+        bool emailVerified;      // v2.5: پرچم ایمیل (خودِ نشانی هرگز ذخیره نمی‌شود)
         bool kycVerified;  // نتیجهٔ بررسی کامل eKYC (عکس + کد ملی + تطبیق چهره)
         bytes32 kycCommitment;  // فقط برای اثبات دست‌نخوردگی در اختلاف‌ها نگه داشته می‌شود، هرگز برای تطبیق
         address migratedTo;  // ناصفر: این آدرس سوخته است و هویتش به آن آدرس منتقل شده (بخش ۳.۴ مشخصات)
@@ -53,6 +55,8 @@ contract IdentityRegistry {
     event IdentityRegistered(address indexed who, PersonType personType, string name);
     event PhoneVerificationUpdated(address indexed who, bool verified);
     event TelegramVerificationUpdated(address indexed who, bool verified);
+    event BaleVerificationUpdated(address indexed who, bool verified);
+    event EmailVerificationUpdated(address indexed who, bool verified);
     event KycVerificationUpdated(address indexed who, bool verified, bytes32 commitment);
     event IdentityMigrated(address indexed oldAddress, address indexed newAddress);
     event IdentityOracleUpdated(address indexed oldOracle, address indexed newOracle);
@@ -64,6 +68,12 @@ contract IdentityRegistry {
 
     modifier notMigrated(address who) {
         require(identities[who].migratedTo == address(0), "IdentityRegistry: address was migrated (burned)");
+        _;
+    }
+
+    /// @dev 🔶 احراز فقط برای اشخاص حقیقی وجود دارد؛ هویت شخص حقوقی همچنان خوداظهاری باقی می‌ماند.
+    modifier onlyIndividual(address who) {
+        require(identities[who].personType == PersonType.Individual, "IdentityRegistry: only individuals can be verified");
         _;
     }
 
@@ -105,16 +115,25 @@ contract IdentityRegistry {
         return id_.registered && id_.migratedTo == address(0);
     }
 
-    /// @notice چک عمومی وضعیت وریفای — همه‌اش بولی، هیچ داده‌ی خامی نیست، پس افشای آزادش
-    ///         مشکلی ندارد (دقیقاً مثل بخش ۶-۱ SIP002).
+    /// @notice بررسی عمومی وضعیت احراز — همه‌چیز در اینجا بولی است و داده‌ی خام وجود ندارد، پس
+    ///         افشای آزادانه‌اش مشکلی ندارد (دقیقاً مثل SIP002 بخش ۶-۱).
+    ///         ترتیب v2.5: registered، phone، telegram، bale، email، kyc.
     function getVerificationStatus(address who)
         external
         view
-        returns (bool registered, bool phoneVerified, bool telegramVerified, bool kycVerified)
+        returns (bool registered, bool phoneVerified, bool telegramVerified, bool baleVerified, bool emailVerified, bool kycVerified)
     {
         Identity storage id_ = identities[who];
-        if (id_.migratedTo != address(0)) return (false, false, false, false);
-        return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.kycVerified);
+        if (id_.migratedTo != address(0)) return (false, false, false, false, false, false);
+        return (id_.registered, id_.phoneVerified, id_.telegramVerified, id_.baleVerified, id_.emailVerified, id_.kycVerified);
+    }
+
+    /// @notice یک شخص «حقیقی» (فرد ایرانیِ حقیقی) ثبت‌شده که eKYC کد ملی، تلفن، تلگرام، بله و
+    ///         ایمیلش همگی احراز شده باشد. برای گرفتن جایگاه ولیدیتور لازم است (ورود، انتقال جایگاه، قرعه‌کشی).
+    function isFullyVerified(address who) external view returns (bool) {
+        Identity storage id_ = identities[who];
+        return id_.migratedTo == address(0) && id_.registered && id_.personType == PersonType.Individual &&
+            id_.kycVerified && id_.phoneVerified && id_.telegramVerified && id_.baleVerified && id_.emailVerified;
     }
 
     // ------------------------------------------------------------------
@@ -122,21 +141,31 @@ contract IdentityRegistry {
     // sur-identity-registry-spec.md)
     // ------------------------------------------------------------------
 
-    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
+    function setPhoneVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         identities[who].phoneVerified = verified;
         emit PhoneVerificationUpdated(who, verified);
     }
 
-    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) {
+    function setTelegramVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         identities[who].telegramVerified = verified;
         emit TelegramVerificationUpdated(who, verified);
+    }
+
+    function setBaleVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
+        identities[who].baleVerified = verified;
+        emit BaleVerificationUpdated(who, verified);
+    }
+
+    function setEmailVerified(address who, bool verified) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
+        identities[who].emailVerified = verified;
+        emit EmailVerificationUpdated(who, verified);
     }
 
     /// @notice نتیجهٔ بررسی کامل eKYC را ثبت می‌کند (عکس شخصی + کارت ملی + جزئیات در سطح شناسنامه + تطبیق چهره).
     ///         `commitment` هش دارای salt کل مجموعه‌دادهٔ احرازشده است — **فقط** برای اثبات دست‌نخوردگی در یک اختلاف حقوقی
     ///         احتمالی نگه داشته می‌شود؛ هیچ تابع روی زنجیره‌ای هرگز آن را برای پاسخ به پرس‌وجوی «تطبیق» به کار نمی‌برد (آن
     ///         عمل همیشه از API سرویس هویت آف‌چین می‌گذرد — بخش ۵ `sur-identity-registry-spec.md` را ببینید).
-    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) {
+    function setKycVerified(address who, bool verified, bytes32 commitment) external onlyIdentityOracle notMigrated(who) onlyIndividual(who) {
         Identity storage id_ = identities[who];
         id_.kycVerified = verified;
         id_.kycCommitment = verified ? commitment : bytes32(0);
@@ -167,6 +196,8 @@ contract IdentityRegistry {
         newId.name = oldId.name;
         newId.phoneVerified = oldId.phoneVerified;
         newId.telegramVerified = oldId.telegramVerified;
+        newId.baleVerified = oldId.baleVerified;
+        newId.emailVerified = oldId.emailVerified;
         newId.kycVerified = oldId.kycVerified;
         newId.kycCommitment = oldId.kycCommitment;
 

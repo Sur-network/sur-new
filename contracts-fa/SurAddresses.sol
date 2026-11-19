@@ -41,14 +41,30 @@ library SurAddresses {
     address internal constant IDENTITY_REGISTRY = 0x6666666666666666666666666666666666666666;
 
     // ------------------------------------------------------------------
-    // آدرس‌های عملیاتی اوراکل — برخلاف شش آدرس ساختاری بالا، این‌ها ثابت‌های تغییرناپذیر
-    // نیستند که برای همیشه توی قراردادهای مصرف‌کننده جاسازی بشن: هر قرارداد همچنان آدرس
-    // اوراکلش رو توی state معمولی (قابل‌تغییر) خودش نگه می‌داره، فقط مقدار *اولیه*ش از اینجا
-    // خونده می‌شه، و بعداً از طریق همون مسیر حکمرانی خودش (ValidatorsBoard برای
-    // distributionOracle/verifier، FoundationDAO برای identityOracle/paymentOracle) قابل‌چرخشه.
-    // متمرکزکردن مقدار *اولیه* اینجا، توی یه فایل، یعنی برای به‌روزرسانی یه اوراکل قبل از
-    // genesis/دیپلوی، فقط کافیه یه خط عوض بشه، نه این‌که دنبال چهار فایل جدا بگردی. هر چهارتا
-    // طبق EIP-55 چک‌سام شده‌اند.
+    // قراردادهای ساختاری v2.5 (آدرس‌ها در اینجا پیشنهاد شده‌اند؛ سند مرجع هنوز آن‌ها را 🔶
+    // نامشخص علامت می‌زند — تثبیت آن‌ها بخشی از طراحی genesis است، با همان الگوی 0xNNNN...NNNN).
+    // ------------------------------------------------------------------
+
+    /// @dev FoundationMembers — دفتر اعضا و حساب‌های سهم‌الشرکه‌ی بنیاد.
+    address internal constant FOUNDATION_MEMBERS = 0x7777777777777777777777777777777777777777;
+
+    /// @dev ValidatorSeatNFT — جایگاه‌های ولیدیتور به‌صورت ERC-721 (هنوز پیاده‌سازی نشده).
+    address internal constant VALIDATOR_SEAT_NFT = 0x8888888888888888888888888888888888888888;
+
+    /// @dev GenesisClaimsVault — مطالبات genesis که در ۲۴ قسط ماهانه آزاد می‌شوند (هنوز پیاده‌سازی نشده).
+    address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
+
+    /// @dev ValidatorLottery — قرعه‌کشی جایگاه ولیدیتور برای مقابله با انحصار ولیدیتورها.
+    address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
+
+    // ------------------------------------------------------------------
+    // آدرس‌های oracle عملیاتی — برخلاف شش آدرس قراردادِ ساختاری بالا، این‌ها ثابت‌های تغییرناپذیری
+    // نیستند که برای همیشه در همه‌ی مصرف‌کنندگان جاسازی شوند: هر قرارداد همچنان آدرس oracle خودش را در
+    // state معمولی (قابل‌تغییر) نگه می‌دارد، از همین‌جا مقداردهی اولیه می‌شود، و بعداً می‌تواند از مسیر
+    // حکمرانی خودش آن را عوض کند (ValidatorsBoard برای distributionOracle/verifier، FoundationDAO برای
+    // identityOracle). متمرکز کردن مقدار *اولیه* در یک فایل یعنی به‌روزرسانی یک oracle پیش از genesis
+    // فقط ویرایش یک خط است، نه جست‌وجو در چند فایل قرارداد. هر سه آدرس طبق EIP-55 checksum شده‌اند.
+    // (v2.5 دقیقاً سه oracle دارد: verifier، distributionOracle، identityOracle.)
     // ------------------------------------------------------------------
 
     /// @dev آدرس اولیه‌ی distributionOracle برای BlockRewardDistributor.sol.
@@ -60,6 +76,5 @@ library SurAddresses {
     /// @dev آدرس اولیه‌ی identityOracle برای IdentityRegistry.sol.
     address internal constant IDENTITY_ORACLE = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
 
-    /// @dev آدرس اولیه‌ی paymentOracle برای SurenSale.sol.
-    address internal constant PAYMENT_ORACLE = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
+    // (v2.5: PAYMENT_ORACLE سابق حذف شد — SurenSale هیچ oracle ندارد؛ فروش از طریق صرافی‌های دارای مجوز انجام می‌شود.)
 }
