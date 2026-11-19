@@ -4,7 +4,7 @@
 
 مسیر پیشنهاد، تأیید، اجرا و نظارت هر تصمیم فقط در [`01-interaction-matrix.md`](01-interaction-matrix.md) مرجع است و در این سند تکرار نمی‌شود؛ اینجا فقط به بخش‌های آن ارجاع می‌دهیم. واژگان در [`00-index-and-glossary.md`](00-index-and-glossary.md) آمده است.
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است. نام توابع از کد گرفته شده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است. نام توابع از کد گرفته شده است.
 
 نشانه‌ها: ✅ تصمیم قطعی؛ 🔶 مورد باز؛ ⏸️ ظرفیت آینده؛ ⚠️ ریسک پذیرفته‌شده.
 
@@ -184,7 +184,7 @@
 |---|---|---|
 | `FoundationDAO` (`0x1111…1111`، بدون constructor) | آن‌چین | مجمع، انتخابات، خرج، مجمع فوق‌العاده، پیشنهادهای تایپ‌شده (`propose<Type>`، `vote`، `getProposal`، `computeParamsHash`)، `pauseExchange`؛ خواندنی‌ها: `getBoard`، `getAlternates`، `getInspector`، `ceo`، `chair`، `treasurer`، `saleContract`، `boardVersion`، `getAssembly`، `getResolution`، `getEthBalance`، `getErc20Balance`، `hasVoted` |
 | `FoundationMembers` (`0x7777…7777`، پیشنهادی) | آن‌چین | `isMember`، `shareOf`، `totalShares`، `memberInfo`، `isMemberOrRepresentative`؛ نوشتن فقط `FoundationDAO` |
-| `SurenSale` (دیپلوی عادی؛ آدرس با `SetSaleContract` به `FoundationDAO` داده می‌شود)، `ValidatorLottery` (`0xAaAa…AaAa`، پیشنهادی)، `GenesisClaimsVault` (`0x9999…9999`، پیشنهادی؛ هنوز نوشته نشده) | آن‌چین | شرح در ماتریس ۷ و ۸ |
+| `SurenSale` (دیپلوی عادی؛ آدرس با `SetSaleContract` به `FoundationDAO` داده می‌شود)، `ValidatorLottery` (`0xAaAa…AaAa`، پیشنهادی)، `GenesisClaimsVault` (`0x9999…9999`، پیشنهادی؛ ✅ کد و آزمون Hardhat) | آن‌چین | شرح در ماتریس ۷ و ۸ |
 | سامانهٔ قراردادهای مبتنی بر بلاک‌چین بنیاد | آف‌چین/حقوقی | هش متن و امضاها؛ 🔶 مشخصات فنی و ترتیب امضا نسبت به `requestMembership` |
 | وب‌سایت، ایمیل رسمی، تلگرام، بله | آف‌چین | ابلاغ قواعد و اصلاحات |
 | داشبورد حکمرانی، صفحهٔ عمومی فروش | آف‌چین | شفافیت |
@@ -253,7 +253,7 @@
 |---|---|
 | ثبت حقوقی، اساسنامه، انتخاب هیأت‌مدیره و بازرس (۱۴۰۵/۰۷/۰۱) | اجراشده |
 | `FoundationDAO` بازطراحی‌شده (با `Execute` و `EndSale`)، `FoundationMembers`، `ValidatorLottery`، `SurenSale` (ویرایش ۲٫۵) | ✅ کد و آزمون Hardhat (نه Besu)؛ آزموده‌نشده روی Besu 🔶 |
-| `GenesisClaimsVault` | برنامه‌ریزی‌شده؛ هنوز نوشته نشده |
+| `GenesisClaimsVault` | ✅ کد و آزمون Hardhat؛ آزموده‌نشده روی Besu 🔶؛ 🔶 آدرس‌ها و مبلغ‌های واقعی طلبکاران |
 | آزمون Besu برای ویژگی‌های ۲٫۵ | 🔶 انجام نشده |
 | سامانهٔ قراردادهای مبتنی بر بلاک‌چین بنیاد | 🔶 مشخصات ندارد |
 

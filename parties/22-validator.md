@@ -4,7 +4,7 @@
 
 مرجع واحد «چه کسی پیشنهاد می‌دهد، چه کسی تأیید و اجرا می‌کند، چه کسی نظارت می‌کند»: [`01-interaction-matrix.md`](01-interaction-matrix.md). این سند جدول‌های آن را تکرار نمی‌کند و فقط هر جا لازم است به بخش مربوط ارجاع می‌دهد. اصطلاحات: [`00-index-and-glossary.md`](00-index-and-glossary.md). متن حقوقی حاکم: `governance/sur-validator-agreement.md` (توافق‌نامهٔ ولیدیتورها؛ پیش‌نویس برای بازبینی حقوقی).
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است.
 
 نشانه‌ها: ✅ تصمیم قطعی طرح؛ 🔶 مورد باز؛ ⏸️ ظرفیت آینده؛ ⚠️ ریسک پذیرفته‌شده.
 
@@ -455,7 +455,7 @@ NFT در `Exiting` یا با پروندهٔ باز قابل انتقال نیس�
 
 ## ۱۲. وضعیت پیاده‌سازی و موارد باز
 
-**وضعیت:** ✅ طرح ۲٫۵ نهایی شده. در کد مخزن اکنون این بخش‌ها هست و با آزمون Hardhat آزموده شده (نه روی Besu): `ValidatorLottery` و `enterAsLotteryWinner`، حذف در بازیابی شبکه (`RemovedInRecovery`)، و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: وثیقهٔ ثابت، `SelfSuspended`، مالک/اپراتور، `entryWindowSeconds` و قیدهای تازه، و دو قرارداد `ValidatorSeatNFT` و `GenesisClaimsVault`. اپ ولیدیتور، سرویس همراه نود و `SUR_NODE_CHECK_V1`، Identity Service و سیستم eKYC نوشته نشده‌اند (مشخصات نوشته‌شده). 🔶 آزمون Besu برای هیچ‌یک از ویژگی‌های ۲٫۵ انجام نشده.
+**وضعیت:** ✅ طرح ۲٫۵ نهایی شده. در کد مخزن اکنون این بخش‌ها هست و با آزمون Hardhat آزموده شده (نه روی Besu): `ValidatorLottery` و `enterAsLotteryWinner`، `GenesisClaimsVault` (صندوق طلب‌ها)، حذف در بازیابی شبکه (`RemovedInRecovery`)، و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: وثیقهٔ ثابت، `SelfSuspended`، مالک/اپراتور، `entryWindowSeconds` و قیدهای تازه، و قرارداد `ValidatorSeatNFT`. اپ ولیدیتور، سرویس همراه نود و `SUR_NODE_CHECK_V1`، Identity Service و سیستم eKYC نوشته نشده‌اند (مشخصات نوشته‌شده). 🔶 آزمون Besu برای هیچ‌یک از ویژگی‌های ۲٫۵ انجام نشده.
 
 **موارد باز (🔶):**
 

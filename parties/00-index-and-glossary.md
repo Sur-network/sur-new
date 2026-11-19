@@ -2,7 +2,7 @@
 
 سند طرف: فهرست و واژه‌نامه (ورودی همهٔ خوانندگان) — طرح بلاک‌چین نسخهٔ ۲٫۵
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است. نام توابعی که در کد نیامده‌اند در واژه‌نامه موقت است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). 🔶 هیچ‌یک از ویژگی‌های ۲٫۵ هنوز روی Besu آزموده نشده است. نام توابعی که در کد نیامده‌اند در واژه‌نامه موقت است.
 
 این سند سه کار می‌کند: (۱) فهرست همهٔ اسناد طرف‌ها و اسناد هستهٔ پروژه، با مخاطب و وضعیت هرکدام؛ (۲) راهنمای «اگر شما … هستید، این‌ها را بخوانید»؛ (۳) واژه‌نامهٔ فارسی اصطلاحات نسخهٔ ۲٫۵. برای اینکه هر تصمیم را چه کسی پیشنهاد می‌دهد و چه کسی تأیید می‌کند، فقط [`01-interaction-matrix.md`](01-interaction-matrix.md) مرجع است.
 
@@ -67,7 +67,7 @@
 | `technical-design/sur-contracts-oracles-accounts-report.md` | تیم فنی، حسابرس | فهرست اوراکل‌ها و کلیدها | نوشته‌شده |
 | `technical-design/sur-security-audit-plan.md` | مالک، حسابرس | برنامهٔ حسابرسی امنیتی | نوشته‌شده |
 | `technical-design/sur-bridge-risk-analysis.md`، `sur-bridge-technical-methods.md`، `sur-dex-launch-plan.md` | تیم فنی، مالک | پل بین‌شبکه‌ای و راه‌اندازی DEX (پیشنهادی) | نوشته‌شده |
-| `contracts/`، `contracts-fa/` | توسعه‌دهنده | فقط نسخهٔ جاری (قدیمی‌ها در git، برچسب `v2.2.0`)؛ نوشته‌شده و آزموده روی Hardhat: `FoundationDAO`، `FoundationMembers`، `SurenSale`، `ValidatorLottery`، حذف در بازیابی، تغییرات `IdentityRegistry`؛ هنوز نوشته نشده: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی Registry/Board | نوشته‌شده (بخشی از ۲٫۵) / باقی‌مانده برنامه‌ریزی‌شده |
+| `contracts/`، `contracts-fa/` | توسعه‌دهنده | فقط نسخهٔ جاری (قدیمی‌ها در git، برچسب `v2.2.0`)؛ نوشته‌شده و آزموده روی Hardhat: `FoundationDAO`، `FoundationMembers`، `SurenSale`، `ValidatorLottery`، `GenesisClaimsVault`، حذف در بازیابی، تغییرات `IdentityRegistry`؛ هنوز نوشته نشده: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی Registry/Board | نوشته‌شده (بخشی از ۲٫۵) / باقی‌مانده برنامه‌ریزی‌شده |
 
 ### ۱٫۵ اسناد هسته: سرویس‌های آف‌چین
 
@@ -123,7 +123,7 @@
 
 ## ۳. واژه‌نامه
 
-ستون‌ها: اصطلاح فارسی | معادل انگلیسی یا فنی | معنی ساده در یک خط. نام توابع پیاده‌شده از کد است؛ نام توابع بخش‌های ننوشته (NFT صندلی، صندوق طلب‌ها، RewardRouter و باقی بازطراحی Registry/Board) موقت است.
+ستون‌ها: اصطلاح فارسی | معادل انگلیسی یا فنی | معنی ساده در یک خط. نام توابع پیاده‌شده از کد است؛ نام توابع بخش‌های ننوشته (NFT صندلی، RewardRouter و باقی بازطراحی Registry/Board) موقت است.
 
 ### ۳٫۱ شبکه و توکن
 
@@ -170,7 +170,7 @@
 | تحویل بستهٔ شواهد | `confirmDelivery` | تأیید ولیدیتور بر دریافت شواهد؛ آغاز مهلت ۷۲ ساعتهٔ اعتراض |
 | مهلت اعتراض | Appeal window | ۷۲ ساعت برای اعتراض به جریمه؛ در صورت اعتراض مجمع ظرف ۷ روز رأی می‌دهد |
 | لاتاری ولیدیتور | ValidatorLottery | قرعه‌کشی ورود بدون وثیقه برای جلوگیری از انحصار؛ مجری: هیأت بنیاد |
-| صندوق طلب‌ها | GenesisClaimsVault | قراردادی که مطالبات genesis را در ۲۴ قسط ماهانه آزاد می‌کند |
+| صندوق طلب‌ها | GenesisClaimsVault | قراردادی که مطالبات genesis را در ۲۴ قسط ماهانه آزاد می‌کند (باقی‌ماندهٔ تقسیم در قسط آخر؛ تابع‌ها: `withdraw`، `claimInfo`، `withdrawableOf`) |
 | تایمر مشترک ۱۸۰ روزه | Shared 180-day timer | فاصلهٔ حداقل میان دو تغییر وثیقه یا کارمزد عضویت |
 
 ### ۳٫۳ حکمرانی

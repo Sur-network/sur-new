@@ -1,6 +1,6 @@
 # برنامه‌ی حسابرسی امنیتی قراردادهای هوشمند سور
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). آزمون Hardhat جایگزین حسابرسی نیست. 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). آزمون Hardhat جایگزین حسابرسی نیست. 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است.
 
 > با ۱۲ قرارداد هوشمند که پول واقعی (وثیقه‌ی ولیدیتورها، طلب‌های قفل‌شده‌ی genesis، فروش سورن، خزانه‌ها، NFT صندلی‌ها) جابه‌جا می‌کنند، یک حسابرسی امنیتی مستقل قبل از genesis نهایی **ضروری** است.
 
@@ -23,7 +23,7 @@
 | `FoundationMembers.sol` | کتابخانه‌ی حساب اعضا که چند قرارداد از آن می‌خوانند؛ کنترل دسترسی نوشتن (فقط `FoundationDAO`، آن هم با تصمیم مجمع فوق‌العاده) |
 | `IdentityRegistry.sol` | `migrateIdentity` (پرچم‌های بله/ایمیل هم منتقل می‌شوند)، `kycVerified`، `isFullyVerified` (شرط بلیط لاتاری)، رد ثبت احراز برای شخص حقوقی؛ آیا واقعاً غیرقابل‌سوءاستفاده است؟ |
 | `ValidatorSeatNFT.sol` | NFT صندلی (ERC-721) که وثیقه و حق رأی همراهش منتقل می‌شود — شرایط انتقال (KYC، نبودن سابقه‌ی ولیدیتوری، مهلت ۳ روزه، ممنوعیت در حال درخواست خروج یا پروندهٔ جریمه‌ی باز)، هماهنگی با `ValidatorsRegistry`، reentrancy در `safeTransferFrom`، `tokenURI` |
-| `GenesisClaimsVault.sol` | قفل ۳۳٬۳۱۱٬۰۰۰ سورن؛ آزادسازی ماهانه ۲۴ قسط؛ حسابداری انباشت اقساط؛ گرد کردن؛ برداشت فقط مبلغ آزادشده؛ بدون امکان تعویض آدرس؛ عدم‌اثرپذیری از جریمه |
+| `GenesisClaimsVault.sol` | ✅ نوشته‌شده و با ۵ آزمون Hardhat آزموده (نه Besu): قفل ۳۳٬۳۱۱٬۰۰۰ سورن؛ آزادسازی ماهانه ۲۴ قسط از اولین ماه میلادی پس از genesis؛ حسابداری انباشت اقساط؛ گرد کردن (باقی‌مانده در قسط آخر)؛ برداشت فقط مبلغ آزادشده؛ بدون امکان تعویض آدرس یا افزودن طلبکار؛ انتقال ساده revert؛ عدم‌اثرپذیری از جریمه |
 | `ValidatorLottery.sol` | commit–reveal و `blockhash` (دستکاری سازنده‌ی بلوک؛ `REVEAL_WINDOW` = ۲۵۰ زیر حد ۲۵۶؛ `targetBlock` را فقط قرارداد تعیین می‌کند؛ تغییرناپذیری commit؛ قفل‌شدن فهرست در `closeLottery`)، Fisher–Yates جزئی با نمونه‌گیری ردی و حالت بین دسته‌ها، شرط احراز هویت و ردّ ۵ عضو اصلی هیأت و مدیرعامل، نگه‌داری مبلغ بلیط و ارسال یک‌جا به `FoundationDAO` و `claimRefund` در لغو (reentrancy)، اختیار فقط `FoundationDAO` برای `startLottery` |
 | `SurenSale.sol` | مستقیماً پول واقعی جابه‌جا می‌کند — بالاترین حساسیت؛ فروش از طریق صرافی‌ها با `sellTo(customer, tomanAmount, minSurenOut, orderRef)` (سهمیه‌ی هر صرافی و سقف کل که در ابتدا ۰ است، `orderRef` یکتا برای هر صرافی، سپردهٔ گس ۱۰۰ سورن هنگام ثبت، `changeExchangeKey` با انتقال شناسهٔ داخلی، قیمت‌گذاری دوره‌ای، تمدید نامحدود توسط مدیرعامل با `extendFixedPeriod`/`extendTransition`، `endSale` و `sweepUnsold` با `isSaleOver()`؛ بدون اوراکل پرداخت) |
 
@@ -65,7 +65,7 @@
 ## ۶. زمان‌بندی — کجای فرآیند راه‌اندازی قرار می‌گیرد
 
 ```
-کد نهایی هر ۱۲ قرارداد نسخهٔ ۲.۵ (🔶 بخشی نوشته و با Hardhat آزموده شده؛ `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی Registry/Board هنوز نوشته نشده)
+کد نهایی هر ۱۲ قرارداد نسخهٔ ۲.۵ (🔶 بخشی نوشته و با Hardhat آزموده شده؛ `ValidatorSeatNFT`، `RewardRouter` و باقی Registry/Board هنوز نوشته نشده)
         │
         ▼
 آزمون Besu برای نسخهٔ ۲.۵ (🔶 انجام نشده)

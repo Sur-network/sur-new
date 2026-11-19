@@ -1,7 +1,7 @@
 # گزارش تحلیلی قراردادهای هوشمند شبکه Sur
 ### اوراکل‌ها و حساب‌های دارای اختیار — کاربرد، اختیارات و روابط بین‌قراردادی
 
-> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۵۷ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `GenesisClaimsVault`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است.
+> **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲.۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۶۲ آزمون Hardhat (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`) و تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`). هنوز نوشته نشده‌اند: `ValidatorSeatNFT`، `RewardRouter` و باقی بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، `SelfSuspended`، تغییر سوزاندن کارمزد و پاداش). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب [`v2.2.0`](https://github.com/Sur-network/sur-new/releases/tag/v2.2.0)). 🔶 هیچ‌یک از ویژگی‌های ۲.۵ هنوز روی Besu آزموده نشده است.
 
 منبع: طرح نسخهٔ ۲.۵ بر پایهٔ ساختار پوشه `contracts` از مخزن `Alireza-Zojaji/sur-new` (جزئیات تابع‌ها در `sur-smart-contracts-reference.md`)
 
@@ -23,7 +23,7 @@
 | `IDENTITY_REGISTRY` | `0x6666...6666` | IdentityRegistry.sol | منبع حقیقت هویت و وضعیت احراز (KYC، تلفن، تلگرام، بله، ایمیل) — فعلاً فقط شخص حقیقی ایرانی |
 | `FOUNDATION_MEMBERS` | `0x7777...7777` (پیشنهادی) | FoundationMembers.sol | دفتر اعضای بنیاد و سهم‌الشرکه؛ قراردادهای دیگر از آن می‌خوانند |
 | `VALIDATOR_SEAT_NFT` | `0x8888...8888` (پیشنهادی؛ هنوز نوشته نشده) | ValidatorSeatNFT.sol | صندلی ولیدیتوری به‌شکل NFT (ERC-721)؛ مالک NFT = مالک وثیقه |
-| `GENESIS_CLAIMS_VAULT` | `0x9999...9999` (پیشنهادی؛ هنوز نوشته نشده) | GenesisClaimsVault.sol | مطالبات genesis با برداشت ماهانهٔ محدود (۲۴ قسط) |
+| `GENESIS_CLAIMS_VAULT` | `0x9999...9999` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | GenesisClaimsVault.sol | مطالبات genesis با برداشت ماهانهٔ محدود (۲۴ قسط) |
 | `VALIDATOR_LOTTERY` | `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa` (پیشنهادی؛ checksum شده در کد) | ValidatorLottery.sol | لاتاری ولیدیتور (مجری: هیأت‌مدیرهٔ بنیاد) |
 
 🔶 آدرس چهار قرارداد ساختاری تازه در `SurAddresses.sol` **پیشنهاد** شده است (الگوی `0xNNNN…NNNN`) و تثبیت نهایی آن‌ها هنگام تثبیت ابزار genesis است. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده: اوراکل‌ها دقیقاً سه‌تاست (`verifier`، `distributionOracle`، `identityOracle`).
@@ -152,7 +152,7 @@
 - از مجموع کارمزدها (Fees): ۳۰٪ سوزانده می‌شود؛ ۷۰٪ به‌علاوهٔ ۱۰۰٪ کارمزد عضویت متناسب با تعداد بلاک تولیدی بین ولیدیتورها — بدون هیچ سهمی برای خزانه.
 - در ValidatorsRegistry: کارمزد عضویت (۴٪ وثیقه = ۲۰٬۰۰۰ سورن) هر ولیدیتور پرداخت‌کننده به `BlockRewardDistributor` فوروارد و در epoch فی بعدی، ۱۰۰٪-به‌نسبت-بلاک بین ولیدیتورهای فعال تقسیم می‌شود (بدون سوزاندن). مبلغ جریمه‌شدهٔ وثیقه (پس از مهلت اعتراض ۷۲ ساعته و بدون اعتراض/تأیید مجمع) ۱۰۰٪ به `address(0)` می‌رود؛ خزانهٔ ولیدیتورها فقط از سهم ریوارد تغذیه می‌شود.
 - در FoundationDAO: ۲۰,۰۰۰,۰۰۰ Suren تخصیص‌یافته در genesis + ۱۵٪ ریوارد؛ با تصویب اکثریت عددی هیأت‌مدیره بدون سقف قابل خرج است — از جمله برای تأمین دوره‌ای SurenSale و بودجهٔ کمیته‌ها.
-- در GenesisClaimsVault: مطالبات ردیف ۲ (۱۱٬۹۸۴٬۰۰۰) و ردیف ۳ (۲۱٬۳۲۷٬۰۰۰) به‌علاوهٔ ۱۰۰ سورن گس هر طلبکار در کیف‌پول؛ باقیمانده ۲۴ قسط ماهانه. عرضهٔ کل genesis ۵۳٬۳۱۱٬۰۰۰ است ولی عرضهٔ در گردش اولیه کمتر است.
+- در GenesisClaimsVault: مطالبات ردیف ۲ (۱۱٬۹۸۴٬۰۰۰) و ردیف ۳ (۲۱٬۳۲۷٬۰۰۰) به‌علاوهٔ ۱۰۰ سورن گس هر طلبکار در کیف‌پول؛ باقیمانده ۲۴ قسط ماهانه (باقی‌ماندهٔ تقسیم در قسط آخر؛ موجودی alloc صندوق = `totalHeld()`). عرضهٔ کل genesis ۵۳٬۳۱۱٬۰۰۰ است ولی عرضهٔ در گردش اولیه کمتر است.
 - در SurenSale: صرافی مجاز ریال را به قیمت قرارداد از مشتری می‌گیرد و قرارداد سورن را به مشتری می‌دهد.
 - ✅ **P06:** ValidatorsTreasury **یک** مسیر خرج دارد: تصویب board (حداقل ۳ رأی) در دو سقف ثابت؛ سقف‌ها فقط با رأی مجمع + تأخیر ۷ روزه تغییر می‌کنند.
 

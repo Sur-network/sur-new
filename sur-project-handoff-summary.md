@@ -29,7 +29,7 @@ contracts/                       ← قراردادهای Solidity نسخهٔ ج
   genesis-seed-helpers/           ← قراردادهای کمکی موقت (فقط برای استخراج storage اولیه‌ی genesis)
   reference-dapps/                ← قراردادهای غیر-genesis اختیاری (SurZether و مشابه)
 contracts-fa/                    ← همان فایل‌ها، فقط کامنت فارسی (برای خواندن انسانی)؛ آن هم فقط نسخهٔ جاری
-contracts-tests/                 ← آزمون‌های Hardhat برای قراردادهای ۲٫۵ (۵۷ آزمون در ۶ فایل؛ روی EVM درون‌فرایندی، نه Besu/QBFT؛ `npm install` و سپس `npm test`)
+contracts-tests/                 ← آزمون‌های Hardhat برای قراردادهای ۲٫۵ (۶۲ آزمون در ۷ فایل؛ روی EVM درون‌فرایندی، نه Besu/QBFT؛ `npm install` و سپس `npm test`)
 technical-design/                ← معماری، مرجع قراردادها، یادداشت دیپلوی، تصمیم‌های نهایی فنی
 offchain-services/               ← اسپک سرویس‌های آف‌چین + بریف‌های رابط کاربری
 governance/                      ← ساختار سازمانی + سیاست بازیابی اضطراری اجماع (N04)
@@ -113,7 +113,7 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 - 🔶 هویت ۷ مسئول بازیابی اضطراری N04، و مسیر انتشار برنامه‌ها.
 - سه سناریوی کم‌ریسکِ اختیاریِ دور سوم Besu که امتحان نشدند (خروج بدون پرونده، تساوی رأی هیأت، جداسازی P05).
 - انتخاب سرویس‌دهنده‌های خارجی (eKYC، پیامک/تلگرام/بله/ایمیل OTP) و توافق نهایی با صرافی‌های رمزارزی برای فروش — هنوز نشده.
-- 🔶 پیاده‌سازی نسخهٔ ۲.۵ قراردادها: نوشته و با Hardhat آزموده‌شده: FoundationDAO، FoundationMembers، SurenSale، ValidatorLottery، حذف در بازیابی، IdentityRegistry. نانوشته: ValidatorSeatNFT، GenesisClaimsVault، RewardRouter، باقی Registry/Board/Distributor (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، سوزاندن). آزمون Besu و به‌روزرسانی ابزار genesis — هنوز انجام نشده.
+- 🔶 پیاده‌سازی نسخهٔ ۲.۵ قراردادها: نوشته و با Hardhat آزموده‌شده: FoundationDAO، FoundationMembers، SurenSale، ValidatorLottery، GenesisClaimsVault، حذف در بازیابی، IdentityRegistry. نانوشته: ValidatorSeatNFT، RewardRouter، باقی Registry/Board/Distributor (وثیقهٔ ثابت، مالک/اپراتور، `SelfSuspended`، سوزاندن). آزمون Besu و به‌روزرسانی ابزار genesis — هنوز انجام نشده.
 - اجرای واقعی ابزار genesis، RewardRouter، Verifier، سرویس همراه نود — هیچ‌کدام کدنویسی نشده‌اند.
 
 ## ۹. سبک کاری که در این پروژه جواب داده — ادامه بده
