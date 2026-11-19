@@ -51,7 +51,7 @@ library SurAddresses {
     /// @dev ValidatorSeatNFT — ERC-721 validator seats (not implemented yet).
     address internal constant VALIDATOR_SEAT_NFT = 0x8888888888888888888888888888888888888888;
 
-    /// @dev GenesisClaimsVault — genesis claims released in 24 monthly instalments (not implemented yet).
+    /// @dev GenesisClaimsVault — genesis claims released in 24 monthly instalments.
     address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
 
     /// @dev ValidatorLottery — validator-seat lottery against validator monopoly.

@@ -51,7 +51,7 @@ library SurAddresses {
     /// @dev ValidatorSeatNFT — جایگاه‌های ولیدیتور به‌صورت ERC-721 (هنوز پیاده‌سازی نشده).
     address internal constant VALIDATOR_SEAT_NFT = 0x8888888888888888888888888888888888888888;
 
-    /// @dev GenesisClaimsVault — مطالبات genesis که در ۲۴ قسط ماهانه آزاد می‌شوند (هنوز پیاده‌سازی نشده).
+    /// @dev GenesisClaimsVault — مطالبات genesis که در ۲۴ قسط ماهانه آزاد می‌شوند.
     address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
 
     /// @dev ValidatorLottery — قرعه‌کشی جایگاه ولیدیتور برای مقابله با انحصار ولیدیتورها.
