@@ -55,6 +55,7 @@
 | گزارش‌های دورهٔ آزادسازی (عرضهٔ روزانهٔ ماشینی، شاخص‌های روزانه، سند تحلیلی هفتگی؛ نمای مجموع وثیقهٔ قفل‌شده) | `economics/sur-tokenomics.md` |
 | اتصال صرافی‌ها به `SurenSale` و صفحهٔ عمومی قیمت/وضعیت فروش | `offchain-services/sur-suren-sale-spec.md` |
 | `FoundationDAO` با پیشنهادهای تایپ‌شده (بدون `bytes data`؛ رأی با `paramsHash`؛ انقضای یک ماه) | `technical-design/sur-smart-contracts-reference.md` |
+| `ValidatorLottery` با commit–reveal + `blockhash`: `startLottery` (فقط `FoundationDAO`)، `commitSecret`/`reveal` (مدیرعامل؛ `REVEAL_WINDOW` = ۲۵۰ بلوک)، `closeLottery`، `drawBatch`، `cancelLottery`، `claimRefund`؛ ردّ ۵ عضو اصلی و مدیرعامل؛ ارسال مبلغ به `FoundationDAO`؛ آزمون ریسک «عدم‌افشای مدیرعامل» | `technical-design/sur-smart-contracts-reference.md` §۱۱؛ تصمیم ۱۰۷ |
 | `SurenSale` نسخهٔ ۲٫۵: ثبت صرافی با سپردهٔ گس ۱۰۰ سورن، آمار هر صرافی، `minSurenOut`، توقف فوری، تغییر کلید | `offchain-services/sur-suren-sale-spec.md` |
 | حذف در بازیابی شبکه: `recordRecoveryRemoval`، اعتراض، رسیدگی `ValidatorsBoard`، قفل ۹۰ روزهٔ وثیقه | `governance/sur-emergency-consensus-recovery.md` بخش ۴-ب |
 
