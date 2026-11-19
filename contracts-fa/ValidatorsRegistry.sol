@@ -56,7 +56,7 @@ interface IIdentityFullyVerified {
 ///         و نه می‌تواند خارج شود.
 ///
 ///         حکمرانی دو مسیر دارد:
-///           - پارامترهای اقتصادی ورود (entryThresholdBase، growthFactorPerValidator، membershipFeeBps) فقط با رأی
+///           - پارامترهای اقتصادی ورود (entryCollateral، membershipFeeBps) فقط با رأی
 ///             داخلی ValidatorsBoard تغییر می‌کنند.
 ///           - بقیهٔ موارد (نرخ ورود، طول probation، دورهٔ بازیابی، slashBps، دورهٔ خروج) اکثریتِ ولیدیتورهایی را می‌خواهند
 ///             که هنگام ساخت پیشنهاد Active بوده‌اند (proposeParameterChange / voteParameterChange).
@@ -83,7 +83,7 @@ contract ValidatorsRegistry {
     IBlockRewardDistributor public constant DISTRIBUTOR = IBlockRewardDistributor(payable(SurAddresses.BLOCK_REWARD_DISTRIBUTOR));
 
     /// @notice ValidatorsBoard — تنها آدرس مجاز به تغییر پارامترهای اقتصادی ورود پایین
-    ///         (entryThresholdBase، growthFactorPerValidator، membershipFeeBps).
+    ///         (entryCollateral، membershipFeeBps).
     address public constant BOARD = SurAddresses.VALIDATORS_BOARD;
 
     // ------------------------------------------------------------------
@@ -169,7 +169,7 @@ contract ValidatorsRegistry {
 
     // ------------------------------------------------------------------
     // پارامترهای اقتصادی ورود: مقادیر اولیه در ادامه؛ فقط ValidatorsBoard می‌تواند تغییرشان دهد (آرگومان constructor نیستند و
-    // با رأی کامل ولیدیتورها هم تغییر نمی‌کنند). entryThresholdBase اولیه ۵۰۰٬۰۰۰ سورن است.
+    // با رأی کامل ولیدیتورها هم تغییر نمی‌کنند). entryCollateral اولیه ۵۰۰٬۰۰۰ سورن است.
     // ------------------------------------------------------------------
 
     /// @notice v2.5: وثیقهٔ ورود برای هر واردشوندهٔ پرداخت‌کننده «ثابت» است (منحنی رشد v2.2 با تعداد ولیدیتورهای پرداخت‌کرده

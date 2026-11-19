@@ -56,7 +56,7 @@ interface IIdentityFullyVerified {
 ///         nor leave.
 ///
 ///         Governance has two tracks:
-///           - ECONOMIC ENTRY PARAMETERS (entryThresholdBase, growthFactorPerValidator, membershipFeeBps) are changed
+///           - ECONOMIC ENTRY PARAMETERS (entryCollateral, membershipFeeBps) are changed
 ///             only by ValidatorsBoard's internal vote.
 ///           - EVERYTHING ELSE (rate limit, probation length, recovery period, slashing bps, exit cooldown) requires a
 ///             majority of the validators that were Active when the proposal was created
@@ -84,7 +84,7 @@ contract ValidatorsRegistry {
     IBlockRewardDistributor public constant DISTRIBUTOR = IBlockRewardDistributor(payable(SurAddresses.BLOCK_REWARD_DISTRIBUTOR));
 
     /// @notice ValidatorsBoard — the only address allowed to change the economic entry
-    ///         parameters below (entryThresholdBase, growthFactorPerValidator, membershipFeeBps).
+    ///         parameters below (entryCollateral, membershipFeeBps).
     address public constant BOARD = SurAddresses.VALIDATORS_BOARD;
 
     // ------------------------------------------------------------------
@@ -173,7 +173,7 @@ contract ValidatorsRegistry {
 
     // ------------------------------------------------------------------
     // Economic entry parameters: initial values below; changeable only by ValidatorsBoard (not a constructor argument and
-    // not a full-validator vote). The initial entryThresholdBase is 500,000 Suren.
+    // not a full-validator vote). The initial entryCollateral is 500,000 Suren.
     // ------------------------------------------------------------------
 
     /// @notice v2.5: the entry collateral is FIXED for every paying entrant (the v2.2 growth curve with the number of paid
