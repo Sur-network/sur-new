@@ -3,99 +3,134 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
+interface IFoundationCeo {
+    function ceo() external view returns (address);
+}
+
 /// @title SurenSale
-/// @notice The Sur Foundation's fixed-price (6-month) Suren sale contract.
+/// @notice The Sur Foundation's Suren sale contract (v2.5): fixed-price period of 90 days, then a
+///         45-day volume-driven transition period; the ONLY sales channel is licensed exchanges.
+///         See offchain-services/sur-suren-sale-spec.md.
 ///
-///         Because Toman is a fiat currency (not an on-chain asset), the actual payment always
-///         happens off-chain (a bank payment gateway). A separate off-chain service
-///         ("PaymentReporter" — exactly the same trust pattern as `verifier`/
-///         `distributionOracle`) reports confirmed payments to this contract using the
-///         `paymentOracle` key; the contract itself computes the price **independently, from
-///         `block.timestamp`** — meaning that even if the `paymentOracle` key were fully
-///         compromised, an attacker could only *falsely claim a payment* (draining the
-///         contract's current balance), never manipulate the price itself.
+///         HOW A SALE WORKS: the customer pays Toman to a licensed exchange, which calls
+///         `sellTo(customer, tomanAmount, minSurenOut, reference)`. The contract computes the price
+///         ITSELF from `block.timestamp` and its own parameters — an exchange can only claim a sale,
+///         up to its own quota, at the official price of that moment; it can never lower the price.
+///         `minSurenOut` protects the customer (and the exchange) when the price rises.
 ///
-///         WARNING — critical security recommendation: the Foundation should not deposit the
-///         entire 20 million Suren into this contract at once — it should transfer only a
-///         portion of the balance periodically (e.g. monthly), so that the maximum possible
-///         loss from a compromised `paymentOracle` key stays bounded.
+///         NO ORACLE: the former `paymentOracle` / `reportPayment` of v2.2 is gone.
 ///
-///         This contract is not one of the six genesis structural contracts — whenever the
-///         Foundation is ready, it is deployed via a normal transaction (not in the genesis
-///         `alloc`).
+///         NOT a genesis contract: deployed with an ordinary transaction whenever the foundation is
+///         ready; it only depends on the fixed address of FoundationDAO (for the CEO and for board
+///         decisions). The foundation tells FoundationDAO the address with the SetSaleContract proposal.
 ///
-///         ✅ TRANSITION PERIOD (added — see sur-tokenomics.md section 3): immediately after
-///         the 6-month fixed-price period ends, a 45-day transition period begins, during which
-///         the Foundation (still the only seller, from the same remaining balance) sells at a
-///         price that adjusts daily based on realized demand — ±0.5% per day depending on
-///         whether that day's volume was above/below [80%, 120%] of the trailing 7-day moving
-///         average, floored at 90 Toman and capped at 150 Toman. See advanceTransitionPrice()
-///         below for the exact mechanism and why it is a permissionless, bounded-loop "catch-up"
-///         function rather than something requiring a keeper bot or daily oracle call.
+///         SECURITY: the foundation should fund this contract periodically, not all at once, so the
+///         loss from a hacked exchange key stays bounded by that exchange's quota.
+///
+///         🔶 Assumptions where the spec is still open (kept visible): extensions are only possible
+///         before the relevant period ends; an extension of the transition period continues the same
+///         daily volume rule; the Toman settlement between exchange and foundation is off-chain.
 contract SurenSale {
     // ------------------------------------------------------------------
-    // Fixed cross-contract address (see SurAddresses.sol)
+    // Fixed address (see SurAddresses.sol)
     // ------------------------------------------------------------------
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
 
     // ------------------------------------------------------------------
-    // Sale schedule — 6 months, 3% monthly compound step (final project decision; the schedule
-    // is precomputed and hardcoded rather than computed as an on-chain power function — since
-    // there are only 6 fixed points, this is simpler and cheaper in gas than a general
-    // exponentiation formula).
+    // Schedule
     // ------------------------------------------------------------------
+    /// @notice Price per Suren in Toman for months 1..3 of the fixed period (+5 Toman every 30 days).
+    uint256[3] public monthlyPriceToman = [uint256(100), 105, 110];
 
-    /// @notice Price of one Suren in Toman, per month (month 1 through 6). Precomputed with a
-    ///         100 Toman base and 3% monthly compound growth, rounded to the nearest Toman.
-    uint256[6] public monthlyPriceToman = [uint256(100), 103, 106, 109, 113, 116];
-
-    uint256 public constant SALE_DURATION = 180 days; // ~6 months
+    uint256 public constant BASE_FIXED_DURATION = 90 days;
     uint256 public constant SECONDS_PER_MONTH = 30 days;
-
-    /// @notice The moment the sale period starts — set in the constructor, immutable thereafter.
-    uint256 public immutable saleStartTime;
-
-    // ------------------------------------------------------------------
-    // ✅ Transition period (new) — sur-tokenomics.md section 3: after the 6-month fixed-price
-    // period ends, instead of jumping straight to "whatever the free market says", a 45-day
-    // window with symmetric, volume-reactive pricing runs first. The Foundation is still the
-    // only seller here, from the same remaining genesis balance — no new seller is added.
-    // ------------------------------------------------------------------
-
     uint256 public constant TRANSITION_DURATION = 45 days;
-    uint256 public constant TRANSITION_PRICE_STEP_BPS = 50; // ±0.5% per adjustment
+    uint256 public constant TRANSITION_PRICE_STEP_BPS = 50; // ±0.5% per day
     uint256 public constant TRANSITION_HIGH_VOLUME_BPS = 12000; // 120% of the 7-day moving average
     uint256 public constant TRANSITION_LOW_VOLUME_BPS = 8000; // 80% of the 7-day moving average
     uint256 public constant TRANSITION_FLOOR_TOMAN = 90;
     uint256 public constant TRANSITION_CEILING_TOMAN = 150;
     uint256 public constant MOVING_AVERAGE_WINDOW_DAYS = 7;
+    /// @notice Internal price precision: prices are stored as milli-Toman (Toman * 1000).
+    uint256 public constant PRICE_PRECISION = 1000;
+    uint256 private constant BPS_DENOMINATOR = 10000;
+    /// @notice Typo guard for one extension call (the total number of extensions is unlimited).
+    uint256 public constant MAX_EXTENSION_DAYS_PER_CALL = 3650;
+    /// @notice Gas deposit sent to an exchange account at registration (decision 2026-11-19: 100 Suren).
+    uint256 public constant GAS_DEPOSIT = 100 ether;
 
-    /// @notice ✅ FIXED (critical bug found in review): TRANSITION_PRICE_STEP_BPS (50 = 0.5%)
-    ///         applied directly to a whole-Toman integer price (90-150) always computed to
-    ///         `price * 50 / 10000 = 0` for every price in that range — Solidity integer
-    ///         division floors, and 150*50=7500 never reaches the 10000 denominator. The daily
-    ///         ±0.5% adjustment therefore silently never fired; the price would have been
-    ///         permanently stuck at whatever it was seeded with. Fix: track the transition
-    ///         price internally at 1000x precision ("milli-Toman" — see
-    ///         transitionPriceMilliToman below) so a 0.5% step on a scaled value like 116000 is
-    ///         580, not zero. currentPriceToman() below still returns a plain whole-Toman
-    ///         value externally — no interface change for PaymentReporter or any other
-    ///         consumer.
-    uint256 public constant TRANSITION_PRICE_PRECISION = 1000;
+    uint256 public immutable saleStartTime;
 
-    /// @notice ✅ RENAMED from transitionPriceToman (was whole Toman, the source of the bug
-    ///         above) — now stores price * TRANSITION_PRICE_PRECISION internally. Never read
-    ///         directly by external callers; use currentPriceToman() (whole Toman) or
-    ///         currentPriceMilliToman() (full precision) instead.
+    /// @dev Price segments added by CEO extensions of the fixed period, in order and contiguous:
+    ///      segment i covers [previous end, end) at `priceMilli`.
+    struct Segment {
+        uint256 end;
+        uint256 priceMilli;
+    }
+    Segment[] private _segments;
+    /// @notice End of the fixed-price period including every extension.
+    uint256 public fixedEnd;
+    /// @notice Extra days added to the transition period by the CEO.
+    uint256 public transitionExtraDays;
+
+    // transition-period state
     uint256 public transitionPriceMilliToman;
-
-    /// @notice How many transition-days have already had their volume folded into a price
-    ///         adjustment. Day indices are 0-based, counted from transitionStartTime().
     uint256 public lastPricedTransitionDay;
-
-    /// @notice Suren volume actually sold (via reportPayment) on each transition-day.
     mapping(uint256 => uint256) public transitionDailyVolumeSuren;
 
+    /// @notice Set by FoundationDAO (EndSale proposal): sales stop and the rest can be swept.
+    bool public saleEnded;
+
+    // ------------------------------------------------------------------
+    // Exchanges
+    // ------------------------------------------------------------------
+    enum ExchangeStatus { None, Active, Paused, Removed }
+
+    struct Exchange {
+        ExchangeStatus status;
+        uint256 id; // follows the exchange through key changes; keys the per-exchange reference set
+        string name;
+        uint256 quota; // total Suren this exchange may sell (including what it already sold)
+        uint256 sold; // Suren
+        uint256 tomanReceived;
+        uint256 salesCount;
+        uint256 lastSaleAt;
+    }
+
+    mapping(address => Exchange) private _ex;
+    address[] private _exchangeList;
+    uint256 public exchangeCount; // ids handed out so far
+    mapping(uint256 => mapping(bytes32 => bool)) private _usedReference; // exchange id => reference
+
+    /// @notice Total Suren all exchanges together may sell. 0 until the board sets it, so nothing
+    ///         sells before the foundation has decided the cap.
+    uint256 public totalCap;
+    uint256 public totalSurenSold;
+    uint256 public totalTomanReceived;
+
+    // ------------------------------------------------------------------
+    // Events
+    // ------------------------------------------------------------------
+    event Funded(address indexed from, uint256 amount);
+    event ExchangeRegistered(address indexed account, uint256 indexed id, string name, uint256 quota, uint256 gasDeposit);
+    event ExchangeQuotaChanged(address indexed account, uint256 newQuota);
+    event ExchangeKeyChanged(address indexed oldAccount, address indexed newAccount, uint256 indexed id);
+    event ExchangePaused(address indexed account);
+    event ExchangeResumed(address indexed account);
+    event ExchangeRemoved(address indexed account);
+    event TotalCapChanged(uint256 newCap);
+    event SaleExecuted(
+        address indexed exchange,
+        address indexed customer,
+        uint256 tomanAmount,
+        uint256 surenAmount,
+        uint256 priceMilliToman,
+        bytes32 orderRef
+    );
+    event FixedPeriodExtended(uint256 extraDays, uint256 newEnd, uint256 priceToman);
+    event TransitionExtended(uint256 extraDays, uint256 newEnd);
+    event SaleEnded();
+    event UnsoldSurenSweeped(address indexed to, uint256 amount);
     event TransitionPriceUpdated(
         uint256 indexed dayIndex,
         uint256 dayVolumeSuren,
@@ -104,311 +139,327 @@ contract SurenSale {
         uint256 newPriceToman
     );
 
-    // ------------------------------------------------------------------
-    // Operational key — reports confirmed payments. Rotatable via the public
-    // `FoundationDAO.proposeExecute` call (a simple-majority proposal type, not two-thirds) —
-    // because the maximum possible loss from this key is kept bounded by periodic (not
-    // lump-sum) funding; if the amounts funded per period grow larger later on, this decision
-    // should be revisited (a two-thirds quorum would likely become more appropriate).
-    // ------------------------------------------------------------------
-    /// @dev ✅ FILLED: initial paymentOracle address, read from SurAddresses.sol (single
-    ///      source of truth for all four oracle addresses — see that file for rationale).
-    ///      Hardcoded directly, matching the pattern of the other three oracles, rather than
-    ///      taken as a constructor argument — this was a deliberate project decision even
-    ///      though this contract is not genesis-injected and does have a real, executing
-    ///      constructor.
-    address public paymentOracle = SurAddresses.PAYMENT_ORACLE;
-
     modifier onlyFoundation() {
         require(msg.sender == FOUNDATION, "SurenSale: caller is not the Foundation");
         _;
     }
 
-    modifier onlyPaymentOracle() {
-        require(msg.sender == paymentOracle, "SurenSale: caller is not the payment oracle");
+    modifier onlyCeo() {
+        address c = IFoundationCeo(FOUNDATION).ceo();
+        require(c != address(0) && msg.sender == c, "SurenSale: caller is not the CEO");
         _;
     }
 
-    // ------------------------------------------------------------------
-    // Idempotency — each payment, identified by a unique reference (e.g. the payment gateway's
-    // tracking code), can only be processed once.
-    // ------------------------------------------------------------------
-    mapping(string => bool) public processedPayments;
-
-    uint256 public totalSurenSold;
-    uint256 public totalTomanReceived;
-
-    // ------------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------------
-    event PaymentOracleUpdated(address indexed oldOracle, address indexed newOracle);
-    event Funded(address indexed from, uint256 amount);
-    event PaymentReported(
-        address indexed buyer,
-        uint256 tomanAmount,
-        uint256 surenAmount,
-        uint256 priceTomanPerSuren,
-        uint256 priceMilliTomanPerSuren, // ✅ NEW — the exact precision actually used for settlement
-        string paymentReference
-    );
-    event UnsoldSurenSweeped(address indexed to, uint256 amount);
-
-    // ------------------------------------------------------------------
-    // Constructor — actually executes on-chain (this contract is not genesis-injected). No
-    // longer takes paymentOracle as an argument — it is hardcoded above, by project decision.
-    // ------------------------------------------------------------------
     constructor() {
         saleStartTime = block.timestamp;
+        fixedEnd = block.timestamp + BASE_FIXED_DURATION;
     }
 
-    // ------------------------------------------------------------------
-    // Funding — the Foundation periodically deposits a portion of its balance here
-    // (`FoundationDAO.proposeSendETH`, simple-majority quorum — every kind of Foundation
-    // payment uses this threshold; see FoundationDAO.sol's governance thresholds doc comment).
-    // ------------------------------------------------------------------
+    /// @notice Funding. The foundation pays Suren from its treasury (a Spend proposal).
     receive() external payable {
         emit Funded(msg.sender, msg.value);
     }
 
-    // ------------------------------------------------------------------
-    // Current price — fixed period: computed purely from block.timestamp. Transition period:
-    // the state variable set by advanceTransitionPrice(), seeded from the last fixed price.
-    // ------------------------------------------------------------------
-    function currentPriceToman() public view returns (uint256) {
-        if (isSaleActive()) {
-            uint256 elapsed = block.timestamp - saleStartTime;
-            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-            if (monthIndex > 5) monthIndex = 5;
-            return monthlyPriceToman[monthIndex];
-        }
-        // Transition period (or after it ends — the contract has no further pricing role past
-        // this point, but keeps returning its last known price rather than reverting, since a
-        // stale-but-defined price is safer for any off-chain dashboard reading it than a revert).
-        // ✅ Converts the internal milli-Toman precision back to a plain whole Toman for
-        // external callers — see currentPriceMilliToman() for the full-precision value.
-        return transitionPriceMilliToman == 0
-            ? monthlyPriceToman[5]
-            : transitionPriceMilliToman / TRANSITION_PRICE_PRECISION;
+    // ==================================================================
+    //  Periods and price
+    // ==================================================================
+    enum Period { FixedPrice, Transition, Ended }
+
+    function transitionStartTime() public view returns (uint256) { return fixedEnd; }
+
+    function transitionEndTime() public view returns (uint256) {
+        return fixedEnd + TRANSITION_DURATION + transitionExtraDays * 1 days;
     }
 
-    /// @notice ✅ NEW: the full-precision transition price (whole Toman * 1000), for any
-    ///         off-chain consumer (e.g. a dashboard) that wants to show sub-Toman movement
-    ///         instead of the rounded value currentPriceToman() returns.
-    /// @notice ✅ FIXED (second critical bug found in review, alongside reportPayment() below):
-    ///         this used to always return monthlyPriceToman[5] (the LAST fixed-period price)
-    ///         during the fixed period, regardless of which month it actually was — because it
-    ///         never checked isSaleActive() at all, unlike currentPriceToman() right above it.
-    ///         A buyer paying in, say, month 2 of the fixed period would have been quoted
-    ///         month-2's correct whole-Toman price via currentPriceToman(), but this function
-    ///         (if it had been used anywhere during the fixed period) would have silently
-    ///         reported month-5's price instead. Fixed to mirror currentPriceToman()'s own
-    ///         branching exactly, just scaled by TRANSITION_PRICE_PRECISION.
-    function currentPriceMilliToman() public view returns (uint256) {
-        if (isSaleActive()) {
-            uint256 elapsed = block.timestamp - saleStartTime;
-            uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-            if (monthIndex > 5) monthIndex = 5;
-            return monthlyPriceToman[monthIndex] * TRANSITION_PRICE_PRECISION;
-        }
-        return transitionPriceMilliToman == 0
-            ? monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION
-            : transitionPriceMilliToman;
-    }
-
-    function isSaleActive() public view returns (bool) {
-        return block.timestamp < saleStartTime + SALE_DURATION;
-    }
-
-    /// @notice The moment the transition period begins — immediately when the fixed-price
-    ///         period ends. Not itself a stored variable (it's a pure function of
-    ///         saleStartTime), matching the existing pattern for saleStartTime + SALE_DURATION.
-    function transitionStartTime() public view returns (uint256) {
-        return saleStartTime + SALE_DURATION;
+    function isFixedActive() public view returns (bool) {
+        return !saleEnded && block.timestamp < fixedEnd;
     }
 
     function isTransitionActive() public view returns (bool) {
-        uint256 start = transitionStartTime();
-        return block.timestamp >= start && block.timestamp < start + TRANSITION_DURATION;
+        return !saleEnded && block.timestamp >= fixedEnd && block.timestamp < transitionEndTime();
     }
 
-    /// @notice 0-based transition-day index for "right now" — day 0 is the first day of the
-    ///         transition period. Only meaningful while isTransitionActive() is true.
-    function currentTransitionDay() public view returns (uint256) {
-        return (block.timestamp - transitionStartTime()) / 1 days;
+    function isSaleActive() public view returns (bool) {
+        return isFixedActive() || isTransitionActive();
     }
 
-    /// @notice Permissionless — anyone (not just the paymentOracle) can call this to fold all
-    ///         fully-completed-but-not-yet-priced transition-days into the price, one
-    ///         adjustment per day, in order. It is also called automatically at the start of
-    ///         every reportPayment() during the transition period, so the price a buyer is
-    ///         quoted is always caught up to "today" even if nobody has called this directly.
-    ///         Bounded loop: at most TRANSITION_DURATION/1 days (45) iterations total across the
-    ///         whole transition period's lifetime, and typically far fewer per call since most
-    ///         callers (reportPayment) trigger this at least daily.
-    function advanceTransitionPrice() public {
-        if (block.timestamp < transitionStartTime()) return; // fixed period still running
+    function currentPeriod() public view returns (Period) {
+        if (isFixedActive()) return Period.FixedPrice;
+        if (isTransitionActive()) return Period.Transition;
+        return Period.Ended;
+    }
 
-        if (transitionPriceMilliToman == 0) {
-            transitionPriceMilliToman = monthlyPriceToman[5] * TRANSITION_PRICE_PRECISION; // seed with the last fixed-period price
+    /// @notice Last price of the fixed period (the transition's starting price), in milli-Toman.
+    function lastFixedPriceMilli() public view returns (uint256) {
+        if (_segments.length > 0) return _segments[_segments.length - 1].priceMilli;
+        return monthlyPriceToman[2] * PRICE_PRECISION;
+    }
+
+    /// @notice Official price in milli-Toman (Toman * 1000) — the exact value used for settlement.
+    function currentPriceMilliToman() public view returns (uint256) {
+        uint256 t = block.timestamp;
+        if (t < fixedEnd) return _fixedPriceAt(t);
+        return transitionPriceMilliToman == 0 ? lastFixedPriceMilli() : transitionPriceMilliToman;
+    }
+
+    /// @notice Rounded price for display only; never use it for calculations.
+    function currentPriceToman() public view returns (uint256) {
+        return currentPriceMilliToman() / PRICE_PRECISION;
+    }
+
+    function _fixedPriceAt(uint256 t) private view returns (uint256) {
+        uint256 baseEnd = saleStartTime + BASE_FIXED_DURATION;
+        if (t < baseEnd) {
+            uint256 month = (t - saleStartTime) / SECONDS_PER_MONTH;
+            if (month > 2) month = 2;
+            return monthlyPriceToman[month] * PRICE_PRECISION;
         }
+        for (uint256 i = 0; i < _segments.length; i++) {
+            if (t < _segments[i].end) return _segments[i].priceMilli;
+        }
+        return lastFixedPriceMilli();
+    }
 
-        uint256 maxDay = TRANSITION_DURATION / 1 days;
+    function segmentCount() external view returns (uint256) { return _segments.length; }
+
+    function segmentAt(uint256 i) external view returns (uint256 end, uint256 priceMilli) {
+        return (_segments[i].end, _segments[i].priceMilli);
+    }
+
+    // ------------------------------------------------------------------
+    // CEO: extensions (unlimited in total; the price of an extended fixed period is set by the CEO and stays fixed)
+    // ------------------------------------------------------------------
+    /// @param extraDays days added to the fixed-price period
+    /// @param priceToman price (whole Toman) for exactly these added days
+    function extendFixedPeriod(uint256 extraDays, uint256 priceToman) external onlyCeo {
+        require(!saleEnded && block.timestamp < fixedEnd, "SurenSale: fixed period already over");
+        require(extraDays > 0 && extraDays <= MAX_EXTENSION_DAYS_PER_CALL, "SurenSale: bad extension length");
+        require(priceToman > 0, "SurenSale: zero price");
+        fixedEnd += extraDays * 1 days;
+        _segments.push(Segment(fixedEnd, priceToman * PRICE_PRECISION));
+        emit FixedPeriodExtended(extraDays, fixedEnd, priceToman);
+    }
+
+    function extendTransition(uint256 extraDays) external onlyCeo {
+        require(!saleEnded && block.timestamp < transitionEndTime(), "SurenSale: transition already over");
+        require(extraDays > 0 && extraDays <= MAX_EXTENSION_DAYS_PER_CALL, "SurenSale: bad extension length");
+        transitionExtraDays += extraDays;
+        emit TransitionExtended(extraDays, transitionEndTime());
+    }
+
+    // ------------------------------------------------------------------
+    // Transition price: permissionless, bounded catch-up (also run at the start of every sale)
+    // ------------------------------------------------------------------
+    function currentTransitionDay() public view returns (uint256) {
+        return (block.timestamp - fixedEnd) / 1 days;
+    }
+
+    function advanceTransitionPrice() public {
+        if (block.timestamp < fixedEnd) return;
+        if (transitionPriceMilliToman == 0) {
+            transitionPriceMilliToman = lastFixedPriceMilli(); // seeded with the last fixed-period price
+        }
+        uint256 maxDay = (TRANSITION_DURATION + transitionExtraDays * 1 days) / 1 days;
         uint256 today = currentTransitionDay();
-        if (today > maxDay) today = maxDay; // don't keep pricing forever past the window's end
+        if (today > maxDay) today = maxDay;
 
-        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * TRANSITION_PRICE_PRECISION;
-        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * TRANSITION_PRICE_PRECISION;
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
             uint256 dayVolume = transitionDailyVolumeSuren[dayIndex];
-            uint256 avg = _transitionMovingAverage(dayIndex);
-
+            uint256 avg = _movingAverage(dayIndex);
             if (avg > 0) {
-                uint256 highThreshold = (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
-                uint256 lowThreshold = (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR_LOCAL;
-
-                if (dayVolume > highThreshold) {
-                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR;
+                if (dayVolume > (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR) {
                     uint256 raised = transitionPriceMilliToman + step;
                     transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
-                } else if (dayVolume < lowThreshold) {
-                    uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR_LOCAL;
+                } else if (dayVolume < (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR) {
                     uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
                     transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
                 }
-                // else: within [80%, 120%] of the moving average — no change this day.
             }
-            // avg == 0 (no prior-day data yet, e.g. day 0) — no change; can't compare to a
-            // moving average that doesn't exist yet.
-
-            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / TRANSITION_PRICE_PRECISION);
+            emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / PRICE_PRECISION);
             lastPricedTransitionDay++;
         }
     }
 
-    /// @dev Average daily volume over the up-to-7 transition-days strictly before
-    ///      `uptoExclusiveDay` (i.e. days [uptoExclusiveDay-7, uptoExclusiveDay)). Returns 0 if
-    ///      `uptoExclusiveDay` is 0 (no prior days exist yet).
-    function _transitionMovingAverage(uint256 uptoExclusiveDay) private view returns (uint256) {
+    function _movingAverage(uint256 uptoExclusiveDay) private view returns (uint256) {
         if (uptoExclusiveDay == 0) return 0;
-        uint256 windowStart = uptoExclusiveDay > MOVING_AVERAGE_WINDOW_DAYS
-            ? uptoExclusiveDay - MOVING_AVERAGE_WINDOW_DAYS
-            : 0;
+        uint256 windowStart = uptoExclusiveDay > MOVING_AVERAGE_WINDOW_DAYS ? uptoExclusiveDay - MOVING_AVERAGE_WINDOW_DAYS : 0;
         uint256 count = uptoExclusiveDay - windowStart;
         uint256 sum;
-        for (uint256 d = windowStart; d < uptoExclusiveDay; d++) {
-            sum += transitionDailyVolumeSuren[d];
-        }
+        for (uint256 d = windowStart; d < uptoExclusiveDay; d++) sum += transitionDailyVolumeSuren[d];
         return sum / count;
     }
 
-    uint256 private constant BPS_DENOMINATOR_LOCAL = 10000;
+    // ==================================================================
+    //  Exchanges — managed by FoundationDAO (typed proposals, 3 of 5)
+    // ==================================================================
+    function registerExchange(address account, string calldata name, uint256 quota) external onlyFoundation {
+        require(account != address(0), "SurenSale: zero account");
+        require(_ex[account].status == ExchangeStatus.None, "SurenSale: account already used");
+        require(bytes(name).length > 0, "SurenSale: empty name");
+        require(address(this).balance >= GAS_DEPOSIT, "SurenSale: balance below gas deposit");
+        uint256 id = ++exchangeCount;
+        Exchange storage e = _ex[account];
+        e.status = ExchangeStatus.Active;
+        e.id = id;
+        e.name = name;
+        e.quota = quota;
+        _exchangeList.push(account);
+        emit ExchangeRegistered(account, id, name, quota, GAS_DEPOSIT);
+        // the deposit leaves the contract balance and is outside the quota
+        (bool ok, ) = account.call{value: GAS_DEPOSIT}("");
+        require(ok, "SurenSale: gas deposit failed");
+    }
 
-    // ------------------------------------------------------------------
-    // Payment reporting — the only entry point that actually moves real Suren.
-    // ------------------------------------------------------------------
+    function setExchangeQuota(address account, uint256 newQuota) external onlyFoundation {
+        Exchange storage e = _ex[account];
+        require(e.status == ExchangeStatus.Active || e.status == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        require(newQuota >= e.sold, "SurenSale: quota below what is already sold");
+        e.quota = newQuota;
+        emit ExchangeQuotaChanged(account, newQuota);
+    }
 
-    /// @notice Reports a confirmed (off-chain) Toman payment and automatically sends the
-    ///         equivalent Suren to the buyer.
-    /// @param buyer The buyer's Ethereum-style address (supplied by the user together with their payment)
-    /// @param tomanAmount The amount paid, in Toman (whole integer, no decimals)
-    /// @param paymentReference A unique identifier for this payment (e.g. the gateway's tracking
-    ///        code) — used to prevent the same payment from being processed twice
-    function reportPayment(
-        address buyer,
-        uint256 tomanAmount,
-        string calldata paymentReference
-    ) external onlyPaymentOracle {
-        require(isSaleActive() || isTransitionActive(), "SurenSale: sale and transition periods have both ended");
-        require(buyer != address(0), "SurenSale: zero buyer address");
-        require(tomanAmount > 0, "SurenSale: zero amount");
-        require(!processedPayments[paymentReference], "SurenSale: payment already processed");
-
-        processedPayments[paymentReference] = true;
-
-        // During the transition period, catch the price up to "today" (folding in every fully
-        // completed day since the last update) BEFORE quoting it to this payment — see
-        // advanceTransitionPrice() for why this is safe to call unconditionally and often.
-        if (isTransitionActive()) {
-            advanceTransitionPrice();
+    /// @notice Moves an exchange (remaining quota, statistics, used references, status) to a new account.
+    function changeExchangeKey(address oldAccount, address newAccount) external onlyFoundation {
+        Exchange storage o = _ex[oldAccount];
+        require(o.status == ExchangeStatus.Active || o.status == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        require(newAccount != address(0) && _ex[newAccount].status == ExchangeStatus.None, "SurenSale: new account already used");
+        _ex[newAccount] = o;
+        delete _ex[oldAccount];
+        _ex[oldAccount].status = ExchangeStatus.Removed;
+        for (uint256 i = 0; i < _exchangeList.length; i++) {
+            if (_exchangeList[i] == oldAccount) { _exchangeList[i] = newAccount; break; }
         }
+        emit ExchangeKeyChanged(oldAccount, newAccount, _ex[newAccount].id);
+    }
 
-        // ✅ FIXED (critical bug found in review — the actual point of the milli-Toman
-        // precision fix above only worked if it was actually USED here; it wasn't before):
-        // this used to call currentPriceToman() (whole Toman, floored) for the REAL settlement
-        // math — meaning even though transitionPriceMilliToman moved by fractional-Toman steps
-        // internally, every buyer was still settled at a price that only ever changed in whole-
-        // Toman increments (e.g. 116 → 117, a real jump of ~0.86%, not the intended ±0.5%
-        // daily step). Using currentPriceMilliToman() here means the actual number of Suren a
-        // buyer receives now reflects the full-precision price, not its rounded display value.
+    /// @notice Immediate stop of one exchange (FoundationDAO.pauseExchange: CEO or any principal board member alone).
+    function pauseExchange(address account) external onlyFoundation {
+        require(_ex[account].status == ExchangeStatus.Active, "SurenSale: exchange not active");
+        _ex[account].status = ExchangeStatus.Paused;
+        emit ExchangePaused(account);
+    }
+
+    function resumeExchange(address account) external onlyFoundation {
+        require(_ex[account].status == ExchangeStatus.Paused, "SurenSale: exchange not paused");
+        _ex[account].status = ExchangeStatus.Active;
+        emit ExchangeResumed(account);
+    }
+
+    function removeExchange(address account) external onlyFoundation {
+        ExchangeStatus s = _ex[account].status;
+        require(s == ExchangeStatus.Active || s == ExchangeStatus.Paused, "SurenSale: no such exchange");
+        _ex[account].status = ExchangeStatus.Removed;
+        emit ExchangeRemoved(account);
+    }
+
+    function setTotalCap(uint256 cap) external onlyFoundation {
+        totalCap = cap;
+        emit TotalCapChanged(cap);
+    }
+
+    // ==================================================================
+    //  The only function that moves Suren to customers
+    // ==================================================================
+    /// @param customer receives the Suren directly
+    /// @param tomanAmount Toman the exchange received from the customer (whole Toman)
+    /// @param minSurenOut minimum Suren the customer must get; fewer => revert
+    /// @param orderRef order id, unique per exchange
+    function sellTo(address customer, uint256 tomanAmount, uint256 minSurenOut, bytes32 orderRef) external {
+        Exchange storage e = _ex[msg.sender];
+        require(e.status == ExchangeStatus.Active, "SurenSale: caller is not an active exchange");
+        require(isSaleActive(), "SurenSale: sale is not active");
+        require(customer != address(0), "SurenSale: zero customer");
+        require(tomanAmount > 0, "SurenSale: zero amount");
+        require(!_usedReference[e.id][orderRef], "SurenSale: reference already used");
+
+        if (isTransitionActive()) advanceTransitionPrice();
+
         uint256 priceMilli = currentPriceMilliToman();
-        uint256 surenAmount = (tomanAmount * 1 ether * TRANSITION_PRICE_PRECISION) / priceMilli;
-
+        uint256 surenAmount = (tomanAmount * 1 ether * PRICE_PRECISION) / priceMilli;
+        require(surenAmount > 0 && surenAmount >= minSurenOut, "SurenSale: below minSurenOut");
+        require(e.sold + surenAmount <= e.quota, "SurenSale: exchange quota exceeded");
+        require(totalSurenSold + surenAmount <= totalCap, "SurenSale: total cap exceeded");
         require(surenAmount <= address(this).balance, "SurenSale: insufficient Suren balance");
 
+        _usedReference[e.id][orderRef] = true;
+        e.sold += surenAmount;
+        e.tomanReceived += tomanAmount;
+        e.salesCount += 1;
+        e.lastSaleAt = block.timestamp;
         totalSurenSold += surenAmount;
         totalTomanReceived += tomanAmount;
+        if (isTransitionActive()) transitionDailyVolumeSuren[currentTransitionDay()] += surenAmount;
 
-        if (isTransitionActive()) {
-            transitionDailyVolumeSuren[currentTransitionDay()] += surenAmount;
-        }
-
-        (bool success, ) = buyer.call{value: surenAmount}("");
-        require(success, "SurenSale: transfer to buyer failed");
-
-        emit PaymentReported(buyer, tomanAmount, surenAmount, priceMilli / TRANSITION_PRICE_PRECISION, priceMilli, paymentReference);
+        emit SaleExecuted(msg.sender, customer, tomanAmount, surenAmount, priceMilli, orderRef);
+        (bool ok, ) = customer.call{value: surenAmount}("");
+        require(ok, "SurenSale: transfer to customer failed");
     }
 
-    // ------------------------------------------------------------------
-    // Operational key management — Foundation only (via FoundationDAO.proposeExecute, simple majority)
-    // ------------------------------------------------------------------
-    function setPaymentOracle(address newOracle) external onlyFoundation {
-        require(newOracle != address(0), "SurenSale: zero oracle address");
-        emit PaymentOracleUpdated(paymentOracle, newOracle);
-        paymentOracle = newOracle;
+    // ==================================================================
+    //  End of the sale and sweeping what was not sold
+    // ==================================================================
+    /// @notice Board decision (EndSale proposal): stops all sales at once.
+    function endSale() external onlyFoundation {
+        require(!saleEnded, "SurenSale: already ended");
+        saleEnded = true;
+        emit SaleEnded();
     }
 
-    // ------------------------------------------------------------------
-    // Sweeping unsold balance — only after the sale period has formally ended, only by the Foundation.
-    // ------------------------------------------------------------------
+    /// @notice True when the sale is officially over: ended by the foundation, or both periods ran out.
+    function isSaleOver() public view returns (bool) {
+        return saleEnded || block.timestamp >= transitionEndTime();
+    }
+
     function sweepUnsold(address to) external onlyFoundation {
-        require(!isSaleActive() && !isTransitionActive(), "SurenSale: sale or transition period still active");
-        require(to != address(0), "SurenSale: zero destination address");
-
+        require(isSaleOver(), "SurenSale: sale not officially over");
+        require(to != address(0), "SurenSale: zero destination");
         uint256 amount = address(this).balance;
         require(amount > 0, "SurenSale: nothing to sweep");
-
         emit UnsoldSurenSweeped(to, amount);
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "SurenSale: sweep transfer failed");
+        (bool ok, ) = to.call{value: amount}("");
+        require(ok, "SurenSale: sweep failed");
     }
 
-    // ------------------------------------------------------------------
-    // View helpers — for the public sale dashboard
-    // ------------------------------------------------------------------
-    function getBalance() external view returns (uint256) {
-        return address(this).balance;
+    // ==================================================================
+    //  Views for the public dashboard
+    // ==================================================================
+    function getExchange(address account) external view returns (
+        ExchangeStatus status,
+        string memory name,
+        uint256 quota,
+        uint256 quotaLeft,
+        uint256 sold,
+        uint256 tomanReceived,
+        uint256 salesCount,
+        uint256 lastSaleAt
+    ) {
+        Exchange storage e = _ex[account];
+        uint256 left = e.quota > e.sold ? e.quota - e.sold : 0;
+        return (e.status, e.name, e.quota, left, e.sold, e.tomanReceived, e.salesCount, e.lastSaleAt);
     }
 
-    function currentMonthIndex() external view returns (uint256) {
-        uint256 elapsed = block.timestamp - saleStartTime;
-        uint256 monthIndex = elapsed / SECONDS_PER_MONTH;
-        return monthIndex > 5 ? 5 : monthIndex;
+    function exchangeQuotaLeft(address account) external view returns (uint256) {
+        Exchange storage e = _ex[account];
+        return e.quota > e.sold ? e.quota - e.sold : 0;
     }
+
+    function getExchanges() external view returns (address[] memory) { return _exchangeList; }
+
+    function getBalance() external view returns (uint256) { return address(this).balance; }
 
     function timeRemaining() external view returns (uint256) {
-        uint256 endTime = saleStartTime + SALE_DURATION;
-        if (block.timestamp >= endTime) return 0;
-        return endTime - block.timestamp;
+        if (saleEnded || block.timestamp >= fixedEnd) return 0;
+        return fixedEnd - block.timestamp;
     }
 
-    /// @notice Seconds remaining in the transition period, 0 if it hasn't started yet or has
-    ///         already ended. For the public sale dashboard, mirroring timeRemaining() above.
     function transitionTimeRemaining() external view returns (uint256) {
-        uint256 start = transitionStartTime();
-        uint256 endTime = start + TRANSITION_DURATION;
-        if (block.timestamp < start || block.timestamp >= endTime) return 0;
-        return endTime - block.timestamp;
+        uint256 end = transitionEndTime();
+        if (saleEnded || block.timestamp < fixedEnd || block.timestamp >= end) return 0;
+        return end - block.timestamp;
     }
 }

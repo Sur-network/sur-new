@@ -35,6 +35,7 @@ interface ISurenSale {
     function removeExchange(address account) external;
     function setTotalCap(uint256 cap) external;
     function sweepUnsold(address to) external;
+    function endSale() external;
     function pauseExchange(address account) external;
 }
 
@@ -96,7 +97,7 @@ contract FoundationDAO {
     // ------------------------------------------------------------------
     enum ProposalType {
         Spend, ElectOfficers, RegisterExchange, SetExchangeQuota, ChangeExchangeKey, ResumeExchange,
-        RemoveExchange, SetSaleTotalCap, SweepUnsold, RotateIdentityOracle, StartLottery, SetSaleContract, Execute
+        RemoveExchange, SetSaleTotalCap, SweepUnsold, RotateIdentityOracle, StartLottery, SetSaleContract, Execute, EndSale
     }
     enum ProposalStatus { Pending, Executed }
     enum AssemblyKind { Ordinary, Extraordinary }
@@ -115,6 +116,7 @@ contract FoundationDAO {
     ///   StartLottery:        numA=ticketPrice, numB=winnersCount, numC=closeTime
     ///   SetSaleContract:     addrA=SurenSale address
     ///   Execute:             addrA=target, numA=value, text=description, data=calldata
+    ///   EndSale:             (no parameters) — stops SurenSale for good
     struct Params {
         ProposalType pType;
         address addrA;
@@ -353,6 +355,10 @@ contract FoundationDAO {
         return _create(Params(ProposalType.SetSaleContract, sale, address(0), address(0), 0, 0, 0, "", ""));
     }
 
+    function proposeEndSale() external onlyBoard returns (uint256) {
+        return _create(Params(ProposalType.EndSale, address(0), address(0), address(0), 0, 0, 0, "", ""));
+    }
+
     /// @notice The single free-form type. Stored visibly (target, value, data, description) and voted
     ///         with the same paramsHash rule as every other type. The target may not be this contract
     ///         or FoundationMembers.
@@ -472,6 +478,8 @@ contract FoundationDAO {
             ISurenSale(sale).setTotalCap(p.numA);
         } else if (t == ProposalType.SweepUnsold) {
             ISurenSale(sale).sweepUnsold(p.addrA);
+        } else if (t == ProposalType.EndSale) {
+            ISurenSale(sale).endSale();
         } else {
             revert("FoundationDAO: unknown type");
         }

@@ -62,10 +62,10 @@ library SurAddresses {
     // are NOT immutable constants baked into every consumer forever: each contract still stores
     // its own oracle address in ordinary (mutable) state, initialized from here, and can later
     // rotate it via its own governance path (ValidatorsBoard for distributionOracle/verifier,
-    // FoundationDAO for identityOracle/paymentOracle). Centralizing the *initial* value here,
-    // in one file, means updating an oracle before genesis/deployment only requires editing one
-    // line instead of hunting through four separate contract files. All four are checksummed
-    // per EIP-55.
+    // FoundationDAO for identityOracle). Centralizing the *initial* value here, in one file,
+    // means updating an oracle before genesis only requires editing one line instead of hunting
+    // through several contract files. All three are checksummed per EIP-55. (v2.5 has exactly
+    // three oracles: verifier, distributionOracle, identityOracle.)
     // ------------------------------------------------------------------
 
     /// @dev Initial distributionOracle for BlockRewardDistributor.sol.
@@ -77,6 +77,5 @@ library SurAddresses {
     /// @dev Initial identityOracle for IdentityRegistry.sol.
     address internal constant IDENTITY_ORACLE = 0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9;
 
-    /// @dev Initial paymentOracle for SurenSale.sol.
-    address internal constant PAYMENT_ORACLE = 0xc1fF1F40F665404fbf7DaAD26153357C544C35A0;
+    // (v2.5: the former PAYMENT_ORACLE is gone — SurenSale has no oracle; sales go through licensed exchanges.)
 }
