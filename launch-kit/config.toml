@@ -78,14 +78,24 @@ min-gas-price=100000000000000
 tx-pool-no-local-priority=true
 tx-pool-min-gas-price=100000000000000
 
-# ===== یافتهٔ بازبین مستقل (HIGH-3) =====
+# ===== یافتهٔ بازبین مستقل (HIGH-3) و محدودیت آن (MEDIUM-A دور ۲) =====
 # چون genesis زنجیره zeroBaseFee دارد، baseFee همیشه 0 است و قیمت مؤثر تراکنش «فقط priority fee» است. بدون این گزینه Besu برای eth_maxPriorityFeePerGas
-# مقدار 0 و برای eth_feeHistory پاداش‌های 0 برمی‌گرداند، در حالی که eth_gasPrice برابر 1e14 است. کیف‌پول/کتابخانه‌ای که (مثل viem/wagmi) priority را از همین RPC
-# می‌گیرد، تراکنش type-2 با priority کمتر از حداقل می‌فرستد: یا پذیرفته می‌شود ولی هرگز استخراج نمی‌شود و nonceهای بعدی همان حساب را هم می‌بندد.
-# min-priority-fee=1e14 (برابر min-gas-price) این را درست می‌کند: eth_maxPriorityFeePerGas برابر 0x5af3107a4000 می‌شود و تراکنش با همین priority استخراج می‌شود.
+# مقدار 0 برمی‌گرداند (و eth_feeHistory پاداش 0)، در حالی که eth_gasPrice برابر 1e14 است. کتابخانه‌ای که priority را از eth_maxPriorityFeePerGas می‌گیرد
+# (viem: estimateFeesPerGas / prepareTransactionRequest) تراکنش type-2 با priority کمتر از حداقل می‌فرستد: یا رد می‌شود یا پذیرفته می‌شود ولی هرگز استخراج
+# نمی‌شود و nonceهای بعدی همان حساب را هم می‌بندد.
+# min-priority-fee=1e14 (برابر min-gas-price) «eth_maxPriorityFeePerGas» را درست می‌کند: برابر 0x5af3107a4000 می‌شود و تراکنش viem با همین priority استخراج می‌شود
+# (VERIFIED [K] با viem + حساب محلی؛ Besu 26.9.0، genesis آزمایشی، یک نود؛ README ۴-۵ و ۷-۷).
+# ⚠ این گزینه «eth_feeHistory» را درست نمی‌کند: آزمون بازبین دور ۲ نشان داد پاداش‌های eth_feeHistory برای «بلاک‌های خالی» همچنان 0x0 است
+# (پاداش از تراکنش‌های داخل بلاک محاسبه می‌شود؛ در زنجیرهٔ کم‌تراکنش اغلب بلاک خالی است). پس کیف‌پول/dAppی که priority را از fee history
+# تخمین می‌زند یا tip ثابت می‌گذارد (مثلاً 1 تا 1.5 gwei، یعنی 1e9 تا 1.5e9 wei، بسیار کمتر از 1e14) می‌تواند تراکنش گیرکرده بسازد.
+#   VERIFIED (viem + حساب محلی): مسیر eth_maxPriorityFeePerGas با این گزینه درست است.
+#   UNVERIFIED: کیف‌پول‌های injected مثل MetaMask پشت wagmi (روش تخمین‌شان آزموده نشد؛ نباید فرض کرد fee history را نمی‌خوانند).
+# پیش از راه‌اندازی «اجباری»: آزمون مسیر واقعی dApp (wagmi + کیف‌پول injected) روی یک زنجیرهٔ دورریختنی با همین config (README بخش ۸).
+# گزینه‌های مالک: (الف) dApp priority را صریحاً از eth_maxPriorityFeePerGas بگیرد (نه از کیف‌پول)؛ (ب) در کد dApp یک tip ثابت ≥ 1e14 wei بگذارد
+# (maxPriorityFeePerGas ≥ 1e14 و maxFeePerGas ≥ آن)؛ (ج) هر دو.
 # باید روی «هر نود» گذاشته شود، از جمله نودهای RPC سرویس‌ها (آن‌ها هستند که به کیف‌پول‌ها قیمت پیشنهادی می‌دهند)، و روی همهٔ ولیدیتورها یکسان باشد
-# (مثل min-gas-price تنظیم محلی است، نه پروتکل). محدودیت: این گزینه فقط «قیمت پیشنهادی RPC» را درست می‌کند؛ تراکنشی که priority را صریح 0 بگذارد (maxFee ≥ 1e14) هنوز هش می‌گیرد
-# و استخراج نمی‌شود (آزموده [K])؛ کیف‌پول/dApp باید priority را از eth_maxPriorityFeePerGas بگیرد. VERIFIED [K] روی Besu 26.9.0 (genesis آزمایشی، یک نود): README ۴-۵ و ۷-۷.
+# (مثل min-gas-price تنظیم محلی است، نه پروتکل). محدودیت دوم: این گزینه فقط «قیمت پیشنهادی RPC» را درست می‌کند؛ تراکنشی که priority را صریح 0 بگذارد (maxFee ≥ 1e14) هنوز هش می‌گیرد
+# و استخراج نمی‌شود (آزموده [K]؛ روش بازیابی: README ۷-۷).
 min-priority-fee=100000000000000
 # سایر تنظیمات tx-pool عمداً پیش‌فرض Besu ماندند (LAYERED، 75MB هر لایه، حداکثر 10000 prioritized). تنظیم‌شان بعد از آزمون بار
 # با بلاک‌های پر انجام شود (OWNER/UNVERIFIED).
