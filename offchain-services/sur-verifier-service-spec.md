@@ -661,3 +661,175 @@ services:
 | ۹ | ✅ دور اول آزمون Besu برای نسخهٔ ۲.۵ (تعریف کلید نود/اپراتور، تعلیق داوطلبانه، انتقال صندلی با قاعدهٔ قبلی — BG-06؛ دور 1b با BH-06A/BH-06B آن را برای قاعدهٔ «صندلی فعال فعال می‌ماند» دوباره اجرا کرد و گذشت، سوزاندن مازاد پاداش) انجام شد (۲۰۲۶-۱۱-۱۹؛ `testing-evidence/besu-live-test-v25-2026-11-19/`)؛ نقش Verifier در آن آزمون را اسکریپت‌های آزمایشی بازی کردند (آدرس `verifier` در genesis آزمایشی با کلید آزمایشی جایگزین شد)؛ خودِ سرویس هنوز نوشته و آزموده نشده است |
 | ۱۰ | ✅ یافتهٔ F-5 بسته شد (تصمیم مالک ۲۰۲۶-۱۱-۱۹ = تعویض دومرحله‌ای؛ در کد و آزمون Hardhat): ولیدیتور `Active` با `proposeOperator` پیشنهاد می‌دهد و Verifier پس از بررسی سلامت نود تازه `confirmOperatorReady` را می‌زند (بخش ۶.۸.۱)؛ `setOperator` فقط بیرون از مجموعهٔ اجماع فوری است. 🔶 باقی: مهلت (SLA) تأیید Verifier؛ آستانه‌های عددی بررسی؛ روش آزمون توان امضا؛ اجرای دوبارهٔ BG-03 روی بایت‌کد جدید در دور ۱b/۱c آزمون Besu (دور ۱b روی بایت‌کد پیش از تعویض دومرحله‌ای ساخته شد؛ نتیجهٔ مسیر جدید هنوز ثبت نشده) |
 | ۱۱ | 🔶 یافتهٔ F-1: لاگ Besu در حالت `contract` گاهی `IllegalStateException: Failed validator smart contract call` ثبت کرد (۸ بار در حدود ۱٬۱۰۰ بلاک روی شبکهٔ چندولیدیتوری؛ احتمالاً رقابت بین import بلاک و پردازشگر پیام BFT؛ هر بار یک پیام BFT از دست رفت و فاصلهٔ بلاک‌ها بیش از ۲ ثانیه نشد). پایش این خطا در لاگ نودها و بررسی یا ثبت مسئله در Besu پیش از mainnet لازم است؛ صاحب پایش تعیین نشده. همچنین F-6: بازیابی پس از توقف زیر نصاب ۸۳ ثانیه طول کشید و F-7: `reveal` لاتاری باید در بلاکی تا `target+250` استخراج شود |
+| ۱۲ | 🔶 تصمیم‌های مالک `VD-1` تا `VD-12` که هم‌ترازی فاز A (۲۰۲۶-۱۱-۲۰) پیدا کرد: محل OTP، خط لولهٔ `personKey`، پیامد جغرافیایی برای `Active`، بازگشت بی‌نظارت پس از لغو حذف، پیامد ناقض یکتایی، مؤسس‌بودن خریدار، اعداد، پیش‌نیاز پروتکل نود، نگهدارنده‌های شواهد، بانک geo، نگه‌داری کلید و HA، چرخش کلید — جدول کامل در بخش ۱۰.۱۱ |
+
+
+---
+
+## ۱۰. طرح ساخت v2.5 (فاز A؛ کد هنوز نوشته نشده)
+
+> **وضعیت:** طرح ساخت پیشنهادی برای `Deployments/Verifier` (شاخهٔ `v2.5-dev`)، هم‌سبک با `GenesisBuilder`، `RewardRouter` و `IdentityRegistry` (TypeScript، ESM، `viem`، `better-sqlite3`، `pino`، `vitest`، `tsc --noEmit`؛ README فارسی و انگلیسی). هیچ بخشی از آن پیاده یا آزموده نشده است. 🔶 = تصمیم مالک (فهرست در ۱۰.۱۱). همهٔ اعداد داخل [ ] پیشنهادند.
+
+### ۱۰.۱ ماژول‌ها، فراخوان‌های on-chain و کلید هر کدام
+
+| ماژول | کار | فراخوان on-chain (کلید) | اندازه / ریسک |
+|---|---|---|---|
+| `M0 scaffold` | بسته، `contracts/` همگام‌شده با هش (مثل GenesisBuilder `contracts:sync` و `SOURCES.json`)، تولید ABI از کامپایل، بارگذار پیکربندی و خودآزمون جداسازی کلید | — | S / متوسط |
+| `M1 chain` | خواننده‌های Registry، Board، IdentityRegistry، SeatNFT، Lottery؛ نشانگر لاگ؛ **بازپخش رویداد** (`OperatorSet`، `OperatorChangeConfirmed`، `SeatTransferred`) روی پایهٔ state بلاک ۰ و نگاشت بلاک←مالک | فقط خواندن | M / **بالا** (F-4) |
+| `M2 state` | SQLite، مهاجرت‌ها، `tx_outbox` (قصد تراکنش پیش از broadcast)، تنظیمات | — | M / متوسط |
+| `M3 monitor` | `admin_peers`، `qbft_*`، کش کشف نود، `GeoIpProvider` | فقط RPC نود پایش | M / متوسط |
+| `M4 rules` | ارزیاب `c01-rules-v1` برای `Active`؛ نسبت ۹۵٪ برای `Probation`/`Demoted` (۶.۷-ث) | — | L / **بالا** (تعلیق نادرست) |
+| `M5 evidence` | ساخت بسته (JSON متعارف)، `keccak256`، امضا، ذخیرهٔ رمزشده نزد ≥۲ نگهدارنده، نگه‌داری و تمدید | — | M / بالا |
+| `M6 signer` | رابط `TxSigner` (کلید آزمایشی در آزمون؛ تولید: بسته به VD-11)، سیاست امضا، اجراکنندهٔ `tx_outbox` با «شبیه‌سازی اول» | همهٔ تراکنش‌ها (`verifier`) | M / بالا |
+| `M7 entry` | `recordActivation` (عادی، مؤسس)، `recordRecovery`، `recordResume`؛ پیش‌شرط ایمنی نود؛ کنترل `personKey` و `isFullyVerified` پیش از ارسال | `Registry.recordActivation/recordRecovery/recordResume` (`verifier`) | M / **بالا** (قفل اجماع) |
+| `M8 enforce` | `recordSuspension`، `recordPreExitViolation`، پیگیری پرونده‌ها (`housekeeping` پرونده) | `Registry.recordSuspension/recordPreExitViolation` (`verifier`)؛ `resolveMassFailureCheck`، `assertDeliveryDisputed`، `executeUncontestedSlash`، `resolveAppealIfExpired`، `resolveDeliveryDisputeIfExpired` (بدون‌مجوز) | L / **بالا** |
+| `M9 opchange` | `confirmOperatorReady` با معیارهای ۶.۸.۱؛ وابسته به پروتکل `SUR_NODE_CHECK_V1` | `Registry.confirmOperatorReady` (`verifier`) | M / بالا؛ **مسدود با VD-8** |
+| `M10 person` | رابط `KeyAccessClient`، پیوند آدرس↔`personKey`، چرخهٔ ممنوعیت، مسیر داخلی Identity Service | — | M / بالا (حریم خصوصی) |
+| `M11 board` | `refreshBoard`، `syncBoard`، `fillVacancies`، `syncVoters`، `referRecoveryRemovalToAssembly`، `clearStaleVotes` | `Board.*` بدون‌مجوز (آدرس سرویس برای گس) | S / کم |
+| `M12 removal` | تشخیص ولیدیتور خاموش‌کنندهٔ بازیابی و `recordRecoveryRemoval`؛ `expireRecoveryRemoval` | `Registry.recordRecoveryRemoval` (`verifier`)؛ `expireRecoveryRemoval` (بدون‌مجوز) | M / متوسط (اضطراری؛ طراحی ابزار بازیابی هنوز نیست) |
+| `M13 api` | `node:http`: challenge/register/node-id/status و مسیر داخلی؛ احراز با امضای EIP-191 | فقط خواندن | S–M / متوسط |
+| `M14 ops` | هشدار (ایمیل/پیجر؛ رابط `AlertSink`)، dead-man's-switch، قفل تک‌نمونه، کلید توقف اضطراری، `status` | — | S / متوسط |
+| `M15 cli/docker` | `serve`، `run-once`، `dry-run`، `status`؛ Dockerfile، compose، README فارسی و انگلیسی | — | S / کم |
+| `M16 live-scenarios` | اسکریپت‌های سناریو برای Besu واقعی (اجرا جداگانه و با تأیید مالک) | — | M / کم |
+| `M-OTP` (اختیاری) | فقط «حالت الف»: OTP و `setXVerified`؛ **فرایند و پکیج جدا با کلید `identityOracle`** | `IdentityRegistry.set*Verified` (`identityOracle`) | M / بالا |
+
+**جداسازی کلید:** فرایند Verifier هیچ‌وقت `identityOracle` یا `distributionOracle` را نمی‌خواند. فراخوان‌های بدون‌مجوز با همان آدرس سرویس (برای گس) فرستاده می‌شوند؛ 🔶 گزینهٔ جدا کردن آن‌ها روی آدرس بی‌اختیار دیگر (کاهش سطح حمله) در VD-11 است.
+
+### ۱۰.۲ جریان داده در یک چرخهٔ ساعتی (خلاصه)
+
+`M1` رویدادهای تازه را می‌خواند و state را به‌روز می‌کند ← `M3` `admin_peers` و بلاک‌های بازه را می‌گیرد و geo را می‌سنجد ← `M4` برای هر ولیدیتور یک نتیجه می‌دهد (`OK`/`INACTIVE_CONFIRMED`/`UNKNOWN(کد)` یا برای `Probation`: `OK`/`FAIL`/`UNKNOWN`) ← فقط اگر **تغییر وضعیت** لازم بود: `M5` بسته می‌سازد و نزد نگهدارنده‌ها می‌گذارد ← `M6` قصد را در `tx_outbox` می‌نویسد، شبیه‌سازی می‌کند، می‌فرستد و رسید را (با `decisionId` از لاگ) ثبت می‌کند ← `M11`/housekeeping ← heartbeat. هر مرحله‌ای که شکست بخورد نتیجه‌اش «نامشخص» است و تراکنشی نمی‌زند.
+
+### ۱۰.۳ داده‌های آف‌چین و جای نگه‌داری
+
+| داده | کجا | حساسیت / نکته |
+|---|---|---|
+| `personKey` = `HMAC-SHA256(کلید محرمانه، کد ملی ۱۰رقمی با صفر پیشرو، برچسب sur-personkey-v1)` | HMAC فقط در سرویس دسترسی کلید (Vault Transit `hmac` ✅ پشتیبانی می‌شود)؛ نتیجه در جدول `person_bindings` Verifier | کد ملی خام در Verifier نیست؛ Identity Service آن را از eKYC دارد و از KAS HMAC می‌گیرد (🔶 VD-2) |
+| `person_bindings`، `person_status` | SQLite Verifier | آدرس↔`personKey`؛ وضعیت `active`/`provisional_ban`/`final_ban`/`lifted` با ارجاع به رویداد |
+| `seats`، `registry_events` | SQLite | صندلی، مالک جاری، اپراتور، نود، پایهٔ بلاک ۰ و رویدادهای بازپخش‌شده با کلید `(block_number, log_index)` و اعمال idempotent |
+| `node_registrations` | SQLite | `(owner, operator, node_id, source)`؛ `node_id` رمزشدهٔ فیلدی؛ پیشنهادی در برابر جاری جدا |
+| `liveness_log`، `node_discovery_cache` | SQLite | بخش ۵؛ IP خام فقط در کش کوتاه‌مدت و با سیاست نگه‌داری |
+| `status_decisions`، `evidence_packages` (فقط نمایه) | SQLite | بخش ۵ |
+| **بستهٔ شواهد** | فایل رمزشده (AES-256-GCM با کلید داده‌ی بسته‌شده برای دست‌کم ۲ گیرنده؛ نگهدارنده‌ها مستقل از اپراتور) و کپی در ≥۲ مخزن مستقل؛ تراکنش فقط پس از ذخیرهٔ موفق در هر دو | JSON متعارف (RFC 8785)؛ `evidenceHash = keccak256(بایت‌های JSON پاکت)`؛ پاکت = `{body, sig}` و `sig` امضای هش `body` با کلید سرویس (RFC 6979 قطعی). فهرست محتوا: بخش ۵ و ۶. 🔶 هویت نگهدارنده‌ها: VD-9 |
+| `tx_outbox` | SQLite | حالت‌ها `prepared → submitted ⇄ unknown → confirmed/reverted` مثل `epoch_txs` در RewardRouter؛ پیش از broadcast نوشته می‌شود |
+| `api_challenges` | SQLite | nonce با TTL ≈ ۵ دقیقه، یک‌بارمصرف |
+| `service_state` | SQLite | آخرین چرخهٔ کامل، heartbeat، آخرین بلاک پردازش‌شده |
+
+**ژئولوکیشن:** `remoteAddress` هر peer از `admin_peers` (قالب `ip:port`، IPv6 با `[ ]`) تجزیه می‌شود؛ IP خصوصی، loopback و CGNAT ⇒ `unknown`. رابط `GeoIpProvider.lookup(ip) → { country | null, dbVersion }`؛ پیاده‌سازی تولیدی (پایگاه آفلاین مثل GeoLite2) و ساختگی (برای آزمون) قابل‌تعویض؛ نسخه/هش بانک در بسته می‌آید. 🔶 انتخاب بانک (VD-10). **liveness:** `Probation`/`Demoted` از حضور `id` در `admin_peers` (و، اگر در Besu 26.9 راستی‌آزمایی شد، هش سر زنجیرهٔ peer برای همگامی)؛ `Active` از `miner` بلاک‌ها و `qbft_getSignerMetrics`.
+
+### ۱۰.۴ پیکربندی
+
+متغیرهای `VERIFIER_*` فقط: `CHAIN_RPC_URL`، `MONITOR_RPC_URL`، `DB_PATH`، `EVIDENCE_DIR` و فهرست نگهدارنده‌ها (کلیدهای عمومی)، `SIGNER_*` (نوع و نشانی؛ بدون کلید خام در فایل)، `GENESIS_OWNERS_FILE` (آدرس مالک مؤسسان و کلید اپراتور ولیدیتور اول برای پایهٔ بازپخش)، `GEOIP_DB_PATH`، `KEY_ACCESS_URL`، `IDENTITY_SERVICE_*` (تأیید متقابل مسیر داخلی)، `HEALTHCHECK_URL`، `ALERT_*`، `API_*`، `RULES_VERSION`، و **کلید روشن/خاموش هر نوع تصمیم** (`ENABLE_ACTIVATION`، `ENABLE_SUSPENSION`، `ENABLE_PRE_EXIT`، `ENABLE_OPCHANGE`، `ENABLE_REMOVAL`، `ENABLE_HOUSEKEEPING`؛ همه پیش‌فرض خاموش؛ حالت `OBSERVE_ONLY` فقط مشاهده و ثبت می‌کند و تراکنش نمی‌زند). آستانه‌های `c01-rules-v1` در پیکربندی نسخه‌دار با `rules_version` می‌آیند. بارگذار فقط متغیرهای خودش را می‌خواهد و وجود متغیر کلید نقش دیگر (`IDENTITY_ORACLE_*`، `DISTRIBUTION_ORACLE_*`) را خطای شروع می‌داند؛ آزمونی همین را قفل می‌کند.
+
+### ۱۰.۵ حالت‌های خطا
+
+| خطا | رفتار |
+|---|---|
+| RPC زنجیره/پایش قطع یا کند | چرخه رد می‌شود؛ نتیجهٔ `UNKNOWN(MONITOR_UNHEALTHY)`؛ هیچ تراکنشی؛ هشدار پس از آستانه |
+| نود پایش ناهمگام | `UNKNOWN`؛ شمارش ۴ساعته از داده‌ی کامل بعدی دوباره شروع می‌شود |
+| ریست سرویس وسط ارسال | `tx_outbox` پس از بازگشت وضعیت را از رسید/nonce تطبیق می‌دهد؛ ارسال تکراری بی‌خطر است (ریورت روی زنجیره) |
+| گس ناکافی | توقف ارسال، هشدار فوری؛ مشاهده ادامه دارد |
+| Vault/امضاکننده در دسترس نیست | هیچ تراکنشی؛ هشدار؛ مشاهده ادامه دارد |
+| ذخیرهٔ بسته نزد یکی از نگهدارنده‌ها شکست خورد | تراکنش زده نمی‌شود |
+| Identity Service یا KAS در دسترس نیست | پیوند `personKey` نمی‌رسد ⇒ فعال‌سازی غیرمؤسس انجام نمی‌شود (شکست بسته) |
+| بانک geo ناموجود/کهنه | `geo_status = unknown` ⇒ `UNKNOWN`، نه `non_iran` |
+| `verifier()` ≠ کلید سرویس | توقف ارسال و هشدار (گام ۱۱) |
+| تعلیق‌های هم‌زمان بیش از سقف لغزان | توقف و هشدار انسانی (سیاست سرویس امضا، بخش ۴) |
+| حفره در لاگ رویدادهای قدیمی | بازپخش متوقف و هشدار؛ هرگز جایگزینی با نگاشت جاری (همان قاعدهٔ Router) |
+| QBFT نهایی است (بدون reorg) | نیازی به منطق reorg نیست؛ ولی نشانگر لاگ با ارتفاع نهایی‌شده پیش می‌رود |
+
+### ۱۰.۶ راهبرد آزمون در برابر قراردادهای واقعی
+
+**ابزار موجود (بررسی‌شده):** `Plan/contracts-tests` آزمون Hardhat درون‌فرایندی با روش «شبیه‌سازی و استخراج» است؛ `Deployments/GenesisBuilder` از Foundry `anvil` (آزموده با ۱٫۸٫۵؛ روی این ماشین ۱٫۸٫۵ است) و `solc` ۰٫۸٫۲۴ و برای راستی‌آزمایی Besu زندهٔ Docker (`hyperledger/besu:26.9.0`) استفاده می‌کند.
+
+**راهبرد پیشنهادی (سه لایه):**
+1. **واحد (بدون زنجیره):** `c01-rules-v1`، نسبت ۹۵٪، JSON متعارف و هش، چرخهٔ ممنوعیت `personKey`، تجزیهٔ `remoteAddress`، بارگذار پیکربندی و جداسازی کلید.
+2. **یکپارچه روی EVM واقعی (لایهٔ اصلی):** `globalSetup` یک `genesis.json` با **CLI خودِ GenesisBuilder** از قراردادهای همگام‌شده می‌سازد (پیکربندی `examples/genesis-config.local-test.json`؛ نتیجه با هش `SOURCES.json` کش می‌شود) و `anvil --init` آن را بالا می‌آورد؛ یعنی دقیقاً همان بایت‌کد و state seed شده که به Besu می‌رود. **راستی‌آزمایی در همین جلسه (نه بخشی از کد):** ساخت genesis ≈ ۲۶ ثانیه و ۳۱۱ کیلوبایت؛ `anvil --init` آن را پذیرفت؛ `getValidators()` ولیدیتور اول را برگرداند؛ `anvil_setCoinbase` + `anvil_mine` فیلد `miner` بلاک را کنترل می‌کند؛ `evm_increaseTime` زمان ۷ روز را می‌پرد (برای دورهٔ آزمایشی)؛ ولی `admin_peers` و `qbft_*` در anvil **نیستند**. هر فایل آزمون با `evm_snapshot`/`evm_revert` ایزوله می‌شود. نبودِ anvil یا GenesisBuilder ⇒ آزمون‌های این لایه با پیام «skipped» رد می‌شوند (مثل e2e GenesisBuilder)، نه شکست بی‌صدا. جایگزین ردشده: کپی روش `contracts-tests/test/helpers.js` (Hardhat) چون زنجیرهٔ ابزار دوم و کد تکراری می‌آورد.
+3. **Besu زنده (اختیاری، پیش از راه‌اندازی):** اسکریپت‌های سناریو با `hyperledger/besu:26.9.0` چندنودی QBFT حالت قرارداد؛ منابع Docker با پیشوند `sur25v-` و حذف پایان‌کار؛ موارد: قالب واقعی `admin_peers`، `qbft_getSignerMetrics`، ترتیب پیشنهاددهنده برای `expected_turns`، BG-03 دوباره روی مسیر دومرحله‌ای، فعال‌سازی «phantom».
+
+**ABI:** از کامپایل قراردادهای همگام‌شده تولید می‌شود (`abi:gen`) و آزمونی شکست می‌خورد اگر ABI کامیت‌شده با کامپایل فرق کند؛ هر تغییر قرارداد را کامپایل برنامه می‌گیرد (فهرست جامع ۸.۴).
+
+| بخش | در آزمون |
+|---|---|
+| قراردادها، EVM، رویدادها، `eth_call` و ریورت‌ها | **واقعی** (بایت‌کد GenesisBuilder روی anvil) |
+| viem، SQLite، API HTTP، JSON متعارف، outbox و ریست وسط کار، شبیه‌سازی اول | **واقعی** |
+| زمان | ساعت قابل‌تزریق + `evm_increaseTime` |
+| `admin_peers`، `admin_nodeInfo`، `qbft_*` | **ساختگی** (`MockMonitorRpc` مثل `MockRpcServer` در RewardRouter) تا Besu زنده؛ قالب پاسخ در لایهٔ ۳ راستی‌آزمایی می‌شود |
+| IP-geolocation | **ساختگی** (`FakeGeoIpProvider`) پشت `GeoIpProvider` |
+| ارائه‌دهندگان OTP/SMS/تلگرام/بله/ایمیل | **ساختگی** (`MockOtpDeliveryProvider`؛ فقط اگر `M-OTP`) |
+| سرویس دسترسی کلید | **ساختگی** (HMAC محلی با کلید آزمایشی) پشت `KeyAccessClient` |
+| امضاکننده | کلید عمومی‌شدهٔ anvil (هرگز کلید واقعی)؛ `TxSigner` واقعی بسته به VD-11 جدا آزموده می‌شود |
+| نگهدارنده‌های شواهد | دو پوشهٔ محلی پشت رابط `CustodianSink` |
+| پروتکل `SUR_NODE_CHECK_V1` | **ساختگی** تا نوشته شود (`NodeCheckClient`: پیاده‌سازی حضور در `admin_peers` + ساختگی چالش) |
+
+**آزمون‌های منفی الزامی:** هیچ تراکنشی برای `UNKNOWN`؛ هیچ `recordActivation` بدون نود زنده یا بدون `personKey`؛ هیچ `confirmOperatorReady` با نتیجهٔ ناموفق/نامشخص؛ شکست بسته با Identity Service قطع؛ ارسال متوقف با `verifier()` عوض‌شده؛ سناریوهای ۱ تا ۹ بازپخش `sur-reward-router-spec.md` بخش ۱۰.۵ به‌علاوهٔ پایهٔ بلاک ۰؛ تکرار تراکنش پس از ریست.
+
+### ۱۰.۷ ترتیب پیشنهادی ساخت
+
+| فاز | ماژول‌ها | چرا این‌جا |
+|---|---|---|
+| ۱ پایه | M0، M2، M1 | ABI و state و بازپخش رویداد؛ بقیه به این‌ها تکیه دارند و F-4 بالاترین خطر داده را دارد |
+| ۲ مشاهده | M3، M4 | بدون هیچ تراکنش؛ حالت `OBSERVE_ONLY` برای سنجش قاعده‌ها روی داده‌ی واقعی/بازپخش |
+| ۳ تصمیم | M5، M6، M7 | شواهد و امضا و سپس ورود (مسدودکنندهٔ ورود غیرمؤسس و فعال‌سازی مؤسسان) |
+| ۴ هویت و API | M10، M13 | پیوند `personKey`، API اپ؛ ورود غیرمؤسس کامل می‌شود |
+| ۵ اجرا | M8، M9، M12 | ریسک‌دارترین تصمیم‌ها (تعلیق، جریمه، تعویض اپراتور، حذف) آخر و پس از آزمون مشاهده؛ M9 به VD-8 و M12 به ابزار بازیابی وابسته است |
+| ۶ عملیات | M11، M14، M15، M16 | هیأت، هشدار، Docker، سناریوهای Besu |
+
+**قواعد کار (فهرست جامع ۸.۴):** سازنده و بازبین یک مدل نباشند؛ بازبینی مستقل پیش از هر فعال‌سازی `ENABLE_*`؛ حسابرسی امنیتی جدا؛ هیچ کلید یا کد ملی واقعی به مدل داده نشود. نسخهٔ اول تک‌نمونه با امضاکنندهٔ درون‌فرایند؛ HA چندنمونه و امضاکنندهٔ راه‌دور بعد از آن (VD-11). 🔶 lint: سرویس‌های همجوار eslint ندارند؛ برای Verifier افزودن `typescript-eslint` با `no-floating-promises` پیشنهاد می‌شود.
+
+### ۱۰.۸ معیار «انجام‌شده» و پیش‌نیازهای بیرونی
+
+برای هر فاز: `tsc --noEmit`، آزمون واحد و یکپارچه روی anvil سبز، آزمون‌های منفی بالا، و گزارش اینکه چه چیزی روی Besu اجرا **نشده**. موانع شروع **کد**: هیچ؛ موانع **راه‌اندازی تولید**: VD-1 تا VD-3، VD-8، VD-11 و اعداد `c01-rules-v1`؛ پیش‌نیازهای بیرونی: Identity Service (مسیر `person-bindings` و بله/ایمیل)، سرویس همراه نود و مسیر ثبت کلید پایش (فقط برای M9)، ابزار بازیابی (فقط برای M12)، نگهدارنده‌های شواهد.
+
+### ۱۰.۹ حدود هم‌ترازی (چه چیزی بررسی شد)
+
+بندبه‌بند با کد خوانده شد: `ValidatorsRegistry` (همهٔ توابع `onlyVerifier`، `requestMembership`، `selfSuspend`/`requestResume`، `onSeatTransferred`، حذف در بازیابی، ثابت‌ها)، `ValidatorsBoard` (`refreshBoard`، `syncBoard`، `fillVacancies`، `_canAct`، رأی حذف در بازیابی، چرخش `verifier`)، `IdentityRegistry`، `ValidatorSeatNFT`، `ValidatorLottery` (ورود برنده). اجرا یا آزمایش سرویس انجام نشد. جدول ناهمخوانی‌ها در ۱۰.۱۰ است.
+
+### ۱۰.۱۰ ثبت ناهمخوانی‌ها و اقدام
+
+| # | ادعای مشخصات | واقعیت قرارداد یا ابزار | اقدام |
+|---|---|---|---|
+| ۱ | `decision_id` سرویس = مقدار برگشتی تابع | مقدار برگشتیِ تراکنش در دسترس نیست؛ `decisionId` در لاگ `StatusDecisionRecorded` است؛ `confirmOperatorReady` و `recordRecoveryRemoval` شناسه ندارند | اصلاح (۳.۱.۱، ۵) |
+| ۲ | `status_decisions` برای مؤسس و انتقال صندلی هم «تصمیم on-chain» است | برای انتقال صندلی تراکنشی نیست؛ مؤسس همان `recordActivation`؛ `recordPreExitViolation` نوع `Suspension` ثبت می‌کند؛ `recordRecoveryRemoval` نوع جدا | اصلاح (انواع ۹گانه) |
+| ۳ | تابع‌های بدون‌مجوز: چهار تا؛ «هر هفت تابع `require` دارد» | پنج تابع به‌علاوهٔ `expireRecoveryRemoval`؛ هفت تابع `onlyVerifier` | اصلاح |
+| ۴ | شرط `recordPreExitViolation`: فقط ۷۲ ساعت و `violationAt` پیش از درخواست | همچنین `violationAt > demotedAt`، `pendingSlashEpoch == 0`، `statusBeforeExit == Active`؛ مبدأ زمان `periodStartedAt` | اضافه (۳.۱.۱) |
+| ۵ | `recordSuspension` بدون سقف | آخرین ولیدیتور فعال (`MIN_ACTIVE_VALIDATORS = 1`) تعلیق نمی‌شود | اضافه |
+| ۶ | `syncBoard` پس از خروج عضو هیأت | کرسی با `membershipEpoch` (خروج، فروش صندلی، حذف در بازیابی) یا وضعیت `None/Exiting/RemovedInRecovery` می‌افتد؛ تعلیق نه؛ پس از ماه جدید همه‌چیز تا `refreshBoard` ریورت می‌شود | اصلاح (گام ۱۰) |
+| ۷ | بازپخش رویداد از genesis کافی است (F-4) | ولیدیتور اول و صندلی‌های ۱ تا ۷ در genesis بی‌رویداد نوشته می‌شوند | پایهٔ بلاک ۰ (۲.۵)؛ هشدار برای Router |
+| ۸ | ممنوعیت بازگشت «برای همیشه» (حذف در بازیابی) | `RecoveryRemovalCancelled` ممنوعیت را برمی‌دارد؛ فروشندهٔ صندلی هم `permanentlyExited` می‌شود | اصلاح (۵.۱، ۶.۹.۱) |
+| ۹ | پیامد جغرافیایی برای `Active` از مسیر غیرفعالی | `c01-rules-v1` قاعدهٔ ۴: بلاک‌زن = `OK`؛ پیامدی نیست | 🔶 VD-3؛ پیش‌فرض فقط هشدار |
+| ۱۰ | مؤسس = `isFounder(owner)` | پرچم با صندلی به خریدار می‌رود | فهرست genesis؛ 🔶 VD-6 |
+| ۱۱ | برنده لاتاری: «مدت بررسی تعیین نشده» | قرارداد `Probation` و `probationPeriod` را اعمال می‌کند؛ اپراتور ندارد؛ `isFullyVerified` را هنگام ورود نمی‌سنجد | اصلاح (۶.۸) |
+| ۱۲ | ستون `exited_at` مبنای ممنوعیت | ممنوعیت از `requestExit` است | ستون `exit_requested_at` |
+| ۱۳ | نسبت ۹۵٪ و «پوشش ۵۰٪» | پوشش و رفتار `UNKNOWN` تعریف نشده بود؛ قرارداد `periodStartedAt` را با تعویض اپراتور بازنشانی نمی‌کند | تعریف (۶.۷-ث؛ اعداد 🔶) |
+| ۱۴ | OTP و `setXVerified` در Verifier؛ «یا یک فرایند با دو کلید» | تناقض با فهرست جامع ۷٫۴؛ Identity Service OTP تلفن و تلگرام را دارد | 🔶 VD-1؛ پیش‌فرض Identity Service |
+| ۱۵ | `personKey` از eKYC Identity Service و کلید HMAC فقط در Verifier | Identity Service کد ملی را دارد و کلید را ندارد؛ پیوند آدرس↔`personKey` مسیری نداشت | 🔶 VD-2؛ مسیر داخلی پیشنهادی |
+| ۱۶ | استثنای `migrateIdentity` برای گم‌شدن کلید مالک | قرارداد مسیر انتقال صندلی از آدرس گم‌شده ندارد | 🔶 VD-2 |
+| ۱۷ | ورود: Verifier «تأیید ورود نمی‌دهد» | ورود (`requestMembership`، لاتاری، خرید NFT) بدون تأیید Verifier انجام می‌شود؛ خودداری فقط `recordActivation` را می‌گیرد؛ وثیقه و اسلات هفتگی قفل می‌مانند؛ علیه خریدار صندلی `Active` هیچ ابزاری نیست | 🔶 VD-5 |
+| ۱۸ | همهٔ ورودهای مجموعه با Verifier است | `RecoveryRemovalCancelled` ولیدیتور را بدون تأیید `Active` می‌کند | 🔶 VD-4؛ هشدار فوری |
+| ۱۹ | امضای تراکنش با Vault Transit | Transit از secp256k1 پشتیبانی نمی‌کند (HMAC بله) | 🔶 VD-11 |
+| ۲۰ | static peer به همهٔ ولیدیتورها با `nodeID` | `admin_addPeer` به enode کامل (IP) نیاز دارد | 🔶 VD-8 |
+| ۲۱ | نگهدارندگان شواهد «در ۸.۳» | ۸.۳ چیزی دربارهٔ آن‌ها ندارد | ارجاع به ۱۰.۳؛ 🔶 VD-9 |
+| ۲۲ | compose: `latest` و دو poller روی یک SQLite | بی‌ثبات و ناسازگار با SQLite | اصلاح (۸.۳) |
+| ۲۳ | گام ۸ دوبار شماره خورده | — | `8-ب` |
+| ۲۴ | `SelfSuspended` به‌عنوان نام رویداد | نام رویداد در کد `SelfSuspendedEvent` است | اصلاح (۲.۵) |
+| ۲۵ | `recordActivation` رویداد/هش | هش تهی در `recordActivation` رد نمی‌شود (برخلاف `confirmOperatorReady`/`recordRecoveryRemoval`) | سرویس همیشه غیرتهی می‌فرستد |
+| ۲۶ | `recordRecoveryRemoval`: «پروندهٔ باز دیگری نباشد» | شرط پروندهٔ حذف قبلی است، نه پروندهٔ جریمه | اصلاح (۶.۹.۱) |
+
+**تأییدشده بدون تغییر:** نام و امضای `recordActivation`/`recordSuspension`/`recordRecovery`/`recordResume`/`recordPreExitViolation`/`confirmOperatorReady`/`recordRecoveryRemoval`؛ `getValidatorInfo` با ۶ خروجی؛ `getValidators`/`getActiveOwners`/`operatorOf`/`ownerOfOperator`؛ ثابت‌های ۷۲ ساعت، ۷ روز، ۹۰ روز، ۳۰ روز؛ ترتیب شش بولی `getVerificationStatus`؛ تصمیم ۱۱۰ (دو مرحله، انقضای ۷ روز، هش غیرتهی)؛ سوزاندن ۱۰۰٪ جریمه؛ «بررسی سلامت پیش از `recordActivation`»؛ `setVerifier` فقط با هیأت.
+
+### ۱۰.۱۱ تصمیم‌های مالک (🔶 VD-n)
+
+| # | سؤال | پیشنهاد سازنده (پیش‌فرض ساخت) |
+|---|---|---|
+| VD-1 | OTP و `setPhone/Telegram/Bale/EmailVerified` کجا ساخته شود: Identity Service (حالت ب) یا فرایند جدای پروژهٔ Verifier با کلید `identityOracle` (حالت الف)؟ | ب (کد OTP تلفن/تلگرام موجود است؛ بله و ایمیل افزوده شود). Verifier فقط `verifier` دارد |
+| VD-2 | خط لولهٔ `personKey`: چه کسی HMAC را از KAS می‌گیرد و Verifier آن را چگونه می‌گیرد؟ مسیر گم‌شدن کلید مالک (انتقال صندلی) چیست؟ | Identity Service از KAS می‌گیرد و `(owner, personKey)` را از مسیر داخلی احرازشده می‌دهد؛ Verifier کد ملی نمی‌بیند. برای گم‌شدن کلید مالک مسیر قراردادی/حقوقی تعریف شود |
+| VD-3 | پیامد نقض جغرافیایی برای `Active`: فقط هشدار، قاعدهٔ `NON_IRAN_CONFIRMED` با جریمهٔ ۱٪، یا تابع قراردادی؟ | فقط هشدار تا تصمیم؛ برای `Probation`/`Demoted` مانع فعال‌سازی است |
+| VD-4 | لغو حذف در بازیابی ولیدیتور را بدون تأیید Verifier `Active` می‌کند: تغییر قرارداد (بازگشت به `SelfSuspended` و `recordResume`) یا فقط عملیات؟ | تغییر قرارداد؛ تا آن موقع هشدار فوری و بررسی نود |
+| VD-5 | علیه خریدار صندلی `Active` ناقض یکتایی یا متقاضی ردشده (وثیقه و اسلات قفل) چه پیامد/چاره‌ای؟ | هشدار به هیأت/بنیاد؛ متقاضی با `requestExit` خارج شود؛ بررسی چاره قراردادی |
+| VD-6 | خریدار صندلی مؤسس `isFounder` می‌گیرد و فعال‌سازی بدون یک هفته انتظار دارد؛ مؤسس‌بودن از فهرست genesis تعیین شود و خریدار مشمول `personKey` و آزمون عادی باشد؟ | بله (فهرست genesis) |
+| VD-7 | اعداد: `c01-rules-v1` (۶.۷)، نسبت/پوشش/پنجرهٔ پس از تعویض اپراتور (۶.۷-ث)، آستانهٔ همگامی و SLA تأیید `confirmOperatorReady`، سقف تعلیق لغزان | مقادیر [ ] پیشنهادی؛ تأیید پیش از `ENABLE_*` |
+| VD-8 | پیش‌نیاز M9: پروتکل `SUR_NODE_CHECK_V1`، مسیر ثبت کلید پایش، آزمون commit seal؛ و روش دسترسی نود پایش به کاندیدا (کشف شبکه یا enode کامل). تا آن موقع آیا بررسی تنزل‌یافته (حضور در `admin_peers` و هش سر peer) برای `confirmOperatorReady` پذیرفته است؟ | تنزل‌یافته پذیرفته نشود برای `Active`؛ M9 پس از پروتکل |
+| VD-9 | هویت دو نگهدارندهٔ مستقل شواهد، کلیدهای رمزگذاری و مراسم کلید | دو نهاد مستقل از اپراتور؛ رمزگذاری چندگیرنده |
+| VD-10 | بانک IP-geolocation و دورهٔ به‌روزرسانی (سؤال ۳) | GeoLite2 آفلاین سنجاق‌شده، تا انتخاب |
+| VD-11 | نگه‌داری کلید `verifier` (Transit secp256k1 ندارد: KMS/HSM، افزونه، یا KV)؛ HA و امضاکنندهٔ راه‌دور؛ آیا فراخوان‌های بدون‌مجوز با آدرس بی‌اختیار جدا بروند؟ | نسخهٔ اول تک‌نمونه، کلید در HSM/KMS با secp256k1 اگر موجود؛ آدرس جدا برای بدون‌مجوزها |
+| VD-12 | رویهٔ چرخش و نشت کلید `verifier` (تا ۳ رأی هیأت کلید قدیمی معتبر می‌ماند) و SLA هیأت | کلید توقف اضطراری در سرویس؛ SLA با هیأت |
