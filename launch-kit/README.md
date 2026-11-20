@@ -159,7 +159,9 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 
 آزموده نشد: میزبان واقعی، `ufw`/Ubuntu، ماندگاری، `ipset`، IPهای واقعی بیرونی (فقط IPهای bridge)، و ترافیک خروجی نود به همتاها (فقط ورودی آزموده شد).
 
-**آزموده نشد (UNVERIFIED):** Besu واقعی پشت همین انتشار (peering/discovery واقعی روی IPv4 با خط `ports:` جدید؛ فقط `docker compose config` و شنوندهٔ ساده)، میزبان واقعی با IPv6 عمومی، `ufw`/Ubuntu، `ip6tables` روی رابط عمومی واقعی، ماندگاری قواعد، `daemon.json` با `ipv6: true` یا `ip6tables: true`. `docker compose config` (با و بدون `--profile monitoring`، و با `.env.example`) معتبر ماند و `host_ip: 0.0.0.0` را برای 30303/tcp و /udp نشان داد؛ با `SUR_P2P_BIND=192.0.2.5` مقدار `host_ip` همان شد؛ RPC و متریک روی `127.0.0.1` ماندند.
+**آزموده شد (VERIFIED، فقط خروجی `docker compose config`):** `docker compose config` (با و بدون `--profile monitoring`، و با `.env.example`) معتبر ماند و `host_ip: 0.0.0.0` را برای 30303/tcp و /udp نشان داد؛ با `SUR_P2P_BIND=192.0.2.5` مقدار `host_ip` همان شد؛ RPC و متریک روی `127.0.0.1` ماندند.
+
+**آزموده نشد (UNVERIFIED):** Besu واقعی پشت همین انتشار (peering/discovery واقعی روی IPv4 با خط `ports:` جدید؛ فقط `docker compose config` و شنوندهٔ ساده)، میزبان واقعی با IPv6 عمومی، `ufw`/Ubuntu، `ip6tables` روی رابط عمومی واقعی، ماندگاری قواعد، `daemon.json` با `ipv6: true` یا `ip6tables: true`.
 
 ## ۵. مدیریت کلید (اصول؛ طراحی پروژه)
 
