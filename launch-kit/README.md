@@ -25,7 +25,7 @@ genesis واقعی به مقادیری وابسته است که فقط مالک/
 
 ## ۳. ترتیب راه‌اندازی
 
-1. **پر کردن `genesis-config.json`** (کپی کار شود؛ مالک/کمیته): همهٔ جای‌گیرهای `OWNER-FILL` (فهرست در بخش ۶). آدرس‌ها باید EIP-55 باشند؛ برای chain id 262 گزینهٔ `allowUnchecksummed` رد می‌شود. `network.genesisTimestamp` باید «از اکنون تا 72 ساعت بعد» باشد (ابزار در `build` این را اجرا می‌کند).
+1. **پر کردن `genesis-config.json`** (کپی کار شود؛ مالک/کمیته): همهٔ جای‌گیرهای `OWNER-FILL` (فهرست در بخش ۶). **نام ۱۵ عضو بنیاد** در قالب خالی (`""`) است و باید با نام حقوقی واقعی و نهایی پر شود: این نام دائمی روی زنجیره نوشته می‌شود و `FoundationMembers` تابع تغییر نام ندارد (فقط حذف و افزودن دوباره با مجمع فوق‌العاده)؛ ابزار `build` نام خالی را رد می‌کند، ولی «نام ساختگی» را نمی‌گیرد؛ پس هر نام را دوباره بخوانید و تأیید کنید. آدرس‌ها باید EIP-55 باشند؛ برای chain id 262 گزینهٔ `allowUnchecksummed` رد می‌شود. `network.genesisTimestamp` باید «از اکنون تا 72 ساعت بعد» باشد (ابزار در `build` این را اجرا می‌کند).
 2. **`build`** (روی ماشین ساخت؛ نیاز: Node 22، `npm install` در GenesisBuilder، Foundry `anvil` 1.8.5):
    ```bash
    cd Deployments/GenesisBuilder   # شاخهٔ v2.5-dev
@@ -49,7 +49,7 @@ genesis واقعی به مقادیری وابسته است که فقط مالک/
 محیط: Docker Desktop 29.7.2 روی Windows 11 (VM لینوکس)، تصویر `hyperledger/besu:26.9.0` (محلی؛ pull نشد)، `besu/v26.9.0/linux-x86_64/openjdk-java-25`، GenesisBuilder شاخهٔ `v2.5-dev`. همهٔ منابع Docker با پیشوند `sur25k-` و حذف‌شده.
 
 ### ۴-۱. `genesis-config.json` توسط ابزار رد می‌شود
-`npx tsx src/cli.ts build --config launch-kit/genesis-config.json --out <scratch>` → **exit 1**، «failed validation (58 issues)» (آدرس‌های صفر، `genesisTimestamp` صفر، `shareWeight` صفر، ردیف طلب جای‌گیر، مجموع عرضه 20,000,000 به‌جای 53,311,000)؛ هیچ فایل خروجی ساخته نشد.
+`npx tsx src/cli.ts build --config launch-kit/genesis-config.json --out <scratch>` → **exit 1**، «failed validation (73 issues)» (آدرس‌های صفر، `genesisTimestamp` صفر، **۱۵ نام خالی عضو**، `shareWeight` صفر، ردیف طلب جای‌گیر، مجموع عرضه 20,000,000 به‌جای 53,311,000). نام اعضا عمداً `""` (خالی) است تا ابزار قالب پرنشده را رد کند؛ نام جای‌گیر «OWNER-FILL …» بررسی `name` ابزار را رد نمی‌کرد (یافتهٔ بازبین، HIGH-1) و برگردانده شد؛ هیچ فایل خروجی ساخته نشد.
 
 ### ۴-۲. genesis آزمایشی
 build از config آزمایشی (فقط دو patch؛ `genesis.TEST-ONLY.README.md`): exit 0، 277 assertion گذشت، sha256 `14dae94d…af79`. `verify` Docker: `all checks passed`، 326 بررسی، head=2، و حذف کامل منابع. بلاک ساخته‌شده با Cancun فعال (`admin_nodeInfo.activeFork = Cancun`).
@@ -100,7 +100,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 
 **تصمیم‌گرفته (در فایل‌ها اعمال شد):** chainId 262؛ زمان بلاک 3 ثانیه؛ blockReward 2 سورن؛ fork cancun؛ حالت contract روی `0x3333…3333`؛ gasLimit 45,000,000؛ `contractSizeLimit` 36,864؛ `min-gas-price` 1e14.
 
-**جای‌گیر `OWNER-FILL` در `genesis-config.json`:** `network.genesisTimestamp`؛ `validatorsRegistry.firstValidator.owner/operator`؛ شش `otherFounders`؛ 5 عضو `validatorsBoard.initialBoardMembers`؛ 15 عضو `foundationMembers.members` (نام، حساب، `shareWeight`)؛ `foundationDAO.initialBoard` (5 اصلی + 2 علی‌البدل) و `initialInspector` (و اختیاری `initialOfficers`)؛ ردیف‌های `genesisClaimsVault.claims` (21 ردیف)؛ تأیید سه آدرس اوراکل.
+**جای‌گیر `OWNER-FILL` در `genesis-config.json`:** `network.genesisTimestamp`؛ `validatorsRegistry.firstValidator.owner/operator`؛ شش `otherFounders`؛ 5 عضو `validatorsBoard.initialBoardMembers`؛ 15 عضو `foundationMembers.members` (نام، حساب، `shareWeight`؛ **نام حقوقی واقعی و نهایی را مالک بنویسد: نام روی زنجیره دائمی است و `FoundationMembers` تابع تغییر نام ندارد؛ فقط حذف و افزودن دوباره با مجمع فوق‌العاده؛ نام خالی را ابزار رد می‌کند**)؛ `foundationDAO.initialBoard` (5 اصلی + 2 علی‌البدل) و `initialInspector` (و اختیاری `initialOfficers`)؛ ردیف‌های `genesisClaimsVault.claims` (21 ردیف)؛ تأیید سه آدرس اوراکل.
 
 **OWNER در سایر فایل‌ها:** IP عمومی هر ولیدیتور (`SUR_P2P_HOST`)؛ طرح bootnode / `discovery-enabled`؛ پذیرفتن دو خط `tx-pool-*` (بخش ۷)؛ نگهداری و تحویل کلید نود؛ سخت‌افزار (`parties/22-validator.md` ۵٫۱: «حداقل سخت‌افزار هنوز نیست»)؛ تنظیم حافظه JVM و محدودیت منابع (در compose کامنت شده).
 

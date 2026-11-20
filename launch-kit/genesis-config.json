@@ -59,80 +59,80 @@
     "validatorDirectShareBps": 5000
   },
   "foundationMembers": {
-    "_comment": "OWNER-FILL: exactly 15 members: name, account (EIP-55), shareWeight; Legal members also need personType and representative (see GenesisBuilder README). All 15 rows below are placeholders (zero address, empty name, shareWeight 0) and are refused.",
+    "_comment": "OWNER-FILL: exactly 15 members: name, account (EIP-55), shareWeight; Legal members also need personType and representative (see GenesisBuilder README). All 15 rows below are placeholders (zero address, EMPTY name, shareWeight 0) and are refused. The name is written to the chain PERMANENTLY: FoundationMembers has no rename function (only removal and re-adding by an extraordinary general assembly), so fill each name with the real, final legal name; never leave it empty and never use a stand-in.",
     "members": [
       {
-        "name": "OWNER-FILL member 01",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 02",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 03",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 04",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 05",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 06",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 07",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 08",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 09",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 10",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 11",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 12",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 13",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 14",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       },
       {
-        "name": "OWNER-FILL member 15",
+        "name": "",
         "account": "0x0000000000000000000000000000000000000000",
         "shareWeight": "0"
       }
