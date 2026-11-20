@@ -1,0 +1,3 @@
+# launch-kit: keep LF so the sha256 of every file is the same on every machine (Plan/.gitattributes has text=auto, core.autocrlf=true on the author PC)
+* text eol=lf
+genesis.TEST-ONLY.json -text

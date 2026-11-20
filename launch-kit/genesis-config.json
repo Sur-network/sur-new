@@ -1,0 +1,176 @@
+{
+  "_comment": "SUR launch kit v2.5 — GenesisBuilder INPUT TEMPLATE (not a genesis). Values already filled are OWNER DECISIONS or v2.5 reference values (chainId 262, blockPeriod 3 s, blockReward 2 SUR, gasLimit 45,000,000, contractSizeLimit 36,864, forks cancun, min gas price 1e14 wei as a node flag not a genesis field). Everything marked OWNER-FILL (zero addresses, genesisTimestamp 0, empty names/shareWeights, the single placeholder claim row) is a PLACEHOLDER only the owner/committee can set: the tool REFUSES this file as it is, on purpose. Do not use allowUnchecksummed for chain id 262: every address needs a correct EIP-55 checksum. This file holds no secret and no private key; the firstValidator.operator is the ADDRESS of the operator key, never the key. See README.md (Persian) for the launch order.",
+  "network": {
+    "_comment": "OWNER DECISIONS (do not change without a new decision): chainId 262; blockPeriodSeconds 3 (production); blockRewardWei 2 SUR; minGasPriceWei 1e14 is only a cross-check value here: min-gas-price is NOT a genesis field and must be set in every node config (config.toml); gasLimit 45,000,000 (0x2aea540): required, no default in the tool, precondition: long run with genuinely full blocks on this value before launch (OPEN); contractSizeLimitBytes 36,864 (36 KiB): irreversible without a coordinated change on all nodes; forks cancun. OWNER-FILL: genesisTimestamp (unix seconds, must be within now..now+72h at build time; 0 = placeholder, refused). initcode limit is not a genesis option (Besu 26.9.0).",
+    "chainId": 262,
+    "genesisTimestamp": 0,
+    "blockPeriodSeconds": 3,
+    "blockRewardWei": "2000000000000000000",
+    "minGasPriceWei": "100000000000000",
+    "gasLimit": "45000000",
+    "contractSizeLimitBytes": 36864,
+    "forks": "cancun"
+  },
+  "oracles": {
+    "_comment": "v2.5 reference values from SurAddresses.sol (distributionOracle, verifier, identityOracle). OWNER CONFIRM before launch that each oracle key exists in the Vault (separate policy per key) and that these are the final addresses; the three keys are never part of this kit.",
+    "distributionOracle": "0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6",
+    "verifier": "0x1A5E86f3333291B3332C0f9Eddb04269940566bc",
+    "identityOracle": "0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9"
+  },
+  "validatorsRegistry": {
+    "_comment": "OWNER-FILL: firstValidator.owner and .operator (the operator ADDRESS of the first node key; owner key never on the node), six otherFounders (7 founders total, seat 1..7). Zero addresses are placeholders and are refused. entryCollateral/membershipFeeBps/windows are the v2.5 reference values. firstValidator is the only Active validator at genesis (seat 1); otherFounders are seats 2..7, Probation, isFounder, until setOperator + recordActivation.",
+    "firstValidator": {
+      "owner": "0x0000000000000000000000000000000000000000",
+      "operator": "0x0000000000000000000000000000000000000000"
+    },
+    "otherFounders": [
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000"
+    ],
+    "seatBaseURI": "https://validator-nft.surnet.org/",
+    "entryCollateral": "500000000000000000000000",
+    "membershipFeeBps": 400,
+    "maxEntriesPerWindow": 1,
+    "entryWindowSeconds": 604800,
+    "probationPeriod": 604800,
+    "recoveryPeriod": 172800,
+    "slashBps": 100,
+    "exitCooldown": 604800
+  },
+  "validatorsBoard": {
+    "_comment": "OWNER-FILL: exactly 5 board members chosen from the 7 founders. A Probation founder holds a seat but cannot act until activated.",
+    "initialBoardMembers": [
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000"
+    ]
+  },
+  "validatorsTreasury": {
+    "perPaymentCap": "50000000000000000000000",
+    "periodCap": "200000000000000000000000"
+  },
+  "blockRewardDistributor": {
+    "validatorDirectShareBps": 5000
+  },
+  "foundationMembers": {
+    "_comment": "OWNER-FILL: exactly 15 members: name, account (EIP-55), shareWeight; Legal members also need personType and representative (see GenesisBuilder README). All 15 rows below are placeholders (zero address, empty name, shareWeight 0) and are refused.",
+    "members": [
+      {
+        "name": "OWNER-FILL member 01",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 02",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 03",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 04",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 05",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 06",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 07",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 08",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 09",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 10",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 11",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 12",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 13",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 14",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      },
+      {
+        "name": "OWNER-FILL member 15",
+        "account": "0x0000000000000000000000000000000000000000",
+        "shareWeight": "0"
+      }
+    ]
+  },
+  "foundationDAO": {
+    "_comment": "OWNER-FILL: initialBoard (5 principal + 2 alternates, all must be foundation members or a member representative), initialInspector (may be outside the foundation). initialOfficers (chair, treasurer, CEO) is an open owner decision and may stay unset. treasuryBalanceWei 20,000,000 SUR is the v2.5 reference value. boardTermEnd defaults to genesisTimestamp + 730 days.",
+    "treasuryBalanceWei": "20000000000000000000000000",
+    "initialBoard": {
+      "principal": [
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "alternates": [
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000"
+      ]
+    },
+    "initialInspector": "0x0000000000000000000000000000000000000000"
+  },
+  "genesisClaimsVault": {
+    "_comment": "OWNER-FILL: replace the single placeholder row by all 21 merged claim rows (7 founders row 2, 15 members row 3; a founder who is also a member = ONE row with both amounts). A mistyped claimant address locks that claim forever (the vault has no address change). Each row total is enforced; rowTotals 11,984,000 and 21,327,000 SUR and installments 24 and gasReserveWei 100 SUR are the v2.5 reference values.",
+    "installments": 24,
+    "gasReserveWei": "100000000000000000000",
+    "claims": [
+      {
+        "to": "0x0000000000000000000000000000000000000000",
+        "totalClaimWei": "0",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "0"
+      }
+    ],
+    "rowTotals": {
+      "initialValidatorClaims": "11984000000000000000000000",
+      "foundationMemberClaims": "21327000000000000000000000"
+    }
+  }
+}
