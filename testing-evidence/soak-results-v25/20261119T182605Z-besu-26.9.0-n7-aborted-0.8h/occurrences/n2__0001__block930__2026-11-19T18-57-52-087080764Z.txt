@@ -1,0 +1,66 @@
+# F-1 occurrence #1 on n2: block 930, first matching line at 2026-11-19T18:57:52.087080764Z
+# 15 lines before, the matching line, 45 lines after (ANSI colours stripped; docker timestamp prefix)
+# ---- before
+2026-11-19T18:57:30.098041145Z 2026-11-19 18:57:30.097+0000 | EthScheduler-Workers-2 | INFO  | PersistBlockTask | Imported empty block #919 / 0 tx / 0 om / 0 (0.0%) gas / (0x8e92523b1fd2bec3b68fed764e166c0faffcd2d1f3e3b547cdff766a528ff01d) in 0.000s. Peers: 8
+2026-11-19T18:57:32.082753384Z 2026-11-19 18:57:32.080+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #920 / 0 tx / 0 pending / 0 (0.0%) gas / (0x18583ce9a5902fea8e4a9cc593bc417cab4c08c4276f32c7968d7030acedf68f)
+2026-11-19T18:57:32.084859638Z 2026-11-19 18:57:32.084+0000 | EthScheduler-Workers-0 | INFO  | PersistBlockTask | Block 920 (0x18583ce9a5902fea8e4a9cc593bc417cab4c08c4276f32c7968d7030acedf68f) is already imported
+2026-11-19T18:57:34.066697655Z 2026-11-19 18:57:34.066+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #921  (72288.....ea1e0)|    0 tx | 0 pending | 0 (0.0%) gas in 0.059s | Timing(started at 2026-11-19T18:57:34.006545609Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=1ms, selectedTxsEvaluation=0ms, blockAssembled=1ms, blockImported=57ms)
+2026-11-19T18:57:36.065578079Z 2026-11-19 18:57:36.065+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #922 / 0 tx / 0 pending / 0 (0.0%) gas / (0xc9f58ace70b94dcc8de78eb9d3c81cf737a638e41edcb0ffb3b7030df3bca2b0)
+2026-11-19T18:57:38.075962634Z 2026-11-19 18:57:38.073+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #923 / 0 tx / 0 pending / 0 (0.0%) gas / (0x7fe736938a278824fd149c94e6fcc113476bb1966183d93b738fe35d416b1008)
+2026-11-19T18:57:40.067258678Z 2026-11-19 18:57:40.067+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #924 / 0 tx / 0 pending / 0 (0.0%) gas / (0xb5b1f12c5d2fb55234347d5a929609c485ea7c08d25db940397a29fa8fbc4d37)
+2026-11-19T18:57:42.057609618Z 2026-11-19 18:57:42.055+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #925 / 0 tx / 0 pending / 0 (0.0%) gas / (0xb9a791b00541a0ce4e5ebd3f2aa3d60402e2881fbbdee90ed9968cfaa698f574)
+2026-11-19T18:57:44.071092340Z 2026-11-19 18:57:44.069+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #926 / 0 tx / 0 pending / 0 (0.0%) gas / (0x533516cf1c415e95c2dba678e383da7cb814195664c00bb9f3342dd1a7b1bd23)
+2026-11-19T18:57:44.071732640Z 2026-11-19 18:57:44.071+0000 | EthScheduler-Workers-4 | INFO  | PersistBlockTask | Block 926 (0x533516cf1c415e95c2dba678e383da7cb814195664c00bb9f3342dd1a7b1bd23) is already imported
+2026-11-19T18:57:46.068231560Z 2026-11-19 18:57:46.067+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #927 / 0 tx / 0 pending / 0 (0.0%) gas / (0x92700513c645a66281a9a79adfa31b8e5b19843c99edf38a10a9f38526b1c8f5)
+2026-11-19T18:57:48.082634008Z 2026-11-19 18:57:48.072+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #928  (4ff52.....25abb)|    0 tx | 0 pending | 0 (0.0%) gas in 0.068s | Timing(started at 2026-11-19T18:57:48.004410355Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=1ms, selectedTxsEvaluation=0ms, blockAssembled=1ms, blockImported=64ms)
+2026-11-19T18:57:50.062614287Z 2026-11-19 18:57:50.062+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #929 / 0 tx / 0 pending / 0 (0.0%) gas / (0x1e1c92e2a9dea41d04963fdae97c824274ab54af0806b66082c8e82b340aee51)
+2026-11-19T18:57:52.075317000Z 2026-11-19 18:57:52.075+0000 | EthScheduler-Workers-3 | INFO  | PersistBlockTask | Imported empty block #930 / 0 tx / 0 om / 0 (0.0%) gas / (0x56a3a6fa7f0e478e5df28eca2bb02721acb5b4d0acdac3be44abdda53bf4093b) in 0.000s. Peers: 8
+2026-11-19T18:57:52.087002890Z 2026-11-19 18:57:52.078+0000 | BftProcessorExecutor-QBFT-0 | ERROR | EventMultiplexer | State machine threw exception while processing event \{org.hyperledger.besu.consensus.common.bft.events.BftReceivedMessageEvent@16d59798\}
+# ---- match
+2026-11-19T18:57:52.087080764Z com.google.common.util.concurrent.UncheckedExecutionException: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 930
+# ---- after
+2026-11-19T18:57:52.087088080Z 	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2077)
+2026-11-19T18:57:52.087091679Z 	at com.google.common.cache.LocalCache.get(LocalCache.java:3985)
+2026-11-19T18:57:52.087096085Z 	at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4854)
+2026-11-19T18:57:52.087099327Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsFromContract(TransactionValidatorProvider.java:88)
+2026-11-19T18:57:52.087102264Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsAfterBlock(TransactionValidatorProvider.java:72)
+2026-11-19T18:57:52.087105346Z 	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsAfterBlock(ForkingValidatorProvider.java:67)
+2026-11-19T18:57:52.087108454Z 	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsAtHead(ForkingValidatorProvider.java:60)
+2026-11-19T18:57:52.087111788Z 	at org.hyperledger.besu.consensus.qbft.adaptor.QbftFinalStateImpl.getValidators(QbftFinalStateImpl.java:85)
+2026-11-19T18:57:52.087390712Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.processMessage(QbftController.java:317)
+2026-11-19T18:57:52.087396663Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.consumeMessage(QbftController.java:224)
+2026-11-19T18:57:52.087400019Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.handleMessage(QbftController.java:120)
+2026-11-19T18:57:52.087403379Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.handleMessageEvent(QbftController.java:203)
+2026-11-19T18:57:52.087406279Z 	at org.hyperledger.besu.consensus.qbft.adaptor.BftEventHandlerAdaptor.handleMessageEvent(BftEventHandlerAdaptor.java:52)
+2026-11-19T18:57:52.087409596Z 	at org.hyperledger.besu.consensus.common.bft.EventMultiplexer.handleBftEvent(EventMultiplexer.java:53)
+2026-11-19T18:57:52.087415619Z 	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+2026-11-19T18:57:52.087419034Z 	at org.hyperledger.besu.consensus.common.bft.BftProcessor.run(BftProcessor.java:105)
+2026-11-19T18:57:52.087422108Z 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+2026-11-19T18:57:52.087425049Z 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+2026-11-19T18:57:52.087439557Z 	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-11-19T18:57:52.087564129Z Caused by: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 930
+2026-11-19T18:57:52.087568051Z 	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.lambda$getValidators$0(ValidatorContractController.java:79)
+2026-11-19T18:57:52.087571313Z 	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+2026-11-19T18:57:52.087574468Z 	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.getValidators(ValidatorContractController.java:79)
+2026-11-19T18:57:52.087577894Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.lambda$getValidatorsFromContract$0(TransactionValidatorProvider.java:91)
+2026-11-19T18:57:52.087581185Z 	at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4859)
+2026-11-19T18:57:52.087583862Z 	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3556)
+2026-11-19T18:57:52.087586904Z 	at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2307)
+2026-11-19T18:57:52.087589446Z 	at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2180)
+2026-11-19T18:57:52.087592497Z 	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2071)
+2026-11-19T18:57:52.087601801Z 	... 18 more
+2026-11-19T18:57:54.071573107Z 2026-11-19 18:57:54.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #931 / 0 tx / 0 pending / 0 (0.0%) gas / (0xfb864695da6c84a2859987cf0263d7427ba20fec2fa6b1a2ee35362cde96f052)
+2026-11-19T18:57:54.073197827Z 2026-11-19 18:57:54.072+0000 | EthScheduler-Workers-7 | INFO  | PersistBlockTask | Block 931 (0xfb864695da6c84a2859987cf0263d7427ba20fec2fa6b1a2ee35362cde96f052) is already imported
+2026-11-19T18:57:56.083049292Z 2026-11-19 18:57:56.082+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #932 / 0 tx / 0 pending / 0 (0.0%) gas / (0x81aef0b938c264ddee483027f64c8c62719f4bce3d9b178d2a50e3bf2a4681d0)
+2026-11-19T18:57:56.083073274Z 2026-11-19 18:57:56.082+0000 | EthScheduler-Workers-1 | INFO  | PersistBlockTask | Block 932 (0x81aef0b938c264ddee483027f64c8c62719f4bce3d9b178d2a50e3bf2a4681d0) is already imported
+2026-11-19T18:57:58.070426897Z 2026-11-19 18:57:58.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #933 / 0 tx / 0 pending / 0 (0.0%) gas / (0x1feec722046f02967f428dfb638da966e8f4f6599434879bf67f2fe6802d1176)
+2026-11-19T18:57:58.072899464Z 2026-11-19 18:57:58.072+0000 | EthScheduler-Workers-6 | INFO  | PersistBlockTask | Block 933 (0x1feec722046f02967f428dfb638da966e8f4f6599434879bf67f2fe6802d1176) is already imported
+2026-11-19T18:58:00.104592037Z 2026-11-19 18:58:00.081+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #934 / 0 tx / 0 pending / 0 (0.0%) gas / (0x30a303a15c7dd2dbc5b7574cd04267d6bdf4dcd28fc786a2cf21f13ca3420c13)
+2026-11-19T18:58:02.085849294Z 2026-11-19 18:58:02.085+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #935  (0a1b8.....d209e)|    0 tx | 0 pending | 0 (0.0%) gas in 0.077s | Timing(started at 2026-11-19T18:58:02.007618980Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=0ms, selectedTxsEvaluation=0ms, blockAssembled=1ms, blockImported=75ms)
+2026-11-19T18:58:02.090259938Z 2026-11-19 18:58:02.090+0000 | EthScheduler-Workers-5 | INFO  | PersistBlockTask | Block 935 (0x0a1b8662a3f309229ea406ebbfdf2292a2b2324627dedf95110000b4afdd209e) is already imported
+2026-11-19T18:58:04.071193410Z 2026-11-19 18:58:04.069+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #936 / 0 tx / 0 pending / 0 (0.0%) gas / (0x0ff72e465c46bc92a9b216c3bc9b6dacf8264429676d1d7a635602d8b8c5ddae)
+2026-11-19T18:58:06.055443570Z 2026-11-19 18:58:06.055+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #937 / 0 tx / 0 pending / 0 (0.0%) gas / (0x63a2622ab974c6c483b0c85725e4c99d0f2c97948687e86d98661ed23096cce4)
+2026-11-19T18:58:08.073443069Z 2026-11-19 18:58:08.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #938 / 0 tx / 0 pending / 0 (0.0%) gas / (0xb9f6520de20a3a7ff2e8d3e6002653f8841983841b63a18d1e5d38cf29e3dfd4)
+2026-11-19T18:58:10.072325222Z 2026-11-19 18:58:10.072+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #939 / 0 tx / 0 pending / 0 (0.0%) gas / (0x18b89ba34658082bebc0b2af84ded82d7945a13f0398dd9c10b17bcd31ec482c)
+2026-11-19T18:58:12.057497289Z 2026-11-19 18:58:12.056+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #940 / 0 tx / 0 pending / 0 (0.0%) gas / (0x6d789a0d85e2e500cb161dcc89dd9f0e9b5437df14f5aba3764970ab2cb72d58)
+2026-11-19T18:58:14.071674209Z 2026-11-19 18:58:14.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #941 / 0 tx / 0 pending / 0 (0.0%) gas / (0xac45bc35d1aaeeca670cd74060875ecfd57fdaf7f7f240c9f223d81d3009d492)

@@ -1,0 +1,66 @@
+# F-1 occurrence #2 on n6: block 1234, first matching line at 2026-11-19T19:08:00.100160857Z
+# 15 lines before, the matching line, 45 lines after (ANSI colours stripped; docker timestamp prefix)
+# ---- before
+2026-11-19T19:07:42.082390523Z 2026-11-19 19:07:42.075+0000 | EthScheduler-Workers-5 | INFO  | PersistBlockTask | Block 1225 (0x9665a804925d6aa0aecce4b44459650c2faffe3ec6b1d100f0aed1555c50ae9a) is already imported
+2026-11-19T19:07:44.082408667Z 2026-11-19 19:07:44.082+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,226 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xb48783562ef475517368220b9bec784402b463f9b38c9d4e81b8d0101dc5b156)
+2026-11-19T19:07:44.083174277Z 2026-11-19 19:07:44.081+0000 | EthScheduler-Workers-6 | INFO  | PersistBlockTask | Block 1226 (0xb48783562ef475517368220b9bec784402b463f9b38c9d4e81b8d0101dc5b156) is already imported
+2026-11-19T19:07:46.077914096Z 2026-11-19 19:07:46.077+0000 | EthScheduler-Workers-0 | INFO  | PersistBlockTask | Imported block #1,227 / 1 tx / 0 om / 21,000 (0.1%) gas / (0x7de30c4377ae3f4402823bcd3025290e6442146c9ef3a1abc50243c630c19ea8) in 0.000s. Peers: 8
+2026-11-19T19:07:46.078916984Z 2026-11-19 19:07:46.078+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,227 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x7de30c4377ae3f4402823bcd3025290e6442146c9ef3a1abc50243c630c19ea8)
+2026-11-19T19:07:48.091443898Z 2026-11-19 19:07:48.089+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,228 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xb08f52cfa67f6e72f6699b6715c978bdcb8d3b363bff45da3bbd2b86a5b96d3a)
+2026-11-19T19:07:48.091459769Z 2026-11-19 19:07:48.090+0000 | EthScheduler-Workers-2 | INFO  | PersistBlockTask | Block 1228 (0xb08f52cfa67f6e72f6699b6715c978bdcb8d3b363bff45da3bbd2b86a5b96d3a) is already imported
+2026-11-19T19:07:50.072557449Z 2026-11-19 19:07:50.072+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,229 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x368cb2ef19cf62f95a0f59de6aaeaa6cd166cbd8dd197881f5b7e39c5a4b5ee1)
+2026-11-19T19:07:52.076245212Z 2026-11-19 19:07:52.076+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,230 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x3cb092b06a4fbcd705548c82157e67addf0b01b7f04dc7e15c751822a59ff07b)
+2026-11-19T19:07:54.087396140Z 2026-11-19 19:07:54.087+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,231 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x1bac1d3d4938a981e29b543dd90af24a7977d02c39ce09fdd3b7e850c01606fc)
+2026-11-19T19:07:54.087427272Z 2026-11-19 19:07:54.087+0000 | EthScheduler-Workers-6 | INFO  | PersistBlockTask | Block 1231 (0x1bac1d3d4938a981e29b543dd90af24a7977d02c39ce09fdd3b7e850c01606fc) is already imported
+2026-11-19T19:07:56.128523126Z 2026-11-19 19:07:56.128+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #1,232  (ac4ad.....35a8b)|    1 tx | 1 pending | 21,000 (0.1%) gas in 0.124s | Timing(started at 2026-11-19T19:07:56.003682601Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=4ms, selectedTxsEvaluation=1ms, blockAssembled=0ms, blockImported=119ms)
+2026-11-19T19:07:56.129627980Z 2026-11-19 19:07:56.128+0000 | EthScheduler-Workers-4 | INFO  | PersistBlockTask | Block 1232 (0xac4ad591944d3660bb1f75addf35ca0ce4e71d552035f91320469094f3b35a8b) is already imported
+2026-11-19T19:07:58.093147594Z 2026-11-19 19:07:58.092+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,233 / 2 tx / 0 pending / 53,392 (0.2%) gas / (0x8338d7724e52ec9324e7e1df55347824a6d5949b6f45ec99e4ae55e5ad719e6b)
+2026-11-19T19:08:00.100128271Z 2026-11-19 19:08:00.099+0000 | BftProcessorExecutor-QBFT-0 | ERROR | EventMultiplexer | State machine threw exception while processing event \{org.hyperledger.besu.consensus.common.bft.events.BftReceivedMessageEvent@746b00b5\}
+# ---- match
+2026-11-19T19:08:00.100160857Z com.google.common.util.concurrent.UncheckedExecutionException: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 1234
+# ---- after
+2026-11-19T19:08:00.100165130Z 	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2077)
+2026-11-19T19:08:00.100183114Z 	at com.google.common.cache.LocalCache.get(LocalCache.java:3985)
+2026-11-19T19:08:00.100186346Z 	at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4854)
+2026-11-19T19:08:00.100188763Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsFromContract(TransactionValidatorProvider.java:88)
+2026-11-19T19:08:00.100191452Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.getValidatorsAfterBlock(TransactionValidatorProvider.java:72)
+2026-11-19T19:08:00.100194126Z 	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsAfterBlock(ForkingValidatorProvider.java:67)
+2026-11-19T19:08:00.100196678Z 	at org.hyperledger.besu.consensus.qbft.validator.ForkingValidatorProvider.getValidatorsAtHead(ForkingValidatorProvider.java:60)
+2026-11-19T19:08:00.100199494Z 	at org.hyperledger.besu.consensus.common.bft.network.ValidatorPeers.getLatestValidators(ValidatorPeers.java:114)
+2026-11-19T19:08:00.100202322Z 	at org.hyperledger.besu.consensus.common.bft.network.ValidatorPeers.send(ValidatorPeers.java:86)
+2026-11-19T19:08:00.100205139Z 	at org.hyperledger.besu.consensus.common.bft.UniqueMessageMulticaster.send(UniqueMessageMulticaster.java:66)
+2026-11-19T19:08:00.100207791Z 	at org.hyperledger.besu.consensus.qbft.network.QbftGossiperImpl.send(QbftGossiperImpl.java:84)
+2026-11-19T19:08:00.100210643Z 	at org.hyperledger.besu.consensus.qbft.network.QbftGossiperImpl.send(QbftGossiperImpl.java:63)
+2026-11-19T19:08:00.100213278Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.consumeMessage(QbftController.java:225)
+2026-11-19T19:08:00.100215832Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.handleMessage(QbftController.java:120)
+2026-11-19T19:08:00.100220355Z 	at org.hyperledger.besu.consensus.qbft.core.statemachine.QbftController.handleMessageEvent(QbftController.java:203)
+2026-11-19T19:08:00.100223601Z 	at org.hyperledger.besu.consensus.qbft.adaptor.BftEventHandlerAdaptor.handleMessageEvent(BftEventHandlerAdaptor.java:52)
+2026-11-19T19:08:00.100226285Z 	at org.hyperledger.besu.consensus.common.bft.EventMultiplexer.handleBftEvent(EventMultiplexer.java:53)
+2026-11-19T19:08:00.100229110Z 	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+2026-11-19T19:08:00.100231757Z 	at org.hyperledger.besu.consensus.common.bft.BftProcessor.run(BftProcessor.java:105)
+2026-11-19T19:08:00.100234518Z 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+2026-11-19T19:08:00.100237274Z 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+2026-11-19T19:08:00.100239952Z 	at java.base/java.lang.Thread.run(Thread.java:1474)
+2026-11-19T19:08:00.100242465Z Caused by: java.lang.IllegalStateException: Failed validator smart contract call: unable to execute call at block 1234
+2026-11-19T19:08:00.100245126Z 	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.lambda$getValidators$0(ValidatorContractController.java:79)
+2026-11-19T19:08:00.100251803Z 	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+2026-11-19T19:08:00.100254518Z 	at org.hyperledger.besu.consensus.qbft.validator.ValidatorContractController.getValidators(ValidatorContractController.java:79)
+2026-11-19T19:08:00.100257216Z 	at org.hyperledger.besu.consensus.qbft.validator.TransactionValidatorProvider.lambda$getValidatorsFromContract$0(TransactionValidatorProvider.java:91)
+2026-11-19T19:08:00.100259935Z 	at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4859)
+2026-11-19T19:08:00.100262637Z 	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3556)
+2026-11-19T19:08:00.100265128Z 	at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2307)
+2026-11-19T19:08:00.100267732Z 	at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2180)
+2026-11-19T19:08:00.100270575Z 	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2071)
+2026-11-19T19:08:00.100273282Z 	... 21 more
+2026-11-19T19:08:00.111253894Z 2026-11-19 19:08:00.111+0000 | EthScheduler-Workers-5 | INFO  | PersistBlockTask | Imported block #1,234 / 1 tx / 0 om / 21,000 (0.1%) gas / (0x95369f73dc04832f509f7c3d52852596d70db5ff5330d555afa51780b8921b1b) in 0.000s. Peers: 8
+2026-11-19T19:08:02.084148154Z 2026-11-19 19:08:02.083+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,235 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x27cee697cd734db0b057a74bbbbd53c6c37d4cd0b2ddbbf9b50e61a45b40c1c8)
+2026-11-19T19:08:04.093574107Z 2026-11-19 19:08:04.088+0000 | EthScheduler-Workers-4 | INFO  | PersistBlockTask | Imported block #1,236 / 1 tx / 0 om / 21,000 (0.1%) gas / (0x7df329b0678f30b59c6112cf056fc8de19aa053d60c19bd4dd3387b798aee0b7) in 0.000s. Peers: 8
+2026-11-19T19:08:06.079700037Z 2026-11-19 19:08:06.075+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,237 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xc02d6f6d4f945ca7e3c9bb249b0dd9b6f2c0622e6c0b8fe3b8231140b9bccf73)
+2026-11-19T19:08:08.070741027Z 2026-11-19 19:08:08.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,238 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xd14a37acea092a331601dc34134975546892f591050c3259d517102e86a918de)
+2026-11-19T19:08:10.072008643Z 2026-11-19 19:08:10.070+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Produced #1,239  (5d110.....227d9)|    1 tx | 0 pending | 21,000 (0.1%) gas in 0.068s | Timing(started at 2026-11-19T19:08:10.002015326Z, duplicateWorldState=0ms, preTxsSelection=0ms, txsSelection=5ms, selectedTxsEvaluation=1ms, blockAssembled=0ms, blockImported=61ms)
+2026-11-19T19:08:12.073053437Z 2026-11-19 19:08:12.071+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,240 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x16df5dfde68b13b1d506d96c3cfd945534661e4cca7c05284a92be28c9c4e541)
+2026-11-19T19:08:14.067748836Z 2026-11-19 19:08:14.064+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,241 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xf452c002a9b0ad56f3ec506d5ad3f0f7c2c1bcde6970228cd563ee45ec7961cc)
+2026-11-19T19:08:16.077425769Z 2026-11-19 19:08:16.075+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,242 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x6edc2f805a024650b0ca8755d20913d8a4b71caee06f194cacc0ccc4990c256f)
+2026-11-19T19:08:18.077059008Z 2026-11-19 19:08:18.074+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,243 / 2 tx / 0 pending / 53,404 (0.2%) gas / (0xa172fb7aaf994ef9985becd48aed8ed25e7625d0794754cf93f24ab40aa045df)
+2026-11-19T19:08:20.109311285Z 2026-11-19 19:08:20.106+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,244 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0xaac58129fd586475452ca671453abbdeadfd11769515cb064b7b057b7faf6e7e)
+2026-11-19T19:08:22.082790682Z 2026-11-19 19:08:22.082+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported block       #1,245 / 1 tx / 0 pending / 21,000 (0.1%) gas / (0x86b206a8a955654652f347f18d8aeba25167a22d2e8811b8a0f645ecf4193087)

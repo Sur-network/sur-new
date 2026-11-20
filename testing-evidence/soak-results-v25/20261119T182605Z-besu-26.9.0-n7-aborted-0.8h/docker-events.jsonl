@@ -1,0 +1,26 @@
+{"t":"2026-11-19T18:26:31.087Z","action":"start","name":"collector"}
+{"t":"2026-11-19T18:26:32.462Z","action":"create","name":"bootstrap-1392139"}
+{"t":"2026-11-19T18:26:32.464Z","action":"attach","name":"bootstrap-1392139"}
+{"t":"2026-11-19T18:26:33.490Z","action":"start","name":"bootstrap-1392139"}
+{"t":"2026-11-19T18:26:57.487Z","action":"health_status: healthy","name":"n1"}
+{"t":"2026-11-19T18:27:03.957Z","action":"health_status: unhealthy","name":"n2"}
+{"t":"2026-11-19T18:27:06.176Z","action":"health_status: unhealthy","name":"n3"}
+{"t":"2026-11-19T18:27:08.543Z","action":"health_status: unhealthy","name":"n4"}
+{"t":"2026-11-19T18:27:09.275Z","action":"health_status: healthy","name":"n2"}
+{"t":"2026-11-19T18:27:11.489Z","action":"health_status: unhealthy","name":"n5"}
+{"t":"2026-11-19T18:27:13.854Z","action":"health_status: unhealthy","name":"n6"}
+{"t":"2026-11-19T18:27:17.025Z","action":"health_status: healthy","name":"n3"}
+{"t":"2026-11-19T18:27:17.225Z","action":"health_status: unhealthy","name":"n7"}
+{"t":"2026-11-19T18:27:19.024Z","action":"health_status: unhealthy","name":"x1"}
+{"t":"2026-11-19T18:27:21.896Z","action":"health_status: unhealthy","name":"x2"}
+{"t":"2026-11-19T18:27:24.796Z","action":"health_status: healthy","name":"n4"}
+{"t":"2026-11-19T18:27:27.298Z","action":"health_status: healthy","name":"n5"}
+{"t":"2026-11-19T18:27:29.717Z","action":"health_status: healthy","name":"n6"}
+{"t":"2026-11-19T18:27:34.852Z","action":"health_status: healthy","name":"x1"}
+{"t":"2026-11-19T18:27:38.037Z","action":"health_status: healthy","name":"x2"}
+{"t":"2026-11-19T18:27:38.322Z","action":"health_status: healthy","name":"n7"}
+{"t":"2026-11-19T18:28:54.251Z","action":"die","name":"bootstrap-1392139","exitCode":"0"}
+{"t":"2026-11-19T18:28:54.332Z","action":"destroy","name":"bootstrap-1392139"}
+{"t":"2026-11-19T18:28:56.411Z","action":"create","name":"loadgen"}
+{"t":"2026-11-19T18:28:56.955Z","action":"start","name":"loadgen"}
+{"t":"2026-11-19T19:17:15.765Z","action":"die","name":"loadgen","exitCode":"0"}

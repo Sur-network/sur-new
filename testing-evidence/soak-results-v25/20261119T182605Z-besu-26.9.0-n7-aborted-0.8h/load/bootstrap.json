@@ -1,0 +1,103 @@
+{
+ "net": "n7",
+ "startedAt": "2026-11-19T18:26:34.848Z",
+ "steps": [
+  {
+   "owner": "owner2",
+   "fn": "setOperator",
+   "block": 26
+  },
+  {
+   "owner": "owner2",
+   "fn": "recordActivation",
+   "block": 27
+  },
+  {
+   "owner": "owner3",
+   "fn": "setOperator",
+   "block": 31
+  },
+  {
+   "owner": "owner3",
+   "fn": "recordActivation",
+   "block": 32
+  },
+  {
+   "owner": "owner4",
+   "fn": "setOperator",
+   "block": 36
+  },
+  {
+   "owner": "owner4",
+   "fn": "recordActivation",
+   "block": 37
+  },
+  {
+   "owner": "owner5",
+   "fn": "setOperator",
+   "block": 41
+  },
+  {
+   "owner": "owner5",
+   "fn": "recordActivation",
+   "block": 42
+  },
+  {
+   "owner": "owner6",
+   "fn": "setOperator",
+   "block": 46
+  },
+  {
+   "owner": "owner6",
+   "fn": "recordActivation",
+   "block": 47
+  },
+  {
+   "owner": "owner7",
+   "fn": "setOperator",
+   "block": 51
+  },
+  {
+   "owner": "owner7",
+   "fn": "recordActivation",
+   "block": 52
+  },
+  {
+   "owner": "owner8",
+   "fn": "setOperator",
+   "block": 56
+  },
+  {
+   "role": "lg1",
+   "fn": "registerIdentity",
+   "block": 57
+  },
+  {
+   "role": "lg2",
+   "fn": "registerIdentity",
+   "block": 58
+  },
+  {
+   "role": "lg3",
+   "fn": "registerIdentity",
+   "block": 59
+  },
+  {
+   "role": "lg4",
+   "fn": "registerIdentity",
+   "block": 60
+  }
+ ],
+ "headWhenSynced": 24,
+ "finishedAt": "2026-11-19T18:28:52.341Z",
+ "head": 60,
+ "validatorOperators": [
+  "0xfa1cB91691cDf69FB801c71F91fD328980406646",
+  "0x41De54d34CaE74160bE25f99025f6db7a40c03ae",
+  "0x52E634F9A85b933B31Bbbf6Ed4FC82344bB253aB",
+  "0x69e494394F27ffE07f9A5FE216a50553B90d4134",
+  "0x3E521d649aD57aFbBF084078E5Cb7f442752B846",
+  "0x6cF7cD1426ed3f2D7e81baAA47dF73c452Ca60A0",
+  "0xe8566EeA588Fc307e0214D7bE4132b6EC8DD415f"
+ ]
+}

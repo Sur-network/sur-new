@@ -1,0 +1,5 @@
+2026-11-19T18:26:32.593Z collector start: net n7, 9 nodes, interval 60 min, rotate 100 MB x 12
+2026-11-19T18:26:32.607Z resumed: 0 blocks in blocks.csv, last 0, rows done 0
+2026-11-19T19:17:12.145Z stop requested: final drain
+2026-11-19T19:17:18.608Z ROW 1 (partial): head 1509, blocks 1448, bt p50/p95/p99/max 2/2/2/2, F-1 11 (total 11), list changes 0, restarts 0, fork mismatches 0
+2026-11-19T19:17:18.610Z collector done

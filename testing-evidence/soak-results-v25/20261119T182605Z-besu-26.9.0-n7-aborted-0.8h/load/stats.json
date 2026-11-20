@@ -1,0 +1,35 @@
+{
+ "startedAt": "2026-11-19T18:28:57.194Z",
+ "phase": "transfers",
+ "transfers": {
+  "sent": 548,
+  "errors": 0,
+  "resyncs": 8,
+  "bursts": 0
+ },
+ "errorsByClass": {
+  "poll: eth_call: Internal error": 1
+ },
+ "identityToggles": {
+  "ok": 55,
+  "err": 0
+ },
+ "listChanges": {
+  "swap": 0,
+  "selfSuspend": 0,
+  "resume": 0,
+  "activate": 0,
+  "failed": 0,
+  "skipped": 0
+ },
+ "poll": {
+  "ok": 2880,
+  "err": 1,
+  "maxMs": 146,
+  "p50Ms": 12
+ },
+ "lastChange": null,
+ "nextChangeAt": null,
+ "updatedAt": "2026-11-19T19:17:12.057Z",
+ "final": true
+}

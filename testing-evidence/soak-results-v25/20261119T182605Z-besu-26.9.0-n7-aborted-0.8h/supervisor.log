@@ -1,0 +1,35 @@
+2026-11-19T18:26:05Z creating network sur25s-net
+2026-11-19T18:26:06Z starting Besu nodes
+2026-11-19T18:26:08Z   started sur25s-n1 ip=172.29.71.11 rpc=127.0.0.1:19611
+2026-11-19T18:26:10Z   started sur25s-n2 ip=172.29.71.12 rpc=127.0.0.1:19612
+2026-11-19T18:26:12Z   started sur25s-n3 ip=172.29.71.13 rpc=127.0.0.1:19613
+2026-11-19T18:26:15Z   started sur25s-n4 ip=172.29.71.14 rpc=127.0.0.1:19614
+2026-11-19T18:26:17Z   started sur25s-n5 ip=172.29.71.15 rpc=127.0.0.1:19615
+2026-11-19T18:26:19Z   started sur25s-n6 ip=172.29.71.16 rpc=127.0.0.1:19616
+2026-11-19T18:26:22Z   started sur25s-n7 ip=172.29.71.17 rpc=127.0.0.1:19617
+2026-11-19T18:26:25Z   started sur25s-x1 ip=172.29.71.21 rpc=127.0.0.1:19621
+2026-11-19T18:26:28Z   started sur25s-x2 ip=172.29.71.22 rpc=127.0.0.1:19622
+2026-11-19T18:26:28Z starting collector
+2026-11-19T18:26:31Z bootstrap: waiting for the nodes, then activating validators 2..7 through the Registry (setOperator + recordActivation)
+2026-11-19T18:26:34.848Z [bootstrap] net n7: 7 validators wanted; waiting for 9 nodes
+2026-11-19T18:27:41.993Z [bootstrap] all nodes up and synced at head 24
+2026-11-19T18:27:52.189Z [bootstrap] owner2 Active (activation block 27); validators now 2
+2026-11-19T18:28:02.132Z [bootstrap] owner3 Active (activation block 32); validators now 3
+2026-11-19T18:28:12.620Z [bootstrap] owner4 Active (activation block 37); validators now 4
+2026-11-19T18:28:22.549Z [bootstrap] owner5 Active (activation block 42); validators now 5
+2026-11-19T18:28:32.495Z [bootstrap] owner6 Active (activation block 47); validators now 6
+2026-11-19T18:28:42.309Z [bootstrap] owner7 Active (activation block 52); validators now 7
+2026-11-19T18:28:52.354Z [bootstrap] done at head 60: 7 validators active
+2026-11-19T18:28:54Z SOAK CLOCK STARTED: 24 h, ends 2026-11-20T18:28:54Z
+2026-11-19T18:28:57Z heartbeat: head 60  last block age 1 s  validators 7  blocks recorded 60  rows written 0  collector errors 0
+2026-11-19T18:38:59Z heartbeat: head 359  last block age 1 s  validators 7  blocks recorded 359  rows written 0  collector errors 0
+2026-11-19T18:49:01Z heartbeat: head 657  last block age 2 s  validators 7  blocks recorded 657  rows written 0  collector errors 0
+2026-11-19T18:59:03Z heartbeat: head 963  last block age 0 s  validators 7  blocks recorded 963  rows written 0  collector errors 0
+2026-11-19T19:09:06Z heartbeat: head 1260  last block age 1 s  validators 7  blocks recorded 1260  rows written 0  collector errors 0
+2026-11-19T19:17:12Z signal received: finishing the run early
+2026-11-19T19:17:12Z finishing run 20261119T182605Z-besu-26.9.0-n7-24h: stopping load generator and collector
+2026-11-19T19:17:21Z stopping the Besu nodes (containers and volumes are kept until cleanup.sh)
+2026-11-19T19:17:50Z analysing /home/zojaji/sur-soak/soak-kit-v25/runs/20261119T182605Z-besu-26.9.0-n7-24h
+summary.md written: 11 occurrences (11 in window), 1448 window blocks, 1 rows
+summary: /home/zojaji/sur-soak/soak-kit-v25/runs/20261119T182605Z-besu-26.9.0-n7-24h/summary.md
+2026-11-19T19:17:52Z run finished. Results: /home/zojaji/sur-soak/soak-kit-v25/runs/20261119T182605Z-besu-26.9.0-n7-24h  (summary.md, hourly.csv, occurrences/)

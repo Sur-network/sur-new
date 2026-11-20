@@ -1,0 +1,12 @@
+idx,seq,sinceChangeBlocks,lastChangeOp,nodesRestartedIn30min,node,block,logTime,phase,bootstrap,validators,listChangeAtN,listChangeAtNminus1,nearChange3,txN,txPrev,txNext,roundN,roundNext,minerN,proposerIdxN,minerNext,proposerIdxNext,nodeIdxInSet,nodeIsProposerOfN,nodeIsProposerOfNext,logMinusBlockNtsMs,gapToNextBlockS,maxGapN_to_N5,persistBlockTaskSameMs,file
+1,1,78,bootstrap/other,,n6,130,2026-11-19T18:31:12.139698543Z,idle,false,7,false,false,false,0,0,0,0,0,n2,1,n3,2,4,false,false,139,2,2,true,n6__0001__block130__2026-11-19T18-31-12-139698543Z.txt
+2,1,275,bootstrap/other,,n7,327,2026-11-19T18:37:46.108734505Z,idle,false,7,false,false,false,0,0,0,0,0,n3,2,n4,3,5,false,false,108,2,2,true,n7__0001__block327__2026-11-19T18-37-46-108734505Z.txt
+3,1,373,bootstrap/other,,n5,425,2026-11-19T18:41:02.100045084Z,idle,false,7,false,false,false,0,0,0,0,0,n3,2,n4,3,0,false,false,100,2,2,true,n5__0001__block425__2026-11-19T18-41-02-100045084Z.txt
+4,1,480,bootstrap/other,,n1,532,2026-11-19T18:44:36.113336872Z,idle,false,7,false,false,false,0,0,0,0,0,n6,4,n7,5,6,false,false,113,2,2,true,n1__0001__block532__2026-11-19T18-44-36-113336872Z.txt
+5,1,523,bootstrap/other,,n4,575,2026-11-19T18:46:02.083640246Z,idle,false,7,false,false,false,0,0,0,0,0,n7,5,n1,6,3,false,false,83,2,2,true,n4__0001__block575__2026-11-19T18-46-02-083640246Z.txt
+6,1,878,bootstrap/other,,n2,930,2026-11-19T18:57:52.087080764Z,idle,false,7,false,false,false,0,0,0,0,0,n4,3,n6,4,1,false,false,87,2,2,true,n2__0001__block930__2026-11-19T18-57-52-087080764Z.txt
+7,2,1045,bootstrap/other,,n1,1097,2026-11-19T19:03:26.079516133Z,transfers,false,7,false,false,false,1,1,1,0,0,n3,2,n4,3,6,false,false,79,2,2,true,n1__0002__block1097__2026-11-19T19-03-26-079516133Z.txt
+8,2,1182,bootstrap/other,,n6,1234,2026-11-19T19:08:00.100160857Z,transfers,false,7,false,false,false,1,2,1,0,0,n1,6,n5,0,4,false,false,100,2,2,true,n6__0002__block1234__2026-11-19T19-08-00-100160857Z.txt
+9,2,1290,bootstrap/other,,n2,1342,2026-11-19T19:11:36.073764320Z,transfers,false,7,false,false,false,1,1,2,0,0,n3,2,n4,3,1,false,false,73,2,2,true,n2__0002__block1342__2026-11-19T19-11-36-073764320Z.txt
+10,3,1302,bootstrap/other,,n2,1354,2026-11-19T19:12:00.100369400Z,transfers,false,7,false,false,false,1,2,1,0,0,n5,0,n2,1,1,false,true,100,2,2,true,n2__0003__block1354__2026-11-19T19-12-00-100369400Z.txt
+11,2,1303,bootstrap/other,,n7,1355,2026-11-19T19:12:02.076212749Z,transfers,false,7,false,false,false,1,1,1,0,0,n2,1,n3,2,5,false,false,76,2,2,true,n7__0002__block1355__2026-11-19T19-12-02-076212749Z.txt

@@ -1,0 +1,344 @@
+[
+    {
+        "Id": "78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1",
+        "Created": "2026-11-19T18:26:25.45949004Z",
+        "Path": "besu-entry.sh",
+        "Args": [
+            "--config-file=/net/x2/config.toml",
+            "--logging=INFO"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 1395692,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-19T18:26:27.451850092Z",
+            "FinishedAt": "0001-01-01T00:00:00Z",
+            "Health": {
+                "Status": "healthy",
+                "FailingStreak": 0,
+                "Log": [
+                    {
+                        "Start": "2026-11-19T22:46:59.679933573+03:30",
+                        "End": "2026-11-19T22:46:59.744953213+03:30",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2026-11-19T22:47:04.745777463+03:30",
+                        "End": "2026-11-19T22:47:04.81608502+03:30",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2026-11-19T22:47:09.817731765+03:30",
+                        "End": "2026-11-19T22:47:09.879087197+03:30",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2026-11-19T22:47:14.880336685+03:30",
+                        "End": "2026-11-19T22:47:14.9373539+03:30",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2026-11-19T22:47:19.938123914+03:30",
+                        "End": "2026-11-19T22:47:19.993800995+03:30",
+                        "ExitCode": 0,
+                        "Output": ""
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:ca05efeb8050497e45bc2b4ed22111a8189a8b85ffa7aca09da18f45a417810d",
+        "ResolvConfPath": "/var/lib/docker/containers/78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1/hostname",
+        "HostsPath": "/var/lib/docker/containers/78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1/hosts",
+        "LogPath": "/var/lib/docker/containers/78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1/78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1-json.log",
+        "Name": "/sur25s-x2",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": [
+                "/home/zojaji/sur-soak/soak-kit-v25/nets/n7:/net:ro",
+                "sur25s-x2-data:/data",
+                "/home/zojaji/sur-soak/soak-kit-v25/nets/n7/x2/static-nodes.json:/data/static-nodes.json:ro"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {
+                    "max-file": "3",
+                    "max-size": "20m"
+                }
+            },
+            "NetworkMode": "sur25s-net",
+            "PortBindings": {
+                "8545/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "19622"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "on-failure",
+                "MaximumRetryCount": 20
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 1610612736,
+            "NanoCpus": 1500000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 1610612736,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap",
+                "/sys/devices/system/cpu/cpu0/thermal_throttle",
+                "/sys/devices/system/cpu/cpu1/thermal_throttle",
+                "/sys/devices/system/cpu/cpu2/thermal_throttle",
+                "/sys/devices/system/cpu/cpu3/thermal_throttle"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "ID": "78474f70da1342f498117080314c97faffbfe01d27262eed162e90583aafe2c1",
+                "LowerDir": "/var/lib/docker/overlay2/79371e0d45a153745afdfc0152494542e7311c28b70cb8e9018a0dcdc8add24c-init/diff:/var/lib/docker/overlay2/b3d932ef8cc9e724c9e2af6616b940fa8e2d405cb42d2615f1e3396b3d0ba14c/diff:/var/lib/docker/overlay2/fc45fba3d479fc58e3a07a69aa07933987a9d0ec4bd3b8dca74979ae4a429fce/diff:/var/lib/docker/overlay2/5cd95070ddaf3755daa2a8f8f1f9bc2854a8d6c7d0372c2c0591ca46591604e0/diff:/var/lib/docker/overlay2/43874497763dd810d11d9f280616ba56020af0ac72af8727647144c0f1eef16b/diff:/var/lib/docker/overlay2/b260bdce7cb6ffc7a9b10c2a5b41f420b81944e27fc253e1118643d48ed27393/diff:/var/lib/docker/overlay2/4a2808b3b67cc782b3bbb7fd3c2883c0da3464ffc4e09973415383a65b3b9567/diff:/var/lib/docker/overlay2/0d459976ec6bde389d67c01b79b57960d88869ed85d4f5e62111b4e2e3d14f18/diff:/var/lib/docker/overlay2/b53bbc5b608f6dfe2e68ea22033dc062bda05bcb62672e28f84d42a7a0c0bfbf/diff",
+                "MergedDir": "/var/lib/docker/overlay2/79371e0d45a153745afdfc0152494542e7311c28b70cb8e9018a0dcdc8add24c/merged",
+                "UpperDir": "/var/lib/docker/overlay2/79371e0d45a153745afdfc0152494542e7311c28b70cb8e9018a0dcdc8add24c/diff",
+                "WorkDir": "/var/lib/docker/overlay2/79371e0d45a153745afdfc0152494542e7311c28b70cb8e9018a0dcdc8add24c/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/home/zojaji/sur-soak/soak-kit-v25/nets/n7",
+                "Destination": "/net",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "volume",
+                "Name": "sur25s-x2-data",
+                "Source": "/var/lib/docker/volumes/sur25s-x2-data/_data",
+                "Destination": "/data",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/zojaji/sur-soak/soak-kit-v25/nets/n7/x2/static-nodes.json",
+                "Destination": "/data/static-nodes.json",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "78474f70da13",
+            "Domainname": "",
+            "User": "root",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "30303/tcp": {},
+                "8545/tcp": {},
+                "8546/tcp": {},
+                "8547/tcp": {},
+                "8550/tcp": {},
+                "8551/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "JAVA_OPTS=-Xms128m -Xmx768m",
+                "PATH=/opt/besu/bin:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NO_PROXY_CACHE=-o Acquire::BrokenProxy=true -o Acquire::http::No-Cache=true -o Acquire::http::Pipeline-Depth=0",
+                "PYROSCOPE_CONFIGURATION_FILE=/etc/besu/pyroscope.properties",
+                "BESU_RPC_HTTP_HOST=0.0.0.0",
+                "BESU_RPC_WS_HOST=0.0.0.0",
+                "BESU_GRAPHQL_HTTP_HOST=0.0.0.0",
+                "BESU_PID_PATH=/tmp/pid",
+                "OTEL_RESOURCE_ATTRIBUTES=service.name=besu,service.version=26.9.0",
+                "JAVA_HOME=/opt/java/openjdk",
+                "BESU_USER_NAME=besu"
+            ],
+            "Cmd": [
+                "--config-file=/net/x2/config.toml",
+                "--logging=INFO"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "bash -c \"[ -f /tmp/pid ]\""
+                ],
+                "Interval": 5000000000,
+                "Timeout": 1000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 10
+            },
+            "Image": "hyperledger/besu:26.9.0",
+            "Volumes": null,
+            "WorkingDir": "/opt/besu",
+            "Entrypoint": [
+                "besu-entry.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "org.opencontainers.image.created": "",
+                "org.opencontainers.image.description": "Enterprise Ethereum client",
+                "org.opencontainers.image.licenses": "Apache 2.0",
+                "org.opencontainers.image.revision": "ee9c64c8ed031cba5c6bcdb502a79c03c3a467c4",
+                "org.opencontainers.image.source": "https://github.com/besu-eth/besu.git",
+                "org.opencontainers.image.title": "Besu",
+                "org.opencontainers.image.url": "https://besu.hyperledger.org/",
+                "org.opencontainers.image.vendor": "Hyperledger",
+                "org.opencontainers.image.version": "26.9.0",
+                "sur25s.kit": "1",
+                "sur25s.node": "x2"
+            },
+            "StopTimeout": 30
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "e244a9735a9eb328ffdb4e3d05db892ade34ee7b61622b0f2436d05400b2383e",
+            "SandboxKey": "/var/run/docker/netns/e244a9735a9e",
+            "Ports": {
+                "30303/tcp": null,
+                "8545/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "19622"
+                    }
+                ],
+                "8546/tcp": null,
+                "8547/tcp": null,
+                "8550/tcp": null,
+                "8551/tcp": null
+            },
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "sur25s-net": {
+                    "IPAMConfig": {
+                        "IPv4Address": "172.29.71.22"
+                    },
+                    "Links": null,
+                    "Aliases": null,
+                    "MacAddress": "0e:75:21:b8:03:c0",
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "ff3e63048cfa964546592984ec9b31e696dd70316c82c8f8512cc64e6c084a99",
+                    "EndpointID": "2915698d5213e10caeb7f068f52f384ed880b4bf49df178b52f9fa131d91d649",
+                    "Gateway": "172.29.71.1",
+                    "IPAddress": "172.29.71.22",
+                    "IPPrefixLen": 24,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "sur25s-x2",
+                        "78474f70da13"
+                    ]
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,253 @@
+[
+    {
+        "Id": "9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9",
+        "Created": "2026-11-19T18:26:28.509604872Z",
+        "Path": "docker-entrypoint.sh",
+        "Args": [
+            "sh",
+            "-c",
+            "mkdir -p /opt && tar -xzf /kit/vendor/node_modules.tgz -C /opt && exec node /kit/runtime/collector.js"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-19T18:26:30.092008443Z",
+            "FinishedAt": "2026-11-19T19:17:18.626096732Z"
+        },
+        "Image": "sha256:8049382e2048cff27289992d304206b4208b5b4f5110a19a5dbe21c18a0b8603",
+        "ResolvConfPath": "/var/lib/docker/containers/9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9/hostname",
+        "HostsPath": "/var/lib/docker/containers/9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9/hosts",
+        "LogPath": "/var/lib/docker/containers/9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9/9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9-json.log",
+        "Name": "/sur25s-collector",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": [
+                "/home/zojaji/sur-soak/soak-kit-v25:/kit:ro",
+                "/home/zojaji/sur-soak/soak-kit-v25/runs/20261119T182605Z-besu-26.9.0-n7-24h:/run-data",
+                "/var/run/docker.sock:/var/run/docker.sock"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "sur25s-net",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap",
+                "/sys/devices/system/cpu/cpu0/thermal_throttle",
+                "/sys/devices/system/cpu/cpu1/thermal_throttle",
+                "/sys/devices/system/cpu/cpu2/thermal_throttle",
+                "/sys/devices/system/cpu/cpu3/thermal_throttle"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "ID": "9dd6f1136beab1a901de130e1789276640648e45425d521838c4e7ceb94075f9",
+                "LowerDir": "/var/lib/docker/overlay2/4d43d3b76d843e1d5f0735c918f521ee137aa4665cc5e0dfba2ef9adb55c260b-init/diff:/var/lib/docker/overlay2/64bce353138ec12a156f39a41e87fc299e3bd348af7cd22fe95126f4207572ec/diff:/var/lib/docker/overlay2/f702e2e4fb2aecfb53adba316851c356737b7da3398050cf1e6faeb4a0112396/diff:/var/lib/docker/overlay2/e40b5d9e4847b301707b76872f79fbbe50c84626ab3ac1bf030ed16a41260678/diff:/var/lib/docker/overlay2/23b6443f8a8ec1556bc1153f18d56017fce241584f330c5d598f79abf33630ec/diff",
+                "MergedDir": "/var/lib/docker/overlay2/4d43d3b76d843e1d5f0735c918f521ee137aa4665cc5e0dfba2ef9adb55c260b/merged",
+                "UpperDir": "/var/lib/docker/overlay2/4d43d3b76d843e1d5f0735c918f521ee137aa4665cc5e0dfba2ef9adb55c260b/diff",
+                "WorkDir": "/var/lib/docker/overlay2/4d43d3b76d843e1d5f0735c918f521ee137aa4665cc5e0dfba2ef9adb55c260b/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/home/zojaji/sur-soak/soak-kit-v25",
+                "Destination": "/kit",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/zojaji/sur-soak/soak-kit-v25/runs/20261119T182605Z-besu-26.9.0-n7-24h",
+                "Destination": "/run-data",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/var/run/docker.sock",
+                "Destination": "/var/run/docker.sock",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "9dd6f1136bea",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "RUN_DIR=/run-data",
+                "KIT_DIR=/kit",
+                "NODE_PATH=/opt/node_modules",
+                "SOAK_PREFIX=sur25s-",
+                "INTERVAL_MIN=60",
+                "NET=n7",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.5",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Cmd": [
+                "sh",
+                "-c",
+                "mkdir -p /opt && tar -xzf /kit/vendor/node_modules.tgz -C /opt && exec node /kit/runtime/collector.js"
+            ],
+            "Image": "node:22-alpine",
+            "Volumes": null,
+            "WorkingDir": "/",
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "sur25s.kit": "1"
+            }
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "sur25s-net": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "MacAddress": "",
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "ff3e63048cfa964546592984ec9b31e696dd70316c82c8f8512cc64e6c084a99",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "sur25s-collector",
+                        "9dd6f1136bea"
+                    ]
+                }
+            }
+        }
+    }
+]
