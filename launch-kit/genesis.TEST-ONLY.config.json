@@ -1,0 +1,288 @@
+{
+  "_comment": "TEST ONLY: input config of genesis.TEST-ONLY.json = GenesisBuilder examples/genesis-config.local-test.json with exactly two patches: validatorsRegistry.firstValidator.operator = the ADDRESS of a throw-away node key that was generated for this test and destroyed (no key in this kit), and network.genesisTimestamp = build time + 60 s (the tool refuses 0). Chain id 262025, NOT the production 262. All addresses are throw-away. Never use for a real network.",
+  "allowUnchecksummed": true,
+  "network": {
+    "_comment": "contractSizeLimitBytes (OPTIONAL, 24576..65536): maximum deployed contract code size, written as config.contractSizeLimit into genesis (verified on Besu 26.9.0). Absent = Besu default 24,576 and nothing is written. OWNER DECISION: 36,864 (36 KiB). Raising it is irreversible without a coordinated change on every node, and call cost does not scale with code size (DoS / flat-cost caveat): the build warns. The initcode limit (49,152, cancun profile only) is a separate rule that is not configurable in genesis and does not cap the runtime size.",
+    "chainId": 262025,
+    "genesisTimestamp": 1795148235,
+    "blockPeriodSeconds": 2,
+    "blockRewardWei": "2000000000000000000",
+    "minGasPriceWei": "100000000000000",
+    "gasLimit": "0x1fffffffffffff",
+    "contractSizeLimitBytes": 36864,
+    "forks": "cancun"
+  },
+  "oracles": {
+    "distributionOracle": "0x5400000000000000000000000000000000000001",
+    "verifier": "0x5400000000000000000000000000000000000002",
+    "identityOracle": "0x5400000000000000000000000000000000000003"
+  },
+  "validatorsRegistry": {
+    "firstValidator": {
+      "owner": "0x5000000000000000000000000000000000000001",
+      "operator": "0xdcf7b3e4ea3474c9912862ecdf0e5f7524ab0e49"
+    },
+    "otherFounders": [
+      "0x5000000000000000000000000000000000000002",
+      "0x5000000000000000000000000000000000000003",
+      "0x5000000000000000000000000000000000000004",
+      "0x5000000000000000000000000000000000000005",
+      "0x5000000000000000000000000000000000000006",
+      "0x5000000000000000000000000000000000000007"
+    ],
+    "seatBaseURI": "https://validator-nft.surnet.org/",
+    "entryCollateral": "500000000000000000000000",
+    "membershipFeeBps": 400,
+    "maxEntriesPerWindow": 1,
+    "entryWindowSeconds": 604800,
+    "probationPeriod": 604800,
+    "recoveryPeriod": 172800,
+    "slashBps": 100,
+    "exitCooldown": 604800
+  },
+  "validatorsBoard": {
+    "initialBoardMembers": [
+      "0x5000000000000000000000000000000000000001",
+      "0x5000000000000000000000000000000000000002",
+      "0x5000000000000000000000000000000000000003",
+      "0x5000000000000000000000000000000000000004",
+      "0x5000000000000000000000000000000000000005"
+    ]
+  },
+  "validatorsTreasury": {
+    "perPaymentCap": "50000000000000000000000",
+    "periodCap": "200000000000000000000000"
+  },
+  "foundationMembers": {
+    "members": [
+      {
+        "name": "Test Member 01",
+        "account": "0x5200000000000000000000000000000000000001",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 02",
+        "account": "0x5200000000000000000000000000000000000002",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 03",
+        "account": "0x5200000000000000000000000000000000000003",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 04",
+        "account": "0x5200000000000000000000000000000000000004",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 05",
+        "account": "0x5200000000000000000000000000000000000005",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 06",
+        "account": "0x5200000000000000000000000000000000000006",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 07",
+        "account": "0x5200000000000000000000000000000000000007",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 08",
+        "account": "0x5200000000000000000000000000000000000008",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 09",
+        "account": "0x5200000000000000000000000000000000000009",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 10",
+        "account": "0x520000000000000000000000000000000000000a",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 11",
+        "account": "0x520000000000000000000000000000000000000b",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 12",
+        "account": "0x520000000000000000000000000000000000000c",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 13",
+        "account": "0x520000000000000000000000000000000000000d",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 14",
+        "account": "0x520000000000000000000000000000000000000e",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 15",
+        "account": "0x5000000000000000000000000000000000000007",
+        "shareWeight": "50000000"
+      }
+    ]
+  },
+  "foundationDAO": {
+    "treasuryBalanceWei": "20000000000000000000000000",
+    "initialBoard": {
+      "principal": [
+        "0x5200000000000000000000000000000000000001",
+        "0x5200000000000000000000000000000000000002",
+        "0x5200000000000000000000000000000000000003",
+        "0x5200000000000000000000000000000000000004",
+        "0x5200000000000000000000000000000000000005"
+      ],
+      "alternates": [
+        "0x5200000000000000000000000000000000000006",
+        "0x5200000000000000000000000000000000000007"
+      ]
+    },
+    "initialInspector": "0x5300000000000000000000000000000000000001"
+  },
+  "genesisClaimsVault": {
+    "installments": 24,
+    "gasReserveWei": "100000000000000000000",
+    "claims": [
+      {
+        "to": "0x5000000000000000000000000000000000000001",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000002",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000003",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000004",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000005",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000006",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x5000000000000000000000000000000000000007",
+        "totalClaimWei": "3133800000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000001",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000002",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000003",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000004",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000005",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000006",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000007",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000008",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5200000000000000000000000000000000000009",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x520000000000000000000000000000000000000a",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x520000000000000000000000000000000000000b",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x520000000000000000000000000000000000000c",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x520000000000000000000000000000000000000d",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x520000000000000000000000000000000000000e",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      }
+    ],
+    "rowTotals": {
+      "initialValidatorClaims": "11984000000000000000000000",
+      "foundationMemberClaims": "21327000000000000000000000"
+    }
+  }
+}
