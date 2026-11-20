@@ -1,0 +1,128 @@
+# =====================================================================================================
+# SUR — یک نود ولیدیتور Besu 26.9.0 (QBFT)         پیشنهاد کیت راه‌اندازی v2.5
+# اجرا:   cp .env.example .env   ← مقدارها را پر کنید (فقط مسیر و پورت؛ هیچ کلیدی داخل مخزن/فایل env نیست)
+#         docker compose config            ← بررسی
+#         docker compose up -d             ← نود (Prometheus فقط با:  docker compose --profile monitoring up -d )
+# هر سطر با برچسب VERIFIED/UNVERIFIED/OWNER: توضیح در README.md. «VERIFIED» = روی Docker Desktop (لینوکس VM) با همین فایل اجرا شد؛
+# رفتار دسترسی‌های فایل روی یک سرور اوبونتو UNVERIFIED است (آزمون Docker Desktop مجوزهای فایل را مثل لینوکس اعمال نمی‌کند).
+# =====================================================================================================
+
+services:
+  validator:
+    # نسخهٔ سنجاق‌شده، بدون latest. نسخهٔ آزموده: 26.9.0. تغییر نسخه = تصمیم هماهنگ همهٔ ولیدیتورها (سند معماری بخش 8). VERIFIED
+    image: hyperledger/besu:${SUR_BESU_TAG:-26.9.0}
+    container_name: ${SUR_CONTAINER_NAME:-sur-validator}
+    restart: unless-stopped
+    # مهلت خاموش‌شدن تمیز (RocksDB). مشاهده [K]: docker compose stop در 3 ثانیه تمام شد، کد خروج 143 (پیام «Session terminated, killing shell» از su داخل entrypoint تصویر)
+    # و ری‌استارت بدون خطا از همان بلاک ادامه داد (121 → 122). این‌که JVM «shutdown hook» تمیز را کامل می‌کند UNVERIFIED (در لاگ پیام خاموشی Besu دیده نشد).
+    stop_grace_period: 60s
+
+    # --p2p-host از .env: آدرس عمومی هر ولیدیتور (در config.toml فقط جای‌گیر است؛ override با خط‌فرمان VERIFIED).
+    # OWNER: آدرس IP عمومی ثابت هر ولیدیتور. بدون آن compose شروع نمی‌شود.
+    command:
+      - --config-file=/config/config.toml
+      - --p2p-host=${SUR_P2P_HOST:?SUR_P2P_HOST را در .env بگذارید (IP عمومی همین نود)}
+
+    ports:
+      # P2P: عمومی (TCP + UDP-discovery). فایروال: فقط IPهای ولیدیتورهای دیگر (bootnodes.example.txt)
+      - "${SUR_P2P_PORT:-30303}:30303/tcp"
+      - "${SUR_P2P_PORT:-30303}:30303/udp"
+      # RPC و متریک: فقط روی 127.0.0.1 میزبان. هرگز 0.0.0.0 نکنید (ADMIN در RPC فعال است). VERIFIED [Docker Desktop]: curl از IP شبکهٔ خود میزبان به RPC و متریک وصل نشد، از 127.0.0.1 وصل شد
+      - "127.0.0.1:${SUR_RPC_PORT:-8545}:8545"
+      - "127.0.0.1:${SUR_METRICS_PORT:-9545}:9545"
+
+    volumes:
+      # داده: volume نام‌دار (همان روش ابزار verify). OWNER: برای دیسک اختصاصی می‌توانید bind mount بگذارید (مجوز: مالک uid 1000 یا root؛ UNVERIFIED)
+      - data:/data
+      # پیکربندی‌ها، فقط‌خواندنی. مسیر میزبان از .env؛ فایل باید «وجود داشته باشد» وگرنه Docker به‌جای فایل یک «پوشه» می‌سازد
+      - ${SUR_CONFIG_FILE:-./config.toml}:/config/config.toml:ro
+      - ${SUR_GENESIS_FILE:?SUR_GENESIS_FILE را در .env بگذارید (genesis.json تولیدی؛ نه genesis.TEST-ONLY.json)}:/config/genesis.json:ro
+      - ${SUR_STATIC_NODES_FILE:-./static-nodes.json}:/config/static-nodes.json:ro
+      # کلید نود (= کلید اپراتور) فقط‌خواندنی از مسیر خارج از مخزن. هرگز در مخزن/تصویر/لاگ نیاید. کلید از Vault تحویل داده می‌شود (README).
+      - ${SUR_NODE_KEY_FILE:?SUR_NODE_KEY_FILE را در .env بگذارید (مسیر فایل کلید اپراتور؛ خارج از مخزن)}:/secrets/node.key:ro
+
+    # healthcheck: تصویر curl/nc/wget ندارد (بررسی شد) ولی bash دارد؛ با /dev/tcp یک eth_chainId می‌فرستد و chainId را با مقدار
+    # مورد انتظار می‌سنجد (SUR_CHAIN_ID_HEX، پیش‌فرض 0x106 = 262). جایگزین healthcheck خود تصویر («[ -f /tmp/pid ]») است. VERIFIED
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - |
+          body='{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
+          exec 3<>/dev/tcp/127.0.0.1/8545 || exit 1
+          printf 'POST / HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: %s\r\nConnection: close\r\n\r\n%s' "$${#body}" "$$body" >&3
+          resp=$$(timeout 4 cat <&3)
+          case "$$resp" in *'"result":"${SUR_CHAIN_ID_HEX:-0x106}"'*) exit 0;; esac
+          exit 1
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 90s
+
+    # لاگ Docker با سقف اندازه (لاگ Besu روی stdout است). VERIFIED (docker inspect LogConfig)
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+    # سخت‌سازی. privileged نیست. cap_drop ALL + فقط چیزهایی که entrypoint تصویر (root → chown داده → su به کاربر besu) لازم دارد. VERIFIED [نود بلند شد و بلاک ساخت]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETUID
+      - SETGID
+    # پروسهٔ Java حافظه را خودش از محدودیت کانتینر می‌گیرد؛ تنظیم دستی: OWNER/UNVERIFIED (soak-kit با JAVA_OPTS="-Xmx768m" و mem_limit 1.5g روی شبکهٔ آزمایشی بود، نه تولید)
+    # environment:
+    #   JAVA_OPTS: "-Xms512m -Xmx2g"
+    # mem_limit: 4g
+    # cpus: 2
+
+    networks:
+      - sur
+
+  # ----------------------------------------------------------------------------------------------
+  # اختیاری: Prometheus فقط با  docker compose --profile monitoring up -d  (پیش‌فرض بالا نمی‌آید).
+  # تصویر سنجاق‌شده؛ در این کیت هرگز pull نشد (تصویر محلی استفاده شد)؛ prometheus.yml همین پوشه. فقط روی 127.0.0.1:9090.
+  # ----------------------------------------------------------------------------------------------
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:${SUR_PROMETHEUS_TAG:-v3.13.4}
+    container_name: ${SUR_CONTAINER_NAME:-sur-validator}-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    ports:
+      - "127.0.0.1:${SUR_PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - sur
+    depends_on:
+      - validator
+
+volumes:
+  data:
+    name: ${SUR_VOLUME_NAME:-sur-validator-data}
+  prometheus-data:
+    name: ${SUR_VOLUME_NAME:-sur-validator-data}-prometheus
+
+networks:
+  sur:
+    name: ${SUR_NETWORK_NAME:-sur-validator-net}

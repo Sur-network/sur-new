@@ -1,0 +1,7 @@
+# never commit secrets or a "final-looking" genesis into this kit
+.env
+*.key
+node.key
+secrets/
+genesis.json
+genesis.summary.json

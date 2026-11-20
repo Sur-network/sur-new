@@ -99,9 +99,10 @@ rpc-http-port=8545
 # TRACE (trace_block برای RewardRouter) فقط روی نود RPC سرویس‌ها [D]، نه روی ولیدیتور؛ هرگز ADMIN را عمومی نکنید.
 rpc-http-api=["ETH","NET","WEB3","QBFT","ADMIN","TXPOOL"]
 
-# نام میزبانِ مجاز در هدر Host. با Host دیگر پاسخ 403 می‌دهد (VERIFIED [K]). مقدار "*" در آزمون‌ها بود [T] ولی برای تولید لازم نیست.
-# healthcheck داخل کانتینر با Host: localhost می‌زند. CORS عمداً تنظیم نشده (پیش‌فرض: هیچ origin؛ در لاگ corsAllowedDomains=[]).
-host-allowlist=["localhost","127.0.0.1"]
+# نام میزبانِ مجاز در هدر Host (روی RPC و متریک هر دو اعمال می‌شود). با Host دیگر پاسخ 403 می‌دهد (VERIFIED [K]). مقدار "*" در آزمون‌ها بود [T] ولی برای تولید لازم نیست.
+# "validator" = نام سرویس در docker-compose.yml فقط برای Prometheus اختیاری (Host=validator:9545؛ بدون آن 403 می‌گیرد، VERIFIED [K]).
+# در شبکهٔ compose فقط همان کانتینر Prometheus به آن می‌رسد؛ RPC بیرون از 127.0.0.1 میزبان publish نمی‌شود. healthcheck داخل کانتینر با Host: localhost می‌زند. CORS عمداً تنظیم نشده (پیش‌فرض: هیچ origin؛ در لاگ corsAllowedDomains=[]).
+host-allowlist=["localhost","127.0.0.1","validator"]
 
 # ---------------------------------------------------------------------------- پایش
 # متریک Prometheus (/metrics). داخل کانتینر روی 0.0.0.0؛ روی میزبان فقط 127.0.0.1:9545 (compose). VERIFIED [K] (متریک‌های besu_* برگشت).
