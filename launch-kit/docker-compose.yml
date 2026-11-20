@@ -46,8 +46,9 @@ services:
     volumes:
       # داده: volume نام‌دار (همان روش ابزار verify). OWNER: برای دیسک اختصاصی می‌توانید bind mount بگذارید (مالک باید uid 1000 باشد: chown -R 1000:1000؛ UNVERIFIED روی لینوکس)
       - data:/data
-      # پیکربندی‌ها، فقط‌خواندنی. مسیر میزبان از .env؛ فایل باید «وجود داشته باشد» وگرنه Docker به‌جای فایل یک «پوشه» می‌سازد
-      # نحو بلند با create_host_path: false: اگر مسیر میزبان وجود نداشته باشد compose/Docker خطا می‌دهد (نحو کوتاه به‌جای فایل یک «پوشه» می‌ساخت). VERIFIED روی موتور لینوکس (docker:dind: «bind source path does not exist»)؛ روی Docker Desktop ویندوز اثر نداشت و پوشه ساخته شد (فقط محیط آزمون).
+      # پیکربندی‌ها، فقط‌خواندنی. مسیر میزبان از .env؛ فایل باید «وجود داشته باشد» (روی Docker Desktop مسیر ناموجود به‌صورت «پوشه» ساخته می‌شود؛ روی موتور لینوکس با create_host_path: false خطا می‌دهد، ذیل)
+      # نحو بلند با create_host_path: false: روی موتور لینوکس اگر مسیر میزبان وجود نداشته باشد Docker خطا می‌دهد و پوشه نمی‌سازد (VERIFIED روی docker:dind: «bind source path does not exist»).
+      # ساخته‌شدن «پوشه» به‌جای فایل (نحو کوتاه) فقط روی Docker Desktop دیده شد و آنجا این گزینه هم اثر نداشت و پوشه ساخته شد (فقط محیط آزمون، نه سرور لینوکس).
       - type: bind
         source: ${SUR_CONFIG_FILE:-./config.toml}
         target: /config/config.toml
