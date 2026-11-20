@@ -40,7 +40,14 @@ genesis واقعی به مقادیری وابسته است که فقط مالک/
    ```
    خروجی باید `verify: all checks passed` باشد. بعد از اجرا `docker ps -a`، `docker network ls`، `docker volume ls` باید چیزی با آن پیشوند نشان ندهند.
 4. **پخش `genesis.json` و sha256 آن** (sha256 از کانالی مستقل از فایل، مثلاً اعلام زنده در جلسهٔ مؤسسان). هر اپراتور: `sha256sum genesis.json` و مقایسه. همهٔ نودها بایت‌به‌بایت یک فایل را دارند.
-5. **هر اپراتور**: `cp .env.example .env` و پر کردن (به‌ویژه `SUR_P2P_HOST`، `SUR_GENESIS_FILE`، `SUR_NODE_KEY_FILE`)؛ کلید اپراتور را در مسیر خارج از مخزن بگذارد (بخش ۵)؛ `docker compose config`؛ `docker compose up -d`.
+5. **هر اپراتور**: `cp .env.example .env` و پر کردن (به‌ویژه `SUR_P2P_HOST`، `SUR_GENESIS_FILE`، `SUR_NODE_KEY_FILE`)؛ کلید اپراتور را در مسیر خارج از مخزن بگذارد (بخش ۵)؛ `docker compose config`؛ سپس **chown یک‌باره روی حجم داده** (کانتینر با `user: "1000:1000"` و بدون ریشه اجرا می‌شود و خودش chown نمی‌کند) و بعد `up`:
+   ```bash
+   docker compose up --no-start validator          # حجم، شبکه و کانتینر ساخته می‌شود، بدون اجرا
+   docker run --rm --user 0 -v sur-validator-data:/data --entrypoint chown hyperledger/besu:26.9.0 -R 1000:1000 /data
+   #   نام حجم = SUR_VOLUME_NAME در .env (پیش‌فرض sur-validator-data)؛ اگر به‌جای حجم نام‌دار bind mount گذاشتید: chown -R 1000:1000 <پوشه>
+   docker compose up -d
+   ```
+   اگر chown را فراموش کنید نود بلند نمی‌شود: `Failed to start Besu: Data directory is not writable: /data` (آزموده شد؛ بعد از chown درست است). فایل کلید هم باید مالک uid 1000 باشد (`.env.example`، بخش ۵).
 6. **اتصال همتاها**: enode هر نود را بگیرید (`bootnodes.example.txt`) و در `static-nodes.json` ولیدیتورهای دیگر بگذارید (یا طرح bootnode را تصمیم بگیرید)؛ فایروال: P2P فقط برای IPهای ولیدیتورها؛ RPC و متریک هرگز عمومی نشود.
 7. **بررسی**: `eth_chainId` = `0x106` (262)، بلاک جدید هر 3 ثانیه، `qbft_getValidatorsByBlockNumber("latest")` = اپراتور ولیدیتور اول. **توجه:** در genesis فقط ولیدیتور اول `Active` است؛ شش مؤسس دیگر `Probation`‌اند تا `setOperator` + `recordActivation` (جریان Registry). قاعدهٔ حیاتی [`parties/22-validator.md`]: تعداد نود واقعی در حال اجرا همیشه ≥ تعداد ولیدیتور فعال؛ ولیدیتور فعال‌شده بدون نود، اجماع را قفل می‌کند.
 
@@ -68,8 +75,8 @@ build از config آزمایشی (فقط دو patch؛ `genesis.TEST-ONLY.README.
 - کانتینر `healthy` (healthcheck خودمان)، بلاک‌ها تولید می‌شد، `eth_chainId` از `127.0.0.1:18570` = `0x3ff89`.
 - **healthcheck:** تصویر `curl`/`wget`/`nc`/`socat` ندارد و `bash` 5.2 و `timeout` دارد (بررسی شد)؛ از `bash` + `/dev/tcp` + `Host: localhost` استفاده شد؛ با chainId اشتباه exit 1 می‌دهد (آزموده)، با درست exit 0. این جایگزین healthcheck خود تصویر (`[ -f /tmp/pid ]`) است.
 - RPC و متریک روی `127.0.0.1` میزبان: از IP شبکهٔ خود میزبان وصل نشد (`curl` کد 000). P2P روی `0.0.0.0`.
-- `docker inspect`: `privileged=false`، `CapDrop=[ALL]` + `CapAdd=[CHOWN DAC_OVERRIDE FOWNER SETGID SETUID]` (لازم برای entrypoint تصویر که root است، داده را chown می‌کند و به کاربر `besu` می‌رود)، `no-new-privileges`، `restart=unless-stopped`، لاگ `json-file` سقف 50m × 10.
-- `docker compose stop`: 3 ثانیه، کد خروج **143** (پیام `Session terminated, killing shell` از `su` تصویر)؛ ری‌استارت بدون خطا از همان بلاک ادامه داد (121 → 122). تمیز بودن shutdown JVM **UNVERIFIED** (در لاگ پیام خاموشی Besu ندیدیم).
+- `docker inspect` (نسخهٔ اصلاح‌شده): `privileged=false`، `User=1000:1000`، `CapDrop=[ALL]` و `CapAdd=[]` (پنج قابلیت قبلی فقط برای entrypoint ریشه بود)، `no-new-privileges`، `restart=unless-stopped`، لاگ `json-file` سقف 50m × 10. Prometheus هم `CapDrop=[ALL]` است و با آن بالا آمد (target `up`، بدون «permission denied»).
+- **توقف (HIGH-2، آزمون دوباره روی Besu 26.9.0 با `user: "1000:1000"` و حجم chown‌شده):** نسخهٔ قبلی (ریشه) هر `stop` را با SIGKILL می‌کشت: entrypoint تصویر با `su` به کاربر `besu` می‌رود و `su` با SIGTERM پروسهٔ Besu را می‌کشد؛ مقایسهٔ زنده: `docker stop -t 60` در 2 ثانیه، کد 143، فقط 8 خط `Shutdown-Hook` و آخر لاگ `Session terminated, killing shell... ...killed.`؛ پس `stop_grace_period: 60s` بی‌اثر بود. با `user: "1000:1000"` پروسهٔ اول کانتینر خودِ `java` است (`/proc/1/cmdline`) و بدون `su`: `docker compose stop` در حدود 2 ثانیه تمام شد، لاگ تا `Stopping eth Subprotocol` → `eth Subprotocol stopped.` → `Network stopped.` → `Shutting down Auto transaction logs caching service.` → `No NAT environment detected…` (hook کامل، بدون «killed»). **کد خروج هنوز 143 است، نه 0:** این کد معمول JVM پس از SIGTERM است (128+15) و نشانهٔ SIGKILL (137) نیست؛ `OOMKilled=false`. داده سالم ماند: بلاک 0x21 (33) پیش از توقف، پس از `start` هش همان بلاک بایت‌به‌بایت یکسان، زنجیره ادامه یافت (0x26) بدون ERROR/corrupt؛ `docker compose restart` هم چند ثانیه. آزمون روی Docker Desktop (VM لینوکس) بود؛ روی سرور اوبونتو انجام نشده (UNVERIFIED).
 - profile `monitoring`: Prometheus (تصویر محلی `prom/prometheus:v3.13.4`، pull نشد) target `validator:9545` = `up`، `ethereum_blockchain_height` = 110.
 - پایان: `docker compose down -v`؛ کانتینر، شبکه و volume با پیشوند `sur25k` باقی نماند.
 
@@ -93,7 +100,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 - **هیچ کلیدی در مخزن/تصویر/لاگ/`.env` نیست**؛ `.env` فقط «مسیر فایل کلید» دارد (`.gitignore` هم `.env`، `*.key`، `secrets/` را نادیده می‌گیرد). کیت هیچ کلید خصوصی ندارد (کلیدهای آزمایشی در scratch ساخته و پس از آزمون نابود شدند).
 - **کلید نود = کلید اپراتور** (آدرس آن همان است که در `ValidatorsRegistry` ثبت می‌شود)، جدا از **کلید مالک که هرگز روی نود نمی‌آید**. یک نود، یک کلید؛ اجرای هم‌زمان با یک کلید در دو محل ممنوع (`parties/22-validator.md` ۵٫۱).
 - طراحی پروژه: هر نرم‌افزاری که کلید امضای **خود سرویس** دارد باید از HashiCorp Vault (Transit/remote signer) استفاده کند (`sur-onchain-offchain-architecture.md`: اوراکل‌ها، Verifier، RewardRouter، Identity Service). **اما Besu 26.9.0 کلید نود را از فایل می‌خواند (`node-private-key-file`) و این کیت راه Vault-Transit برای امضای بلاک پیدا/آزمایش نکرد.** پیشنهاد عملی (UNVERIFIED، تصمیم OWNER): کلید در Vault نگه‌داری شود و با Vault Agent روی tmpfs میزبان به‌صورت فایل با مجوز `0400` فقط برای کاربر سرویس رندر شود، و در `SUR_NODE_KEY_FILE` ارجاع شود.
-- مجوز فایل روی لینوکس: entrypoint تصویر root است و کاربر `besu` (uid 1000) را اجرا می‌کند؛ کلیدِ mount فقط‌خواندنی باید برای آن uid خواندنی باشد (مثلاً مالک uid 1000 و `0400`). **این روی سرور اوبونتو آزموده نشده** (Docker Desktop مجوزها را مثل لینوکس اعمال نمی‌کند).
+- مجوز فایل روی لینوکس: کانتینر با `user: "1000:1000"` اجرا می‌شود؛ کلید باید **مالک uid 1000** و `0400` باشد (مالک root یا uid 1001 = Besu با خطای گمراه‌کنندهٔ «Supplied file does not contain valid keyPair» و حلقهٔ crash؛ با مالک root و `0400` در آزمون ما: «Private key cannot be loaded from file»؛ مالک 1000 درست بارگذاری شد). حجم داده هم باید یک‌بار `chown 1000:1000` شود (بخش ۳). **روی سرور اوبونتو آزموده نشده** (Docker Desktop مجوزهای bind mount را مثل لینوکس اعمال نمی‌کند؛ آزمون مالکیت با حجم Docker انجام شد).
 - سه کلید اوراکل (`distributionOracle`، `verifier`، `identityOracle`) جزو این کیت نیستند و هرگز نباید باشند؛ فقط آدرس‌هایشان در `genesis-config.json` (مقدار مرجع `SurAddresses.sol`؛ OWNER تأیید کند).
 
 ## ۶. تصمیم‌گرفته / جای‌گیر / UNVERIFIED
@@ -104,7 +111,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 
 **OWNER در سایر فایل‌ها:** IP عمومی هر ولیدیتور (`SUR_P2P_HOST`)؛ طرح bootnode / `discovery-enabled`؛ پذیرفتن دو خط `tx-pool-*` (بخش ۷)؛ نگهداری و تحویل کلید نود؛ سخت‌افزار (`parties/22-validator.md` ۵٫۱: «حداقل سخت‌افزار هنوز نیست»)؛ تنظیم حافظه JVM و محدودیت منابع (در compose کامنت شده).
 
-**UNVERIFIED (هنوز آزموده نشده):** رفتار چند ولیدیتور با `target-gas-limit` متفاوت؛ اتصال به bootnode واقعی؛ مجوزهای فایل روی لینوکس؛ shutdown تمیز JVM؛ `sync-mode` به‌جز FULL با QBFT؛ رفتار RPC/تراکنش‌های رسیده از همتا (p2p) برای قیمت زیر حداقل؛ رفتار زیر بار بلاک‌های واقعاً پر؛ Vault برای کلید نود؛ آماده بودن NAT/فایروال واقعی؛ شبکهٔ چندمیزبانه.
+**UNVERIFIED (هنوز آزموده نشده):** رفتار چند ولیدیتور با `target-gas-limit` متفاوت؛ اتصال به bootnode واقعی؛ مجوزهای فایل روی لینوکس؛ `sync-mode` به‌جز FULL با QBFT؛ رفتار RPC/تراکنش‌های رسیده از همتا (p2p) برای قیمت زیر حداقل؛ رفتار زیر بار بلاک‌های واقعاً پر؛ Vault برای کلید نود؛ آماده بودن NAT/فایروال واقعی؛ شبکهٔ چندمیزبانه.
 
 ## ۷. یافته‌ها و تعارض‌های مهم با انتظار (بدون لاپوشانی)
 
@@ -112,7 +119,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 2. **`target-gas-limit` در QBFT کار می‌کند** (برخلاف ابهام اسناد) و **با genesis = 45M بی‌اثر است**؛ پس `gasLimit` بعد از راه‌اندازی بدون genesis جدید قابل تغییر است (ولیدیتورها با مقدار یکسان)، حداکثر ≈ parent/1024 در هر بلاک. ولی این فقط با یک ولیدیتور آزموده شد؛ سند بخش ظرفیت می‌گفت «برای gasLimit راستی‌آزمایی نشده» — اکنون برای یک ولیدیتور راستی‌آزمایی است، برای چند ولیدیتور نه. هشدار: با `genesis.TEST-ONLY.json` (سقف نامحدود) و `target 45M` سقف به‌تدریج پایین می‌آید؛ آن genesis برای این‌کار نیست.
 3. **`sync-min-peers=1` در soak-kit در حالت FULL بی‌اثر است** (Besu هشدار می‌دهد)؛ از `config.toml` حذف شد.
 4. **`--bootnodes` ویندوزی خطا داد (سند)؛ روی لینوکس/Docker سینتکس پذیرفته شد** ولی اتصال به bootnode واقعی آزموده نشد؛ روش آزموده‌شدهٔ پروژه `static-nodes.json` است.
-5. **entrypoint تصویر root است** و پس از `chown` داده به کاربر `besu` می‌رود؛ برای همین `cap_drop: ALL` با پنج قابلیت لازم همراه شد (آزموده). این از `read_only` یا `user:` ساده‌تر ولی کمتر سخت‌گیرانه است؛ سخت‌ترکردن بیشتر آزموده نشد.
+5. **entrypoint تصویر root است و کاربر را با `su` عوض می‌کند؛ `su` با SIGTERM پروسهٔ Besu را SIGKILL می‌کند** (یافتهٔ بازبین مستقل، HIGH-2، و در آزمون دوباره تأیید شد): پس هر توقف JVM را نیمه‌کاره می‌کشت و `stop_grace_period` بی‌اثر بود. راه‌حل: `user: "1000:1000"` (entrypoint در حالت غیرریشه `su` را رد می‌کند) + chown یک‌بارهٔ حجم داده + حذف `cap_add`؛ با آن shutdown hook کامل می‌شود (کد خروج 143 = رفتار عادی JVM پس از SIGTERM، نه SIGKILL). بخش ۳ و ۴-۴.
 6. **Prometheus:** Besu `host-allowlist` را روی `/metrics` هم اعمال می‌کند و Prometheus اجازهٔ تغییر Host نمی‌دهد؛ برای همین نام سرویس `validator` به `host-allowlist` اضافه شد (بدون آن 403).
 
 ## ۸. چک‌لیست تصمیم‌های مالک/کمیتهٔ باقی‌مانده
