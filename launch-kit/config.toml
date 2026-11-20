@@ -101,6 +101,7 @@ tx-pool-min-gas-price=100000000000000
 min-priority-fee=100000000000000
 # سایر تنظیمات tx-pool عمداً پیش‌فرض Besu ماندند (LAYERED، 75MB هر لایه، حداکثر 10000 prioritized). تنظیم‌شان بعد از آزمون بار
 # با بلاک‌های پر انجام شود (OWNER/UNVERIFIED).
+# هشدار: گزینهٔ tx-pool-retention-hours مخصوص pool sequenced است؛ با pool لایه‌ای (این کیت) Besu 26.9.0 بالا نمی‌آید (VERIFIED)؛ انقضای زمانی وجود ندارد (README ۷-۸).
 
 # سقف گاز بلاک. genesis تولیدی 45,000,000 دارد؛ این خط همان مقدار را برای «پایداری» می‌گذارد. VERIFIED [K] روی QBFT:
 #  - با 40M در genesis و target 45M، سقف هر بلاک ≈ +parent/1024 رفت بالا (بلاک 1: 40,039,061؛ بلاک 12: 40,471,258)؛
