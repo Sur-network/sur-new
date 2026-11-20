@@ -31,6 +31,8 @@ services:
 
     ports:
       # P2P: عمومی (TCP + UDP-discovery). فایروال: فقط IPهای ولیدیتورهای دیگر (bootnodes.example.txt)
+      # هشدار: پورت منتشرشدهٔ Docker از قواعد «ufw» رد می‌شود (ufw روی INPUT است، Docker از FORWARD/DNAT می‌گذرد). فیلتر را در زنجیرهٔ DOCKER-USER
+      # (با -m conntrack --ctorigdstport ... --ctdir ORIGINAL) یا فایروال بیرونی/ابری بگذارید؛ README بخش ۳ مرحلهٔ ۶. UNVERIFIED روی اوبونتو (الگوی DOCKER-USER روی موتور لینوکس آزموده شد).
       - "${SUR_P2P_PORT:-30303}:30303/tcp"
       - "${SUR_P2P_PORT:-30303}:30303/udp"
       # هشدار: API «ADMIN» در RPC فعال است و Host: validator در host-allowlist هست؛ هر کانتینر دیگری روی همین شبکهٔ compose (sur) به آن می‌رسد. هیچ سرویس دیگری را روی این شبکه نگذارید.

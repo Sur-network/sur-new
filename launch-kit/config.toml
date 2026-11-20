@@ -40,6 +40,8 @@ network-id=262
 p2p-host="127.0.0.1"
 
 # رابط شنود و پورت P2P (TCP و UDP-discovery هر دو روی همین پورت). [T] VERIFIED
+# هشدار فایروال: محدودکردن همتاها با «ufw» روی پورت منتشرشدهٔ Docker اثر ندارد؛ فیلتر باید در DOCKER-USER یا فایروال بیرونی باشد
+# (README بخش ۳ مرحلهٔ ۶ و بخش ۸؛ UNVERIFIED روی اوبونتو).
 p2p-interface="0.0.0.0"
 p2p-port=30303
 
