@@ -36,8 +36,11 @@ services:
       # P2P: عمومی (TCP + UDP-discovery). فایروال: فقط IPهای ولیدیتورهای دیگر (bootnodes.example.txt)
       # هشدار: پورت منتشرشدهٔ Docker از قواعد «ufw» رد می‌شود (ufw روی INPUT است، Docker از FORWARD/DNAT می‌گذرد). فیلتر را در زنجیرهٔ DOCKER-USER
       # (با -m conntrack --ctorigdstport ... --ctdir ORIGINAL) یا فایروال بیرونی/ابری بگذارید؛ README بخش ۳ مرحلهٔ ۶. UNVERIFIED روی اوبونتو (الگوی DOCKER-USER روی موتور لینوکس آزموده شد).
-      - "${SUR_P2P_PORT:-30303}:30303/tcp"
-      - "${SUR_P2P_PORT:-30303}:30303/udp"
+      # فقط IPv4 (MEDIUM-1 دور ۳): نحو کوتاه بدون آدرس ("30303:30303") روی 0.0.0.0 «و» [::] هر دو منتشر می‌شود و ترافیک [::] را docker-proxy می‌گیرد؛ آن مسیر از
+      # FORWARD/DOCKER-USER رد نمی‌شود، پس قاعدهٔ DOCKER-USER فقط IPv4 را می‌بندد. آدرس صریح IPv4 (پیش‌فرض 0.0.0.0، متغیر SUR_P2P_BIND) فقط روی IPv4 گوش می‌دهد. VERIFIED (dind، README بخش ۴-۶).
+      # اگر IPv6 عمومی لازم دارید، آدرس IPv6 را جدا و آگاهانه منتشر کنید و ip6tables/فایروال بیرونی بگذارید (README بخش ۳ مرحلهٔ ۶).
+      - "${SUR_P2P_BIND:-0.0.0.0}:${SUR_P2P_PORT:-30303}:30303/tcp"
+      - "${SUR_P2P_BIND:-0.0.0.0}:${SUR_P2P_PORT:-30303}:30303/udp"
       # هشدار: API «ADMIN» در RPC فعال است و Host: validator در host-allowlist هست؛ هر کانتینر دیگری روی همین شبکهٔ compose (sur) به آن می‌رسد. هیچ سرویس دیگری را روی این شبکه نگذارید.
       # RPC و متریک: فقط روی 127.0.0.1 میزبان. هرگز 0.0.0.0 نکنید (ADMIN در RPC فعال است). VERIFIED [Docker Desktop]: curl از IP شبکهٔ خود میزبان به RPC و متریک وصل نشد، از 127.0.0.1 وصل شد
       - "127.0.0.1:${SUR_RPC_PORT:-8545}:8545"
