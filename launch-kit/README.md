@@ -83,6 +83,7 @@ build از config آزمایشی (فقط دو patch؛ `genesis.TEST-ONLY.README.
 - RPC و متریک روی `127.0.0.1` میزبان: از IP شبکهٔ خود میزبان وصل نشد (`curl` کد 000). P2P روی `0.0.0.0`.
 - `docker inspect` (نسخهٔ اصلاح‌شده): `privileged=false`، `User=1000:1000`، `CapDrop=[ALL]` و `CapAdd=[]` (پنج قابلیت قبلی فقط برای entrypoint ریشه بود)، `no-new-privileges`، `restart=unless-stopped`، لاگ `json-file` سقف 50m × 10. Prometheus هم `CapDrop=[ALL]` است و با آن بالا آمد (target `up`، بدون «permission denied»).
 - **توقف (HIGH-2، آزمون دوباره روی Besu 26.9.0 با `user: "1000:1000"` و حجم chown‌شده):** نسخهٔ قبلی (ریشه) هر `stop` را با SIGKILL می‌کشت: entrypoint تصویر با `su` به کاربر `besu` می‌رود و `su` با SIGTERM پروسهٔ Besu را می‌کشد؛ مقایسهٔ زنده: `docker stop -t 60` در 2 ثانیه، کد 143، فقط 8 خط `Shutdown-Hook` و آخر لاگ `Session terminated, killing shell... ...killed.`؛ پس `stop_grace_period: 60s` بی‌اثر بود. با `user: "1000:1000"` پروسهٔ اول کانتینر خودِ `java` است (`/proc/1/cmdline`) و بدون `su`: `docker compose stop` در حدود 2 ثانیه تمام شد، لاگ تا `Stopping eth Subprotocol` → `eth Subprotocol stopped.` → `Network stopped.` → `Shutting down Auto transaction logs caching service.` → `No NAT environment detected…` (hook کامل، بدون «killed»). **کد خروج هنوز 143 است، نه 0:** این کد معمول JVM پس از SIGTERM است (128+15) و نشانهٔ SIGKILL (137) نیست؛ `OOMKilled=false`. داده سالم ماند: بلاک 0x21 (33) پیش از توقف، پس از `start` هش همان بلاک بایت‌به‌بایت یکسان، زنجیره ادامه یافت (0x26) بدون ERROR/corrupt؛ `docker compose restart` هم چند ثانیه. آزمون روی Docker Desktop (VM لینوکس) بود؛ روی سرور اوبونتو انجام نشده (UNVERIFIED).
+- **bind mount با نحو بلند و `create_host_path: false`** (compose): روی موتور لینوکس (`docker:dind`) با مسیر ناموجود خطای `bind source path does not exist` می‌دهد و پوشه نمی‌سازد (آزموده). روی Docker Desktop ویندوز همان مسیر ناموجود را **به‌صورت پوشه ساخت** (گزینه آنجا اثر ندارد؛ فقط محیط آزمون، نه تولید لینوکس).
 - profile `monitoring`: Prometheus (تصویر محلی `prom/prometheus:v3.13.4`، pull نشد) target `validator:9545` = `up`، `ethereum_blockchain_height` = 110.
 - پایان: `docker compose down -v`؛ کانتینر، شبکه و volume با پیشوند `sur25k` باقی نماند.
 
@@ -165,6 +166,8 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 #    SUR_NODE_KEY_FILE=<کلید دورریختنی>، SUR_CONFIG_FILE=<کپی config.toml با network-id=262025>،
 #    SUR_CONTAINER_NAME/SUR_VOLUME_NAME/SUR_NETWORK_NAME با پیشوند دلخواه
 docker compose --env-file test.env -p demo config
+docker compose --env-file test.env -p demo up --no-start --pull never validator
+docker run --rm --user 0 -v <SUR_VOLUME_NAME>:/data --entrypoint chown hyperledger/besu:26.9.0 -R 1000:1000 /data   # یک‌بار (بخش ۳)
 docker compose --env-file test.env -p demo up -d --pull never
 curl -s -X POST -H 'content-type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' http://127.0.0.1:8545
 docker compose --env-file test.env -p demo down -v     # پاک‌سازی

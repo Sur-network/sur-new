@@ -2,6 +2,7 @@
 # SUR — یک نود ولیدیتور Besu 26.9.0 (QBFT)         پیشنهاد کیت راه‌اندازی v2.5
 # اجرا:   cp .env.example .env   ← مقدارها را پر کنید (فقط مسیر و پورت؛ هیچ کلیدی داخل مخزن/فایل env نیست)
 #         docker compose config            ← بررسی
+#         docker compose up --no-start validator  ← ساخت حجم؛ سپس chown یک‌باره (README بخش ۳ مرحلهٔ ۵)
 #         docker compose up -d             ← نود (Prometheus فقط با:  docker compose --profile monitoring up -d )
 # پیش از اولین up: حجم داده باید یک‌بار برای uid 1000 chown شود (README بخش ۳، مرحلهٔ ۵)؛ کانتینر با user 1000:1000 اجرا می‌شود.
 # هر سطر با برچسب VERIFIED/UNVERIFIED/OWNER: توضیح در README.md. «VERIFIED» = روی Docker Desktop (لینوکس VM) با همین فایل اجرا شد؛
@@ -41,7 +42,7 @@ services:
       # داده: volume نام‌دار (همان روش ابزار verify). OWNER: برای دیسک اختصاصی می‌توانید bind mount بگذارید (مالک باید uid 1000 باشد: chown -R 1000:1000؛ UNVERIFIED روی لینوکس)
       - data:/data
       # پیکربندی‌ها، فقط‌خواندنی. مسیر میزبان از .env؛ فایل باید «وجود داشته باشد» وگرنه Docker به‌جای فایل یک «پوشه» می‌سازد
-      # نحو بلند با create_host_path: false: اگر مسیر میزبان وجود نداشته باشد compose خطا می‌دهد (نحو کوتاه به‌جای فایل یک «پوشه» می‌ساخت).
+      # نحو بلند با create_host_path: false: اگر مسیر میزبان وجود نداشته باشد compose/Docker خطا می‌دهد (نحو کوتاه به‌جای فایل یک «پوشه» می‌ساخت). VERIFIED روی موتور لینوکس (docker:dind: «bind source path does not exist»)؛ روی Docker Desktop ویندوز اثر نداشت و پوشه ساخته شد (فقط محیط آزمون).
       - type: bind
         source: ${SUR_CONFIG_FILE:-./config.toml}
         target: /config/config.toml
