@@ -77,6 +77,16 @@ min-gas-price=100000000000000
 # بدون no-local-priority تراکنش ارزان را هنوز استخراج کرد). این دو خط در آزمون‌ها و اسناد قبلی نبود: OWNER تأیید کند.
 tx-pool-no-local-priority=true
 tx-pool-min-gas-price=100000000000000
+
+# ===== یافتهٔ بازبین مستقل (HIGH-3) =====
+# چون genesis زنجیره zeroBaseFee دارد، baseFee همیشه 0 است و قیمت مؤثر تراکنش «فقط priority fee» است. بدون این گزینه Besu برای eth_maxPriorityFeePerGas
+# مقدار 0 و برای eth_feeHistory پاداش‌های 0 برمی‌گرداند، در حالی که eth_gasPrice برابر 1e14 است. کیف‌پول/کتابخانه‌ای که (مثل viem/wagmi) priority را از همین RPC
+# می‌گیرد، تراکنش type-2 با priority کمتر از حداقل می‌فرستد: یا پذیرفته می‌شود ولی هرگز استخراج نمی‌شود و nonceهای بعدی همان حساب را هم می‌بندد.
+# min-priority-fee=1e14 (برابر min-gas-price) این را درست می‌کند: eth_maxPriorityFeePerGas برابر 0x5af3107a4000 می‌شود و تراکنش با همین priority استخراج می‌شود.
+# باید روی «هر نود» گذاشته شود، از جمله نودهای RPC سرویس‌ها (آن‌ها هستند که به کیف‌پول‌ها قیمت پیشنهادی می‌دهند)، و روی همهٔ ولیدیتورها یکسان باشد
+# (مثل min-gas-price تنظیم محلی است، نه پروتکل). محدودیت: این گزینه فقط «قیمت پیشنهادی RPC» را درست می‌کند؛ تراکنشی که priority را صریح 0 بگذارد (maxFee ≥ 1e14) هنوز هش می‌گیرد
+# و استخراج نمی‌شود (آزموده [K])؛ کیف‌پول/dApp باید priority را از eth_maxPriorityFeePerGas بگیرد. VERIFIED [K] روی Besu 26.9.0 (genesis آزمایشی، یک نود): README ۴-۵ و ۷-۷.
+min-priority-fee=100000000000000
 # سایر تنظیمات tx-pool عمداً پیش‌فرض Besu ماندند (LAYERED، 75MB هر لایه، حداکثر 10000 prioritized). تنظیم‌شان بعد از آزمون بار
 # با بلاک‌های پر انجام شود (OWNER/UNVERIFIED).
 

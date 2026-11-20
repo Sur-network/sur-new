@@ -94,6 +94,9 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 | 1e13 با `tx-pool-no-local-priority=true` فقط | پذیرفته شد ولی **در 15 ثانیهٔ انتظار استخراج نشد** (در `txpool_besuTransactions` ماند) |
 | 1e13 با `tx-pool-min-gas-price=1e14` فقط | هنوز استخراج شد (کافی نیست) |
 | 1e13 با هر دو | رد با خطای RPC `-32009 Gas price below configured minimum gas price` |
+| **HIGH-3** بدون `min-priority-fee`: `eth_maxPriorityFeePerGas` / `eth_gasPrice` / `eth_feeHistory` | `0x0` / `0x5af3107a4000` (1e14) / پاداش‌ها `0x0`؛ `viem.prepareTransactionRequest` برای type-2: `maxFeePerGas=0`، `maxPriorityFeePerGas=0` ⇒ RPC رد کرد؛ تراکنش دستی type-2 با `maxFee=1e14` و `priority=0`: هش گرفت، در `txpool_besuTransactions` ماند و در 40 ثانیه **استخراج نشد** |
+| با `min-priority-fee=100000000000000` (زنجیرهٔ تازه، همان genesis، یک نود) | `eth_maxPriorityFeePerGas` = `0x5af3107a4000`؛ `viem.prepareTransactionRequest`: `maxFee=prio=1e14`؛ تراکنش در بلاک 15 در 2٫0 ثانیه استخراج شد، `gasUsed` 21000، `effectiveGasPrice` = 1e14؛ `eth_feeHistory` پاداش آن بلاک `0x5af3107a4000`. هشدار گزینهٔ ناشناخته در لاگ نبود |
+| با `min-priority-fee` ولی تراکنش دستی با `priority=0` و `maxFee=1e14` | **هنوز** هش می‌گیرد و استخراج نمی‌شود (گزینه فقط قیمت پیشنهادی RPC را درست می‌کند، تراکنش با priority صریح 0 را رد نمی‌کند) |
 
 ## ۵. مدیریت کلید (اصول؛ طراحی پروژه)
 
@@ -109,7 +112,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 
 **جای‌گیر `OWNER-FILL` در `genesis-config.json`:** `network.genesisTimestamp`؛ `validatorsRegistry.firstValidator.owner/operator`؛ شش `otherFounders`؛ 5 عضو `validatorsBoard.initialBoardMembers`؛ 15 عضو `foundationMembers.members` (نام، حساب، `shareWeight`؛ **نام حقوقی واقعی و نهایی را مالک بنویسد: نام روی زنجیره دائمی است و `FoundationMembers` تابع تغییر نام ندارد؛ فقط حذف و افزودن دوباره با مجمع فوق‌العاده؛ نام خالی را ابزار رد می‌کند**)؛ `foundationDAO.initialBoard` (5 اصلی + 2 علی‌البدل) و `initialInspector` (و اختیاری `initialOfficers`)؛ ردیف‌های `genesisClaimsVault.claims` (21 ردیف)؛ تأیید سه آدرس اوراکل.
 
-**OWNER در سایر فایل‌ها:** IP عمومی هر ولیدیتور (`SUR_P2P_HOST`)؛ طرح bootnode / `discovery-enabled`؛ پذیرفتن دو خط `tx-pool-*` (بخش ۷)؛ نگهداری و تحویل کلید نود؛ سخت‌افزار (`parties/22-validator.md` ۵٫۱: «حداقل سخت‌افزار هنوز نیست»)؛ تنظیم حافظه JVM و محدودیت منابع (در compose کامنت شده).
+**OWNER در سایر فایل‌ها:** IP عمومی هر ولیدیتور (`SUR_P2P_HOST`)؛ طرح bootnode / `discovery-enabled`؛ پذیرفتن دو خط `tx-pool-*` (بخش ۷-۱) و `min-priority-fee=1e14` (بخش ۷-۷؛ روی همهٔ نودها از جمله RPC)؛ نگهداری و تحویل کلید نود؛ سخت‌افزار (`parties/22-validator.md` ۵٫۱: «حداقل سخت‌افزار هنوز نیست»)؛ تنظیم حافظه JVM و محدودیت منابع (در compose کامنت شده).
 
 **UNVERIFIED (هنوز آزموده نشده):** رفتار چند ولیدیتور با `target-gas-limit` متفاوت؛ اتصال به bootnode واقعی؛ مجوزهای فایل روی لینوکس؛ `sync-mode` به‌جز FULL با QBFT؛ رفتار RPC/تراکنش‌های رسیده از همتا (p2p) برای قیمت زیر حداقل؛ رفتار زیر بار بلاک‌های واقعاً پر؛ Vault برای کلید نود؛ آماده بودن NAT/فایروال واقعی؛ شبکهٔ چندمیزبانه.
 
@@ -121,6 +124,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 4. **`--bootnodes` ویندوزی خطا داد (سند)؛ روی لینوکس/Docker سینتکس پذیرفته شد** ولی اتصال به bootnode واقعی آزموده نشد؛ روش آزموده‌شدهٔ پروژه `static-nodes.json` است.
 5. **entrypoint تصویر root است و کاربر را با `su` عوض می‌کند؛ `su` با SIGTERM پروسهٔ Besu را SIGKILL می‌کند** (یافتهٔ بازبین مستقل، HIGH-2، و در آزمون دوباره تأیید شد): پس هر توقف JVM را نیمه‌کاره می‌کشت و `stop_grace_period` بی‌اثر بود. راه‌حل: `user: "1000:1000"` (entrypoint در حالت غیرریشه `su` را رد می‌کند) + chown یک‌بارهٔ حجم داده + حذف `cap_add`؛ با آن shutdown hook کامل می‌شود (کد خروج 143 = رفتار عادی JVM پس از SIGTERM، نه SIGKILL). بخش ۳ و ۴-۴.
 6. **Prometheus:** Besu `host-allowlist` را روی `/metrics` هم اعمال می‌کند و Prometheus اجازهٔ تغییر Host نمی‌دهد؛ برای همین نام سرویس `validator` به `host-allowlist` اضافه شد (بدون آن 403).
+7. **`min-priority-fee` (HIGH-3؛ یافتهٔ بازبین مستقل، با آزمون دوباره تأیید شد).** `zeroBaseFee` در genesis فعال است، پس قیمت مؤثر تراکنش فقط priority fee است. بدون `min-priority-fee` در `config.toml`، `eth_maxPriorityFeePerGas` مقدار `0` می‌دهد (در حالی که `eth_gasPrice` برابر 1e14 است) و کتابخانه‌هایی مثل viem/wagmi که priority را از همین RPC می‌گیرند تراکنش type-2 با priority 0 می‌سازند: یا رد می‌شود یا (اگر maxFee دستی ≥ 1e14 باشد) هش می‌گیرد ولی هرگز استخراج نمی‌شود و nonceهای بعدی همان حساب را هم می‌بندد. `min-priority-fee=100000000000000` (1e14، برابر `min-gas-price`) آن را درست می‌کند. **این گزینه باید روی هر نود گذاشته شود، از جمله نودهای RPC سرویس‌ها و dApp** (آن‌ها قیمت پیشنهادی را به کیف‌پول‌ها می‌دهند) و روی همهٔ ولیدیتورها یکسان باشد. محدودیت (آزموده): تراکنشی که priority را صریح 0 بگذارد هنوز پذیرفته می‌شود و استخراج نمی‌شود؛ پس dApp/کیف‌پول باید priority را از RPC بگیرد، نه ثابت 0 بگذارد.
 
 ## ۸. چک‌لیست تصمیم‌های مالک/کمیتهٔ باقی‌مانده
 
@@ -131,6 +135,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 - [ ] طرح اتصال: `static-nodes.json` یا bootnodeها؛ `discovery-enabled`؛ IP عمومی هر ولیدیتور.
 - [ ] برنامهٔ ساعت‌های اول: در genesis فقط **یک** ولیدیتور فعال است؛ برنامهٔ فعال‌سازی مؤسسان دیگر (`setOperator` + `recordActivation`) و نود پایش.
 - [ ] پذیرش `tx-pool-no-local-priority` + `tx-pool-min-gas-price` (بخش ۷-۱) و اعلام یکسان `min-gas-price` به همهٔ ولیدیتورها.
+- [ ] `min-priority-fee=1e14` (بخش ۷-۷) روی **هر** نود، از جمله نودهای RPC سرویس‌ها و dApp (فقط در این فایل برای ولیدیتور هست؛ سیاست نودهای RPC باید همین را داشته باشد).
 - [ ] سیاست `target-gas-limit` (همهٔ ولیدیتورها یکسان) و رویهٔ تغییر بعدی سقف گاز.
 - [ ] نگهداری کلید نود (Vault Agent/tmpfs یا روش دیگر)، مجوزها، جایگزینی کلید.
 - [ ] `data-storage-format` نود ولیدیتور (Bonsai) در برابر نود RPC جداگانهٔ RewardRouter (archive/FOREST، `TRACE`) — بخش «نگه‌داری داده» سند معماری.
