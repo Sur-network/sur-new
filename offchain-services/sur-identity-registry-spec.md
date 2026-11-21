@@ -141,7 +141,7 @@ Body: {
 - احراز فقط برای اشخاص حقیقی ایرانی است؛ بعداً ممکن است توسعه یابد.
 
 ### امنیت
-- کلید `identityOracle` در سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`) — کاملاً جدا از `verifier` (لایوینس) و `distributionOracle`. همچنین کلید HMAC یکتایی شخص (`personKey`) در Verifier پشت سرویس دسترسی کلید است و در اختیار Identity Service نیست.
+- کلید `identityOracle` در سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`) — کاملاً جدا از `verifier` (لایوینس) و `distributionOracle`. همچنین کلید HMAC یکتایی شخص (`personKey`) هم فقط داخل SurKMS است (متد `kms_hmac`؛ تصمیم مالک ۲۰۲۶-۱۱-۲۱؛ Verifier آن را صدا می‌زند) و در اختیار Identity Service نیست.
 - داده‌ی خام رمزنگاری‌شده در حالت سکون؛ دسترسی محدود به تیم مجاز.
 - سرویس‌دهنده‌ی eKYC باید مجاز و دارای مجوز رسمی باشد — این خودمان انجامش نمی‌دهیم.
 

@@ -39,6 +39,7 @@
 |---|---|---|---|
 | چرخش کلید `verifier` (تصمیم‌های وضعیت ولیدیتور) | ≥ ۳ رأی، بدون تأخیر | `proposeRotateVerifier` / `voteAction` | `ValidatorsRegistry.setVerifier` (فقط `ValidatorsBoard`) |
 | چرخش کلید `distributionOracle` (RewardRouter) | ≥ ۳ رأی، بدون تأخیر | `proposeRotateOracle` / `voteAction` | `BlockRewardDistributor.setDistributionOracle` |
+| مسدودکردن یا آزادکردن کلید `verifier` یا `distributionOracle` در SurKMS (✅ ۲۰۲۶-۱۱-۲۱) | ≥ ۳ رأی (۳ از ۵)، مهلت ۱۴ روز، با تغییر ترکیب هیأت باطل می‌شود | `proposeKmsFreeze(slot, isFrozen)` / `voteAction` | `KmsDirectives.setFrozen` (قرارداد genesis در `0xbBbB…bBbB`)؛ SurKMS با کلید مسدود امضا نمی‌کند |
 | تصویب پرداخت از خزانهٔ ولیدیتورها (گیرنده هرکس، حتی بنیاد) | `floor(اعضا/۲)+۱` با کف ۳ رأی | `proposeApproveBudget` / `voteAction` | `ValidatorsTreasury.boardApproveExpenditure`؛ زیر سقف‌های مجمع |
 | تغییر مبلغ وثیقهٔ ورود (`entryCollateral`) | ۳ از ۵ | `proposeSetEntryCollateral` | `ValidatorsRegistry.setEntryCollateral` |
 | تغییر درصد کارمزد عضویت (`membershipFeeBps`) | ۳ از ۵ | `proposeSetMembershipFeeBps` | `ValidatorsRegistry.setMembershipFeeBps` |

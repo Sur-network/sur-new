@@ -79,8 +79,8 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 
 ## ۶. تصمیمات معماری کلیدی (باید همیشه رعایت شوند — بدون تغییر از قبل)
 
-1. ده قرارداد ساختاری genesis مستقیم در `alloc` بلاک genesis تزریق می‌شوند: شش قرارداد پایه (`FoundationDAO`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`) در آدرس‌های ثابت `0x1111...` تا `0x6666...`، و چهار قرارداد تازه (`FoundationMembers`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`) با آدرس‌های پیشنهادی در `SurAddresses.sol`: `0x7777…7777` (`FoundationMembers`)، `0x8888…8888` (`ValidatorSeatNFT`)، `0x9999…9999` (`GenesisClaimsVault`)، `0xAaAa…AaAa` (`ValidatorLottery`).
-2. هیچ‌کدام از این ده قرارداد `constructor` ندارند (وریفای‌شدن روی Blockscout). برای mapping/آرایه (اعضای اولیه)، از `genesis-seed-helpers/` استفاده می‌شود.
+1. یازده قرارداد ساختاری genesis مستقیم در `alloc` بلاک genesis تزریق می‌شوند: شش قرارداد پایه (`FoundationDAO`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`) در آدرس‌های ثابت `0x1111...` تا `0x6666...`، و پنج قرارداد تازه (`FoundationMembers`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`, `KmsDirectives`) با آدرس‌های پیشنهادی در `SurAddresses.sol`: `0x7777…7777` (`FoundationMembers`)، `0x8888…8888` (`ValidatorSeatNFT`)، `0x9999…9999` (`GenesisClaimsVault`)، `0xAaAa…AaAa` (`ValidatorLottery`)، `0xbBbB…bBbB` (`KmsDirectives`).
+2. هیچ‌کدام از این یازده قرارداد `constructor` ندارند (وریفای‌شدن روی Blockscout). برای mapping/آرایه (اعضای اولیه)، از `genesis-seed-helpers/` استفاده می‌شود.
 3. کامپایل همیشه **بدون `viaIR`** — هر «Stack too deep» با تقسیم به توابع کوچک‌تر (`struct` + توابع خصوصی) حل می‌شود، نه با فعال‌کردن `viaIR`. این الگو چند بار در این نشست هم تکرار شد (`RefreshCtx`، `EpochPrep`).
 4. `SurenSale.sol` تنها قرارداد غیر-genesis اصلی است.
 5. سورن ارز بومی زنجیره است (مثل ETH)، نه ERC20.

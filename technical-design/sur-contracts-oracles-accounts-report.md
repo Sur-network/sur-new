@@ -11,7 +11,7 @@
 
 ## ۱. معماری کلی و قراردادهای بررسی‌شده
 
-این مجموعه، زیرساخت یک شبکه بلاکچین با کنسنسوس QBFT (بر پایه Hyperledger Besu) به نام Sur را تشکیل می‌دهد. ده قرارداد «ساختاری» مستقیماً در بلاک genesis تزریق می‌شوند (کد + storage نهایی، بدون تراکنش deploy و بدون constructor)، به همین دلیل آدرس هر ده‌تا از پیش و به‌صورت ثابت در فایل `SurAddresses.sol` تعریف شده و در بقیه‌ی قراردادها به‌صورت constant هارد-کد می‌شود. یک قرارداد (`SurenSale`) ساختاری نیست و بعداً با یک تراکنش عادی دیپلوی می‌شود.
+این مجموعه، زیرساخت یک شبکه بلاکچین با کنسنسوس QBFT (بر پایه Hyperledger Besu) به نام Sur را تشکیل می‌دهد. یازده قرارداد «ساختاری» مستقیماً در بلاک genesis تزریق می‌شوند (کد + storage نهایی، بدون تراکنش deploy و بدون constructor)، به همین دلیل آدرس هر یازده‌تا از پیش و به‌صورت ثابت در فایل `SurAddresses.sol` تعریف شده و در بقیه‌ی قراردادها به‌صورت constant هارد-کد می‌شود. یک قرارداد (`SurenSale`) ساختاری نیست و بعداً با یک تراکنش عادی دیپلوی می‌شود.
 
 | ثابت (Constant) | آدرس | قرارداد | نقش خلاصه |
 |---|---|---|---|
@@ -26,7 +26,7 @@
 | `GENESIS_CLAIMS_VAULT` | `0x9999...9999` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | GenesisClaimsVault.sol | مطالبات genesis با برداشت ماهانهٔ محدود (۲۴ قسط) |
 | `VALIDATOR_LOTTERY` | `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa` (پیشنهادی؛ checksum شده در کد) | ValidatorLottery.sol | لاتاری ولیدیتور (مجری: هیأت‌مدیرهٔ بنیاد) |
 
-🔶 آدرس چهار قرارداد ساختاری تازه در `SurAddresses.sol` **پیشنهاد** شده است (الگوی `0xNNNN…NNNN`) و تثبیت نهایی آن‌ها هنگام تثبیت ابزار genesis است. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده: اوراکل‌ها دقیقاً سه‌تاست (`verifier`، `distributionOracle`، `identityOracle`).
+🔶 آدرس پنج قرارداد ساختاری تازه (از جمله `KmsDirectives` در `0xbBbB…bBbB`) در `SurAddresses.sol` **پیشنهاد** شده است (الگوی `0xNNNN…NNNN`) و تثبیت نهایی آن‌ها هنگام تثبیت ابزار genesis است. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده: اوراکل‌ها دقیقاً سه‌تاست (`verifier`، `distributionOracle`، `identityOracle`).
 
 قرارداد غیرساختاری، `SurenSale.sol`، فروش سورن به تومان از طریق صرافی‌های رمزارزی ایرانی مجاز است (دورهٔ قیمت ثابت ۹۰ روزه با ۱۰۰/۱۰۵/۱۱۰ تومان و گذار ۴۵ روزه؛ هر دو با تمدید مدیرعامل بنیاد) که بنیاد هر زمان آماده بود، آن را با یک تراکنش معمولی دیپلوی می‌کند.
 
@@ -40,19 +40,19 @@
 
 | نام | قرارداد میزبان | کاربرد اصلی | چرخش توسط |
 |---|---|---|---|
-| `distributionOracle` | BlockRewardDistributor | گزارش تعداد بلاک هر ولیدیتور و مجموع reward/fee هر epoch؛ فراخوانی `distributeRewards` | ValidatorsBoard (رأی داخلی board، دست‌کم ۳ رأی) |
+| `distributionOracle` | BlockRewardDistributor | گزارش تعداد بلاک هر ولیدیتور و مجموع reward/fee هر epoch؛ فراخوانی `openDistribution` و `payPage` و `closeDistribution` (و `abortDistribution` ۳ روز پس از باز شدن) | ValidatorsBoard (رأی داخلی board، دست‌کم ۳ رأی) |
 | `verifier` | ValidatorsRegistry | ثبت تصمیم‌های وضعیت ولیدیتورها (`recordActivation`/`recordSuspension`/`recordPreExitViolation`/`recordRecovery`/`recordResume`، و تأیید تعویض اپراتور ولیدیتور `Active` با `confirmOperatorReady`) بر پایه‌ی بررسی آف‌چین | ValidatorsBoard (رأی داخلی board، دست‌کم ۳ رأی) |
 | `identityOracle` | IdentityRegistry | ثبت نتیجه احراز KYC/تلفن/تلگرام/بله/ایمیل و مهاجرت هویت | فقط FoundationDAO (تصمیم هیأت‌مدیرهٔ بنیاد) |
 
 ### ۲.۱ `distributionOracle` — در BlockRewardDistributor
-- **کاربرد:** تنها فراخوان‌کننده‌ی مجاز تابع `distributeRewards` است؛ لیست ولیدیتورها، تعداد بلاک هر کدام، و مجموع reward/fee هر epoch را گزارش می‌دهد (حداقل فاصله بین دو فراخوانی: ۲۳ ساعت).
+- **کاربرد:** تنها فراخوان‌کننده‌ی مجاز توابع توزیع (`openDistribution`، `payPage`، `closeDistribution`، `abortDistribution`) است؛ در باز کردن کل بلاک‌ها و مجموع reward/fee هر epoch را اعلام می‌کند و در صفحه‌ها فهرست ولیدیتورها و تعداد بلاک هر کدام را می‌دهد (حداقل فاصله بین دو توزیع: ۲۳ ساعت از لحظهٔ `openDistribution`).
 - **اختیارات:** می‌تواند زمان‌بندی و مقدار توزیع را تعیین کند، اما نمی‌تواند به آدرسی که هرگز فعال نشده (`everActivated == false`) پرداخت کند — این بررسی مستقیماً روی زنجیره انجام می‌شود. پاداش به کلید مالک می‌رسد. تطابق اینکه هر مینر (اپراتور) در لحظه‌ی تولید بلاک واجد شرایط بوده یا نه مسئولیت سرویس RewardRouter است، نه قرارداد. اگر پاداش گزارش‌شده بیش از مقدار مصوب بازه باشد، قرارداد فقط مقدار مصوب را تقسیم و مازاد را می‌سوزاند (رویداد `RewardExcessBurned`)؛ اوراکل نمی‌تواند نرخ پاداش را تغییر دهد.
 - ✅ مقدار `distributionOracle` نهایی و هاردکد شده: `0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6` (چک‌سام‌شده طبق EIP-55).
-- 🔶 **موجودی گس (مشاهدهٔ آزمون Besu v4؛ تصمیم باز):** هزینهٔ یک `distributeRewards` با حداقل gas price آزمایشی (۰٫۰۰۰۱ SUR به‌ازای هر گس) در آزمون‌های واقعی از ≈۹۴ تا ≈۱۳۶ SUR بود و در benchmark مصنوعی ۱۵۰ payee حدود ۲٬۱۹۹ SUR؛ این کارمزد به distributor برمی‌گردد. حساب اوراکل پیش از ارسال باید `gasLimit × gasPrice` موجودی داشته باشد. مقدار و روش تأمین موجودی و هشدار موجودی کم انتخاب نشده است — `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۴.
+- 🔶 **موجودی گس (مشاهدهٔ آزمون Besu v4؛ تصمیم باز):** هزینهٔ یک `distributeRewards` تک‌تراکنشی (پیش از صفحه‌بندی RD-18؛ اکنون حدود ۳۴٬۰۰۰ گس به ازای هر دریافت‌کننده در حالت پایدار و ۸۵٬۰۰۰ در بدترین حالت، در صفحه‌های ۱۰۰ نفره) با حداقل gas price آزمایشی (۰٫۰۰۰۱ SUR به‌ازای هر گس) در آزمون‌های واقعی از ≈۹۴ تا ≈۱۳۶ SUR بود و در benchmark مصنوعی ۱۵۰ payee حدود ۲٬۱۹۹ SUR؛ این کارمزد به distributor برمی‌گردد. حساب اوراکل پیش از ارسال باید `gasLimit × gasPrice` موجودی داشته باشد. مقدار و روش تأمین موجودی و هشدار موجودی کم انتخاب نشده است — `offchain-services/sur-reward-router-spec.md` بخش ۱۰.۴.
 
 ### ۲.۲ `verifier` — در ValidatorsRegistry
-- **کاربرد دوگانه:** هم گزارش وضعیت آنلاین/سینک‌بودن نود در دوره Probation/Demoted/ازسرگیری (recovery، resume)، و هم گزارش تولید واقعی بلاک (فیلد miner/coinbase) برای ولیدیتورهای Active — و نتیجه را فقط هنگام تغییر وضعیت با توابع `recordActivation`/`recordSuspension`/`recordRecovery`/`recordPreExitViolation`/`recordResume` (هرکدام با `evidenceHash`) ثبت می‌کند، و تعویض کلید نودِ ولیدیتور `Active` را فقط پس از بررسی سلامت نود تازه با `confirmOperatorReady(owner, evidenceHash)` اعمال می‌کند (✅ تصمیم ۱۱۰)؛ تابع `reportLiveness` در قرارداد وجود ندارد. 🔶 `recordResume` تأیید سلامت نود برای ازسرگیری از تعلیق داوطلبانه است (بدون دورهٔ آزمایشی).
-- **یکتایی شخص:** `personKey` (HMAC کد ملی، کلید پشت یک سرویس دسترسی کلید) فقط آف‌چین در Verifier نگه‌داری می‌شود و هرگز روی زنجیره نمی‌آید.
+- **کاربرد دوگانه:** هم گزارش وضعیت آنلاین/سینک‌بودن نود در دوره Probation/Demoted/ازسرگیری (recovery، resume)، و هم گزارش تولید واقعی بلاک (فیلد miner/coinbase) برای ولیدیتورهای Active — و نتیجه را فقط هنگام تغییر وضعیت با توابع `recordActivation`/`recordSuspension`/`recordRecovery`/`recordPreExitViolation`/`recordResume` (هرکدام با `evidenceHash`) ثبت می‌کند، و تعویض کلید نودِ ولیدیتور `Active` را فقط پس از بررسی سلامت نود تازه با `confirmOperatorReady(owner, newOperator, evidenceHash)` اعمال می‌کند (✅ تصمیم ۱۱۰)؛ تابع `reportLiveness` در قرارداد وجود ندارد. 🔶 `recordResume` تأیید سلامت نود برای ازسرگیری از تعلیق داوطلبانه است (بدون دورهٔ آزمایشی).
+- **یکتایی شخص:** `personKey` (HMAC کد ملی، کلید داخل SurKMS با متد `kms_hmac`) فقط آف‌چین در Verifier نگه‌داری می‌شود و هرگز روی زنجیره نمی‌آید.
 - **اختیارات:** فقط همین توابع ثبت تصمیم را می‌تواند صدا بزند؛ همه‌ی مراحل بعدی (تحویل شواهد، اعتراض، رأی مجمع) با توابع عمومی یا رأی ولیدیتورهاست و اختیار Verifier نیست. اجرای Verifier زیر نظر هیأت‌مدیرهٔ ولیدیتورهاست؛ کمیتهٔ فنی بنیاد فقط نرم‌افزار آن را توسعه می‌دهد.
 - کاملاً مستقل از `identityOracle` در IdentityRegistry است — با اینکه هر دو «کلید تأیید» هستند، عمداً از هم جدا نگه داشته شده‌اند.
 - ✅ آدرس نهایی `verifier`: `0x1A5E86f3333291B3332C0f9Eddb04269940566bc` (چک‌سام‌شده طبق EIP-55).
@@ -171,7 +171,7 @@
 
 هر سه مستقیم در سورس هاردکد شده‌اند؛ `constructor` قرارداد `SurenSale` هیچ پارامتری نمی‌گیرد.
 - ✅ **وضعیت داده‌های genesis:** اسامی (نه آدرس‌ها) هر ۱۵ عضو بنیاد، هر ۷ ولیدیتور مؤسس، و هر ۵ عضو هیأت در قراردادهای کمکی موقت (`contracts/genesis-seed-helpers/*_GenesisSeed.sol`) هاردکد شده‌اند؛ (این بند مربوط به helperهای قدیمی v2.2 بود؛ در ۲.۵ helperها قرارداد واقعی را ارث می‌برند و فهرست‌ها را آرگومان `constructor` می‌گیرند.) فقط خودِ آدرس‌های `0x0000...0000` (و genesis timestamp) هنوز باید با مقادیر واقعی جایگزین شوند. جزئیات کامل در `sur-genesis-builder-tool-spec.md`.
-- 🔶 **نکته‌ی عملیاتی تکمیلی (خارج از اسکوپ تحلیل سورس، ولی مرتبط):** طبق سیاست کلی پروژه (`sur-software-inventory.md`)، کلیدهای عملیاتی `distributionOracle` و `verifier` — تنها دو اوراکلی که یک سرویس آف‌چین واقعی (به ترتیب RewardRouter و Verifier) پشت‌شان کلید خصوصی نگه می‌دارد — باید در سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`) ذخیره شوند، هرکدام با slot و قاعدهٔ امضای کاملاً مستقل از هم. `identityOracle` هم به همین شکل باید نگه‌داری شود اگر Identity Service پشتش کلید خصوصی مستقل دارد. کلید HMAC برای `personKey` پشت یک سرویس دسترسی کلید است.
+- 🔶 **نکته‌ی عملیاتی تکمیلی (خارج از اسکوپ تحلیل سورس، ولی مرتبط):** طبق سیاست کلی پروژه (`sur-software-inventory.md`)، کلیدهای عملیاتی `distributionOracle` و `verifier` — تنها دو اوراکلی که یک سرویس آف‌چین واقعی (به ترتیب RewardRouter و Verifier) پشت‌شان کلید خصوصی نگه می‌دارد — باید در سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`) ذخیره شوند، هرکدام با slot و قاعدهٔ امضای کاملاً مستقل از هم. `identityOracle` هم به همین شکل باید نگه‌داری شود اگر Identity Service پشتش کلید خصوصی مستقل دارد. کلید HMAC برای `personKey` هم داخل SurKMS است (تصمیم مالک ۲۰۲۶-۱۱-۲۱). چرخش این کلیدها فقط با رأی روی زنجیره است و هیچ فرد تنهایی نمی‌تواند کلیدی را عوض کند.
 - ✅ **وضعیت:** آدرس اولیه‌ی اوراکل‌ها placeholder نیست؛ پارامترهای امنیتی دیگر `ValidatorsRegistry` (`probationPeriod=۱هفته`، `slashBps=۱٪`، `exitCooldown=۱هفته` و بقیه) نهایی‌اند (جزئیات در `sur-tokenomics.md` بخش ۶).
 - **جداسازی عمدی حکمرانی در ValidatorsRegistry:** وثیقهٔ ثابت و کارمزد عضویت فقط زیر کنترل board هستند (رأی ۳ از ۵ و قیدهای ±۱۰٪/۱۸۰ روز)؛ بقیه‌ی پارامترهای امنیتی فقط با رأی کامل ولیدیتورهای فعال قابل تغییرند.
 - محافظ reentrancy (`nonReentrant`) در BlockRewardDistributor، ValidatorsRegistry و ValidatorsTreasury پیاده‌سازی شده است.
@@ -183,4 +183,4 @@
 - ⏸️ ابزار تنظیم قیمت گس برای اپراتور نود (`min-gas-price`) — فعلاً اجرا نمی‌شود؛ زیرساخت نباید مانع آن شود.
 - ⏸️ بلوکه‌کردن یک حساب در نودهای ولیدیتوری — تأیید نشده؛ زیرساخت نباید مانع آن شود.
 - 🔶 گسترش KYC به اشخاص حقوقی و خارجی.
-- ✅🔶 آزمون Besu برای ویژگی‌های ۲.۵: دور اول انجام شد (۲۰۲۶-۱۱-۱۹؛ `testing-evidence/besu-live-test-v25-2026-11-19/`)؛ 🔶 اجرانشده‌ها در بنر بالا؛ 🔶 تثبیت آدرس چهار قرارداد ساختاری تازه همچنان باز است.
+- ✅🔶 آزمون Besu برای ویژگی‌های ۲.۵: دور اول انجام شد (۲۰۲۶-۱۱-۱۹؛ `testing-evidence/besu-live-test-v25-2026-11-19/`)؛ 🔶 اجرانشده‌ها در بنر بالا؛ 🔶 تثبیت آدرس پنج قرارداد ساختاری تازه همچنان باز است.

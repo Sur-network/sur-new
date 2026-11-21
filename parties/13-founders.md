@@ -205,7 +205,7 @@
 | مجمع ولیدیتورها | رأی با کلید مالک | تصمیم‌های لازم‌الاجرا | `voteParameterChange` و مانند آن |
 | هیأت‌مدیرهٔ ولیدیتورها | رأی تأییدی مستمر | تصمیم‌های هیأت | `voteFor`، `unvoteFor` |
 | ولیدیتور دیگر | فروش صندلی (NFT) | قیمت (خارج از پروتکل) | `ValidatorSeatNFT.transferFrom` |
-| شبکه / اوراکل‌ها | نود روشن، `nodeID` | پاداش؛ بررسی سلامت | `distributeRewards`؛ Verifier |
+| شبکه / اوراکل‌ها | نود روشن، `nodeID` | پاداش؛ بررسی سلامت | توزیع پاداش (`openDistribution`، `payPage`، `closeDistribution`)؛ Verifier |
 | خریداران و صرافی‌ها | — | سورن از فروش؛ سپیدنامه: سیتکس و کوین‌ایران فروش اولیه را انجام نمی‌دهند | `SurenSale` |
 | ارائه‌دهندهٔ KYC | هیچ (معاف از eKYC) | — | — |
 | مراجع بیرونی | همکاری قانونی | — | [`40`](40-external-authorities-legal-interface.md) |
