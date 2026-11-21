@@ -558,7 +558,7 @@ contract BlockRewardDistributor {
     //          مبلغ لازم را رزرو می‌کند (budgetLeft) و فاصلهٔ ۲۳ ساعته از همین‌جا شمرده می‌شود؛ RewardsDistributed هنوز داده نمی‌شود.
     //   page   تعدادی دریافت‌کننده را می‌پردازد. آدرس‌ها باید در کل صفحه‌ها اکیداً صعودی باشند (هر صفحه از بالای آخرین آدرس صفحهٔ پیش شروع می‌شود).
     //   close  مجموع بلاک‌های صفحه‌ها را با مجموع اعلام‌شده دقیقاً برابر می‌خواهد، سپس خزانه، بنیاد و سوزاندن فی را می‌پردازد و RewardsDistributed را می‌دهد.
-    // مسیر فرار «وجود ندارد»: توزیع بازمانده فقط ادامه و بسته می‌شود (با کلید فعلی اوراکل)؛ هیچ‌کس، از جمله هیأت، نمی‌تواند آن را رها کند یا پولش را جابه‌جا کند.
+    // مسیر فرار (تصمیم مالک ۲۰۲۶-۱۱-۲۱): برای هیچ‌کس جز اوراکل نیست. توزیعی که نمی‌شود تمامش کرد را کلید فعلی اوراکل می‌تواند «رها» کند، ولی فقط پس از ABORT_DELAY (۳ روز) از open: آنچه پرداخت شده پرداخت‌شده می‌ماند؛ باقی‌ماندهٔ رزروشدهٔ پرداخت‌نشده فقط به استخر عادیِ قابل توزیع برمی‌گردد (نه به خزانه یا کسی)؛ بازه تسویه‌شده می‌ماند، پس دریافت‌کنندگان پرداخت‌نشدهٔ آن بازه سهم آن را از دست می‌دهند. هیأت و بنیاد قدرتی روی آن ندارند.
     // سقف اندازهٔ صفحه در کد نیست: صفحه‌ای که در حد گس نگنجد کامل ریورت می‌شود (بدون تغییر حالت)، پس صفحهٔ بزرگ فقط تراکنش خودش را شکست می‌دهد. اندازهٔ صفحه را Router انتخاب می‌کند.
     // ------------------------------------------------------------------
     struct OpenDistribution {
@@ -576,8 +576,15 @@ contract BlockRewardDistributor {
         uint256 distributedFees;
         uint256 validatorCount;
         address lastPayee;
+        uint256 openedAt;               // زمان open: abortDistribution() پس از ABORT_DELAY از آن ممکن است
     }
     OpenDistribution private cur;
+
+    /// @notice مدتی که توزیع باید باز بماند تا اوراکل بتواند آن را رها کند (تصمیم مالک ۲۰۲۶-۱۱-۲۱).
+    uint256 public constant ABORT_DELAY = 3 days;
+    /// @notice درست برای epochی که توزیعش رها شد (رکورد epochs[] فقط آنچه واقعاً پرداخت شد را نشان می‌دهد).
+    mapping(uint256 => bool) public epochAborted;
+    event DistributionAborted(uint256 indexed epochId, uint256 paidBlocks, uint256 paidAmount, uint256 returnedAmount);
 
     event DistributionOpened(
         uint256 indexed epochId,
@@ -625,6 +632,7 @@ contract BlockRewardDistributor {
         c.distributedFees = 0;
         c.validatorCount = 0;
         c.lastPayee = address(0);
+        c.openedAt = block.timestamp;
         emit DistributionOpened(epochCount, range.fromBlock, range.toBlock, totalBlocks, totalRewards, prep.feesToDistribute);
     }
 
@@ -664,6 +672,28 @@ contract BlockRewardDistributor {
         require(c.isOpen, "BlockRewardDistributor: no open distribution");
         require(c.paidBlocks == c.totalBlocks, "BlockRewardDistributor: paged blocks differ from the declared total");
         _finalizeEpoch(c);
+    }
+
+    /// @notice توزیع باز را رها می‌کند؛ فقط کلید «فعلی» اوراکل و فقط ABORT_DELAY (۳ روز) پس از open. صفحه‌های پرداخت‌شده (و claimable اعتبارداده‌شده) همان‌طور می‌مانند و پس گرفته نمی‌شوند. باقی‌ماندهٔ رزروشدهٔ پرداخت‌نشده (پاداش، فی و کارمزد عضویتِ رزروشده در open، با سهم بنیاد/خزانه/سوزاندن فی) به هیچ‌جا فرستاده نمی‌شود: فقط دیگر رزرو نیست و دوباره جزو موجودی عادیِ قابل توزیع است. بازه تسویه‌شده می‌ماند (lastSettledBlock عقب نمی‌رود)، پس همان بلاک‌ها هرگز دوبار پرداخت نمی‌شود؛ دریافت‌کنندگان پرداخت‌نشدهٔ آن سهم آن بازه را از دست می‌دهند. RewardsDistributed داده نمی‌شود؛ رکورد epoch آنچه واقعاً پرداخت شد را نشان می‌دهد و epochAborted[id] درست است. توزیع بعدی فوراً می‌تواند باز شود (فاصلهٔ ۲۳ ساعته از open شمرده می‌شود).
+    function abortDistribution() external onlyDistributionOracle nonReentrant {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(block.timestamp >= c.openedAt + ABORT_DELAY, "BlockRewardDistributor: too early to abort");
+        uint256 epochId = c.epochId;
+        uint256 paidAmount = c.distributedRewards + c.distributedFees;
+        uint256 returnedAmount = c.budgetLeft;
+        totalDistributedToValidators += paidAmount;
+        epochs[epochId] = Epoch({
+            timestamp: block.timestamp,
+            totalRewards: c.distributedRewards,
+            totalFees: c.distributedFees,
+            treasuryAmount: 0,
+            totalBlocksMined: c.paidBlocks,
+            validatorCount: c.validatorCount
+        });
+        epochAborted[epochId] = true;
+        emit DistributionAborted(epochId, c.paidBlocks, paidAmount, returnedAmount);
+        delete cur; // رزرو آزاد می‌شود: پول در قرارداد و در استخر قابل توزیع می‌ماند
     }
 
     /// @notice وضعیت توزیع باز (isOpen = false اگر نباشد).

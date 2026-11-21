@@ -569,7 +569,7 @@ contract BlockRewardDistributor {
     //          reserves the needed amount (budgetLeft) and starts the 23-hour gap; RewardsDistributed is NOT emitted yet.
     //   page   pays some payees. Addresses must be strictly ascending ACROSS pages (each page starts above the last address of the page before).
     //   close  requires the paged block counts to add up EXACTLY to the declared total, then pays treasury, foundation and the fee burn and emits RewardsDistributed.
-    // There is NO escape path: an open distribution can only be continued and closed (by the current oracle key); nothing, including the board, can abandon it or move its money.
+    // ESCAPE PATH (owner decision 2026-11-21): none for anyone but the oracle. A distribution that cannot be finished can be ABORTED by the current oracle key, but only after ABORT_DELAY (3 days) from its open: what was already paid stays paid; the unpaid reserved remainder simply returns to the normal distributable pool (not to the treasury or anyone); the range stays settled, so its unpaid payees lose that range's share. The board and the foundation get no power over it.
     // No page-size cap is coded: a page that does not fit the gas limit simply reverts as a whole (no state change), so an oversized page can only fail its own transaction. The Router chooses the page size.
     // ------------------------------------------------------------------
     struct OpenDistribution {
@@ -587,8 +587,15 @@ contract BlockRewardDistributor {
         uint256 distributedFees;
         uint256 validatorCount;
         address lastPayee;
+        uint256 openedAt;               // block.timestamp of open: abortDistribution() is possible ABORT_DELAY after it
     }
     OpenDistribution private cur;
+
+    /// @notice How long a distribution must stay open before the oracle may abort it (owner decision 2026-11-21).
+    uint256 public constant ABORT_DELAY = 3 days;
+    /// @notice True for an epoch whose distribution was aborted (its epochs[] record shows only what was actually paid).
+    mapping(uint256 => bool) public epochAborted;
+    event DistributionAborted(uint256 indexed epochId, uint256 paidBlocks, uint256 paidAmount, uint256 returnedAmount);
 
     event DistributionOpened(
         uint256 indexed epochId,
@@ -636,6 +643,7 @@ contract BlockRewardDistributor {
         c.distributedFees = 0;
         c.validatorCount = 0;
         c.lastPayee = address(0);
+        c.openedAt = block.timestamp;
         emit DistributionOpened(epochCount, range.fromBlock, range.toBlock, totalBlocks, totalRewards, prep.feesToDistribute);
     }
 
@@ -675,6 +683,28 @@ contract BlockRewardDistributor {
         require(c.isOpen, "BlockRewardDistributor: no open distribution");
         require(c.paidBlocks == c.totalBlocks, "BlockRewardDistributor: paged blocks differ from the declared total");
         _finalizeEpoch(c);
+    }
+
+    /// @notice Abandons the open distribution; only the CURRENT oracle key, only ABORT_DELAY (3 days) after its open. Pages already paid (and claimable already credited) stay as they are and are never clawed back. The unpaid reserved remainder (rewards, fees and membership fees reserved at open, incl. the foundation/treasury/fee-burn parts) is NOT sent anywhere: it just stops being reserved and is part of the normal distributable balance again. The range stays settled (lastSettledBlock is not moved back), so the same blocks can never be paid twice; its unpaid payees lose that range's share. RewardsDistributed is NOT emitted; the epoch record shows what was actually paid and epochAborted[id] is true. The next distribution may open at once (the 23-hour gap is counted from the open).
+    function abortDistribution() external onlyDistributionOracle nonReentrant {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(block.timestamp >= c.openedAt + ABORT_DELAY, "BlockRewardDistributor: too early to abort");
+        uint256 epochId = c.epochId;
+        uint256 paidAmount = c.distributedRewards + c.distributedFees;
+        uint256 returnedAmount = c.budgetLeft;
+        totalDistributedToValidators += paidAmount;
+        epochs[epochId] = Epoch({
+            timestamp: block.timestamp,
+            totalRewards: c.distributedRewards,
+            totalFees: c.distributedFees,
+            treasuryAmount: 0,
+            totalBlocksMined: c.paidBlocks,
+            validatorCount: c.validatorCount
+        });
+        epochAborted[epochId] = true;
+        emit DistributionAborted(epochId, c.paidBlocks, paidAmount, returnedAmount);
+        delete cur; // the reservation is released: the money stays in the contract, in the distributable pool
     }
 
     /// @notice State of the open distribution (isOpen = false when none).
