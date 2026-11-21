@@ -30,7 +30,7 @@
 |---|---|---|
 | **۰ — شبکه (Besu/QBFT)** | Hyperledger Besu (نسخهٔ آزمون‌شده `v26.9.0`)، اجماع QBFT، `chainId` ۲۶۲، بلاک هر ۳ ثانیه، RPC عمومی بدون احراز، `validatorselectionmode: contract` به آدرس `0x3333…3333`، `miningbeneficiary` = `0x2222…2222`، `zeroBaseFee=true` | هر ولیدیتور نود خودش را؛ نودهای پایش/RPC سرویس‌ها زیر نظر هیأت‌مدیرهٔ ولیدیتورها |
 | **۱ — قراردادها** | **ده قرارداد ساختاری** در `alloc` بلاک genesis با آدرس ثابت و بدون constructor: `FoundationDAO`، `BlockRewardDistributor`، `ValidatorsRegistry`، `ValidatorsBoard`، `ValidatorsTreasury`، `IdentityRegistry` (شش قرارداد با آدرس‌های ثابت `0x1111…` تا `0x6666…`) + چهار قرارداد تازهٔ ۲٫۵: `FoundationMembers`، `ValidatorSeatNFT`، `GenesisClaimsVault`، `ValidatorLottery` (آدرس‌های **پیشنهادی** در `SurAddresses.sol`: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xaAaA…aAaA`؛ از این چهار `FoundationMembers`، `ValidatorLottery` و `GenesisClaimsVault` کد دارند). **غیرساختاری (دیپلوی عادی پس از genesis):** `SurenSale` و `ServiceStaking` (و دپ مرجع اختیاری `SurZether` که در این سند نیست) | بدون ادمین؛ هیچ کلید مرکزی پس از genesis روی قراردادها اختیار ندارد |
-| **۲ — سرویس‌های آف‌چین** | RewardRouter، Verifier (+ سرویس دسترسی کلید `personKey`)، Identity Service + eKYC (سرویس‌دهندهٔ بیرونی)، سرویس همراه نود (`SUR_NODE_CHECK_V1`)، ابزار ساخت genesis، ابزار بازیابی اضطراری، گزارش‌ساز دورهٔ آزادسازی، Blockscout، سرور مدیریت کلید SurKMS (A4)، نودهای پایش و RPC | توسعه: کمیتهٔ فنی بنیاد؛ اجرای Verifier و RewardRouter: هیأت‌مدیرهٔ ولیدیتورها؛ eKYC/Identity: کمیتهٔ فنی بنیاد ولی مستقل؛ گزارش‌ها: کمیتهٔ توسعهٔ کسب‌وکار؛ Blockscout: 🔶 (مسئول مشخص نیست) |
+| **۲ — سرویس‌های آف‌چین** | RewardRouter، Verifier (+ فراخوان `kms_hmac` به SurKMS برای `personKey`)، Identity Service + eKYC (سرویس‌دهندهٔ بیرونی)، سرویس همراه نود (`SUR_NODE_CHECK_V1`)، ابزار ساخت genesis، ابزار بازیابی اضطراری، گزارش‌ساز دورهٔ آزادسازی، Blockscout، سرور مدیریت کلید SurKMS (A4)، نودهای پایش و RPC | توسعه: کمیتهٔ فنی بنیاد؛ اجرای Verifier و RewardRouter: هیأت‌مدیرهٔ ولیدیتورها؛ eKYC/Identity: کمیتهٔ فنی بنیاد ولی مستقل؛ گزارش‌ها: کمیتهٔ توسعهٔ کسب‌وکار؛ Blockscout: 🔶 (مسئول مشخص نیست) |
 | **۳ — اپ‌ها و دپ‌ها** | اپ ولیدیتور، داشبورد حکمرانی، صفحهٔ عمومی فروش، اپ احراز هویت عمومی (❌ سند ندارد)، دپ‌های ثالث | کمیتهٔ فنی (اپ‌ها)، کمیتهٔ توسعهٔ کسب‌وکار (محتوای صفحهٔ فروش)، دپ‌های ثالث: صاحبانشان |
 
 > نکتهٔ ضروری: **سورن ارز بومی** زنجیره است (نه توکن ERC20)؛ همهٔ جابه‌جایی‌ها با `msg.value`/`.call{value:…}` انجام می‌شود. تنها استثنا `FoundationDAO` است که می‌تواند ERC20 دیگر را هم جابه‌جا کند.
@@ -49,7 +49,7 @@ flowchart TB
     VT[("SurKMS (A4)<br/>سرور مدیریت کلید")]
     RR["RewardRouter<br/>کلید distributionOracle"]
     VF["Verifier<br/>کلید verifier"]
-    KAS["سرویس دسترسی کلید<br/>HMAC personKey"]
+    KAS["سرویس دسترسی کلید<br/>HMAC personKey (متد kms_hmac در SurKMS)"]
     IS["Identity Service<br/>کلید identityOracle"]
     NC["سرویس همراه نود<br/>(کنار هر نود، کلید پایش جدا)"]
     REP["گزارش‌ساز دورهٔ آزادسازی"]
@@ -81,6 +81,7 @@ flowchart TB
   VT --- RR
   VT --- VF
   VT --- IS
+  VT ---|"kms_hmac (personKey)"| KAS
   EKYC --> IS
   IS -- "set*Verified / migrateIdentity" --> IDR
   REG -- "فوروارد کارمزد عضویت" --> DST
@@ -516,7 +517,7 @@ flowchart LR
 
 ### ۷.۱ سیاست قطعی (از فهرست نرم‌افزارها)
 
-- هر نرم‌افزاری که **کلید خصوصی امضاکنندهٔ خودِ سرویس** نگه می‌دارد باید آن را در **سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`)** نگه دارد؛ نه فایل کلید محلی، نه راه‌حل موقت (Vault Transit از secp256k1 پشتیبانی نمی‌کند و HSM کنار گذاشته شد). قاعدهٔ همهٔ پروژه است.
+- هر نرم‌افزاری که **کلید خصوصی امضاکنندهٔ خودِ سرویس** نگه می‌دارد باید آن را در **سرور مدیریت کلید SurKMS (A4؛ `offchain-services/sur-kms-spec.md`)** نگه دارد؛ نه فایل کلید محلی، نه راه‌حل موقت (Vault Transit از secp256k1 پشتیبانی نمی‌کند و HSM کنار گذاشته شد). قاعدهٔ همهٔ پروژه است. **[تصمیم مالک ۲۰۲۶-۱۱-۲۱]** کلید HMAC یکتایی شخص (`personKey`) هم در SurKMS نگه‌داری می‌شود (نه Vault).
 - سه کلید سرویس **کاملاً جدا از هم**، همه در همان SurKMS ولی با slot، آدرس و قاعدهٔ امضای مستقل: RewardRouter (`distributionOracle`)، Verifier (`verifier`)، Identity Service (`identityOracle`). افزون بر این کلید HMAC `personKey` پشت **سرویس دسترسی کلید** (کلید امضا نیست ولی همان سطح حفاظت؛ 🔶 پرسش باز: محل نگه‌داری آن، چون SurKMS فقط سه کلید امضا را دارد).
 - امضا: SurKMS (امضای remote بدون خروج کلید خام، JSON-RPC `eth_signTransaction` / `eth_sign` با mTLS)؛ در Verifier سرویس امضای جدا (`verifier-signer`) تنها جزئی است که با SurKMS حرف می‌زند؛ نمونه‌های polling فقط نتیجه را برایش می‌فرستند.
 - نرم‌افزارهای خواندنی (Blockscout، داشبوردها، صفحهٔ فروش، گزارش‌ساز) کلید ندارند؛ اپ/داشبورد با کیف‌پول کاربر امضا می‌کنند.
@@ -528,7 +529,7 @@ flowchart LR
 | `distributionOracle` | هیأت‌مدیرهٔ ولیدیتورها (اجرای RewardRouter) | SurKMS (slot جدا؛ مدیر سرور: زجاجی؛ نگه‌دارندهٔ عبارت قفل: سپهر محمدی) | هیأت (۳ رأی؛ مهلت جمع‌کردن رأی ۱۴ روز؛ پس از رسیدن به نصاب بلافاصله اجرا می‌شود) | کمیتهٔ فنی دسترسی ندارد؛ حساب باید موجودی گس داشته باشد |
 | `verifier` | هیأت‌مدیرهٔ ولیدیتورها | SurKMS (slot جدا) + remote signer | هیأت (۳ رأی؛ مهلت جمع‌کردن رأی ۱۴ روز؛ پس از رسیدن به نصاب بلافاصله اجرا می‌شود) | همان؛ HA فقط برای polling، نه چند کلید |
 | `identityOracle` | بنیاد (مسئولیت)؛ بهره‌برداری کمیتهٔ فنی؛ تأیید چرخش مدیرعامل | SurKMS (slot جدا) | `FoundationDAO` (پیشنهاد `RotateIdentityOracle`، ۳ از ۵) | جدا از `verifier`؛ نظارت بازرس بر لاگ تأییدها 🔶 |
-| HMAC `personKey` | سرویس دسترسی کلید (نزد Verifier) | Vault؛ policy جدا | 🔶 رویهٔ نشت/چرخش | خروجی: فقط HMAC |
+| HMAC `personKey` | SurKMS (کلید HMAC ۳۲ بایتی؛ Verifier با `kms_hmac` صدا می‌زند؛ تصمیم مالک ۲۰۲۶-۱۱-۲۱) | SurKMS (همان قفل و نگه‌دارنده؛ بدون Vault) | ⚠️ چرخش‌ناپذیر مگر با باطل‌شدن همهٔ personKeyها؛ پشتیبان‌گیری 🔶 تصمیم باز مالک | خروجی: فقط HMAC |
 | کلید پایش هر نود | ولیدیتور (کنار نود) | روی سرور نود (غیر از کلید امضای بلاک) | 🔶 مسیر ثبت/تعویض | برای `SUR_NODE_CHECK_V1` |
 | اپراتور (کلید نود) | ولیدیتور | سرور نود | مالک: ولیدیتور `Active` با `proposeOperator` و تأیید Verifier (`confirmOperatorReady`)؛ بیرون از مجموعهٔ اجماع با `setOperator` (فوری)؛ در هر دو وارد چرخهٔ سلامت | کلید مالک روی سرور نود **نباشد** |
 | مالک | ولیدیتور | کیف‌پول شخصی | `migrateIdentity` (گم‌شدن)؛ **سرقت: راهی نیست** | 🔶 توصیهٔ رسمی (سخت‌افزاری؟) ننوشته |
