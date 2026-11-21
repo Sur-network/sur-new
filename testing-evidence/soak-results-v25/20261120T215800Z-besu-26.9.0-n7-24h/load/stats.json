@@ -1,0 +1,40 @@
+{
+ "startedAt": "2026-11-20T22:00:56.830Z",
+ "phase": "heavy",
+ "transfers": {
+  "sent": 146877,
+  "errors": 0,
+  "resyncs": 8,
+  "bursts": 78
+ },
+ "errorsByClass": {
+  "poll: eth_call: Internal error": 17,
+  "identity: eth_sendRawTransaction: Nonce too low": 2
+ },
+ "identityToggles": {
+  "ok": 3681,
+  "err": 2
+ },
+ "listChanges": {
+  "swap": 16,
+  "selfSuspend": 15,
+  "resume": 15,
+  "activate": 1,
+  "failed": 0,
+  "skipped": 0
+ },
+ "poll": {
+  "ok": 85969,
+  "err": 17,
+  "maxMs": 294,
+  "p50Ms": 9
+ },
+ "lastChange": {
+  "type": "swap",
+  "block": 41908,
+  "at": "2026-11-21T21:15:44.562Z"
+ },
+ "nextChangeAt": null,
+ "updatedAt": "2026-11-21T22:00:54.191Z",
+ "final": true
+}

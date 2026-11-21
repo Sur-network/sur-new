@@ -1,0 +1,174 @@
+2026-11-20T21:58:00Z creating network sur25s-net
+2026-11-20T21:58:00Z starting Besu nodes
+2026-11-20T21:58:03Z   started sur25s-n1 ip=172.29.71.11 rpc=127.0.0.1:19611
+2026-11-20T21:58:05Z   started sur25s-n2 ip=172.29.71.12 rpc=127.0.0.1:19612
+2026-11-20T21:58:07Z   started sur25s-n3 ip=172.29.71.13 rpc=127.0.0.1:19613
+2026-11-20T21:58:09Z   started sur25s-n4 ip=172.29.71.14 rpc=127.0.0.1:19614
+2026-11-20T21:58:11Z   started sur25s-n5 ip=172.29.71.15 rpc=127.0.0.1:19615
+2026-11-20T21:58:13Z   started sur25s-n6 ip=172.29.71.16 rpc=127.0.0.1:19616
+2026-11-20T21:58:15Z   started sur25s-n7 ip=172.29.71.17 rpc=127.0.0.1:19617
+2026-11-20T21:58:18Z   started sur25s-x1 ip=172.29.71.21 rpc=127.0.0.1:19621
+2026-11-20T21:58:21Z   started sur25s-x2 ip=172.29.71.22 rpc=127.0.0.1:19622
+2026-11-20T21:58:21Z starting collector
+2026-11-20T21:58:23Z bootstrap: waiting for the nodes, then activating validators 2..7 through the Registry (setOperator + recordActivation)
+2026-11-20T21:58:28.095Z [bootstrap] net n7: 7 validators wanted; waiting for 9 nodes
+2026-11-20T21:59:42.334Z [bootstrap] all nodes up and synced at head 27
+2026-11-20T21:59:52.174Z [bootstrap] owner2 Active (activation block 29); validators now 2
+2026-11-20T22:00:02.083Z [bootstrap] owner3 Active (activation block 34); validators now 3
+2026-11-20T22:00:12.502Z [bootstrap] owner4 Active (activation block 39); validators now 4
+2026-11-20T22:00:22.290Z [bootstrap] owner5 Active (activation block 44); validators now 5
+2026-11-20T22:00:32.578Z [bootstrap] owner6 Active (activation block 49); validators now 6
+2026-11-20T22:00:42.415Z [bootstrap] owner7 Active (activation block 54); validators now 7
+2026-11-20T22:00:52.381Z [bootstrap] done at head 62: 7 validators active
+2026-11-20T22:00:54Z SOAK CLOCK STARTED: 24 h, ends 2026-11-21T22:00:54Z
+2026-11-20T22:00:56Z heartbeat: head 58  last block age 1 s  validators 7  blocks recorded 58  rows written 0  collector errors 0
+2026-11-20T22:10:59Z heartbeat: head 365  last block age 1 s  validators 7  blocks recorded 365  rows written 0  collector errors 0
+2026-11-20T22:21:02Z heartbeat: head 664  last block age 0 s  validators 7  blocks recorded 664  rows written 0  collector errors 0
+2026-11-20T22:31:04Z heartbeat: head 961  last block age 2 s  validators 7  blocks recorded 961  rows written 0  collector errors 0
+2026-11-20T22:41:06Z heartbeat: head 1266  last block age 2 s  validators 7  blocks recorded 1266  rows written 0  collector errors 0
+2026-11-20T22:51:08Z heartbeat: head 1564  last block age 0 s  validators 7  blocks recorded 1564  rows written 0  collector errors 0
+2026-11-20T23:01:10Z heartbeat: head 1869  last block age 1 s  validators 7  blocks recorded 1869  rows written 1  collector errors 0
+2026-11-20T23:11:12Z heartbeat: head 2166  last block age 2 s  validators 7  blocks recorded 2166  rows written 1  collector errors 0
+2026-11-20T23:21:14Z heartbeat: head 2471  last block age 1 s  validators 7  blocks recorded 2471  rows written 1  collector errors 0
+2026-11-20T23:31:16Z heartbeat: head 2768  last block age 1 s  validators 7  blocks recorded 2768  rows written 1  collector errors 0
+2026-11-20T23:41:18Z heartbeat: head 3073  last block age 0 s  validators 7  blocks recorded 3073  rows written 1  collector errors 0
+2026-11-20T23:51:20Z heartbeat: head 3370  last block age 0 s  validators 7  blocks recorded 3370  rows written 1  collector errors 0
+2026-11-21T00:01:22Z heartbeat: head 3674  last block age 1 s  validators 6  blocks recorded 3674  rows written 2  collector errors 0
+2026-11-21T00:11:24Z heartbeat: head 3971  last block age 2 s  validators 7  blocks recorded 3971  rows written 2  collector errors 0
+2026-11-21T00:21:26Z heartbeat: head 4276  last block age 1 s  validators 7  blocks recorded 4276  rows written 2  collector errors 0
+2026-11-21T00:31:29Z heartbeat: head 4573  last block age 2 s  validators 7  blocks recorded 4573  rows written 2  collector errors 0
+2026-11-21T00:41:31Z heartbeat: head 4877  last block age 1 s  validators 7  blocks recorded 4877  rows written 2  collector errors 0
+2026-11-21T00:51:35Z heartbeat: head 5181  last block age 1 s  validators 7  blocks recorded 5181  rows written 2  collector errors 0
+2026-11-21T01:01:38Z heartbeat: head 5477  last block age 1 s  validators 7  blocks recorded 5477  rows written 3  collector errors 0
+2026-11-21T01:11:40Z heartbeat: head 5781  last block age 1 s  validators 6  blocks recorded 5781  rows written 3  collector errors 0
+2026-11-21T01:21:43Z heartbeat: head 6085  last block age 1 s  validators 7  blocks recorded 6085  rows written 3  collector errors 0
+2026-11-21T01:31:46Z heartbeat: head 6381  last block age 2 s  validators 7  blocks recorded 6381  rows written 3  collector errors 0
+2026-11-21T01:41:48Z heartbeat: head 6686  last block age 0 s  validators 7  blocks recorded 6686  rows written 3  collector errors 0
+2026-11-21T01:51:50Z heartbeat: head 6990  last block age 1 s  validators 7  blocks recorded 6990  rows written 3  collector errors 0
+2026-11-21T02:01:52Z heartbeat: head 7287  last block age 1 s  validators 7  blocks recorded 7287  rows written 4  collector errors 0
+2026-11-21T02:11:54Z heartbeat: head 7592  last block age 0 s  validators 7  blocks recorded 7592  rows written 4  collector errors 0
+2026-11-21T02:21:56Z heartbeat: head 7888  last block age 2 s  validators 7  blocks recorded 7888  rows written 4  collector errors 0
+2026-11-21T02:31:58Z heartbeat: head 8193  last block age 1 s  validators 7  blocks recorded 8193  rows written 4  collector errors 0
+2026-11-21T02:42:00Z heartbeat: head 8490  last block age 1 s  validators 7  blocks recorded 8490  rows written 4  collector errors 0
+2026-11-21T02:52:02Z heartbeat: head 8794  last block age 2 s  validators 7  blocks recorded 8794  rows written 4  collector errors 0
+2026-11-21T03:02:04Z heartbeat: head 9091  last block age 2 s  validators 7  blocks recorded 9091  rows written 5  collector errors 0
+2026-11-21T03:12:06Z heartbeat: head 9396  last block age 1 s  validators 6  blocks recorded 9396  rows written 5  collector errors 0
+2026-11-21T03:22:08Z heartbeat: head 9692  last block age 2 s  validators 7  blocks recorded 9692  rows written 5  collector errors 0
+2026-11-21T03:32:10Z heartbeat: head 9997  last block age 1 s  validators 7  blocks recorded 9997  rows written 5  collector errors 0
+2026-11-21T03:42:12Z heartbeat: head 10302  last block age 1 s  validators 7  blocks recorded 10302  rows written 5  collector errors 0
+2026-11-21T03:52:14Z heartbeat: head 10599  last block age 1 s  validators 6  blocks recorded 10599  rows written 5  collector errors 0
+2026-11-21T04:02:16Z heartbeat: head 10903  last block age 1 s  validators 7  blocks recorded 10903  rows written 6  collector errors 0
+2026-11-21T04:12:19Z heartbeat: head 11199  last block age 2 s  validators 7  blocks recorded 11199  rows written 6  collector errors 0
+2026-11-21T04:22:22Z heartbeat: head 11503  last block age 1 s  validators 7  blocks recorded 11503  rows written 6  collector errors 0
+2026-11-21T04:32:25Z heartbeat: head 11807  last block age 1 s  validators 7  blocks recorded 11807  rows written 6  collector errors 0
+2026-11-21T04:42:28Z heartbeat: head 12103  last block age 1 s  validators 7  blocks recorded 12103  rows written 6  collector errors 0
+2026-11-21T04:52:30Z heartbeat: head 12407  last block age 2 s  validators 6  blocks recorded 12407  rows written 6  collector errors 0
+2026-11-21T05:02:33Z heartbeat: head 12711  last block age 1 s  validators 7  blocks recorded 12711  rows written 7  collector errors 0
+2026-11-21T05:12:35Z heartbeat: head 13008  last block age 1 s  validators 7  blocks recorded 13008  rows written 7  collector errors 0
+2026-11-21T05:22:37Z heartbeat: head 13312  last block age 2 s  validators 7  blocks recorded 13312  rows written 7  collector errors 0
+2026-11-21T05:32:39Z heartbeat: head 13609  last block age 1 s  validators 7  blocks recorded 13609  rows written 7  collector errors 0
+2026-11-21T05:42:41Z heartbeat: head 13913  last block age 2 s  validators 7  blocks recorded 13913  rows written 7  collector errors 0
+2026-11-21T05:52:43Z heartbeat: head 14210  last block age 2 s  validators 7  blocks recorded 14210  rows written 7  collector errors 0
+2026-11-21T06:02:45Z heartbeat: head 14515  last block age 1 s  validators 7  blocks recorded 14515  rows written 8  collector errors 0
+2026-11-21T06:12:47Z heartbeat: head 14812  last block age 1 s  validators 7  blocks recorded 14812  rows written 8  collector errors 0
+2026-11-21T06:22:49Z heartbeat: head 15116  last block age 2 s  validators 7  blocks recorded 15116  rows written 8  collector errors 0
+2026-11-21T06:32:51Z heartbeat: head 15421  last block age 1 s  validators 7  blocks recorded 15421  rows written 8  collector errors 0
+2026-11-21T06:42:53Z heartbeat: head 15718  last block age 0 s  validators 7  blocks recorded 15718  rows written 8  collector errors 0
+2026-11-21T06:52:55Z heartbeat: head 16022  last block age 2 s  validators 7  blocks recorded 16022  rows written 8  collector errors 0
+2026-11-21T07:02:57Z heartbeat: head 16319  last block age 1 s  validators 6  blocks recorded 16319  rows written 9  collector errors 0
+2026-11-21T07:12:59Z heartbeat: head 16624  last block age 0 s  validators 7  blocks recorded 16624  rows written 9  collector errors 0
+2026-11-21T07:23:00Z heartbeat: head 16920  last block age 2 s  validators 7  blocks recorded 16920  rows written 9  collector errors 0
+2026-11-21T07:33:03Z heartbeat: head 17225  last block age 1 s  validators 7  blocks recorded 17225  rows written 9  collector errors 0
+2026-11-21T07:43:05Z heartbeat: head 17521  last block age 1 s  validators 7  blocks recorded 17521  rows written 9  collector errors 0
+2026-11-21T07:53:08Z heartbeat: head 17825  last block age 1 s  validators 7  blocks recorded 17825  rows written 9  collector errors 0
+2026-11-21T08:03:11Z heartbeat: head 18129  last block age 2 s  validators 8  blocks recorded 18129  rows written 10  collector errors 0
+2026-11-21T08:13:14Z heartbeat: head 18426  last block age 1 s  validators 7  blocks recorded 18426  rows written 10  collector errors 0
+2026-11-21T08:23:17Z heartbeat: head 18729  last block age 2 s  validators 8  blocks recorded 18729  rows written 10  collector errors 0
+2026-11-21T08:33:20Z heartbeat: head 19033  last block age 2 s  validators 8  blocks recorded 19033  rows written 10  collector errors 0
+2026-11-21T08:43:22Z heartbeat: head 19330  last block age 2 s  validators 8  blocks recorded 19330  rows written 10  collector errors 0
+2026-11-21T08:53:24Z heartbeat: head 19635  last block age 1 s  validators 8  blocks recorded 19635  rows written 10  collector errors 0
+2026-11-21T09:03:26Z heartbeat: head 19932  last block age 1 s  validators 8  blocks recorded 19932  rows written 11  collector errors 0
+2026-11-21T09:13:28Z heartbeat: head 20236  last block age 2 s  validators 8  blocks recorded 20236  rows written 11  collector errors 0
+2026-11-21T09:23:30Z heartbeat: head 20533  last block age 2 s  validators 8  blocks recorded 20533  rows written 11  collector errors 0
+2026-11-21T09:33:32Z heartbeat: head 20838  last block age 0 s  validators 8  blocks recorded 20838  rows written 11  collector errors 0
+2026-11-21T09:43:34Z heartbeat: head 21142  last block age 1 s  validators 8  blocks recorded 21142  rows written 11  collector errors 0
+2026-11-21T09:53:37Z heartbeat: head 21439  last block age 1 s  validators 8  blocks recorded 21439  rows written 11  collector errors 0
+2026-11-21T10:03:39Z heartbeat: head 21744  last block age 2 s  validators 8  blocks recorded 21744  rows written 12  collector errors 0
+2026-11-21T10:13:41Z heartbeat: head 22041  last block age 1 s  validators 7  blocks recorded 22041  rows written 12  collector errors 0
+2026-11-21T10:23:43Z heartbeat: head 22346  last block age 0 s  validators 7  blocks recorded 22346  rows written 12  collector errors 0
+2026-11-21T10:33:45Z heartbeat: head 22643  last block age 0 s  validators 8  blocks recorded 22643  rows written 12  collector errors 0
+2026-11-21T10:43:47Z heartbeat: head 22947  last block age 1 s  validators 8  blocks recorded 22947  rows written 12  collector errors 0
+2026-11-21T10:53:49Z heartbeat: head 23244  last block age 0 s  validators 8  blocks recorded 23244  rows written 12  collector errors 0
+2026-11-21T11:03:52Z heartbeat: head 23548  last block age 1 s  validators 8  blocks recorded 23548  rows written 13  collector errors 0
+2026-11-21T11:13:55Z heartbeat: head 23852  last block age 1 s  validators 8  blocks recorded 23852  rows written 13  collector errors 0
+2026-11-21T11:23:58Z heartbeat: head 24148  last block age 2 s  validators 8  blocks recorded 24148  rows written 13  collector errors 0
+2026-11-21T11:34:01Z heartbeat: head 24453  last block age 1 s  validators 8  blocks recorded 24453  rows written 13  collector errors 0
+2026-11-21T11:44:04Z heartbeat: head 24757  last block age 0 s  validators 8  blocks recorded 24757  rows written 13  collector errors 0
+2026-11-21T11:54:07Z heartbeat: head 25053  last block age 1 s  validators 7  blocks recorded 25053  rows written 13  collector errors 0
+2026-11-21T12:04:09Z heartbeat: head 25357  last block age 1 s  validators 8  blocks recorded 25357  rows written 14  collector errors 0
+2026-11-21T12:14:11Z heartbeat: head 25654  last block age 1 s  validators 8  blocks recorded 25654  rows written 14  collector errors 0
+2026-11-21T12:24:13Z heartbeat: head 25958  last block age 1 s  validators 8  blocks recorded 25958  rows written 14  collector errors 0
+2026-11-21T12:34:15Z heartbeat: head 26263  last block age 1 s  validators 8  blocks recorded 26263  rows written 14  collector errors 0
+2026-11-21T12:44:17Z heartbeat: head 26560  last block age 1 s  validators 8  blocks recorded 26560  rows written 14  collector errors 0
+2026-11-21T12:54:19Z heartbeat: head 26864  last block age 2 s  validators 8  blocks recorded 26864  rows written 14  collector errors 0
+2026-11-21T13:04:21Z heartbeat: head 27161  last block age 2 s  validators 8  blocks recorded 27161  rows written 15  collector errors 0
+2026-11-21T13:14:23Z heartbeat: head 27466  last block age 1 s  validators 8  blocks recorded 27466  rows written 15  collector errors 0
+2026-11-21T13:24:26Z heartbeat: head 27763  last block age 1 s  validators 8  blocks recorded 27763  rows written 15  collector errors 0
+2026-11-21T13:34:28Z heartbeat: head 28067  last block age 1 s  validators 8  blocks recorded 28067  rows written 15  collector errors 0
+2026-11-21T13:44:30Z heartbeat: head 28364  last block age 1 s  validators 8  blocks recorded 28364  rows written 15  collector errors 0
+2026-11-21T13:54:32Z heartbeat: head 28668  last block age 1 s  validators 7  blocks recorded 28668  rows written 15  collector errors 0
+2026-11-21T14:04:34Z heartbeat: head 28965  last block age 1 s  validators 7  blocks recorded 28965  rows written 16  collector errors 0
+2026-11-21T14:14:36Z heartbeat: head 29270  last block age 1 s  validators 8  blocks recorded 29270  rows written 16  collector errors 0
+2026-11-21T14:24:38Z heartbeat: head 29575  last block age 0 s  validators 8  blocks recorded 29575  rows written 16  collector errors 0
+2026-11-21T14:34:40Z heartbeat: head 29871  last block age 2 s  validators 8  blocks recorded 29871  rows written 16  collector errors 0
+2026-11-21T14:44:44Z heartbeat: head 30176  last block age 0 s  validators 8  blocks recorded 30176  rows written 16  collector errors 0
+2026-11-21T14:54:47Z heartbeat: head 30472  last block age 1 s  validators 8  blocks recorded 30472  rows written 16  collector errors 0
+2026-11-21T15:04:49Z heartbeat: head 30776  last block age 1 s  validators 8  blocks recorded 30776  rows written 17  collector errors 0
+2026-11-21T15:14:52Z heartbeat: head 31080  last block age 0 s  validators 7  blocks recorded 31080  rows written 17  collector errors 0
+2026-11-21T15:24:55Z heartbeat: head 31376  last block age 1 s  validators 8  blocks recorded 31376  rows written 17  collector errors 0
+2026-11-21T15:34:58Z heartbeat: head 31680  last block age 2 s  validators 8  blocks recorded 31680  rows written 17  collector errors 0
+2026-11-21T15:45:00Z heartbeat: head 31985  last block age 1 s  validators 8  blocks recorded 31985  rows written 17  collector errors 0
+2026-11-21T15:55:02Z heartbeat: head 32282  last block age 0 s  validators 8  blocks recorded 32282  rows written 17  collector errors 0
+2026-11-21T16:05:04Z heartbeat: head 32586  last block age 1 s  validators 8  blocks recorded 32586  rows written 18  collector errors 0
+2026-11-21T16:15:06Z heartbeat: head 32883  last block age 1 s  validators 8  blocks recorded 32883  rows written 18  collector errors 0
+2026-11-21T16:25:08Z heartbeat: head 33187  last block age 2 s  validators 8  blocks recorded 33187  rows written 18  collector errors 0
+2026-11-21T16:35:10Z heartbeat: head 33484  last block age 1 s  validators 8  blocks recorded 33484  rows written 18  collector errors 0
+2026-11-21T16:45:12Z heartbeat: head 33789  last block age 1 s  validators 8  blocks recorded 33789  rows written 18  collector errors 0
+2026-11-21T16:55:14Z heartbeat: head 34086  last block age 0 s  validators 8  blocks recorded 34086  rows written 18  collector errors 0
+2026-11-21T17:05:16Z heartbeat: head 34390  last block age 1 s  validators 8  blocks recorded 34390  rows written 19  collector errors 0
+2026-11-21T17:15:18Z heartbeat: head 34694  last block age 2 s  validators 8  blocks recorded 34694  rows written 19  collector errors 0
+2026-11-21T17:25:20Z heartbeat: head 34991  last block age 1 s  validators 7  blocks recorded 34991  rows written 19  collector errors 0
+2026-11-21T17:35:22Z heartbeat: head 35296  last block age 1 s  validators 7  blocks recorded 35296  rows written 19  collector errors 0
+2026-11-21T17:45:24Z heartbeat: head 35593  last block age 1 s  validators 8  blocks recorded 35593  rows written 19  collector errors 1
+2026-11-21T17:55:26Z heartbeat: head 35897  last block age 1 s  validators 8  blocks recorded 35897  rows written 19  collector errors 1
+2026-11-21T18:05:29Z heartbeat: head 36194  last block age 1 s  validators 8  blocks recorded 36194  rows written 20  collector errors 1
+2026-11-21T18:15:31Z heartbeat: head 36498  last block age 1 s  validators 8  blocks recorded 36498  rows written 20  collector errors 1
+2026-11-21T18:25:34Z heartbeat: head 36802  last block age 1 s  validators 8  blocks recorded 36802  rows written 20  collector errors 1
+2026-11-21T18:35:37Z heartbeat: head 37098  last block age 1 s  validators 8  blocks recorded 37098  rows written 20  collector errors 1
+2026-11-21T18:45:40Z heartbeat: head 37402  last block age 1 s  validators 7  blocks recorded 37402  rows written 20  collector errors 1
+2026-11-21T18:55:43Z heartbeat: head 37706  last block age 2 s  validators 8  blocks recorded 37706  rows written 20  collector errors 1
+2026-11-21T19:05:45Z heartbeat: head 38003  last block age 1 s  validators 8  blocks recorded 38003  rows written 21  collector errors 1
+2026-11-21T19:15:47Z heartbeat: head 38308  last block age 1 s  validators 8  blocks recorded 38308  rows written 21  collector errors 1
+2026-11-21T19:25:49Z heartbeat: head 38605  last block age 0 s  validators 8  blocks recorded 38605  rows written 21  collector errors 1
+2026-11-21T19:35:51Z heartbeat: head 38909  last block age 1 s  validators 8  blocks recorded 38909  rows written 21  collector errors 1
+2026-11-21T19:45:53Z heartbeat: head 39206  last block age 0 s  validators 8  blocks recorded 39206  rows written 21  collector errors 1
+2026-11-21T19:55:55Z heartbeat: head 39510  last block age 1 s  validators 8  blocks recorded 39510  rows written 21  collector errors 1
+2026-11-21T20:05:57Z heartbeat: head 39814  last block age 2 s  validators 8  blocks recorded 39814  rows written 22  collector errors 1
+2026-11-21T20:16:00Z heartbeat: head 40111  last block age 1 s  validators 8  blocks recorded 40111  rows written 22  collector errors 1
+2026-11-21T20:26:02Z heartbeat: head 40416  last block age 1 s  validators 8  blocks recorded 40416  rows written 22  collector errors 1
+2026-11-21T20:36:04Z heartbeat: head 40713  last block age 1 s  validators 8  blocks recorded 40713  rows written 22  collector errors 1
+2026-11-21T20:46:06Z heartbeat: head 41017  last block age 2 s  validators 7  blocks recorded 41017  rows written 22  collector errors 1
+2026-11-21T20:56:07Z heartbeat: head 41314  last block age 1 s  validators 7  blocks recorded 41314  rows written 22  collector errors 1
+2026-11-21T21:06:09Z heartbeat: head 41619  last block age 0 s  validators 8  blocks recorded 41619  rows written 23  collector errors 1
+2026-11-21T21:16:12Z heartbeat: head 41915  last block age 2 s  validators 8  blocks recorded 41915  rows written 23  collector errors 1
+2026-11-21T21:26:14Z heartbeat: head 42220  last block age 1 s  validators 8  blocks recorded 42220  rows written 23  collector errors 1
+2026-11-21T21:36:16Z heartbeat: head 42516  last block age 2 s  validators 8  blocks recorded 42516  rows written 23  collector errors 1
+2026-11-21T21:46:19Z heartbeat: head 42820  last block age 1 s  validators 8  blocks recorded 42820  rows written 23  collector errors 1
+2026-11-21T21:56:22Z heartbeat: head 43124  last block age 1 s  validators 8  blocks recorded 43124  rows written 23  collector errors 1
+2026-11-21T22:00:57Z duration reached
+2026-11-21T22:00:58Z finishing run 20261120T215800Z-besu-26.9.0-n7-24h: stopping load generator and collector
+2026-11-21T22:01:07Z stopping the Besu nodes (containers and volumes are kept until cleanup.sh)
+2026-11-21T22:01:40Z analysing /home/zojaji/sur-soak/soak-kit-v25/runs/20261120T215800Z-besu-26.9.0-n7-24h
+summary.md written: 725 occurrences (725 in window), 43201 window blocks, 24 rows
+summary: /home/zojaji/sur-soak/soak-kit-v25/runs/20261120T215800Z-besu-26.9.0-n7-24h/summary.md
+2026-11-21T22:01:46Z run finished. Results: /home/zojaji/sur-soak/soak-kit-v25/runs/20261120T215800Z-besu-26.9.0-n7-24h  (summary.md, hourly.csv, occurrences/)

@@ -1,0 +1,7 @@
+phase,blocks,tx_blocks,txs,list_change_blocks,f1,f1_per_1000_blocks,bt_p50,bt_p95,bt_p99,bt_max,gaps_gt_2_5s,gaps_ge_10s,round_change_blocks
+unknown,1,0,0,0,0,0.000,2,2,2,2,0,0,0
+idle,6299,3,3,0,142,22.543,2,2,2,2,0,0,0
+transfers,12600,12600,13852,0,228,18.095,2,2,2,2,0,0,0
+changes,12600,12600,13898,27,230,18.254,2,2,2,2,0,0,0
+heavy,6301,6301,66154,2,68,10.792,2,2,2,2,0,0,0
+changes-heavy,5400,5400,56729,18,57,10.556,2,2,2,2,0,0,0
