@@ -468,7 +468,7 @@
 
 **اپراتور یکتا:** یک اپراتور برای چند مالک مجاز نیست؛ Verifier در جدول `validators` ستون `operator_address` را کنترل می‌کند و در صورت تکرار هشدار به هیأت‌مدیرهٔ ولیدیتورها می‌دهد (اعمال اصلی با قرارداد است).
 
-### ۶.۸.۱ ✅ تأیید تعویض اپراتور ولیدیتور `Active` — `confirmOperatorReady` (تصمیم ۱۱۰، ۲۰۲۶-۱۱-۱۹؛ در کد و آزمون Hardhat؛ سرویس نوشته نشده)
+### ۶.۸.۱ ✅ تأیید تعویض اپراتور ولیدیتور `Active` — `confirmOperatorReady` (تصمیم ۱۱۰، ۲۰۲۶-۱۱-۱۹؛ در کد و آزمون Hardhat؛ سرویس: ✅ فاز C ۲۰۲۶-۱۱-۲۱ نوشته شد، **بازبینی مستقل نشده**، بی‌اثر تا سرویس همراه نود B2 وجود نداشته باشد)
 
 **چرا:** ولیدیتور `Active` نمی‌تواند کلید نودش را فوری عوض کند (`setOperator` برایش ریورت می‌کند)؛ مالک `proposeOperator(newOperator)` می‌زند، کلید رزرو می‌شود و اجماع دست‌نخورده می‌ماند، و **فقط Verifier** پس از بررسی سلامت نود تازه می‌تواند `confirmOperatorReady(owner, evidenceHash)` را بزند که جایگزینی را در همان تراکنش اعمال می‌کند. این وظیفهٔ **تازه** است و یافتهٔ F-5 را می‌بندد: نودِ خاموش یا ناهمگام هرگز به مجموعهٔ اجماع نمی‌رسد (هر نوبت چنین نودی ۱۲ ثانیه دور تغییر می‌گرفت و تعداد کافی از آن‌ها زنجیره را می‌ایستاند).
 
@@ -668,9 +668,11 @@ services:
 
 ---
 
-## ۱۰. طرح ساخت v2.5 (فاز A؛ کد هنوز نوشته نشده)
+## ۱۰. طرح ساخت v2.5 (فاز A؛ فاز B و فاز C ساخته شد: وضعیت در بلوک پایین)
 
-> **وضعیت:** طرح ساخت پیشنهادی برای `Deployments/Verifier` (شاخهٔ `v2.5-dev`)، هم‌سبک با `GenesisBuilder`، `RewardRouter` و `IdentityRegistry` (TypeScript، ESM، `viem`، `better-sqlite3`، `pino`، `vitest`، `tsc --noEmit`؛ README فارسی و انگلیسی). هیچ بخشی از آن پیاده یا آزموده نشده است. 🔶 = تصمیم مالک (فهرست در ۱۰.۱۱). همهٔ اعداد داخل [ ] پیشنهادند.
+> **وضعیت ساخت (۲۰۲۶-۱۱-۲۱):** ✅ فاز B: M0..M8، M10، M11، M13..M15 در `Deployments/Verifier` نوشته و روی anvil آزموده شد؛ بازبینی مستقل دور ۱ و ۲ انجام و یافته‌ها رفع شد (`verifier-review-record.md`). ✅ **فاز C: M9 (`confirmOperatorReady`) و M12 (`recordRecoveryRemoval`) نوشته شد؛ کد تازه و بازبینی مستقل نشده** (هر دو خاموش؛ `VERIFIER_ENABLE_OPCHANGE` و `_REMOVAL` اکنون تنظیم معتبرند). M9: سمت Verifier پروتکل `SUR_NODE_CHECK_V1` با قالب سیمیِ پیشنهادیِ این ساخت، مسیر ثبت کلید پایش `PUT /api/v1/node-check-key`، پیش‌فرض VD-8 (فقط پروتکل چالش؛ تنزل‌یافته پذیرفته نیست)؛ **بی‌اثر تا سرویس همراه نود (B2) وجود نداشته باشد**. M12: انسان *پروندهٔ بازیابی* را ثبت می‌کند و سرویس هرگز کسی را معرفی نمی‌کند؛ معیار خاموشی عمدی باز می‌ماند (۶.۹.۱)؛ پیش‌شرط‌های عینی و سقف f = ⌊(n−1)/3⌋؛ برای VD-4 پس از لغو برای همان پرونده دوباره حذف ثبت نمی‌شود. M-OTP: **در Verifier نیست** (VD-1 حالت ب؛ سطر ⚠️ بخش ۸.۱ مسیرهای OTP را فقط حالت الف و فرایند جدا می‌داند؛ رابط Identity Service با Verifier همان `POST /internal/v1/person-bindings` با HMAC است). یافته‌های تازه F-C1 (قرارداد: `confirmOperatorReady` کلیدی را که اعمال می‌کند نام نمی‌برد؛ پیشنهاد `confirmOperatorReady(owner, newOperator, evidenceHash)`)، F-C2، F-C3، F-C4: README سرویس و `verifier-review-record.md` بخش «فاز C». هنوز ساخته نشده: M16 (Besu زنده). تصمیم‌های مالک ۲۰۲۶-۱۱-۲۱ (`sur-offchain-decisions.md`): VD-8 پیش‌فرض پذیرفته (آنچه پروتکل باز می‌گذارد: ثبت کلید پایش، آزمون commit seal، دسترسی نود پایش به کاندیدا، هنوز پیشنهاد این ساخت است)، VD-4 تغییر قرارداد پیش از genesis (انجام‌نشده)، VD-7 اعداد با داده پس از مشاهده.
+>
+> **وضعیت طرح (فاز A):** طرح ساخت پیشنهادی برای `Deployments/Verifier` (شاخهٔ `v2.5-dev`)، هم‌سبک با `GenesisBuilder`، `RewardRouter` و `IdentityRegistry` (TypeScript، ESM، `viem`، `better-sqlite3`، `pino`، `vitest`، `tsc --noEmit`؛ README فارسی و انگلیسی). 🔶 = تصمیم مالک (فهرست در ۱۰.۱۱). همهٔ اعداد داخل [ ] پیشنهادند.
 
 ### ۱۰.۱ ماژول‌ها، فراخوان‌های on-chain و کلید هر کدام
 
@@ -685,15 +687,15 @@ services:
 | `M6 signer` | رابط `TxSigner` (کلید آزمایشی در آزمون؛ تولید: بسته به VD-11)، سیاست امضا، اجراکنندهٔ `tx_outbox` با «شبیه‌سازی اول» | همهٔ تراکنش‌ها (`verifier`) | M / بالا |
 | `M7 entry` | `recordActivation` (عادی، مؤسس)، `recordRecovery`، `recordResume`؛ پیش‌شرط ایمنی نود؛ کنترل `personKey` و `isFullyVerified` پیش از ارسال | `Registry.recordActivation/recordRecovery/recordResume` (`verifier`) | M / **بالا** (قفل اجماع) |
 | `M8 enforce` | `recordSuspension`، `recordPreExitViolation`، پیگیری پرونده‌ها (`housekeeping` پرونده) | `Registry.recordSuspension/recordPreExitViolation` (`verifier`)؛ `resolveMassFailureCheck`، `assertDeliveryDisputed`، `executeUncontestedSlash`، `resolveAppealIfExpired`، `resolveDeliveryDisputeIfExpired` (بدون‌مجوز) | L / **بالا** |
-| `M9 opchange` | `confirmOperatorReady` با معیارهای ۶.۸.۱؛ وابسته به پروتکل `SUR_NODE_CHECK_V1` | `Registry.confirmOperatorReady` (`verifier`) | M / بالا؛ **مسدود با VD-8** |
+| `M9 opchange` | `confirmOperatorReady` با معیارهای ۶.۸.۱؛ وابسته به پروتکل `SUR_NODE_CHECK_V1` | `Registry.confirmOperatorReady` (`verifier`) | M / بالا؛ ✅ فاز C ساخته شد (بازبینی‌نشده؛ بی‌اثر تا سرویس همراه B2)؛ پیش‌فرض VD-8 پذیرفته |
 | `M10 person` | رابط `KeyAccessClient`، پیوند آدرس↔`personKey`، چرخهٔ ممنوعیت، مسیر داخلی Identity Service | — | M / بالا (حریم خصوصی) |
 | `M11 board` | `refreshBoard`، `syncBoard`، `fillVacancies`، `syncVoters`، `referRecoveryRemovalToAssembly`، `clearStaleVotes` | `Board.*` بدون‌مجوز (آدرس سرویس برای گس) | S / کم |
-| `M12 removal` | تشخیص ولیدیتور خاموش‌کنندهٔ بازیابی و `recordRecoveryRemoval`؛ `expireRecoveryRemoval` | `Registry.recordRecoveryRemoval` (`verifier`)؛ `expireRecoveryRemoval` (بدون‌مجوز) | M / متوسط (اضطراری؛ طراحی ابزار بازیابی هنوز نیست) |
+| `M12 removal` | تشخیص ولیدیتور خاموش‌کنندهٔ بازیابی و `recordRecoveryRemoval`؛ `expireRecoveryRemoval` | `Registry.recordRecoveryRemoval` (`verifier`)؛ `expireRecoveryRemoval` (بدون‌مجوز) | M / متوسط (اضطراری؛ طراحی ابزار بازیابی هنوز نیست)؛ ✅ فاز C ساخته شد (بازبینی‌نشده): پرونده را انسان ثبت می‌کند، سرویس کسی را معرفی نمی‌کند |
 | `M13 api` | `node:http`: challenge/register/node-id/status و مسیر داخلی؛ احراز با امضای EIP-191 | فقط خواندن | S–M / متوسط |
 | `M14 ops` | هشدار (ایمیل/پیجر؛ رابط `AlertSink`)، dead-man's-switch، قفل تک‌نمونه، کلید توقف اضطراری، `status` | — | S / متوسط |
 | `M15 cli/docker` | `serve`، `run-once`، `dry-run`، `status`؛ Dockerfile، compose، README فارسی و انگلیسی | — | S / کم |
 | `M16 live-scenarios` | اسکریپت‌های سناریو برای Besu واقعی (اجرا جداگانه و با تأیید مالک) | — | M / کم |
-| `M-OTP` (اختیاری) | فقط «حالت الف»: OTP و `setXVerified`؛ **فرایند و پکیج جدا با کلید `identityOracle`** | `IdentityRegistry.set*Verified` (`identityOracle`) | M / بالا |
+| `M-OTP` (اختیاری) | فقط «حالت الف»: OTP و `setXVerified`؛ **فرایند و پکیج جدا با کلید `identityOracle`** | `IdentityRegistry.set*Verified` (`identityOracle`) | M / بالا؛ **در Verifier ساخته نمی‌شود** (VD-1 حالت ب = کار Identity Service)؛ در فاز C مستند شد و آزمونی آن را قفل می‌کند |
 
 **جداسازی کلید:** فرایند Verifier هیچ‌وقت `identityOracle` یا `distributionOracle` را نمی‌خواند. فراخوان‌های بدون‌مجوز با همان آدرس سرویس (برای گس) فرستاده می‌شوند؛ 🔶 گزینهٔ جدا کردن آن‌ها روی آدرس بی‌اختیار دیگر (کاهش سطح حمله) در VD-11 است.
 
