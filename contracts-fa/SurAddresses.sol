@@ -57,6 +57,10 @@ library SurAddresses {
     /// @dev ValidatorLottery — قرعه‌کشی جایگاه ولیدیتور برای مقابله با انحصار ولیدیتورها.
     address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
 
+    /// @dev KmsDirectives — کلید قطع هر کلید سرویس امضای SurKMS (verifier، distributionOracle، identityOracle).
+    ///      بدون constructor و بدون seed حافظه: فقط بایت‌کد اجرایی در `alloc` genesis گذاشته می‌شود.
+    address internal constant KMS_DIRECTIVES = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
+
     // ------------------------------------------------------------------
     // آدرس‌های oracle عملیاتی — برخلاف شش آدرس قراردادِ ساختاری بالا، این‌ها ثابت‌های تغییرناپذیری
     // نیستند که برای همیشه در همه‌ی مصرف‌کنندگان جاسازی شوند: هر قرارداد همچنان آدرس oracle خودش را در

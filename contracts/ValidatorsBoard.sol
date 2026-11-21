@@ -49,6 +49,10 @@ interface IBlockRewardDistributor {
     function setDistributionOracle(address newOracle) external;
 }
 
+interface IKmsDirectives {
+    function setFrozen(uint8 slot, bool isFrozen) external;
+}
+
 interface IValidatorsTreasury {
     function boardApproveExpenditure(address to, uint256 amount, string calldata description) external;
 }
@@ -137,7 +141,7 @@ contract ValidatorsBoard {
     /// @notice 1-based position of `voter` inside `candidateVoters[candidate]`, for O(1) removal.
     mapping(address => mapping(address => uint256)) private voterIndexInCandidateVoters;
 
-    enum ActionType { RotateOracle, ApproveBudget, SetEntryCollateral, SetMembershipFeeBps, RotateVerifier }
+    enum ActionType { RotateOracle, ApproveBudget, SetEntryCollateral, SetMembershipFeeBps, RotateVerifier, KmsFreeze }
 
     /// @dev `requiredVotes` is fixed when the action is created and never recomputed. `expiresAt`
     ///      bounds how long an action stays open. `boardVersionAtCreation` ties the action to the
@@ -198,6 +202,7 @@ contract ValidatorsBoard {
     event BudgetApproved(address indexed to, uint256 amount, string description);
     event RegistryEconomicParamSet(ActionType indexed atype, uint256 newValue);
     event VerifierRotated(address indexed newVerifier);
+    event KmsFreezeApplied(uint8 indexed slot, bool frozen);
 
     modifier onlyActiveValidator() {
         require(REGISTRY.isValidator(msg.sender), "ValidatorsBoard: caller is not an active validator");
@@ -636,6 +641,14 @@ contract ValidatorsBoard {
         id = _createAction(ActionType.RotateVerifier, newVerifier, 0, "", MIN_VOTES_SENSITIVE_ACTION);
     }
 
+    /// @notice Freeze or unfreeze the verifier (slot 0) or distributionOracle (slot 1) key in KmsDirectives. identityOracle (slot 2) belongs to FoundationDAO, not here. Same _createAction rules: at least 3 votes and a majority, BOARD_ACTION_EXPIRY, void on a boardVersion change.
+    ///         The slot and the flag are packed into `amount`: bits 0..7 = slot, bit 8 = frozen.
+    function proposeKmsFreeze(uint8 slot, bool isFrozen) external onlyBoardMember returns (uint256 id) {
+        require(slot <= 1, "ValidatorsBoard: the board freezes only the verifier and distributionOracle keys");
+        require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key control halted");
+        id = _createAction(ActionType.KmsFreeze, address(0), uint256(slot) | (isFrozen ? 0x100 : 0), "", MIN_VOTES_SENSITIVE_ACTION);
+    }
+
     function voteAction(uint256 id) external onlyBoardMember {
         _voteAction(id, msg.sender);
     }
@@ -693,6 +706,10 @@ contract ValidatorsBoard {
             } else if (a.atype == ActionType.RotateVerifier) {
                 REGISTRY.setVerifier(a.target);
                 emit VerifierRotated(a.target);
+            } else if (a.atype == ActionType.KmsFreeze) {
+                require(boardMembers.length >= MIN_VOTES_SENSITIVE_ACTION, "ValidatorsBoard: fewer than 3 board members - key control halted");
+                IKmsDirectives(SurAddresses.KMS_DIRECTIVES).setFrozen(uint8(a.amount & 0xff), (a.amount & 0x100) != 0);
+                emit KmsFreezeApplied(uint8(a.amount & 0xff), (a.amount & 0x100) != 0);
             }
         }
     }

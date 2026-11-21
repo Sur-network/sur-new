@@ -57,6 +57,10 @@ library SurAddresses {
     /// @dev ValidatorLottery — validator-seat lottery against validator monopoly.
     address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
 
+    /// @dev KmsDirectives — per-key freeze switch for the SurKMS signing service (verifier, distributionOracle, identityOracle).
+    ///      No constructor and no storage seed: only its runtime bytecode goes into the genesis `alloc`.
+    address internal constant KMS_DIRECTIVES = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
+
     // ------------------------------------------------------------------
     // Operational oracle addresses — unlike the six structural contract addresses above, these
     // are NOT immutable constants baked into every consumer forever: each contract still stores
