@@ -50,17 +50,27 @@ describe("RD-12b / RD-18 - gas per payee (measurement, local Hardhat EVM)", () =
     const total = addrs.length;
     const tx = await f.dist.connect(f.oracle).distributeRewards({ fromBlock: 1, toBlock: total }, addrs, addrs.map(() => 1), E("2") * BigInt(total), E("1"), { gasLimit: 16_000_000 });
     const gas = (await tx.wait()).gasUsed;
+    // second epoch: lifetime totals are non-zero now (steady state)
+    await hre.network.provider.send("evm_increaseTime", [24 * 3600]);
+    await mine(total + 5);
+    const tx2 = await f.dist.connect(f.oracle).distributeRewards({ fromBlock: total + 1, toBlock: 2 * total }, addrs, addrs.map(() => 1), E("2") * BigInt(total), E("1"), { gasLimit: 16_000_000 });
+    const gas2 = (await tx2.wait()).gasUsed;
     await hre.network.provider.send("evm_revert", [snap]);
-    return gas;
+    return [gas, gas2];
   }
 
   it("marginal gas of one payee, EOA path and deferred path; implied payee cap at a 45M block gas limit", async function () {
     this.timeout(600000);
-    const [a1, a2, d1, d2] = [await run(30, false), await run(70, false), await run(30, true), await run(70, true)];
-    const eoaPer = Number(a2 - a1) / 40, defPer = Number(d2 - d1) / 40;
-    const eoaFixed = Number(a1) - eoaPer * 31, defFixed = Number(d1) - defPer * 31;
-    console.log(`      [gas] EOA payee: ${eoaPer.toFixed(0)} per payee, fixed ${eoaFixed.toFixed(0)}  => cap at 45M ~ ${Math.floor((45e6 - eoaFixed) / eoaPer)}`);
-    console.log(`      [gas] deferred payee (owner with code): ${defPer.toFixed(0)} per payee, fixed ${defFixed.toFixed(0)}  => cap at 45M ~ ${Math.floor((45e6 - defFixed) / defPer)}`);
+    const [[a1, a1s], [a2, a2s], [d1, d1s], [d2, d2s]] = [await run(30, false), await run(70, false), await run(30, true), await run(70, true)];
+    const rep = (name, g1, g2) => {
+      const per = Number(g2 - g1) / 40, fixed = Number(g1) - per * 31;
+      console.log("      [gas] " + name + ": " + per.toFixed(0) + " per payee, fixed " + fixed.toFixed(0) + "  => cap at 45M ~ " + Math.floor((45e6 - fixed) / per));
+      return per;
+    };
+    const eoaPer = rep("EOA payee, first epoch (worst case: lifetime totals zero)", a1, a2);
+    rep("EOA payee, steady state (second epoch)", a1s, a2s);
+    const defPer = rep("deferred payee (owner with code), first epoch", d1, d2);
+    rep("deferred payee (owner with code), steady state", d1s, d2s);
     expect(eoaPer).to.be.gt(50_000).and.lt(200_000);
     expect(defPer).to.be.gt(50_000).and.lt(200_000);
   });
