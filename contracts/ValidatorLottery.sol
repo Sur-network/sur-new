@@ -130,6 +130,7 @@ contract ValidatorLottery {
         Lottery storage l = _lotteries[id];
         require(l.phase == Phase.Open && block.timestamp < l.closeTime, "ValidatorLottery: registration is not open");
         require(msg.value == l.ticketPrice, "ValidatorLottery: wrong ticket price");
+        require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorLottery: a seat owner must be a plain wallet (EOA)"); // RD-12
         require(!_bought[id][msg.sender], "ValidatorLottery: one ticket per address");
         require(IDENTITY.isFullyVerified(msg.sender), "ValidatorLottery: identity not fully verified");
         ILotteryFoundation f = ILotteryFoundation(FOUNDATION);

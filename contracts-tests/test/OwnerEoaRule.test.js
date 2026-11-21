@@ -52,16 +52,15 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
     expect((await reg.validators(seller.address)).status).to.equal(1); // Probation
   });
 
-  it("known limit (closed by RD-12b at payment time): code.length is 0 while a contract is being constructed, so a constructor-time entry passes", async () => {
+  it("a contract cannot enter even from its own constructor (code.length is 0 there, so msg.sender == tx.origin is required too); the remaining limit is an address that gets code AFTER entry, closed by RD-12b at payment", async () => {
     const { reg, idr, S, price, factory } = await loadFixture(fixture);
     const next = ethers.getCreateAddress({ from: S[15].address, nonce: await ethers.provider.getTransactionCount(S[15].address) });
     await idr.setVerified(next, true);
-    const c = await factory.deploy(ADDR.VALIDATORS_REGISTRY, rnd(), { value: price });
-    expect(await c.getAddress()).to.equal(next);
-    expect((await reg.validators(next)).status).to.equal(1);
+    await expect(factory.deploy(ADDR.VALIDATORS_REGISTRY, rnd(), { value: price })).to.be.revertedWith(EOA_REG);
+    expect((await reg.validators(next)).status).to.equal(0);
   });
 
-  it("lottery winner: a contract winner is refused (the lottery's try/catch records entryFailed), an EOA winner is entered", async () => {
+  it("Registry.enterAsLotteryWinner called as the lottery: a contract winner is refused, an EOA winner is entered (drawBatch's try/catch and entryFailed are not exercised here)", async () => {
     const { reg, buyer, factory } = await loadFixture(fixture);
     await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
     const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);

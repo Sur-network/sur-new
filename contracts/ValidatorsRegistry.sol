@@ -573,7 +573,7 @@ contract ValidatorsRegistry {
     //   2. `fee` (currentMembershipFee()): forwarded to BlockRewardDistributor.
     // ------------------------------------------------------------------
     function requestMembership(address operator) external payable nonReentrant {
-        require(msg.sender.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
+        require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");

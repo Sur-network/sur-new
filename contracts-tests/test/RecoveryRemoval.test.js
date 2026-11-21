@@ -171,7 +171,7 @@ describe("Recovery removal - objection decided by the board", () => {
     expect(await reg.resumeRequested(paid.address)).to.equal(false);
   });
 
-  it("VD-4: a cancelled validator may also exit normally or change its node key while SelfSuspended; recordResume needs the operator key", async () => {
+  it("VD-4: a cancelled validator may change its node key while SelfSuspended and then be resumed by the Verifier; a second recordResume is refused", async () => {
     const f = await loadFixture(fixture);
     const { reg, board, paid, S, verifier } = f;
     await remove(f, paid);
@@ -183,6 +183,21 @@ describe("Recovery removal - objection decided by the board", () => {
     expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
     // a second recordResume is refused: no longer suspended
     await expect(reg.connect(verifier).recordResume(paid.address, HASH)).to.be.revertedWith("ValidatorsRegistry: not self-suspended");
+  });
+
+  it("VD-4: a cancelled validator can exit from SelfSuspended: paid count goes down again, the seat is burned, collateral is returned after the cooldown", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, board, paid, S } = f;
+    const before = await reg.paidValidatorCount();
+    await remove(f, paid);
+    await reg.connect(paid).objectRecoveryRemoval();
+    for (const i of [0, 1, 2]) await board.connect(S[i]).voteRecoveryRemoval(paid.address, false);
+    expect(await reg.paidValidatorCount()).to.equal(before);
+    await reg.connect(paid).requestExit();
+    expect((await reg.validators(paid.address)).status).to.equal(ST_EXITING);
+    expect(await reg.paidValidatorCount()).to.equal(before - 1n);
+    await increaseTime(8 * DAY);
+    await reg.connect(paid).withdrawStake();
   });
 
   it("no decision within 7 days: anyone can cancel (expire) the removal; a late board vote is refused", async () => {

@@ -167,7 +167,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 | قرارداد | پیش از | پس از |
 |---|---|---|
-| `ValidatorsRegistry` | ۳۶٬۸۷۹ | ۳۷٬۳۳۵ (بالای سقف CREATE از پیش؛ در `alloc` اثر ندارد) |
+| `ValidatorsRegistry` | ۳۶٬۸۷۹ | ۳۷٬۳۴۶ (بالای سقف CREATE از پیش؛ در `alloc` اثر ندارد) |
 | `ValidatorsBoard` | ۲۰٬۳۹۷ | ۲۱٬۱۶۰ |
 | `BlockRewardDistributor` | ۲۰٬۶۷۱ | ۲۱٬۴۸۷ |
 | `ValidatorSeatNFT` | ۵٬۷۴۵ | ۵٬۸۷۱ |
@@ -175,7 +175,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 ## آزمون‌های Hardhat (v2.5)
 
-پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۱۱۵ آزمون موفق در ۱۴ فایل: `BlockRewardDistributor` ۴، `DeferredClaim` ۵، `FoundationDAO` ۱۶، `GasPerPayee` ۱، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `KmsDirectives` ۶، `LotteryRegistry` ۳، `OwnerEoaRule` ۴، `RecoveryRemoval` ۱۳، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۱ (پیش از بستهٔ تغییرها ۹۷ آزمون در ۱۰ فایل). ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
+پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۱۱۶ آزمون موفق در ۱۴ فایل: `BlockRewardDistributor` ۴، `DeferredClaim` ۵، `FoundationDAO` ۱۶، `GasPerPayee` ۱، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `KmsDirectives` ۶، `LotteryRegistry` ۳، `OwnerEoaRule` ۴، `RecoveryRemoval` ۱۴، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۱ (پیش از بستهٔ تغییرها ۹۷ آزمون در ۱۰ فایل). ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
 
 ## پارامترهای قابل‌تغییر با رأی
 
