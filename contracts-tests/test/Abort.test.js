@@ -42,7 +42,6 @@ async function fixture() {
 function blocksFor(f) { const rest = [2, 2, 1, 1]; return f.all.map((a) => (a === f.c.target ? 4 : rest.shift())); }
 const REV = (m) => "BlockRewardDistributor: " + m;
 const DAY3 = 3 * 24 * 3600;
-function blocksFor(f) { const rest = [2, 2, 1, 1]; return f.all.map((a) => (a === f.c.target ? 4 : rest.shift())); }
 async function ts(tx) { return (await ethers.provider.getBlock((await tx.wait()).blockNumber)).timestamp; }
 
 describe("RD-18 escape path - abortDistribution (oracle only, 3 days after open)", () => {
@@ -137,24 +136,77 @@ describe("RD-18 escape path - abortDistribution (oracle only, 3 days after open)
     expect((await dist.openDistributionInfo()).isOpen).to.equal(false);
   });
 
-  it("no double payment: the aborted range cannot be reopened; the next range opens at once and is paid from the pool including the returned amount", async () => {
+  it("no double payment: the aborted range cannot be reopened; after an abort a NORMAL distribution of the next range opens, pays and closes with its full amounts and the totals add up", async () => {
     const f = await loadFixture(fixture);
     const { dist, oracle, all } = f;
     const d = dist.connect(oracle);
     const blocks = blocksFor(f);
     await d.openDistribution(R(1, 10), 10, E("20"), E("1"));
     await d.payPage(all.slice(0, 2), blocks.slice(0, 2));
+    const paid1 = (E("1") + E("0.07")) * BigInt(blocks[0] + blocks[1]);
     await increaseTime(DAY3);
     await d.abortDistribution();
     await expect(d.openDistribution(R(1, 10), 10, E("20"), E("1"))).to.be.revertedWith(REV("range must start right after the last settled block"));
     await expect(d.openDistribution(R(5, 20), 10, E("20"), E("1"))).to.be.revertedWith(REV("range must start right after the last settled block"));
     await mine(20);
-    // the next range reports (almost) the whole pool as rewards: possible only because the reservation was released
-    const pool = await dist.getDistributableBalance();
-    await distribute(dist, oracle, R(11, 20), all, blocks, pool - E("1"), E("1"));
-    expect((await dist.openDistributionInfo()).isOpen).to.equal(false);
+    const fB = await ethers.provider.getBalance(FOUNDATION);
+    await distribute(dist, oracle, R(11, 20), all, blocks, E("20"), E("1"));
+    expect(await dist.epochAborted(1)).to.equal(true);
     expect(await dist.epochAborted(2)).to.equal(false);
-    expect((await dist.getEpoch(2)).totalBlocksMined).to.equal(10);
+    const e2 = await dist.getEpoch(2);
+    expect([e2.totalRewards, e2.totalFees, e2.totalBlocksMined, e2.validatorCount]).to.deep.equal([E("20"), E("1"), 10n, 5n]);
+    expect((await ethers.provider.getBalance(FOUNDATION)) - fB).to.equal(E("3")); // the normal epoch pays the foundation its full 15%
+    expect(await dist.totalDistributedToFoundation()).to.equal(E("3"));
+    expect(await dist.totalDistributedToValidators()).to.equal(paid1 + E("10.7")); // aborted epoch's paid part + the closed epoch
     expect(await ethers.provider.getBalance(dist.target)).to.be.gte(await dist.totalClaimable());
+  });
+
+  it("a membership fee that arrives while a distribution is open stays pending through the abort and is folded into the next open; the invariant balance >= claimable + pending + reserved holds", async () => {
+    const f = await loadFixture(fixture);
+    const { dist, oracle } = f;
+    const d = dist.connect(oracle);
+    await d.openDistribution(R(1, 10), 10, E("20"), E("1"));
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATORS_REGISTRY, "0x56BC75E2D63100000"]);
+    await dist.connect(await ethers.getImpersonatedSigner(ADDR.VALIDATORS_REGISTRY)).receiveMembershipFee({ value: E("5") });
+    await increaseTime(DAY3);
+    await d.abortDistribution();
+    expect(await dist.pendingMembershipFees()).to.equal(E("5"));
+    const bal = await ethers.provider.getBalance(dist.target);
+    expect(bal).to.be.gte((await dist.totalClaimable()) + (await dist.pendingMembershipFees()));
+    expect(await dist.getDistributableBalance()).to.equal(bal - E("5"));
+    await mine(20);
+    await d.openDistribution(R(11, 20), 10, E("20"), E("1"));
+    expect((await dist.openDistributionInfo()).budgetLeft).to.equal(E("26")); // 20 + 1 + the 5 folded in
+    expect(await dist.pendingMembershipFees()).to.equal(0);
+  });
+
+  it("after an abort pages and close are refused; a zero-page abort leaves a clean record", async () => {
+    const f = await loadFixture(fixture);
+    const { dist, oracle, all } = f;
+    const d = dist.connect(oracle);
+    await d.openDistribution(R(1, 10), 10, E("20"), E("1"));
+    await increaseTime(DAY3);
+    await d.abortDistribution();
+    await expect(d.payPage([all[0]], [1])).to.be.revertedWith(REV("no open distribution"));
+    await expect(d.closeDistribution()).to.be.revertedWith(REV("no open distribution"));
+    const e = await dist.getEpoch(1);
+    expect([e.totalRewards, e.totalFees, e.treasuryAmount, e.totalBlocksMined, e.validatorCount]).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
+    expect(e.timestamp).to.be.gt(0);
+    expect(await dist.epochAborted(1)).to.equal(true);
+    expect((await dist.epochBlockRanges(1)).toBlock).to.equal(10); // the settled range is still on record
+  });
+
+  it("KNOWN, accepted consequence: when all blocks are paged but close is never called, abort leaves the treasury, foundation and fee burn parts in the pool (the validators are fully paid)", async () => {
+    const f = await loadFixture(fixture);
+    const { dist, oracle, all } = f;
+    const d = dist.connect(oracle);
+    const [tB, fB, zB] = await Promise.all([ethers.provider.getBalance(TREASURY), ethers.provider.getBalance(FOUNDATION), ethers.provider.getBalance(ZERO)]);
+    await d.openDistribution(R(1, 10), 10, E("20"), E("1"));
+    await d.payPage(all, blocksFor(f));
+    await increaseTime(DAY3);
+    await expect(d.abortDistribution()).to.emit(dist, "DistributionAborted").withArgs(1, 10, E("10.7"), E("10.3"));
+    expect(await ethers.provider.getBalance(TREASURY)).to.equal(tB);
+    expect(await ethers.provider.getBalance(FOUNDATION)).to.equal(fB);
+    expect(await ethers.provider.getBalance(ZERO)).to.equal(zB);
   });
 });
