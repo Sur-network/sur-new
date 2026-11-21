@@ -559,6 +559,7 @@ contract ValidatorsRegistry {
     //   ۲. `fee` (currentMembershipFee()): به BlockRewardDistributor فرستاده می‌شود.
     // ------------------------------------------------------------------
     function requestMembership(address operator) external payable nonReentrant {
+        require(msg.sender.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12: مالک صندلی فقط کیف‌پول معمولی
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
@@ -629,7 +630,7 @@ contract ValidatorsRegistry {
     //     برای شبکه خراب نمی‌شود؛ Verifier پیش از (باز)ورود ولیدیتور به مجموعه، گره را بررسی می‌کند.
     //   * ACTIVE (گره بلاک امضا می‌کند): دو مرحله‌ای (تصمیم مالک ۲۰۲۶-۱۱-۱۹، برگرفته از یافتهٔ Besu با شناسهٔ F-5):
     //       1. proposeOperator(newKey)            مالک کلید جدید را رزرو می‌کند؛ هنوز چیزی در اجماع تغییر نمی‌کند؛
-    //       2. confirmOperatorReady(owner, hash)  Verifier بررسی می‌کند که گرهٔ جدید بالا، همگام و توانای امضا است و سپس
+    //       2. confirmOperatorReady(owner, newOperator, hash)  Verifier بررسی می‌کند که گرهٔ جدید بالا، همگام و توانای امضا است و سپس
     //                                             جابه‌جایی را در یک تراکنش اعمال می‌کند.
     //     به این ترتیب جابه‌جایی به گرهٔ روشن‌نشده هرگز به مجموعهٔ QBFT نمی‌رسد (گرهٔ خاموش در هر نوبت خود یک
     //     round change بیش از ۱۰ ثانیه هزینه دارد و به تعداد کافی از آن‌ها می‌تواند زنجیره را متوقف کند).
@@ -680,9 +681,12 @@ contract ValidatorsRegistry {
 
     /// @notice مرحلهٔ ۲، فقط Verifier، پس از بررسی سلامت گرهٔ جدید: جابه‌جایی را اعمال می‌کند (بلافاصله در
     ///         getValidators() و در نتیجه در QBFT دیده می‌شود).
-    function confirmOperatorReady(address owner_, bytes32 evidenceHash) external onlyVerifier {
+    ///         VD-13: Verifier کلیدی را که بررسی کرده نام می‌برد (`newOperator`)؛ اگر مالک بین بررسی و این تراکنش
+    ///         پیشنهاد را لغو و کلید دیگری پیشنهاد داده باشد، فراخوانی revert می‌شود و کلید سنجیده‌نشده اعمال نمی‌شود.
+    function confirmOperatorReady(address owner_, address newOperator, bytes32 evidenceHash) external onlyVerifier {
         address newOp = pendingOperator[owner_];
         require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        require(newOp == newOperator, "ValidatorsRegistry: operator differs from the open proposal");
         require(pendingOperatorExpiresAt[owner_] > block.timestamp, "ValidatorsRegistry: proposal expired");
         require(validators[owner_].status == Status.Active, "ValidatorsRegistry: owner is no longer Active");
         require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
@@ -1379,7 +1383,8 @@ contract ValidatorsRegistry {
     //   * ممنوعیت دائمی ولیدیتور اعمال می‌شود (permanentlyExited)، دقیقاً مثل پس از خروج داوطلبانه؛
     //   * ولیدیتورِ حذف‌شده ۷۲ ساعت برای اعتراض فرصت دارد؛ اعتراض‌ها ظرف ۷ روز با ValidatorsBoard (۳ از ۵، موضوع
     //     رأی ندارد) تصمیم‌گیری می‌شوند؛ با کمتر از ۳ عضو بی‌طرف هیأت، پرونده به ولیدیتورها می‌رود (دو‌سوم
-    //     ولیدیتورهای واجد شرایط در لحظه‌ی ارجاع)؛ نبودِ تصمیم در موعد = حذف لغو می‌شود و ولیدیتور بازگردانده می‌شود.
+    //     ولیدیتورهای واجد شرایط در لحظه‌ی ارجاع)؛ نبودِ تصمیم در موعد = حذف لغو می‌شود و ولیدیتور بازگردانده می‌شود
+    //     (VD-4: به SelfSuspended با درخواست ازسرگیریِ باز؛ فقط recordResume از Verifier، پس از سنجش سلامت گره، او را دوباره Active می‌کند).
     // ------------------------------------------------------------------
     // ------------------------------------------------------------------
     // v2.5: برندگان قرعه‌کشی (ValidatorLottery.drawBatch برای هر برنده این را صدا می‌زند)
@@ -1396,6 +1401,7 @@ contract ValidatorsRegistry {
     function enterAsLotteryWinner(address winner) external {
         require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
+        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (try/catch لاتاری entryFailed را ثبت می‌کند)
         require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
         validators[winner] = ValidatorInfo({
             status: Status.Probation,
@@ -1494,7 +1500,7 @@ contract ValidatorsRegistry {
     }
 
     /// @notice فقط ValidatorsBoard، با تصمیم هیأت (۳ از ۵) یا ولیدیتورها (دو‌سوم).
-    ///         upheld = حذف پابرجاست؛ در غیر این صورت ولیدیتور بازگردانده می‌شود.
+    ///         upheld = حذف پابرجاست؛ در غیر این صورت حذف لغو می‌شود و ولیدیتور به SelfSuspended برمی‌گردد (VD-4).
     function resolveRecoveryRemoval(address validator, bool upheld) external onlyBoard nonReentrant {
         RecoveryRemoval storage r = recoveryRemovals[validator];
         require(
@@ -1525,7 +1531,12 @@ contract ValidatorsRegistry {
         recoveryRemovals[validator].state = RecoveryRemovalState.Cancelled;
         permanentlyExited[validator] = false;
         if (v.isPaidEntrant) paidValidatorCount++;
-        _activate(validator); // بازگشت به فهرست ولیدیتورها
+        // VD-4: مستقیم به Active برنمی‌گردد (گره پس از حذف هرگز سنجیده نشده). ولیدیتور با درخواست ازسرگیریِ باز به
+        // SelfSuspended برمی‌گردد و تنها راه بازگشت به فهرست ولیدیتورها recordResume از Verifier (سنجش سلامت گره) است.
+        v.status = Status.SelfSuspended;
+        v.periodStartedAt = block.timestamp;
+        resumeRequested[validator] = true;
+        emit ResumeRequested(validator);
         emit RecoveryRemovalCancelled(validator, expired);
         _notifyBoard(validator);
     }

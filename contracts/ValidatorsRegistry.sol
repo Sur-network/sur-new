@@ -573,6 +573,7 @@ contract ValidatorsRegistry {
     //   2. `fee` (currentMembershipFee()): forwarded to BlockRewardDistributor.
     // ------------------------------------------------------------------
     function requestMembership(address operator) external payable nonReentrant {
+        require(msg.sender.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
@@ -643,7 +644,7 @@ contract ValidatorsRegistry {
     //     network now; the Verifier checks the node before the validator (re)enters the set.
     //   * ACTIVE (the node signs blocks): TWO steps (owner decision 2026-11-19, from Besu finding F-5):
     //       1. proposeOperator(newKey)            the owner reserves the new key; nothing changes in consensus yet;
-    //       2. confirmOperatorReady(owner, hash)  the Verifier checks the new node is up, synced and signing-capable and then
+    //       2. confirmOperatorReady(owner, newOperator, hash)  the Verifier checks the new node is up, synced and signing-capable and then
     //                                             applies the switch in one transaction.
     //     This way a swap to a node that is not running can never reach the QBFT set (a dead node would cost a 10+ second
     //     round change on every one of its turns, and enough of them could stop the chain).
@@ -694,9 +695,12 @@ contract ValidatorsRegistry {
 
     /// @notice Step 2, Verifier only, after its health check of the new node: applies the switch (immediately visible in
     ///         getValidators() and so in QBFT).
-    function confirmOperatorReady(address owner_, bytes32 evidenceHash) external onlyVerifier {
+    ///         VD-13: the Verifier names the key it checked (`newOperator`); if the owner cancelled and re-proposed a different
+    ///         key between the check and this transaction, the call reverts instead of applying an unchecked key.
+    function confirmOperatorReady(address owner_, address newOperator, bytes32 evidenceHash) external onlyVerifier {
         address newOp = pendingOperator[owner_];
         require(newOp != address(0), "ValidatorsRegistry: no open proposal");
+        require(newOp == newOperator, "ValidatorsRegistry: operator differs from the open proposal");
         require(pendingOperatorExpiresAt[owner_] > block.timestamp, "ValidatorsRegistry: proposal expired");
         require(validators[owner_].status == Status.Active, "ValidatorsRegistry: owner is no longer Active");
         require(evidenceHash != bytes32(0), "ValidatorsRegistry: empty evidence hash");
@@ -1400,7 +1404,8 @@ contract ValidatorsRegistry {
     //   * the permanent validator ban applies (permanentlyExited), exactly as after a voluntary exit;
     //   * the removed validator has 72 hours to object; objections are decided by ValidatorsBoard (3 of 5, the subject has no
     //     vote) within 7 days; with fewer than 3 impartial board members the case goes to the validators (two thirds of the
-    //     validators eligible at referral); no decision in time = the removal is cancelled and the validator is reinstated.
+    //     validators eligible at referral); no decision in time = the removal is cancelled and the validator is reinstated
+    //     (VD-4: into SelfSuspended with a resume request open; only the Verifier's recordResume, after a node health check, makes it Active again).
     // ------------------------------------------------------------------
     // ------------------------------------------------------------------
     // v2.5: lottery winners (ValidatorLottery.drawBatch calls this for every winner)
@@ -1417,6 +1422,7 @@ contract ValidatorsRegistry {
     function enterAsLotteryWinner(address winner) external {
         require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
+        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (the lottery's try/catch records entryFailed)
         require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
         validators[winner] = ValidatorInfo({
             status: Status.Probation,
@@ -1515,7 +1521,7 @@ contract ValidatorsRegistry {
     }
 
     /// @notice ValidatorsBoard only, with the decision of the board (3 of 5) or of the validators (two thirds).
-    ///         upheld = the removal stands; otherwise the validator is reinstated.
+    ///         upheld = the removal stands; otherwise the removal is cancelled and the validator returns to SelfSuspended (VD-4).
     function resolveRecoveryRemoval(address validator, bool upheld) external onlyBoard nonReentrant {
         RecoveryRemoval storage r = recoveryRemovals[validator];
         require(
@@ -1546,7 +1552,13 @@ contract ValidatorsRegistry {
         recoveryRemovals[validator].state = RecoveryRemovalState.Cancelled;
         permanentlyExited[validator] = false;
         if (v.isPaidEntrant) paidValidatorCount++;
-        _activate(validator); // back into the validator list
+        // VD-4: NOT straight back to Active (the node was never checked after the removal). The validator returns to
+        // SelfSuspended with a resume request already open, so the Verifier's recordResume (node health check) is the only way
+        // back into the validator list.
+        v.status = Status.SelfSuspended;
+        v.periodStartedAt = block.timestamp;
+        resumeRequested[validator] = true;
+        emit ResumeRequested(validator);
         emit RecoveryRemovalCancelled(validator, expired);
         _notifyBoard(validator);
     }

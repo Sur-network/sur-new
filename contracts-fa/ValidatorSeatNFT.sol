@@ -119,6 +119,7 @@ contract ValidatorSeatNFT {
             "ValidatorSeatNFT: not owner nor approved"
         );
         require(to != address(0), "ValidatorSeatNFT: transfer to the zero address");
+        require(to.code.length == 0, "ValidatorSeatNFT: a seat owner must be a plain wallet (EOA)"); // RD-12: مالک صندلی فقط کیف‌پول معمولی
         require(_balances[to] == 0, "ValidatorSeatNFT: recipient already holds a seat");
         delete _approved[tokenId];
         _balances[from] = 0;

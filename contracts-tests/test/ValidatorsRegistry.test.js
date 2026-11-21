@@ -142,14 +142,31 @@ describe("Registry v2.5 - changing the node key", () => {
     // the reserved key cannot be taken by anyone else meanwhile
     await expect(reg.connect(founders[1]).setOperator(op1)).to.be.revertedWith("ValidatorsRegistry: operator reserved by another owner's pending change");
     // only the Verifier confirms, with evidence
-    await expect(reg.connect(first).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: caller is not the verifier");
-    await expect(reg.connect(verifier).confirmOperatorReady(first.address, ethers.ZeroHash)).to.be.revertedWith("ValidatorsRegistry: empty evidence hash");
-    await reg.connect(verifier).confirmOperatorReady(first.address, HASH);
+    await expect(reg.connect(first).confirmOperatorReady(first.address, op1, HASH)).to.be.revertedWith("ValidatorsRegistry: caller is not the verifier");
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, op1, ethers.ZeroHash)).to.be.revertedWith("ValidatorsRegistry: empty evidence hash");
+    await reg.connect(verifier).confirmOperatorReady(first.address, op1, HASH);
     expect(await reg.getValidators()).to.deep.equal([op1]); // the switch happens in the Verifier's transaction
     expect(await reg.operatorOf(first.address)).to.equal(op1);
     expect(await reg.ownerOfOperator(op0)).to.equal(first.address); // old key stays attached (event history, F-4)
     expect(await reg.pendingOperator(first.address)).to.equal(ZERO);
-    await expect(reg.connect(verifier).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, op1, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+  });
+
+  it("VD-13: confirmOperatorReady names the key; the owner cancelling and re-proposing another key between the check and the confirmation is refused", async () => {
+    const { reg, founders, verifier, op0 } = await loadFixture(fixture);
+    const first = founders[0];
+    const checked = rnd(), swapped = rnd();
+    await reg.connect(first).proposeOperator(checked);
+    // the Verifier checked `checked`; before its transaction is mined the owner swaps the proposal
+    await reg.connect(first).cancelOperatorChange();
+    await reg.connect(first).proposeOperator(swapped);
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, checked, HASH)).to.be.revertedWith("ValidatorsRegistry: operator differs from the open proposal");
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, ZERO, HASH)).to.be.revertedWith("ValidatorsRegistry: operator differs from the open proposal");
+    expect(await reg.getValidators()).to.deep.equal([op0]); // nothing was applied
+    expect(await reg.pendingOperator(first.address)).to.equal(swapped);
+    // the right key goes through
+    await reg.connect(verifier).confirmOperatorReady(first.address, swapped, HASH);
+    expect(await reg.getValidators()).to.deep.equal([swapped]);
   });
 
   it("the owner can cancel; a proposal lapses after 7 days and frees the key; confirm after expiry is refused", async () => {
@@ -163,7 +180,7 @@ describe("Registry v2.5 - changing the node key", () => {
     await reg.connect(founders[1]).setOperator(op1); // reservation gone: another owner may use the key
     await reg.connect(first).proposeOperator(op2);
     await increaseTime(7 * DAY + 10);
-    await expect(reg.connect(verifier).confirmOperatorReady(first.address, HASH)).to.be.revertedWith("ValidatorsRegistry: proposal expired");
+    await expect(reg.connect(verifier).confirmOperatorReady(first.address, op2, HASH)).to.be.revertedWith("ValidatorsRegistry: proposal expired");
     await reg.connect(founders[2]).setOperator(op2); // an expired reservation does not block others
     await reg.connect(first).proposeOperator(rnd()); // a new proposal after expiry is allowed
   });
@@ -186,9 +203,10 @@ describe("Registry v2.5 - changing the node key", () => {
       await reg.connect(verifier).recordActivation(x.address, HASH);
     }
     const second = founders[1];
-    await reg.connect(second).proposeOperator(rnd());
+    const pendKey = rnd();
+    await reg.connect(second).proposeOperator(pendKey);
     await reg.connect(verifier).recordSuspension(second.address, HASH);
-    await expect(reg.connect(verifier).confirmOperatorReady(second.address, HASH)).to.be.revertedWith("ValidatorsRegistry: owner is no longer Active");
+    await expect(reg.connect(verifier).confirmOperatorReady(second.address, pendKey, HASH)).to.be.revertedWith("ValidatorsRegistry: owner is no longer Active");
   });
 });
 

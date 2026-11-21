@@ -213,7 +213,7 @@ describe("ValidatorSeatNFT - the seller leaves nothing behind", () => {
     expect(await reg.pendingOperator(seller.address)).to.equal(ZERO);
     expect(await reg.pendingOperator(buyer.address)).to.equal(ZERO);
     expect(await reg.operatorReservedBy(newKey)).to.equal(ZERO);
-    await expect(f.reg.connect(f.verifier).confirmOperatorReady(seller.address, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
+    await expect(f.reg.connect(f.verifier).confirmOperatorReady(seller.address, newKey, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
     // the freed key can be claimed by the buyer in a fresh proposal
     await reg.connect(buyer).proposeOperator(newKey);
     // resale: the first buyer's pending acceptance flag does not survive on the seller side

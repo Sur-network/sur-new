@@ -69,3 +69,36 @@ contract MockLottery {
     address public lastCaller;
     function startLottery(uint256 p, uint256 w, uint256 c) external { price = p; winners = w; closeTime = c; lastCaller = msg.sender; }
 }
+
+interface IMockReg { function requestMembership(address operator) external payable; }
+interface IMockDist { function claim() external; }
+
+/// @dev Test-only owner with code: can enter the Registry (also from its constructor, where code.length is still 0), has a switchable receive(),
+///      and can try to re-enter claim() while it is being paid.
+contract MockSeatOwner {
+    bool public rejectPayments;
+    bool public attack;
+    address public dist;
+    bool public reenterSucceeded;
+    bytes public reenterReason;
+    uint256 public received;
+
+    constructor(address reg, address operator) payable {
+        if (reg != address(0)) IMockReg(reg).requestMembership{value: msg.value}(operator);
+    }
+    function enter(address reg, address operator) external payable { IMockReg(reg).requestMembership{value: msg.value}(operator); }
+    function setReject(bool r) external { rejectPayments = r; }
+    function setAttack(bool a, address d) external { attack = a; dist = d; }
+    function callClaim(address d) external { IMockDist(d).claim(); }
+    function sellSeat(address nft, uint256 id, address to) external {
+        (bool ok, bytes memory r) = nft.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", address(this), to, id));
+        if (!ok) { assembly { revert(add(r, 32), mload(r)) } }
+    }
+    receive() external payable {
+        require(!rejectPayments, "MockSeatOwner: rejects payments");
+        received += msg.value;
+        if (attack) {
+            try IMockDist(dist).claim() { reenterSucceeded = true; } catch (bytes memory r) { reenterReason = r; }
+        }
+    }
+}

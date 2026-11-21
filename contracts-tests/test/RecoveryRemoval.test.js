@@ -10,7 +10,7 @@ const HASH = ethers.id("qbft_getSignerMetrics evidence");
 const START = Math.floor(Date.UTC(2027, 2, 2) / 1000); // 2027-03-02: leaves four weeks inside one board month
 
 const S_NONE = 0, S_RECORDED = 1, S_OBJECTED = 2, S_REFERRED = 3, S_UPHELD = 4, S_CANCELLED = 5;
-const ST_ACTIVE = 2, ST_EXITING = 4, ST_REMOVED = 5;
+const ST_ACTIVE = 2, ST_EXITING = 4, ST_REMOVED = 5, ST_SELF_SUSPENDED = 6;
 
 async function fixture() {
   const S = await ethers.getSigners();
@@ -149,7 +149,7 @@ describe("Recovery removal - objection decided by the board", () => {
     expect((await reg.validators(paid.address)).status).to.equal(ST_EXITING);
   });
 
-  it("3 board votes to cancel: the validator is reinstated and the ban is lifted", async () => {
+  it("VD-4: 3 board votes to cancel: the validator returns to SelfSuspended (NOT Active), the ban is lifted, and only the Verifier's recordResume brings it back", async () => {
     const f = await loadFixture(fixture);
     const { reg, board, paid, S } = f;
     const paidBefore = await reg.paidValidatorCount();
@@ -157,11 +157,32 @@ describe("Recovery removal - objection decided by the board", () => {
     await reg.connect(paid).objectRecoveryRemoval();
     for (const i of [0, 1, 2]) await board.connect(S[i]).voteRecoveryRemoval(paid.address, false);
     expect((await reg.recoveryRemovals(paid.address)).state).to.equal(S_CANCELLED);
-    expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
-    expect(await reg.getActiveOwners()).to.include(paid.address);
+    expect((await reg.validators(paid.address)).status).to.equal(ST_SELF_SUSPENDED);
+    expect(await reg.getActiveOwners()).to.not.include(paid.address); // still out of the consensus list: the node was never checked
     expect(await reg.permanentlyExited(paid.address)).to.equal(false);
     expect(await reg.paidValidatorCount()).to.equal(paidBefore);
     expect((await reg.validators(paid.address)).lockedStake).to.equal(E("500000"));
+    expect(await reg.resumeRequested(paid.address)).to.equal(true); // the resume request is opened by the cancellation
+    // nobody but the Verifier brings it back; the owner cannot do it itself
+    await expect(reg.connect(paid).recordResume(paid.address, HASH)).to.be.revertedWith("ValidatorsRegistry: caller is not the verifier");
+    await reg.connect(f.verifier).recordResume(paid.address, HASH);
+    expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
+    expect(await reg.getActiveOwners()).to.include(paid.address);
+    expect(await reg.resumeRequested(paid.address)).to.equal(false);
+  });
+
+  it("VD-4: a cancelled validator may also exit normally or change its node key while SelfSuspended; recordResume needs the operator key", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, board, paid, S, verifier } = f;
+    await remove(f, paid);
+    await reg.connect(paid).objectRecoveryRemoval();
+    for (const i of [0, 1, 2]) await board.connect(S[i]).voteRecoveryRemoval(paid.address, false);
+    await reg.connect(paid).setOperator(ethers.Wallet.createRandom().address); // SelfSuspended: immediate
+    await expect(reg.connect(paid).requestResume()).to.not.be.reverted;
+    await reg.connect(verifier).recordResume(paid.address, HASH);
+    expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
+    // a second recordResume is refused: no longer suspended
+    await expect(reg.connect(verifier).recordResume(paid.address, HASH)).to.be.revertedWith("ValidatorsRegistry: not self-suspended");
   });
 
   it("no decision within 7 days: anyone can cancel (expire) the removal; a late board vote is refused", async () => {
@@ -175,7 +196,7 @@ describe("Recovery removal - objection decided by the board", () => {
     await expect(board.connect(S[1]).voteRecoveryRemoval(paid.address, true)).to.be.revertedWith("ValidatorsBoard: decision window over");
     await reg.connect(S[9]).expireRecoveryRemoval(paid.address);
     expect((await reg.recoveryRemovals(paid.address)).state).to.equal(S_CANCELLED);
-    expect((await reg.validators(paid.address)).status).to.equal(ST_ACTIVE);
+    expect((await reg.validators(paid.address)).status).to.equal(ST_SELF_SUSPENDED); // VD-4
   });
 
   it("only the board can resolve or refer a case; the board vote needs an open case", async () => {
@@ -222,7 +243,8 @@ describe("Recovery removal - fewer than 3 impartial board members: the validator
     expect((await reg.recoveryRemovals(S[1].address)).state).to.equal(S_REFERRED);
     await board.connect(S[4]).voteRecoveryAssembly(S[1].address, false); // 2 cancel > 5 - 4
     expect((await reg.recoveryRemovals(S[1].address)).state).to.equal(S_CANCELLED);
-    expect(await reg.getActiveOwners()).to.include(S[1].address);
+    expect((await reg.validators(S[1].address)).status).to.equal(ST_SELF_SUSPENDED); // VD-4: not Active until recordResume
+    expect(await reg.getActiveOwners()).to.not.include(S[1].address);
     expect(await reg.permanentlyExited(S[1].address)).to.equal(false);
   });
 
@@ -232,7 +254,7 @@ describe("Recovery removal - fewer than 3 impartial board members: the validator
     await increaseTime(7 * DAY + 10);
     await expect(board.connect(S[4]).voteRecoveryAssembly(S[1].address, true)).to.be.revertedWith("ValidatorsBoard: decision window over");
     await reg.expireRecoveryRemoval(S[1].address);
-    expect((await reg.validators(S[1].address)).status).to.equal(ST_ACTIVE);
+    expect((await reg.validators(S[1].address)).status).to.equal(ST_SELF_SUSPENDED); // VD-4
     expect((await reg.validators(S[2].address)).status).to.equal(ST_REMOVED);
   });
 });
