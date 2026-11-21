@@ -20,6 +20,7 @@
 | `0x9999999999999999999999999999999999999999` (پیشنهادی) | `GenesisClaimsVault` (✅ کد و آزمون Hardhat) |
 | `0x7777777777777777777777777777777777777777` (پیشنهادی) | `FoundationMembers` |
 | `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa` (پیشنهادی؛ checksum به‌صورت کد) | `ValidatorLottery` |
+| `0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB` (پیشنهادی؛ checksum به‌صورت کد؛ ۲۰۲۶-۱۱-۲۱) | `KmsDirectives` (کلید قطع سرویس امضای SurKMS؛ ✅ کد و آزمون Hardhat) |
 
 🔶 آدرس چهار قرارداد تازه در `SurAddresses.sol` **پیشنهاد** شده است (همان الگوی `0xNNNN…NNNN`؛ برای لاتاری `0xaAaA…aAaA`)؛ تثبیت نهایی بخشی از طراحی genesis است. `ValidatorSeatNFT` و `GenesisClaimsVault` نوشته و با Hardhat آزموده شده‌اند. ✅ `PAYMENT_ORACLE` از `SurAddresses.sol` حذف شده است: ۲.۵ دقیقاً **سه اوراکل** دارد (`verifier`، `distributionOracle`، `identityOracle`) و `SurenSale` اوراکل ندارد.
 
@@ -103,6 +104,7 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 | `ValidatorsTreasury` | ❌ خیر | فقط `perPaymentCap`/`periodCap` — مقادیر ساده |
 | `IdentityRegistry` | ❌ خیر | فقط `identityOracle` — مقدار ساده |
 | `ValidatorLottery` | ❌ خیر | ساختاری، بدون constructor؛ وضعیت اولیه همه‌چیز صفر است؛ مجری و مدیرعامل از `FoundationDAO` خوانده می‌شوند |
+| `KmsDirectives` | ❌ خیر | ساختاری، بدون constructor و بدون هیچ storage اولیه (همهٔ پرچم‌ها `false`)؛ فقط بایت‌کد اجرایی در `alloc` و موجودی صفر. **ابزار GenesisBuilder باید این قرارداد و آدرسش را بشناسد** (`D:\Amir\Business\SUR\NewSur\Deployments\GenesisBuilder`؛ هنوز تغییر نکرده) |
 
 ⚠️ **کامپایل به‌تنهایی storage اولیه‌ی درست تولید نمی‌کند:** کامپایل فقط `storageLayout` و creation code را می‌دهد؛ کپی‌کردن `deployedBytecode` به `alloc.code` دستورهای مقداردهی اولیه‌ی متغیرهای غیرconstant را اجرا نمی‌کند (آدرس اوراکل‌ها، سهم‌های قابل‌تغییر، سقف‌ها، پارامترهای زمانی…). برای هر قراردادی — از جمله قراردادهای ستون «خیر» — وضعیت اولیه باید یا از **اجرای واقعی creation code** (دیپلوی روی زنجیره‌ی موقت و خواندن `code` با `eth_getCode` و هر storage slot لمس‌شده) استخراج شود، یا با overlay صریح slotها نوشته شود. دو نکته‌ی اجباری: (۱) متغیرهای `immutable` (در قراردادهای genesis هیچ immutableی نیست؛ تنها immutable پروژه `SurenSale.saleStartTime` است) داخل runtime code جایگزین می‌شوند، پس runtime نهایی باید از یک دیپلوی واقعی روی زنجیره‌ی موقتی که timestamp بلاکش برابر timestamp genesis تنظیم شده استخراج شود (یا محل‌های immutable با `immutableReferences` شناسایی و patch و آزموده شوند) — برداشتن خام `evm.deployedBytecode.object` کافی نیست؛ (۲) درستی باید با assertion از **بلاک صفر** روی همه‌ی scalarهای غیرصفر، اعضا، طلبکاران، مالکان NFT و آدرس اوراکل‌ها تأیید شود؛ برابری `eth_getCode` روی چند نود، درستی مقداردهی را ثابت نمی‌کند.
 
@@ -161,9 +163,19 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 
 سقف ۲۴٬۵۷۶ بایت (EIP-170) فقط برای **CREATE** اعمال می‌شود. runtime `FoundationDAO` حدود ۲۷٫۹ کیلوبایت و runtime `ValidatorsRegistry` حدود ۳۶٬۸۷۹ بایت (اندازهٔ فعلی؛ در دور اول Besu با ۳۴٬۶۰۵ بایت آزموده شد؛ از artifact آزمون Hardhat با solc 0.8.24 و optimizer 200؛ `ValidatorSeatNFT` ۵٬۷۴۵ و `BlockRewardDistributor` ۲۰٬۶۷۱ بایت و زیر سقف) است و دو قرارداد اول از این سقف گذشته‌اند. helperهای seed هم با CREATE دیپلوی می‌شوند، پس زنجیرهٔ موقتِ شبیه‌سازی باید این سقف را بردارد (مثل `allowUnlimitedContractSize` در آزمون‌ها). چون هر دو در `alloc` بلاک genesis تزریق می‌شوند (نه با CREATE)، **این سقف روی زنجیرهٔ واقعی اعمال نمی‌شود**؛ آزمون‌های Hardhat برای شبکهٔ درون‌فرایندی آن را برمی‌دارند (`allowUnlimitedContractSize` در `contracts-tests/hardhat.config.js`، چون helper با CREATE دیپلوی می‌شود). ✅ روی Besu واقعی تأیید شد (دور اول آزمون ۲.۵، ۲۰۲۶-۱۱-۱۹، BR-SIZE؛ مشتق از BG-01/02/09): `FoundationDAO` با ۲۸٬۳۶۵ بایت و `ValidatorsRegistry` با ۳۴٬۶۰۵ بایت (اندازهٔ آن دور؛ اکنون حدود ۳۶٬۸۷۹ بایت و دوباره تأیید شود) در `alloc` پذیرفته شدند و برای `eth_getCode`، فراخوانی و تراکنش‌های تغییر وضعیت کار کردند. 🔶 در ساخت production با ابزار genesis تولیدی باید دوباره تأیید شود. `SurenSale` با تراکنش عادی (CREATE) دیپلوی می‌شود و مشمول این سقف است.
 
+### اندازهٔ runtime پس از بستهٔ تغییرهای پیش از genesis (۲۰۲۶-۱۱-۲۱؛ solc 0.8.24، optimizer 200، artifact Hardhat)
+
+| قرارداد | پیش از | پس از |
+|---|---|---|
+| `ValidatorsRegistry` | ۳۶٬۸۷۹ | ۳۷٬۳۳۵ (بالای سقف CREATE از پیش؛ در `alloc` اثر ندارد) |
+| `ValidatorsBoard` | ۲۰٬۳۹۷ | ۲۱٬۱۶۰ |
+| `BlockRewardDistributor` | ۲۰٬۶۷۱ | ۲۱٬۴۸۷ |
+| `ValidatorSeatNFT` | ۵٬۷۴۵ | ۵٬۸۷۱ |
+| `KmsDirectives` (تازه) | — | ۹۵۲ |
+
 ## آزمون‌های Hardhat (v2.5)
 
-پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۹۷ آزمون موفق در ۱۰ فایل: `BlockRewardDistributor` ۴، `FoundationDAO` ۱۶، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `LotteryRegistry` ۳، `RecoveryRemoval` ۱۲، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۰. ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
+پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۱۱۵ آزمون موفق در ۱۴ فایل: `BlockRewardDistributor` ۴، `DeferredClaim` ۵، `FoundationDAO` ۱۶، `GasPerPayee` ۱، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `KmsDirectives` ۶، `LotteryRegistry` ۳، `OwnerEoaRule` ۴، `RecoveryRemoval` ۱۳، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۱ (پیش از بستهٔ تغییرها ۹۷ آزمون در ۱۰ فایل). ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
 
 ## پارامترهای قابل‌تغییر با رأی
 
