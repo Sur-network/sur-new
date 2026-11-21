@@ -234,7 +234,7 @@
 | برنامه‌های موجود | با `npm install`، `tsc` و `eslint` تأیید شده‌اند و اپ هویت وب با اجرای سرور واقعی؛ **هیچ‌کدام با قراردادهای ۲٫۵ آزموده نشده‌اند** |
 | GenesisBuilder (v2.5، شاخهٔ `v2.5-dev` در `Deployments`) | ساخته‌شده: ۱۳۴ آزمون موفق؛ با Besu 26.9.0 زنده ۱۳۸. دو دور بازبینی مستقل (Fable، سپس Opus پس از رفع ایرادها)؛ **نیمه‌رفع و باز:** مهار نود `verify` با کلید واقعی. `gasLimit` تولیدی تصمیم باز مالک است. جزئیات: `genesisbuilder-review-record.md` |
 | اندروید | بیلد نشده |
-| Verifier (فاز B، ۲۰۲۶-۱۱-۲۱؛ `Deployments/Verifier`) | ساخته‌شده: **۲۰۴ آزمون موفق** (۱۲۱ واحد، ۸۳ روی anvil با قراردادهای واقعی از genesis ساخته‌شده با GenesisBuilder)، `tsc` و `eslint` تمیز. روی anvil: قرارداد/EVM/رویداد/ریورت، viem، SQLite، API روی HTTP، outbox و ریست وسط کار **واقعی**؛ `admin_peers`، دور QBFT، geo، سرویس دسترسی کلید و Identity Service **ساختگی**. **روی Besu اجرا نشده**؛ M9، M12، M16، M-OTP ساخته نشد؛ حسابرسی امنیتی انجام نشده |
+| Verifier (فاز B، ۲۰۲۶-۱۱-۲۱؛ `Deployments/Verifier`) | ساخته‌شده: **۲۳۲ آزمون موفق** (۱۳۶ واحد، ۹۶ روی anvil با قراردادهای واقعی از genesis ساخته‌شده با GenesisBuilder)، `tsc` و `eslint` تمیز. روی anvil: قرارداد/EVM/رویداد/ریورت، viem، SQLite، API روی HTTP، outbox و ریست وسط کار **واقعی**؛ `admin_peers`، دور QBFT، geo، سرویس دسترسی کلید و Identity Service **ساختگی**. **روی Besu اجرا نشده**؛ M9، M12، M16، M-OTP ساخته نشد؛ حسابرسی امنیتی انجام نشده |
 | حسابرسی امنیتی | انجام نشده |
 
 ### ۷.۴ تضادها و نکات نگهداری
