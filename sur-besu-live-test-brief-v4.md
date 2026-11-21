@@ -114,7 +114,7 @@ d8c0c523157faa67780e287faf416cbbac58825df4f66611083d54d6571dfa3f  genesis-seed-h
 | ابزار آزمایشی (در این آزمون ساخته می‌شود) | چه می‌کند | چرا production نیست |
 |---|---|---|
 | `testonly-genesis-builder` | ساخت genesis آزمایشی، شامل seedهای مخصوص آزمون | seed مستقیم `everActivated` برای payeeهای آزمون هزینه و seed تاریخچهٔ نرخ **در ابزار production مجاز نیست**؛ ۵ یا ۶ مؤسس (نه ۷) و کلیدهای آزمایشی؛ overlayهای زمانی کوتاه؛ **کپی‌های آزمایشی از helperها** با آدرس‌های آزمایشی |
-| `testonly-settle` | ساخت و ارسال `distributeRewards` برای آزمون | یک اسکریپت یک‌بارمصرف است؛ recovery، idempotency، ماشین حالت تراکنش، Vault و هشدار عملیاتی ندارد؛ **RewardRouter نیست** |
+| `testonly-settle` | ساخت و ارسال `distributeRewards` برای آزمون | یک اسکریپت یک‌بارمصرف است؛ recovery، idempotency، ماشین حالت تراکنش، SurKMS (نگه‌داری کلید) و هشدار عملیاتی ندارد؛ **RewardRouter نیست** |
 | `testonly-collector` | جمع‌آوری ردیف‌های بلاک (مجموعهٔ مؤثر، تولیدکننده، امضاکنندگان، Registry در N−1) | فقط برای شواهد |
 | `testonly-network` | راه‌اندازی/ری‌استارت نودها | فقط محیط آزمون |
 

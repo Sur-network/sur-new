@@ -148,7 +148,7 @@
 | ابزار | نوع | توضیح |
 |---|---|---|
 | قرارداد `SurenSale` | آن‌چین | غیرساختاری؛ پس از genesis با یک تراکنش عادی دیپلوی می‌شود و فقط به `FoundationDAO` وابسته است |
-| کلید صرافی | آن‌چین، نزد صرافی | فقط `sellTo`؛ بدون Vault بنیاد؛ اوراکل پرداخت وجود ندارد (`paymentOracle` حذف شد) |
+| کلید صرافی | آن‌چین، نزد صرافی | فقط `sellTo`؛ بدون SurKMS (کلید صرافی در سرور مدیریت کلید نیست)؛ اوراکل پرداخت وجود ندارد (`paymentOracle` حذف شد) |
 | توابع `view` قرارداد | آن‌چین | `currentPriceMilliToman()`، `currentPriceToman()` (نمایش)، `advanceTransitionPrice()` (بدون‌مجوز)، `currentPeriod()`، `isSaleActive()`، `isSaleOver()`، `getExchange(address)`، `exchangeQuotaLeft(address)`، `getExchanges()`، `getBalance()`، `timeRemaining()`، `transitionTimeRemaining()` |
 | صفحهٔ عمومی فروش | آف‌چین، فقط‌خواندنی | قیمت، موجودی، سهمیه، تمدیدها؛ فهرست و لینک صرافی‌ها از یک فایل پیکربندی ایستا |
 | راهنما/API/ابزار کمکی اتصال | آف‌چین | 🔶 مشخصات هنوز تکمیل نشده (آیتم ۱۴ فهرست نرم‌افزار؛ مسئول توسعه: کمیتهٔ فنی؛ مسئول کسب‌وکار: توسعهٔ کسب‌وکار) |
