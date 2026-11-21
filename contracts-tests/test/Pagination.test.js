@@ -38,8 +38,8 @@ async function fixture() {
   return { reg, dist, c, eoas, oracle, board, all, S: await ethers.getSigners() };
 }
 
-/// blocks aligned with `all`: the contract owner mined 4 blocks, the four EOAs 3, 2, 1 and 0 (10 in all)
-function blocksFor(f) { const rest = [3, 2, 1, 0]; return f.all.map((a) => (a === f.c.target ? 4 : rest.shift())); }
+/// blocks aligned with `all`: the contract owner mined 4 blocks, the four EOAs 2, 2, 1 and 1 (10 in all; zero-block entries are refused)
+function blocksFor(f) { const rest = [2, 2, 1, 1]; return f.all.map((a) => (a === f.c.target ? 4 : rest.shift())); }
 const REV = (m) => "BlockRewardDistributor: " + m;
 
 describe("RD-18 - paginated distribution", () => {
@@ -69,7 +69,7 @@ describe("RD-18 - paginated distribution", () => {
     expect(info.paidBlocks).to.equal(10);
     expect(info.lastPayee).to.equal(all[4]);
     const close = d.closeDistribution();
-    await expect(close).to.emit(dist, "RewardsDistributed").withArgs(1, E("20"), E("1"), anyValue, 10, 4);
+    await expect(close).to.emit(dist, "RewardsDistributed").withArgs(1, E("20"), E("1"), anyValue, 10, 5);
     await close;
     info = await dist.openDistributionInfo();
     expect(info.isOpen).to.equal(false);
@@ -80,9 +80,9 @@ describe("RD-18 - paginated distribution", () => {
       if (all[i] === c.target) { expect(await dist.claimable(all[i])).to.equal(want[i]); continue; }
       expect((await ethers.provider.getBalance(all[i])) - start[i]).to.equal(want[i]);
     }
-    expect((await dist.getEpoch(1)).validatorCount).to.equal(4);
-    // nothing but the debt is left of the reserved money: the contract keeps its old balance minus what was paid out
-    expect(await dist.getDistributableBalance()).to.be.gt(0);
+    expect((await dist.getEpoch(1)).validatorCount).to.equal(5);
+    // exact conservation: the contract lost exactly the 21 reserved Suren, minus what stayed as claimable
+    expect(await ethers.provider.getBalance(dist.target)).to.equal(dBal - E("21") + (await dist.totalClaimable()));
   });
 
   it("page size does not change who gets what (one page of five vs five pages of one)", async () => {
@@ -107,6 +107,8 @@ describe("RD-18 - paginated distribution", () => {
     await expect(d.payPage([all[0], all[0]], [1, 1])).to.be.revertedWith(REV("validators must be strictly ascending"));
     await expect(d.payPage([ZERO], [1])).to.be.revertedWith(REV("validators must be strictly ascending"));
     await expect(d.payPage([], [])).to.be.revertedWith(REV("empty validator list"));
+    await expect(d.payPage([all[0]], [0])).to.be.revertedWith(REV("zero blocks - leave the address out")); // would only move lastPayee
+    await expect(d.payPage([all[0], all[1]], [6, 6])).to.be.revertedWith(REV("paged blocks exceed the declared total")); // 12 of 10, clear message
     await expect(d.payPage([all[0]], [1, 1])).to.be.revertedWith(REV("length mismatch"));
     await d.payPage([all[0], all[1]], [2, 2]);
     await expect(d.payPage([all[1]], [1])).to.be.revertedWith(REV("validators must be strictly ascending")); // paid in the previous page
@@ -132,7 +134,7 @@ describe("RD-18 - paginated distribution", () => {
     const d = dist.connect(oracle);
     await expect(d.payPage([all[0]], [1])).to.be.revertedWith(REV("no open distribution"));
     await expect(d.closeDistribution()).to.be.revertedWith(REV("no open distribution"));
-    await distribute(dist, oracle, R(1, 10), all, [4, 3, 2, 1, 0], E("20"), E("1"));
+    await distribute(dist, oracle, R(1, 10), all, [3, 3, 2, 1, 1], E("20"), E("1"));
     await expect(d.payPage([all[4]], [1])).to.be.revertedWith(REV("no open distribution"));
     await expect(d.closeDistribution()).to.be.revertedWith(REV("no open distribution"));
   });
@@ -218,14 +220,49 @@ describe("RD-18 - paginated distribution", () => {
     expect(await ethers.provider.getBalance(dist.target)).to.be.gte(await dist.totalClaimable());
   });
 
-  it("claim() cannot be used to drain the reservation: claim pays only the caller's claimable, and the Distributable view subtracts the reservation", async () => {
+  it("claim() by a stranger gets nothing while a distribution is open; the Distributable view subtracts the reservation, the claimable debt and pending membership fees", async () => {
     const f = await loadFixture(fixture);
-    const { dist, oracle, all, S } = f;
+    const { dist, oracle, all, S, c, reg } = f;
     const d = dist.connect(oracle);
     await d.openDistribution(R(1, 10), 10, E("20"), E("1"));
     await expect(dist.connect(S[16]).claim()).to.be.revertedWith(REV("nothing to claim"));
     const bal = await ethers.provider.getBalance(dist.target);
     expect(await dist.getDistributableBalance()).to.equal(bal - E("21"));
+    // a membership fee arriving while the distribution is open belongs to the NEXT epoch: not distributable, not part of this one
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATORS_REGISTRY, "0x56BC75E2D63100000"]);
+    const regSigner = await ethers.getImpersonatedSigner(ADDR.VALIDATORS_REGISTRY);
+    await dist.connect(regSigner).receiveMembershipFee({ value: E("5") });
+    expect(await dist.getDistributableBalance()).to.equal(bal + E("5") - E("21") - E("5"));
+    const blocks = blocksFor(f);
+    await d.payPage(all, blocks);
+    await d.closeDistribution();
+    expect(await dist.pendingMembershipFees()).to.equal(E("5")); // still waiting for the next open
+    expect((await dist.getEpoch(1)).totalFees).to.equal(E("1")); // this epoch's pool is unchanged
+  });
+
+  it("rounding dust: non-divisible amounts over several pages are conserved exactly (the treasury gets its share plus all dust, nothing is lost)", async () => {
+    const f = await loadFixture(fixture);
+    const { dist, oracle, all } = f;
+    const blocks = blocksFor(f);
+    const before = await ethers.provider.getBalance(dist.target);
+    const tBefore = await ethers.provider.getBalance(TREASURY);
+    const fBefore = await ethers.provider.getBalance(FOUNDATION);
+    const burnBefore = await ethers.provider.getBalance(ZERO);
+    const rewards = E("19") + 7n, fees = E("1") + 13n; // 7 and 13 wei: every division leaves a remainder
+    await distribute(dist, oracle, R(1, 10), all, blocks, rewards, fees, 2);
+    const feeBurn = (fees * 3000n) / 10000n;
+    const paidDirect = await Promise.all(all.map(async (a, i) => (await dist.claimable(a)) + (await ethers.provider.getBalance(a))));
+    const spent = before - (await ethers.provider.getBalance(dist.target));
+    // total leaving the contract = reserved budget minus what became claimable
+    expect(spent).to.equal(rewards + fees - (await dist.totalClaimable()));
+    expect((await ethers.provider.getBalance(ZERO)) - burnBefore).to.equal(feeBurn);
+    const toTreasury = (await ethers.provider.getBalance(TREASURY)) - tBefore;
+    const toFoundation = (await ethers.provider.getBalance(FOUNDATION)) - fBefore;
+    expect(toFoundation).to.equal((rewards * 1500n) / 10000n);
+    // every wei is accounted for: validators + treasury + foundation + fee burn = rewards + fees
+    const validators = (await dist.totalDistributedToValidators());
+    expect(validators + toTreasury + toFoundation + feeBurn).to.equal(rewards + fees);
+    expect((await dist.getEpoch(1)).treasuryAmount).to.equal(toTreasury);
   });
 });
 

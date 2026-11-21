@@ -646,8 +646,10 @@ contract BlockRewardDistributor {
             require(validator > prev, "BlockRewardDistributor: validators must be strictly ascending");
             prev = validator;
             uint256 b = blocksMined[i];
-            if (b == 0) continue;
+            // ورودی بدون بلاک رد می‌شود: فقط ترتیب lastPayee را جلو می‌برد و آدرس بالایی (مثلاً 0xFF…FF) می‌توانست توزیع را برای همیشه ببندد (یافتهٔ بازبینی)
+            require(b > 0, "BlockRewardDistributor: zero blocks - leave the address out");
             pageBlocks += b;
+            require(c.paidBlocks + pageBlocks <= c.totalBlocks, "BlockRewardDistributor: paged blocks exceed the declared total");
             _payOne(c, validator, b);
         }
         c.lastPayee = prev;
@@ -1124,6 +1126,6 @@ contract BlockRewardDistributor {
 
     /// @notice موجودی که توزیع می‌تواند خرج کند = موجودی قرارداد منهای بدهی claimable.
     function getDistributableBalance() external view returns (uint256) {
-        return address(this).balance - totalClaimable - cur.budgetLeft;
+        return address(this).balance - totalClaimable - cur.budgetLeft - pendingMembershipFees;
     }
 }

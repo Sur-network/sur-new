@@ -169,13 +169,13 @@ address public verifier = 0x0000000000000000000000000000000000000000; // 🔶 FI
 |---|---|---|
 | `ValidatorsRegistry` | ۳۶٬۸۷۹ | ۳۷٬۳۴۶ (بالای سقف CREATE از پیش؛ در `alloc` اثر ندارد) |
 | `ValidatorsBoard` | ۲۰٬۳۹۷ | ۲۱٬۱۶۰ |
-| `BlockRewardDistributor` | ۲۰٬۶۷۱ | ۲۲٬۰۹۳ (با صفحه‌بندی RD-18) |
+| `BlockRewardDistributor` | ۲۰٬۶۷۱ | ۲۲٬۲۶۸ (با صفحه‌بندی RD-18) |
 | `ValidatorSeatNFT` | ۵٬۷۴۵ | ۵٬۸۷۱ |
 | `KmsDirectives` (تازه) | — | ۹۵۲ |
 
 ## آزمون‌های Hardhat (v2.5)
 
-پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۱۲۷ آزمون موفق در ۱۴ فایل: `BlockRewardDistributor` ۴، `DeferredClaim` ۵، `FoundationDAO` ۱۶، `GasPerPayee` ۱، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `KmsDirectives` ۶، `LotteryRegistry` ۳، `OwnerEoaRule` ۴، `Pagination` ۱۱، `RecoveryRemoval` ۱۴، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۱ (پیش از بستهٔ تغییرها ۹۷ آزمون در ۱۰ فایل؛ ۱۲۷ در ۱۵ فایل). ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
+پوشهٔ `contracts-tests/` (Hardhat 2.29.1، `solc 0.8.24`، `evmVersion paris`): `npm install` سپس `npm test`؛ هر فایل آزمون در فرایند جدا اجرا می‌شود (`run-tests.js`)؛ mockها در `contracts-tests/mocks`. نتیجهٔ فعلی ۱۲۸ آزمون موفق در ۱۴ فایل: `BlockRewardDistributor` ۴، `DeferredClaim` ۵، `FoundationDAO` ۱۶، `GasPerPayee` ۱، `GenesisClaimsVault` ۵، `IdentityRegistry` ۵، `KmsDirectives` ۶، `LotteryRegistry` ۳، `OwnerEoaRule` ۴، `Pagination` ۱۲، `RecoveryRemoval` ۱۴، `SurenSale` ۱۱، `ValidatorLottery` ۱۰، `ValidatorSeatNFT` ۱۱، `ValidatorsRegistry` ۲۱ (پیش از بستهٔ تغییرها ۹۷ آزمون در ۱۰ فایل؛ ۱۲۷ در ۱۵ فایل). ⚠️ این آزمون‌ها روی EVM درون‌فرایندی Hardhat اجرا می‌شوند، **نه** روی Besu/QBFT؛ آزمون زندهٔ Besu برای ۲.۵ جدا انجام شده است (دور اول ۲۰۲۶-۱۱-۱۹؛ بخش پایان سند).
 
 ## پارامترهای قابل‌تغییر با رأی
 

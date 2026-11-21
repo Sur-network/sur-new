@@ -657,8 +657,10 @@ contract BlockRewardDistributor {
             require(validator > prev, "BlockRewardDistributor: validators must be strictly ascending");
             prev = validator;
             uint256 b = blocksMined[i];
-            if (b == 0) continue;
+            // an entry with zero blocks is refused: it would only advance lastPayee, and an address such as 0xFF…FF would then make closing impossible forever (review finding)
+            require(b > 0, "BlockRewardDistributor: zero blocks - leave the address out");
             pageBlocks += b;
+            require(c.paidBlocks + pageBlocks <= c.totalBlocks, "BlockRewardDistributor: paged blocks exceed the declared total");
             _payOne(c, validator, b);
         }
         c.lastPayee = prev;
@@ -1139,6 +1141,6 @@ contract BlockRewardDistributor {
 
     /// @notice Balance a distribution may spend = contract balance minus the claimable debt.
     function getDistributableBalance() external view returns (uint256) {
-        return address(this).balance - totalClaimable - cur.budgetLeft;
+        return address(this).balance - totalClaimable - cur.budgetLeft - pendingMembershipFees;
     }
 }
