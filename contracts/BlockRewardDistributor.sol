@@ -944,7 +944,11 @@ contract BlockRewardDistributor {
         prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
 
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+        // RD-12b: amounts already owed to owners with code (claimable) are a debt of this contract and never distributable.
+        require(
+            totalRewards + prep.effectiveTotalFees + totalClaimable <= address(this).balance,
+            "BlockRewardDistributor: insufficient contract balance"
+        );
 
         // Burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
         // deliberately NOT of membershipFeesThisEpoch. Rationale (see sur-tokenomics.md
@@ -1052,10 +1056,18 @@ contract BlockRewardDistributor {
         totalBlocksRecorded[validator] += blocksMinedByValidator;
 
         // single combined transfer per validator for the entire call
-        (bool success, ) = validator.call{value: payout}("");
-        require(success, "BlockRewardDistributor: validator transfer failed");
-
-        emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        // RD-12b: direct payment only to an address WITHOUT code (an EOA). An address that has code (e.g. a contract created later at a
+        // pre-computed address) is never called: the amount is credited to claimable and the owner calls claim(), so no payee can
+        // halt anyone else's distribution.
+        if (validator.code.length == 0) {
+            (bool success, ) = validator.call{value: payout}("");
+            require(success, "BlockRewardDistributor: validator transfer failed");
+            emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        } else {
+            claimable[validator] += payout;
+            totalClaimable += payout;
+            emit ValidatorRewardDeferred(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        }
         return true;
     }
 
@@ -1180,5 +1192,40 @@ contract BlockRewardDistributor {
         uint256 nextAllowed = lastDistributionTime + MIN_DISTRIBUTION_INTERVAL;
         if (block.timestamp >= nextAllowed) return 0;
         return nextAllowed - block.timestamp;
+    }
+
+    // ------------------------------------------------------------------
+    // RD-12b: deferred payment to an owner that has code
+    // ------------------------------------------------------------------
+    /// @notice Amount held for an owner that has code; only that owner withdraws it, with claim().
+    mapping(address => uint256) public claimable;
+    /// @notice Sum of all claimable: a debt of this contract, deducted in every distribution's balance check.
+    uint256 public totalClaimable;
+
+    /// @dev Emitted INSTEAD of ValidatorRewarded for a payout that was not sent directly (address with code). RewardRouter must accept both.
+    event ValidatorRewardDeferred(
+        uint256 indexed epochId,
+        address indexed validator,
+        uint256 blocksMined,
+        uint256 rewardShare,
+        uint256 feeShare,
+        uint256 totalPayout
+    );
+    event ClaimableWithdrawn(address indexed owner, uint256 amount);
+
+    /// @notice The owner (with code) withdraws its own deferred balance. Only the caller's own balance; if its receive() reverts only this claim fails.
+    function claim() external nonReentrant {
+        uint256 amount = claimable[msg.sender];
+        require(amount > 0, "BlockRewardDistributor: nothing to claim");
+        claimable[msg.sender] = 0;
+        totalClaimable -= amount;
+        (bool ok, ) = msg.sender.call{value: amount}("");
+        require(ok, "BlockRewardDistributor: claim transfer failed");
+        emit ClaimableWithdrawn(msg.sender, amount);
+    }
+
+    /// @notice Balance a distribution may spend = contract balance minus the claimable debt.
+    function getDistributableBalance() external view returns (uint256) {
+        return address(this).balance - totalClaimable;
     }
 }

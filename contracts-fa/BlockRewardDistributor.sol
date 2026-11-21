@@ -931,7 +931,11 @@ contract BlockRewardDistributor {
         prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
 
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        require(totalRewards + prep.effectiveTotalFees <= address(this).balance, "BlockRewardDistributor: insufficient contract balance");
+        // RD-12b: amounts already owed to owners with code (claimable) are a debt of this contract and never distributable.
+        require(
+            totalRewards + prep.effectiveTotalFees + totalClaimable <= address(this).balance,
+            "BlockRewardDistributor: insufficient contract balance"
+        );
 
         // ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
         // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
@@ -1035,10 +1039,17 @@ contract BlockRewardDistributor {
         totalBlocksRecorded[validator] += blocksMinedByValidator;
 
         // یک انتقال ترکیبی واحد برای هر ولیدیتور در کل این فراخوانی
-        (bool success, ) = validator.call{value: payout}("");
-        require(success, "BlockRewardDistributor: validator transfer failed");
-
-        emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        // RD-12b: پرداخت مستقیم فقط به آدرس بدون کد (EOA). آدرسی که کد دارد (مثلاً قراردادی که بعداً روی آدرس از پیش محاسبه‌شده ساخته شده)
+        // هرگز فراخوانی نمی‌شود: مبلغ به claimable می‌رود و خود مالک claim() می‌زند، پس هیچ پرداخت‌گیری توزیع دیگران را متوقف نمی‌کند.
+        if (validator.code.length == 0) {
+            (bool success, ) = validator.call{value: payout}("");
+            require(success, "BlockRewardDistributor: validator transfer failed");
+            emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        } else {
+            claimable[validator] += payout;
+            totalClaimable += payout;
+            emit ValidatorRewardDeferred(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+        }
         return true;
     }
 
@@ -1162,5 +1173,40 @@ contract BlockRewardDistributor {
         uint256 nextAllowed = lastDistributionTime + MIN_DISTRIBUTION_INTERVAL;
         if (block.timestamp >= nextAllowed) return 0;
         return nextAllowed - block.timestamp;
+    }
+
+    // ------------------------------------------------------------------
+    // RD-12b: پرداخت مؤجل به مالکِ دارای کد
+    // ------------------------------------------------------------------
+    /// @notice مبلغی که برای مالکِ دارای کد نگه داشته شده و فقط خود او با claim() برمی‌دارد.
+    mapping(address => uint256) public claimable;
+    /// @notice مجموع claimable: بدهی این قرارداد؛ در بررسی موجودی هر توزیع کسر می‌شود.
+    uint256 public totalClaimable;
+
+    /// @dev به‌جای ValidatorRewarded برای پرداختی که مستقیم نشد (آدرس دارای کد). RewardRouter باید هر دو رویداد را بپذیرد.
+    event ValidatorRewardDeferred(
+        uint256 indexed epochId,
+        address indexed validator,
+        uint256 blocksMined,
+        uint256 rewardShare,
+        uint256 feeShare,
+        uint256 totalPayout
+    );
+    event ClaimableWithdrawn(address indexed owner, uint256 amount);
+
+    /// @notice مالکِ دارای کد موجودی مؤجل خودش را برمی‌دارد. فقط برای موجودی خود فراخواننده؛ اگر receive او revert کند فقط همین claim شکست می‌خورد.
+    function claim() external nonReentrant {
+        uint256 amount = claimable[msg.sender];
+        require(amount > 0, "BlockRewardDistributor: nothing to claim");
+        claimable[msg.sender] = 0;
+        totalClaimable -= amount;
+        (bool ok, ) = msg.sender.call{value: amount}("");
+        require(ok, "BlockRewardDistributor: claim transfer failed");
+        emit ClaimableWithdrawn(msg.sender, amount);
+    }
+
+    /// @notice موجودی که توزیع می‌تواند خرج کند = موجودی قرارداد منهای بدهی claimable.
+    function getDistributableBalance() external view returns (uint256) {
+        return address(this).balance - totalClaimable;
     }
 }
