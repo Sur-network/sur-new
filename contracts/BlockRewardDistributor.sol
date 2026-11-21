@@ -105,7 +105,7 @@ contract BlockRewardDistributor {
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice Fixed fraction of ordinary transaction fees (NOT membership fees — see
-    /// distributeRewards()'s comment for why they are deliberately exempt) that is permanently
+    /// _prepareEpoch()'s comment for why they are deliberately exempt) that is permanently
     /// burned every epoch, before the remaining 70% is distributed 100%-pro-rata-by-blocks to
     /// validators. See sur-tokenomics.md section 7 for the full reasoning: rewards (not fees)
     /// are the dominant source of Suren inflation, so burning fees alone cannot offset it, but
@@ -222,9 +222,6 @@ contract BlockRewardDistributor {
 
     mapping(uint256 => Epoch) public epochs;
 
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorRewardShare;
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorFeeShare;
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorBlocks;
 
     mapping(address => uint256) public totalRewardsPaid;
     mapping(address => uint256) public totalFeesPaid;
@@ -236,7 +233,7 @@ contract BlockRewardDistributor {
 
     /// @notice Membership fees forwarded by ValidatorsRegistry since the last distribution
     ///         epoch, waiting to be folded into that epoch's 100%-pro-rata-by-blocks fee pool.
-    ///         Reset to zero at the end of every distributeRewards() call.
+    ///         Reset to zero when openDistribution() folds it into the fee pool.
     uint256 public pendingMembershipFees;
 
     /// @notice A bicameral proposal to change validatorDirectShareBps. Requires
@@ -424,7 +421,7 @@ contract BlockRewardDistributor {
 
     /// @notice Called by ValidatorsRegistry.requestMembership() to forward a new validator's
     ///         membership fee here instead of straight to ValidatorsTreasury (the old
-    ///         behavior). The amount simply accumulates until the next distributeRewards()
+    ///         behavior). The amount simply accumulates until the next openDistribution()
     ///         call, at which point it is folded into that epoch's fee pool and paid out
     ///         100%-pro-rata-by-blocks, exactly like ordinary transaction fees — see
     ///         sur-tokenomics.md section 6 for why this design (a direct, traceable, per-join
@@ -564,85 +561,128 @@ contract BlockRewardDistributor {
     // The logic is split into three functions, each with its own stack frame, so the contract compiles without viaIR
     // (which many verification services cannot verify against — see sur-contracts-deploy-notes.md).
     // ------------------------------------------------------------------
-    /// @param validators list of validator addresses (no duplicates)
-    /// @param blocksMined number of blocks each validator mined since the last call (same order as validators)
-    /// @param totalRewards total reward amount (in wei) for this epoch — computed off-chain by the oracle, from trace_block "reward" entries
-    /// @param totalFees total transaction fee amount (in wei) for this epoch — computed off-chain by the oracle, from eth_getTransactionReceipt.gasUsed * effectiveGasPrice per tx (never from trace_* output, which reports gasUsed=0 for simple transfers)
-    /// @notice `range` is the inclusive block range this distribution settles. It must start exactly at
-    ///         lastSettledBlock + 1 (no duplicate, no overlap, no gap — an outage is covered by the NEXT, larger range, never
-    ///         skipped), must end before the current block, and the reported per-validator block counts (after the daemon's
-    ///         filtering of blocks whose producer is no longer valid) cannot exceed its size.
-    function distributeRewards(
-        BlockRange calldata range,
-        address[] calldata validators,
-        uint256[] calldata blocksMined,
-        uint256 totalRewards,
-        uint256 totalFees
-    )
+    // ------------------------------------------------------------------
+    // Paginated distribution (RD-18, owner decision 2026-11-21)
+    //
+    // One distribution = openDistribution() + payPage() x N + closeDistribution(); only the distribution oracle calls them.
+    //   open   declares the block range, the TOTAL block count and the totals; settles the range (lastSettledBlock moves NOW), burns the excess,
+    //          reserves the needed amount (budgetLeft) and starts the 23-hour gap; RewardsDistributed is NOT emitted yet.
+    //   page   pays some payees. Addresses must be strictly ascending ACROSS pages (each page starts above the last address of the page before).
+    //   close  requires the paged block counts to add up EXACTLY to the declared total, then pays treasury, foundation and the fee burn and emits RewardsDistributed.
+    // There is NO escape path: an open distribution can only be continued and closed (by the current oracle key); nothing, including the board, can abandon it or move its money.
+    // No page-size cap is coded: a page that does not fit the gas limit simply reverts as a whole (no state change), so an oversized page can only fail its own transaction. The Router chooses the page size.
+    // ------------------------------------------------------------------
+    struct OpenDistribution {
+        bool isOpen;
+        uint256 epochId;
+        uint256 totalBlocks;            // declared at open; the pages must add up to exactly this
+        uint256 paidBlocks;             // sum of the blocks paged so far
+        uint256 totalRewards;           // approved rewards (after the excess burn)
+        uint256 totalFees;              // full fee pool incl. membership fees, before the burn (for the epoch record)
+        uint256 feeBurnAmount;
+        uint256 feesToDistribute;
+        uint256 validatorDirectAmount;
+        uint256 budgetLeft;             // reserved amount not yet paid, credited to claimable or spent at close
+        uint256 distributedRewards;
+        uint256 distributedFees;
+        uint256 validatorCount;
+        address lastPayee;
+    }
+    OpenDistribution private cur;
+
+    event DistributionOpened(
+        uint256 indexed epochId,
+        uint256 fromBlock,
+        uint256 toBlock,
+        uint256 totalBlocks,
+        uint256 approvedRewards,
+        uint256 feePoolToDistribute
+    );
+    event DistributionPage(uint256 indexed epochId, uint256 payees, uint256 blocksInPage, uint256 paidBlocksSoFar);
+
+    /// @notice Opens the distribution of `range`. The range must start at lastSettledBlock + 1, end before the current block, and the declared totalBlocks cannot exceed its size. totalRewards is the reported actual reward (the part above the approved amount is burned at once); totalFees the ordinary fees of the range.
+    function openDistribution(BlockRange calldata range, uint256 totalBlocks, uint256 totalRewards, uint256 totalFees)
         external
         onlyDistributionOracle
         nonReentrant
     {
-        require(validators.length > 0, "BlockRewardDistributor: empty validator list");
-        require(validators.length == blocksMined.length, "BlockRewardDistributor: length mismatch");
+        OpenDistribution storage c = cur;
+        require(!c.isOpen, "BlockRewardDistributor: another distribution is open");
         require(
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
-
-        // The pre-computation is kept in _prepareEpoch() so this function's own stack frame stays small: its 4 result
-        // values are bundled into one memory struct (`prep`) instead of 4 live locals.
-        EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
-        _settleRange(range, prep.totalBlocks);
-        // v2.5: the reported (actual) reward of the range may exceed the approved reward of its blocks (an unvoted change of the
-        // Besu configuration, or an approved decrease not yet applied in Besu). Only the APPROVED amount is split three ways;
-        // the excess is burned at once (no cap, the distribution is never halted, no manual or emergency path to split it).
-        // Fees and membership fees are outside this rule; their split and burn are unchanged.
+        EpochPrep memory prep = _prepareEpoch(totalBlocks, totalRewards, totalFees);
+        _settleRange(range, totalBlocks);
+        // v2.5: only the APPROVED amount of the range is split; the excess over it is burned at once (never halts the distribution).
         totalRewards = _capAndBurnExcess(range, totalRewards);
 
         epochCount++;
-        uint256 epochId = epochCount;
-        epochBlockRanges[epochId] = range;
-        emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
+        epochBlockRanges[epochCount] = range;
+        emit EpochRangeSettled(epochCount, range.fromBlock, range.toBlock);
+        lastDistributionTime = block.timestamp; // the 23-hour gap is counted from OPEN
 
-        // foundationAmount/treasuryAmount are computed AFTER the _payValidators call (they do not feed into it), which
-        // keeps fewer locals live at that call site.
-        // validatorDirectShareBps is governable (bicameral vote, [40%, 65%]) — see the
-        // contract-level doc comment. ValidatorsTreasury receives whatever remains of the
-        // reward pool after Foundation's fixed share and this governable share are both
-        // removed.
-        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        c.isOpen = true;
+        c.epochId = epochCount;
+        c.totalBlocks = totalBlocks;
+        c.paidBlocks = 0;
+        c.totalRewards = totalRewards;
+        c.totalFees = prep.effectiveTotalFees;
+        c.feeBurnAmount = prep.feeBurnAmount;
+        c.feesToDistribute = prep.feesToDistribute;
+        c.validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        c.budgetLeft = totalRewards + prep.effectiveTotalFees; // the reservation: nothing else can spend it
+        c.distributedRewards = 0;
+        c.distributedFees = 0;
+        c.validatorCount = 0;
+        c.lastPayee = address(0);
+        emit DistributionOpened(epochCount, range.fromBlock, range.toBlock, totalBlocks, totalRewards, prep.feesToDistribute);
+    }
 
-        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
-            _payValidators(
-                validators,
-                blocksMined,
-                EpochContext({
-                    epochId: epochId,
-                    remainingRewards: validatorDirectAmount,
-                    totalFees: prep.feesToDistribute,
-                    totalBlocks: prep.totalBlocks
-                })
-            );
+    /// @notice Pays one page of the open distribution. `validators` must be strictly ascending and every address above the last payee of the previous page. Each payee gets its share of the declared totals by blocksMined / totalBlocks: directly if it has no code, otherwise credited to claimable (RD-12b).
+    function payPage(address[] calldata validators, uint256[] calldata blocksMined)
+        external
+        onlyDistributionOracle
+        nonReentrant
+    {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(validators.length > 0, "BlockRewardDistributor: empty validator list");
+        require(validators.length == blocksMined.length, "BlockRewardDistributor: length mismatch");
+        address prev = c.lastPayee;
+        uint256 pageBlocks;
+        for (uint256 i = 0; i < validators.length; i++) {
+            address validator = validators[i];
+            // strictly ascending across pages: rejects duplicates, unsorted lists, the zero address and an address paid in an earlier page
+            require(validator > prev, "BlockRewardDistributor: validators must be strictly ascending");
+            prev = validator;
+            uint256 b = blocksMined[i];
+            if (b == 0) continue;
+            pageBlocks += b;
+            _payOne(c, validator, b);
+        }
+        c.lastPayee = prev;
+        c.paidBlocks += pageBlocks;
+        require(c.paidBlocks <= c.totalBlocks, "BlockRewardDistributor: paged blocks exceed the declared total");
+        emit DistributionPage(c.epochId, validators.length, pageBlocks, c.paidBlocks);
+    }
 
-        // Foundation's cut is a fixed 15% of TOTAL rewards, taken independently off
-        // the top — never affected by validatorDirectShareBps above. Only REWARDS are split this
-        // way; FEES are never touched by any of these three shares.
-        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
+    /// @notice Closes the open distribution: the paged blocks must equal the declared total EXACTLY. Pays the treasury (its share plus all rounding dust), the foundation and the fee burn, and emits RewardsDistributed.
+    function closeDistribution() external onlyDistributionOracle nonReentrant {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(c.paidBlocks == c.totalBlocks, "BlockRewardDistributor: paged blocks differ from the declared total");
+        _finalizeEpoch(c);
+    }
 
-        _finalizeEpoch(
-            epochId,
-            totalRewards,
-            prep.effectiveTotalFees,
-            prep.feeBurnAmount,
-            treasuryAmount,
-            foundationAmount,
-            prep.totalBlocks,
-            validatorCount,
-            distributedRewards,
-            distributedFees
-        );
+    /// @notice State of the open distribution (isOpen = false when none).
+    function openDistributionInfo()
+        external
+        view
+        returns (bool isOpen, uint256 epochId, uint256 totalBlocks, uint256 paidBlocks, address lastPayee, uint256 budgetLeft)
+    {
+        OpenDistribution storage c = cur;
+        return (c.isOpen, c.epochId, c.totalBlocks, c.paidBlocks, c.lastPayee, c.budgetLeft);
     }
 
     /// @notice Cumulative Suren burned because the actual reward of a settled range exceeded the approved one.
@@ -926,180 +966,69 @@ contract BlockRewardDistributor {
         uint256 effectiveTotalFees;
         uint256 feeBurnAmount;
         uint256 feesToDistribute;
-        uint256 totalBlocks;
     }
 
-    /// @dev Pre-computation helper for distributeRewards(): isolated in its own stack frame so distributeRewards() has
-    ///      fewer simultaneously-live locals at the _payValidators call site.
-    function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
+    /// @dev Pre-computation of openDistribution(): folds the membership fees in, checks the balance (claimable is a debt, never distributable) and splits off the fee burn.
+    function _prepareEpoch(uint256 totalBlocks, uint256 totalRewards, uint256 totalFees)
         private
         returns (EpochPrep memory prep)
     {
-        // Fold any membership fees forwarded by ValidatorsRegistry since the last epoch into
-        // this epoch's fee pool — they are already sitting in this contract's balance (received
-        // via receiveMembershipFee()), so they simply join ordinary fees and get the exact same
-        // 100%-pro-rata-by-blocks treatment. See sur-tokenomics.md section 6.
+        // Fold the membership fees forwarded since the last distribution into this fee pool (exempt from the fee burn; see sur-tokenomics.md section 6).
         uint256 membershipFeesThisEpoch = pendingMembershipFees;
         pendingMembershipFees = 0;
         prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
 
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
+        require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
         // RD-12b: amounts already owed to owners with code (claimable) are a debt of this contract and never distributable.
         require(
             totalRewards + prep.effectiveTotalFees + totalClaimable <= address(this).balance,
             "BlockRewardDistributor: insufficient contract balance"
         );
 
-        // Burn a fixed 30% — but ONLY of ordinary transaction fees (totalFees),
-        // deliberately NOT of membershipFeesThisEpoch. Rationale (see sur-tokenomics.md
-        // section 6): the membership fee is not a general network fee at all — it is a
-        // targeted, one-time dilution-compensation payment to existing validators, triggered
-        // by a new validator's entry. Burning part of it would silently weaken that specific
-        // incentive mechanism as an unintended side effect of a later, unrelated decision
-        // (the general fee-burn). Ordinary fees have no such earmarked purpose, so they are
-        // the correct — and only — burn target.
+        // Burn a fixed 30% of the ORDINARY fees only (not of the membership fees).
         prep.feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
         prep.feesToDistribute = prep.effectiveTotalFees - prep.feeBurnAmount;
-
-        prep.totalBlocks = _sumBlocks(blocksMined);
-        require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
     }
 
-    /// @dev Sums the reported per-validator block counts. Split out of distributeRewards purely
-    ///      to keep that function's own stack frame small (see the refactor note above) — no
-    ///      behavior change from the original inline loop.
-    function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
-        for (uint256 i = 0; i < blocksMined.length; i++) {
-            totalBlocks += blocksMined[i];
-        }
-    }
-
-    /// @dev Bundles the four scalar inputs `_payValidators` needs into a single memory struct —
-    ///      a struct is passed as one pointer (one stack slot) instead of four separate slots,
-    ///      which is what let this function's own frame fit under the 16-slot limit (see the
-    ///      refactor note above `distributeRewards`).
-    struct EpochContext {
-        uint256 epochId;
-        uint256 remainingRewards;
-        uint256 totalFees;
-        uint256 totalBlocks;
-    }
-
-    /// @dev Pays every eligible validator a single combined (reward share + fee share) transfer,
-    ///      by block ratio. Same behavior as the original inline loop body from
-    ///      distributeRewards; the actual per-validator storage writes, transfer, and event now
-    ///      live in `_payOneValidator` (its own stack frame) so that even this loop's own frame
-    ///      stays small — no behavior, event, or ordering change.
-    function _payValidators(
-        address[] calldata validators,
-        uint256[] calldata blocksMined,
-        EpochContext memory ctx
-    ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
-        for (uint256 i = 0; i < validators.length; i++) {
-            // Addresses must be STRICTLY ascending. This rejects duplicates (which would overwrite the per-epoch records
-            // while paying every entry) and unsorted lists. The RewardRouter must aggregate blocks per miner and sort by
-            // address before submitting.
-            if (i > 0) {
-                require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
-            }
-            if (blocksMined[i] == 0) continue;
-
-            address validator = validators[i];
-            require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            // Past legitimate work is always paid, regardless of the validator's CURRENT status.
-            // `isValidator()` would incorrectly reject a validator that has since exited or been
-            // suspended, even for blocks it mined while genuinely Active. `everActivated()` is a
-            // permanent, append-only Registry flag that survives `withdrawStake()`'s deletion; it
-            // proves only "was legitimately activated at least once," not "was Active when this
-            // specific block was mined" — that timing verification is NOT and CANNOT be done
-            // on-chain (Solidity has no access to historical Registry state beyond the current
-            // block) and remains entirely RewardRouter's responsibility: it must determine, from
-            // chain data, both the true miner of each block in the settled range (`eth_getBlockByNumber`)
-            // and that this miner was genuinely Active at that block's height (via a historical
-            // `eth_call` on an archive node, or by replaying `StatusDecisionRecorded` events) before
-            // including it here. This check is only a minimal backstop against an address that was
-            // never a real validator at all — it is not a substitute for that oracle-side proof, and
-            // does not make this contract's payout self-verifying.
-            require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
-
-            uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
-            uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;
-
-            bool paid = _payOneValidator(ctx.epochId, validator, blocksMined[i], rewardShare, feeShare);
-            if (paid) {
-                distributedRewards += rewardShare;
-                distributedFees += feeShare;
-                validatorCount++;
-            }
-        }
-    }
-
-    /// @dev Records one validator's epoch shares, transfers their combined payout, and emits the
-    ///      per-validator event. Split out of `_payValidators` purely so these locals (payout,
-    ///      success) live in their own minimal stack frame — no behavior, event, or ordering
-    ///      change from the original single-function version.
-    function _payOneValidator(
-        uint256 epochId,
-        address validator,
-        uint256 blocksMinedByValidator,
-        uint256 rewardShare,
-        uint256 feeShare
-    ) private returns (bool paid) {
+    /// @dev Pays or credits one payee of a page. Past legitimate work is always paid (everActivated); the timing check (was the miner Active at that block) remains the RewardRouter's job. Per-payee records are the events only (no per-epoch storage).
+    function _payOne(OpenDistribution storage c, address validator, uint256 blocksMinedByValidator) private {
+        require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
+        uint256 rewardShare = (c.validatorDirectAmount * blocksMinedByValidator) / c.totalBlocks;
+        uint256 feeShare = (c.feesToDistribute * blocksMinedByValidator) / c.totalBlocks;
         uint256 payout = rewardShare + feeShare;
-        if (payout == 0) return false;
+        if (payout == 0) return;
 
-        epochValidatorRewardShare[epochId][validator] = rewardShare;
-        epochValidatorFeeShare[epochId][validator] = feeShare;
-        epochValidatorBlocks[epochId][validator] = blocksMinedByValidator;
         totalRewardsPaid[validator] += rewardShare;
         totalFeesPaid[validator] += feeShare;
         totalBlocksRecorded[validator] += blocksMinedByValidator;
+        c.budgetLeft -= payout;
+        c.distributedRewards += rewardShare;
+        c.distributedFees += feeShare;
+        c.validatorCount++;
 
-        // single combined transfer per validator for the entire call
-        // RD-12b: direct payment only to an address WITHOUT code (an EOA). An address that has code (e.g. a contract created later at a
-        // pre-computed address) is never called: the amount is credited to claimable and the owner calls claim(), so no payee can
-        // halt anyone else's distribution.
+        // RD-12b: direct payment only to an address WITHOUT code; an address with code is never called: it is credited to claimable and the owner calls claim().
         if (validator.code.length == 0) {
             (bool success, ) = validator.call{value: payout}("");
             require(success, "BlockRewardDistributor: validator transfer failed");
-            emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+            emit ValidatorRewarded(c.epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
         } else {
             claimable[validator] += payout;
             totalClaimable += payout;
-            emit ValidatorRewardDeferred(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+            emit ValidatorRewardDeferred(c.epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
         }
-        return true;
     }
 
-    /// @dev Rounds dust into the treasury, transfers the treasury's share, updates lifetime
-    ///      totals, records the epoch, and emits the final event — exactly the original inline
-    ///      tail of distributeRewards, moved into its own function purely for stack-depth
-    ///      reasons (see the refactor note above). No behavior, event, or ordering change.
-    function _finalizeEpoch(
-        uint256 epochId,
-        uint256 totalRewards,
-        uint256 totalFees,
-        uint256 feeBurnAmount,
-        uint256 treasuryAmount,
-        uint256 foundationAmount,
-        uint256 totalBlocks,
-        uint256 validatorCount,
-        uint256 distributedRewards,
-        uint256 distributedFees
-    ) private {
-        // Rounding dust from both reward and fee division is added to the treasury's amount
-        // so that no wei is left stuck in the contract. The reward-side dust formula subtracts
-        // treasuryAmount, foundationAmount, AND distributedRewards from totalRewards — since
-        // totalRewards is algebraically exactly foundationAmount + validatorDirectAmount +
-        // treasuryAmount (treasuryAmount is defined as the remainder, so there is no dust at
-        // that level), what's left over here is exactly validatorDirectAmount - distributedRewards
-        // — the integer-division remainder from splitting validatorDirectAmount by block share.
-        uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        // totalFees here is the FULL pre-burn fee pool (for the epoch record/event's transparency — see
-        // distributeRewards). feeDust must therefore subtract feeBurnAmount as well as distributedFees, or the
-        // burned 30% would be silently miscounted as "rounding dust" and sent to the treasury a second time.
-        uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
+    /// @dev Tail of closeDistribution(): rounding dust goes to the treasury, then treasury, foundation and fee burn are paid, totals and the epoch record are written and RewardsDistributed is emitted.
+    function _finalizeEpoch(OpenDistribution storage c) private {
+        uint256 epochId = c.epochId;
+        uint256 foundationAmount = (c.totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = c.totalRewards - foundationAmount - c.validatorDirectAmount;
+        // dust: what the integer division by block share left of the validators' reward share and of the fee pool
+        uint256 rewardDust = c.validatorDirectAmount - c.distributedRewards;
+        uint256 feeDust = c.feesToDistribute - c.distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
+        uint256 feeBurnAmount = c.feeBurnAmount;
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");
@@ -1112,10 +1041,6 @@ contract BlockRewardDistributor {
             emit FoundationFunded(epochId, foundationAmount);
         }
 
-        // Burn the fee-burn portion — sent last, after the treasury/foundation
-        // transfers, purely for a consistent call ordering; the amount was already carved out
-        // of feesToDistribute before _payValidators ran, so this is simply moving Suren that
-        // was never paid to anyone into permanent, verifiable non-circulation.
         if (feeBurnAmount > 0) {
             (bool bsuccess, ) = BURN_ADDRESS.call{value: feeBurnAmount}("");
             require(bsuccess, "BlockRewardDistributor: fee burn transfer failed");
@@ -1123,21 +1048,21 @@ contract BlockRewardDistributor {
             emit FeesBurned(epochId, feeBurnAmount, totalFeesBurned);
         }
 
-        totalDistributedToValidators += (distributedRewards + distributedFees);
+        totalDistributedToValidators += (c.distributedRewards + c.distributedFees);
         totalDistributedToTreasury += totalTreasuryAmount;
         totalDistributedToFoundation += foundationAmount;
-        lastDistributionTime = block.timestamp;
 
         epochs[epochId] = Epoch({
             timestamp: block.timestamp,
-            totalRewards: totalRewards,
-            totalFees: totalFees,
+            totalRewards: c.totalRewards,
+            totalFees: c.totalFees,
             treasuryAmount: totalTreasuryAmount,
-            totalBlocksMined: totalBlocks,
-            validatorCount: validatorCount
+            totalBlocksMined: c.totalBlocks,
+            validatorCount: c.validatorCount
         });
 
-        emit RewardsDistributed(epochId, totalRewards, totalFees, totalTreasuryAmount, totalBlocks, validatorCount);
+        emit RewardsDistributed(epochId, c.totalRewards, c.totalFees, totalTreasuryAmount, c.totalBlocks, c.validatorCount);
+        delete cur; // closed: the reservation is released (its money has just been spent)
     }
 
     // ------------------------------------------------------------------
@@ -1154,18 +1079,6 @@ contract BlockRewardDistributor {
     ) {
         Epoch storage e = epochs[epochId];
         return (e.timestamp, e.totalRewards, e.totalFees, e.treasuryAmount, e.totalBlocksMined, e.validatorCount);
-    }
-
-    function getValidatorEpochReward(uint256 epochId, address validator)
-        external
-        view
-        returns (uint256 rewardShare, uint256 feeShare, uint256 blocks)
-    {
-        return (
-            epochValidatorRewardShare[epochId][validator],
-            epochValidatorFeeShare[epochId][validator],
-            epochValidatorBlocks[epochId][validator]
-        );
     }
 
     function getValidatorTotals(address validator)
@@ -1226,6 +1139,6 @@ contract BlockRewardDistributor {
 
     /// @notice Balance a distribution may spend = contract balance minus the claimable debt.
     function getDistributableBalance() external view returns (uint256) {
-        return address(this).balance - totalClaimable;
+        return address(this).balance - totalClaimable - cur.budgetLeft;
     }
 }

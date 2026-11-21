@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, mine, setTime, now } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, mine, setTime, now, distribute } = require("./helpers");
 
 const E = ethers.parseEther;
 const ORACLE = "0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6"; // SurAddresses.DISTRIBUTION_ORACLE
@@ -29,7 +29,7 @@ describe("BlockRewardDistributor v2.5 - approved reward and excess burn", () => 
     const { dist, oracle, owner } = await loadFixture(fixture);
     expect(await dist.maxRewardsForRange(1, 10)).to.equal(E("20")); // 2 Suren per block
     const before = [await ethers.provider.getBalance(owner.address), await ethers.provider.getBalance(FOUNDATION), await ethers.provider.getBalance(TREASURY)];
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("20"), E("1"));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("20"), E("1"));
     expect(await dist.totalExcessBurned()).to.equal(0);
     expect(await ethers.provider.getBalance(owner.address)).to.equal(before[0] + E("10") + E("0.7"));
     expect(await ethers.provider.getBalance(FOUNDATION)).to.equal(before[1] + E("3"));
@@ -41,9 +41,8 @@ describe("BlockRewardDistributor v2.5 - approved reward and excess burn", () => 
     const { dist, oracle, owner } = await loadFixture(fixture);
     const burnedBefore = await ethers.provider.getBalance(ZERO);
     const before = [await ethers.provider.getBalance(owner.address), await ethers.provider.getBalance(FOUNDATION), await ethers.provider.getBalance(TREASURY)];
-    const tx = dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("25"), E("1"));
-    await expect(tx).to.emit(dist, "RewardExcessBurned").withArgs(1, 1, 10, E("20"), E("5"));
-    await tx;
+    const txs = await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("25"), E("1"));
+    await expect(txs.open).to.emit(dist, "RewardExcessBurned").withArgs(1, 1, 10, E("20"), E("5"));
     expect(await dist.totalExcessBurned()).to.equal(E("5"));
     expect(await ethers.provider.getBalance(ZERO)).to.equal(burnedBefore + E("5") + E("0.3")); // excess + 30% of the fee
     expect(await ethers.provider.getBalance(owner.address)).to.equal(before[0] + E("10") + E("0.7"));
@@ -54,17 +53,20 @@ describe("BlockRewardDistributor v2.5 - approved reward and excess burn", () => 
 
   it("reported < approved is paid as reported (no burn); there is no cap on the excess burned per epoch", async () => {
     const { dist, oracle, owner } = await loadFixture(fixture);
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("10"), E("0"));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, [owner.address], [10], E("10"), E("0"));
     expect(await dist.totalExcessBurned()).to.equal(0);
     await hre.network.provider.send("evm_increaseTime", [24 * 3600]);
-    await dist.connect(oracle).distributeRewards({ fromBlock: 11, toBlock: 20 }, [owner.address], [10], E("1000"), E("0")); // 980 over the approved 20
+    await distribute(dist, oracle, { fromBlock: 11, toBlock: 20 }, [owner.address], [10], E("1000"), E("0")); // 980 over the approved 20
     expect(await dist.totalExcessBurned()).to.equal(E("980"));
     expect(await dist.lastSettledBlock()).to.equal(20);
   });
 
   it("only the distribution oracle can distribute; an address never activated is refused", async () => {
     const { dist, S, oracle } = await loadFixture(fixture);
-    await expect(dist.connect(S[3]).distributeRewards({ fromBlock: 1, toBlock: 10 }, [S[0].address], [10], E("20"), 0)).to.be.reverted;
-    await expect(dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, [S[5].address], [10], E("20"), 0)).to.be.reverted;
+    await expect(dist.connect(S[3]).openDistribution({ fromBlock: 1, toBlock: 10 }, 10, E("20"), 0)).to.be.revertedWith("BlockRewardDistributor: caller is not the distribution oracle");
+    await dist.connect(oracle).openDistribution({ fromBlock: 1, toBlock: 10 }, 10, E("20"), 0);
+    await expect(dist.connect(S[3]).payPage([S[0].address], [10])).to.be.revertedWith("BlockRewardDistributor: caller is not the distribution oracle");
+    await expect(dist.connect(S[3]).closeDistribution()).to.be.revertedWith("BlockRewardDistributor: caller is not the distribution oracle");
+    await expect(dist.connect(oracle).payPage([S[5].address], [10])).to.be.revertedWith("BlockRewardDistributor: address was never a legitimate validator");
   });
 });

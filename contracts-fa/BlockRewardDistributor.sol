@@ -101,7 +101,7 @@ contract BlockRewardDistributor {
     uint256 private constant BPS_DENOMINATOR = 10000;
 
     /// @notice بخش ثابتی از **فی معمولی تراکنش** (نه کارمزد عضویت — به کامنت
-    ///         distributeRewards() مراجعه کن که چرا عمداً معاف است) که هر epoch، قبل از توزیع
+    ///         openDistribution() مراجعه کن که چرا عمداً معاف است) که هر epoch، قبل از توزیع
     ///         ۷۰٪ باقی‌مانده بین ولیدیتورها، برای همیشه سوزانده می‌شود. به
     ///         sur-tokenomics.md بخش ۷ برای استدلال کامل مراجعه کن: چون
     ///         منبع غالب تورم سورن خودِ ریوارد است نه فی، سوزاندن فی به‌تنهایی تورم را خنثی
@@ -217,9 +217,6 @@ contract BlockRewardDistributor {
 
     mapping(uint256 => Epoch) public epochs;
 
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorRewardShare;
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorFeeShare;
-    mapping(uint256 => mapping(address => uint256)) public epochValidatorBlocks;
 
     mapping(address => uint256) public totalRewardsPaid;
     mapping(address => uint256) public totalFeesPaid;
@@ -231,7 +228,7 @@ contract BlockRewardDistributor {
 
     /// @notice کارمزدهای عضویتی که ValidatorsRegistry از epoch توزیع قبلی تا الان فرستاده،
     ///         در انتظار تجمیع در استخر فی ۱۰۰٪-به‌نسبت-بلاک همان epoch. در انتهای هر
-    ///         فراخوانی distributeRewards() صفر می‌شود.
+    ///         فراخوانی openDistribution() صفر می‌شود.
     uint256 public pendingMembershipFees;
 
     /// @notice یک پیشنهاد دومجلسی برای تغییر validatorDirectShareBps. نیازمند تأیید
@@ -415,7 +412,7 @@ contract BlockRewardDistributor {
 
     /// @notice توسط ValidatorsRegistry.requestMembership() فراخوانی می‌شود تا کارمزد عضویت
     ///         ولیدیتور تازه را اینجا بفرستد. مبلغ صرفاً انباشته می‌شود تا فراخوانی
-    ///         distributeRewards() بعدی، جایی که به استخر فی همان epoch اضافه می‌شود —
+    ///         openDistribution() بعدی، جایی که به استخر فی همان epoch اضافه می‌شود —
     ///         کاملاً از سوزاندن ۳۰٪ معاف (برخلاف فی معمولی)، ولی از نظر نحوه‌ی تقسیم بین
     ///         ولیدیتورها ۱۰۰٪-به‌نسبت-بلاک پرداخت می‌شود — به sur-tokenomics.md بخش ۶ مراجعه
     ///         کنید که چرا این طراحی (یک انگیزه‌ی نقدی مستقیم و قابل‌ردیابی به‌ازای هر عضویت
@@ -553,84 +550,128 @@ contract BlockRewardDistributor {
     // منطق به سه تابع تقسیم شده، هرکدام با stack frame مستقل خودشان، تا قرارداد بدون viaIR کامپایل شود
     // (که خیلی از سرویس‌های وریفای نمی‌توانند در برابرش وریفای کنند — sur-contracts-deploy-notes.md را ببین).
     // ------------------------------------------------------------------
-    /// @param validators لیست آدرس ولیدیتورها (بدون تکرار)
-    /// @param blocksMined تعداد بلاک تولیدشده توسط هر ولیدیتور از آخرین فراخوانی به بعد (همون ترتیب validators)
-    /// @param totalRewards مجموع ریوارد این epoch (به wei) — آف‌چین توسط اوراکل، از ورودی‌های «reward» تابع trace_block محاسبه می‌شود
-    /// @param totalFees مجموع فی تراکنش‌های این epoch (به wei) — آف‌چین توسط اوراکل، از eth_getTransactionReceipt.gasUsed ضرب‌در effectiveGasPrice برای هر تراکنش محاسبه می‌شود (هرگز از خروجی trace_*، که برای انتقال‌های ساده gasUsed=0 گزارش می‌کند)
-    /// @notice `range` بازه‌ی شامل (inclusive) بلاک‌هایی است که این توزیع تسویه می‌کند. باید دقیقاً از lastSettledBlock + 1
-    ///         شروع شود (نه تکرار، نه هم‌پوشانی، نه فاصله — قطعی سرویس با بازه‌ی **بعدی‌ِ بزرگ‌تر** پوشش داده می‌شود، هرگز
-    ///         رد نمی‌شود)، باید قبل از بلاک جاری تمام شود، و تعداد بلاک‌های گزارش‌شده‌ی هر ولیدیتور (بعد از فیلتر سرویس روی
-    ///         بلاک‌هایی که تولیدکننده‌شان دیگر معتبر نیست) نمی‌تواند از اندازه‌ی آن بیشتر باشد.
-    function distributeRewards(
-        BlockRange calldata range,
-        address[] calldata validators,
-        uint256[] calldata blocksMined,
-        uint256 totalRewards,
-        uint256 totalFees
-    )
+    // ------------------------------------------------------------------
+    // توزیع صفحه‌بندی‌شده (RD-18، تصمیم مالک ۲۰۲۶-۱۱-۲۱)
+    //
+    // یک توزیع = openDistribution() + چند payPage() + closeDistribution()؛ فقط اوراکل توزیع آن‌ها را صدا می‌زند.
+    //   open   بازه، «مجموع» بلاک‌ها و مبالغ را اعلام می‌کند؛ بازه را تسویه می‌کند (lastSettledBlock همین‌جا جلو می‌رود)، مازاد را می‌سوزاند،
+    //          مبلغ لازم را رزرو می‌کند (budgetLeft) و فاصلهٔ ۲۳ ساعته از همین‌جا شمرده می‌شود؛ RewardsDistributed هنوز داده نمی‌شود.
+    //   page   تعدادی دریافت‌کننده را می‌پردازد. آدرس‌ها باید در کل صفحه‌ها اکیداً صعودی باشند (هر صفحه از بالای آخرین آدرس صفحهٔ پیش شروع می‌شود).
+    //   close  مجموع بلاک‌های صفحه‌ها را با مجموع اعلام‌شده دقیقاً برابر می‌خواهد، سپس خزانه، بنیاد و سوزاندن فی را می‌پردازد و RewardsDistributed را می‌دهد.
+    // مسیر فرار «وجود ندارد»: توزیع بازمانده فقط ادامه و بسته می‌شود (با کلید فعلی اوراکل)؛ هیچ‌کس، از جمله هیأت، نمی‌تواند آن را رها کند یا پولش را جابه‌جا کند.
+    // سقف اندازهٔ صفحه در کد نیست: صفحه‌ای که در حد گس نگنجد کامل ریورت می‌شود (بدون تغییر حالت)، پس صفحهٔ بزرگ فقط تراکنش خودش را شکست می‌دهد. اندازهٔ صفحه را Router انتخاب می‌کند.
+    // ------------------------------------------------------------------
+    struct OpenDistribution {
+        bool isOpen;
+        uint256 epochId;
+        uint256 totalBlocks;            // در open اعلام می‌شود؛ مجموع صفحه‌ها باید دقیقاً همین باشد
+        uint256 paidBlocks;             // مجموع بلاک‌های صفحه‌های تاکنون
+        uint256 totalRewards;           // پاداش مصوب (پس از سوزاندن مازاد)
+        uint256 totalFees;              // کل استخر فی با کارمزد عضویت، پیش از سوزاندن (برای رکورد epoch)
+        uint256 feeBurnAmount;
+        uint256 feesToDistribute;
+        uint256 validatorDirectAmount;
+        uint256 budgetLeft;             // مبلغ رزروشده‌ای که هنوز پرداخت، به claimable منتقل یا در close خرج نشده
+        uint256 distributedRewards;
+        uint256 distributedFees;
+        uint256 validatorCount;
+        address lastPayee;
+    }
+    OpenDistribution private cur;
+
+    event DistributionOpened(
+        uint256 indexed epochId,
+        uint256 fromBlock,
+        uint256 toBlock,
+        uint256 totalBlocks,
+        uint256 approvedRewards,
+        uint256 feePoolToDistribute
+    );
+    event DistributionPage(uint256 indexed epochId, uint256 payees, uint256 blocksInPage, uint256 paidBlocksSoFar);
+
+    /// @notice توزیع `range` را باز می‌کند. بازه باید از lastSettledBlock + 1 شروع شود، پیش از بلاک جاری تمام شود و totalBlocks اعلام‌شده از اندازهٔ آن بیشتر نباشد. totalRewards پاداش واقعی گزارش‌شده است (بخش بیش از مصوب فوراً سوزانده می‌شود)؛ totalFees فی عادی بازه.
+    function openDistribution(BlockRange calldata range, uint256 totalBlocks, uint256 totalRewards, uint256 totalFees)
         external
         onlyDistributionOracle
         nonReentrant
     {
-        require(validators.length > 0, "BlockRewardDistributor: empty validator list");
-        require(validators.length == blocksMined.length, "BlockRewardDistributor: length mismatch");
+        OpenDistribution storage c = cur;
+        require(!c.isOpen, "BlockRewardDistributor: another distribution is open");
         require(
             block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL || epochCount == 0,
             "BlockRewardDistributor: too soon since last distribution"
         );
-
-        // پیش‌محاسبه در _prepareEpoch() نگه داشته شده تا stack frame خودِ این تابع کوچک بماند:
-        // ۴ مقدار نتیجه در یک struct حافظه (`prep`) جمع می‌شوند، نه ۴ متغیر local جدا.
-        EpochPrep memory prep = _prepareEpoch(blocksMined, totalRewards, totalFees);
-        _settleRange(range, prep.totalBlocks);
-        // v2.5: پاداش گزارش‌شده (واقعی) بازه ممکن است از پاداش مصوب بلاک‌هایش بیشتر باشد (تغییر بی‌رأی پیکربندی Besu، یا
-        // کاهش مصوبی که هنوز در Besu اعمال نشده). فقط مقدار «مصوب» سه‌طرفه تقسیم می‌شود؛ مازاد بلافاصله سوزانده می‌شود
-        // (بدون سقف، توزیع هرگز متوقف نمی‌شود، هیچ مسیر دستی یا اضطراری برای تقسیم آن وجود ندارد).
-        // کارمزد عادی و کارمزد عضویت خارج از این قاعده‌اند؛ تقسیم و سوزاندن آن‌ها بدون تغییر است.
+        EpochPrep memory prep = _prepareEpoch(totalBlocks, totalRewards, totalFees);
+        _settleRange(range, totalBlocks);
+        // v2.5: فقط مقدار «مصوب» بازه تقسیم می‌شود؛ مازاد بر آن فوراً سوزانده می‌شود (توزیع هرگز متوقف نمی‌شود).
         totalRewards = _capAndBurnExcess(range, totalRewards);
 
         epochCount++;
-        uint256 epochId = epochCount;
-        epochBlockRanges[epochId] = range;
-        emit EpochRangeSettled(epochId, range.fromBlock, range.toBlock);
+        epochBlockRanges[epochCount] = range;
+        emit EpochRangeSettled(epochCount, range.fromBlock, range.toBlock);
+        lastDistributionTime = block.timestamp; // فاصلهٔ ۲۳ ساعته از «باز کردن» شمرده می‌شود
 
-        // foundationAmount/treasuryAmount *بعد* از فراخوان _payValidators محاسبه می‌شوند (به آن وابسته نیستند)، که تعداد
-        // متغیرهای local زنده در آن فراخوان را کم می‌کند.
-        // validatorDirectShareBps حکمرانی‌شونده است (رأی دومجلسی، [۴۰٪, ۶۵٪]) — کامنت سطح
-        // قرارداد بالا را ببینید. ValidatorsTreasury هرچه بعد از سهم ثابت بنیاد و این سهم
-        // حکمرانی‌شونده باقی بماند را دریافت می‌کند.
-        uint256 validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        c.isOpen = true;
+        c.epochId = epochCount;
+        c.totalBlocks = totalBlocks;
+        c.paidBlocks = 0;
+        c.totalRewards = totalRewards;
+        c.totalFees = prep.effectiveTotalFees;
+        c.feeBurnAmount = prep.feeBurnAmount;
+        c.feesToDistribute = prep.feesToDistribute;
+        c.validatorDirectAmount = (totalRewards * validatorDirectShareBps) / BPS_DENOMINATOR;
+        c.budgetLeft = totalRewards + prep.effectiveTotalFees; // رزرو: هیچ مسیر دیگری نمی‌تواند خرجش کند
+        c.distributedRewards = 0;
+        c.distributedFees = 0;
+        c.validatorCount = 0;
+        c.lastPayee = address(0);
+        emit DistributionOpened(epochCount, range.fromBlock, range.toBlock, totalBlocks, totalRewards, prep.feesToDistribute);
+    }
 
-        (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) =
-            _payValidators(
-                validators,
-                blocksMined,
-                EpochContext({
-                    epochId: epochId,
-                    remainingRewards: validatorDirectAmount,
-                    totalFees: prep.feesToDistribute,
-                    totalBlocks: prep.totalBlocks
-                })
-            );
+    /// @notice یک صفحه از توزیع باز را می‌پردازد. `validators` باید اکیداً صعودی و هر آدرس بالاتر از آخرین دریافت‌کنندهٔ صفحهٔ پیش باشد. سهم هر دریافت‌کننده به نسبت blocksMined / totalBlocks از مجموع‌های اعلام‌شده است: بدون کد مستقیم، با کد به claimable (RD-12b).
+    function payPage(address[] calldata validators, uint256[] calldata blocksMined)
+        external
+        onlyDistributionOracle
+        nonReentrant
+    {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(validators.length > 0, "BlockRewardDistributor: empty validator list");
+        require(validators.length == blocksMined.length, "BlockRewardDistributor: length mismatch");
+        address prev = c.lastPayee;
+        uint256 pageBlocks;
+        for (uint256 i = 0; i < validators.length; i++) {
+            address validator = validators[i];
+            // اکیداً صعودی در کل صفحه‌ها: تکراری، نامرتب، آدرس صفر و آدرسی که در صفحهٔ پیش پرداخت شده را رد می‌کند
+            require(validator > prev, "BlockRewardDistributor: validators must be strictly ascending");
+            prev = validator;
+            uint256 b = blocksMined[i];
+            if (b == 0) continue;
+            pageBlocks += b;
+            _payOne(c, validator, b);
+        }
+        c.lastPayee = prev;
+        c.paidBlocks += pageBlocks;
+        require(c.paidBlocks <= c.totalBlocks, "BlockRewardDistributor: paged blocks exceed the declared total");
+        emit DistributionPage(c.epochId, validators.length, pageBlocks, c.paidBlocks);
+    }
 
-        // سهم بنیاد ۱۵٪ ثابت از کل ریوارد است، مستقل و از بالای کل کسر
-        // می‌شود — هرگز تحت‌تأثیر validatorDirectShareBps بالا نیست. فقط ریوارد این‌طور
-        // تقسیم می‌شود؛ فی هرگز توسط هیچ‌کدام از این سه سهم لمس نمی‌شود.
-        uint256 foundationAmount = (totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
-        uint256 treasuryAmount = totalRewards - foundationAmount - validatorDirectAmount;
+    /// @notice توزیع باز را می‌بندد: مجموع بلاک‌های صفحه‌ها باید دقیقاً برابر مجموع اعلام‌شده باشد. سهم خزانه (با همهٔ باقی‌ماندهٔ گرد کردن)، بنیاد و سوزاندن فی را می‌پردازد و RewardsDistributed را می‌دهد.
+    function closeDistribution() external onlyDistributionOracle nonReentrant {
+        OpenDistribution storage c = cur;
+        require(c.isOpen, "BlockRewardDistributor: no open distribution");
+        require(c.paidBlocks == c.totalBlocks, "BlockRewardDistributor: paged blocks differ from the declared total");
+        _finalizeEpoch(c);
+    }
 
-        _finalizeEpoch(
-            epochId,
-            totalRewards,
-            prep.effectiveTotalFees,
-            prep.feeBurnAmount,
-            treasuryAmount,
-            foundationAmount,
-            prep.totalBlocks,
-            validatorCount,
-            distributedRewards,
-            distributedFees
-        );
+    /// @notice وضعیت توزیع باز (isOpen = false اگر نباشد).
+    function openDistributionInfo()
+        external
+        view
+        returns (bool isOpen, uint256 epochId, uint256 totalBlocks, uint256 paidBlocks, address lastPayee, uint256 budgetLeft)
+    {
+        OpenDistribution storage c = cur;
+        return (c.isOpen, c.epochId, c.totalBlocks, c.paidBlocks, c.lastPayee, c.budgetLeft);
     }
 
     /// @notice مجموع تجمعی سورنی که سوزانده شده چون پاداش واقعی یک بازهٔ تسویه‌شده از پاداش مصوب بیشتر بود.
@@ -910,177 +951,69 @@ contract BlockRewardDistributor {
         uint256 effectiveTotalFees;
         uint256 feeBurnAmount;
         uint256 feesToDistribute;
-        uint256 totalBlocks;
     }
 
-    /// @dev تابع کمکی پیش‌محاسبه‌ی distributeRewards(): در stack frame جدای خودش ایزوله شده تا
-    ///      distributeRewards() متغیرهای local هم‌زمان زنده‌ی کمتری در لحظه‌ی فراخوان
-    ///      _payValidators داشته باشد.
-    function _prepareEpoch(uint256[] calldata blocksMined, uint256 totalRewards, uint256 totalFees)
+    /// @dev پیش‌محاسبهٔ openDistribution(): کارمزد عضویت را اضافه می‌کند، موجودی را می‌سنجد (claimable بدهی است و هرگز قابل توزیع نیست) و سهم سوزاندن فی را جدا می‌کند.
+    function _prepareEpoch(uint256 totalBlocks, uint256 totalRewards, uint256 totalFees)
         private
         returns (EpochPrep memory prep)
     {
-        // هر کارمزد عضویتی که از epoch قبلی ValidatorsRegistry فرستاده به استخر فی همین epoch
-        // اضافه می‌شود — از قبل در موجودی این قرارداد هست (از طریق receiveMembershipFee()
-        // دریافت شده). این کارمزد عضویت با فی معمولی یکی نیست: کاملاً از سوزاندن ۳۰٪ زیر
-        // معاف است (فقط totalFees معمولی سوزانده می‌شود، نه membershipFeesThisEpoch) — فقط
-        // از نظر نحوه‌ی تقسیم نهایی بین ولیدیتورها همان رفتار ۱۰۰٪-به‌نسبت-بلاک را می‌گیرد.
-        // به sur-tokenomics.md بخش ۶ مراجعه کنید.
+        // کارمزد عضویتِ رسیده از توزیع قبل به استخر فی افزوده می‌شود (از سوزاندن فی معاف است؛ sur-tokenomics.md بخش ۶).
         uint256 membershipFeesThisEpoch = pendingMembershipFees;
         pendingMembershipFees = 0;
         prep.effectiveTotalFees = totalFees + membershipFeesThisEpoch;
 
         require(totalRewards + prep.effectiveTotalFees > 0, "BlockRewardDistributor: nothing to distribute");
-        // RD-12b: amounts already owed to owners with code (claimable) are a debt of this contract and never distributable.
+        require(totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
+        // RD-12b: مبلغ‌های بدهکار به مالکان دارای کد (claimable) بدهی این قرارداد است و هرگز قابل توزیع نیست.
         require(
             totalRewards + prep.effectiveTotalFees + totalClaimable <= address(this).balance,
             "BlockRewardDistributor: insufficient contract balance"
         );
 
-        // ۳۰٪ ثابت سوزانده می‌شود — ولی **فقط از فی معمولی تراکنش‌ها** (totalFees)،
-        // عمداً نه از کارمزد عضویت. دلیل (به sur-tokenomics.md بخش ۶ مراجعه کن): کارمزد عضویت
-        // اصلاً یه فی عمومی شبکه نیست — یه پرداخت هدفمند و یک‌باره‌ی جبران رقیق‌شدن به
-        // ولیدیتورهای موجوده، که با ورود ولیدیتور تازه فعال می‌شه. سوزوندن بخشی ازش، این
-        // انگیزه‌ی مشخص رو به‌عنوان یه اثر جانبی ناخواسته‌ی یه تصمیم بعدی و بی‌ربط (سوزاندن
-        // عمومی فی) ضعیف می‌کنه. فی معمولی چنین هدف‌گذاری‌ای نداره، پس هدف درست — و تنها هدف
-        // — سوزاندنه.
+        // ۳۰٪ ثابتِ فی «معمولی» سوزانده می‌شود (نه کارمزد عضویت).
         prep.feeBurnAmount = (totalFees * FEE_BURN_BPS) / BPS_DENOMINATOR;
         prep.feesToDistribute = prep.effectiveTotalFees - prep.feeBurnAmount;
-
-        prep.totalBlocks = _sumBlocks(blocksMined);
-        require(prep.totalBlocks > 0, "BlockRewardDistributor: total blocks is zero");
     }
 
-    /// @dev جمع تعداد بلاک گزارش‌شده‌ی هر ولیدیتور. برای کوچک‌نگه‌داشتن stack frame خودِ
-    ///      distributeRewards از آن جدا شده.
-    function _sumBlocks(uint256[] calldata blocksMined) private pure returns (uint256 totalBlocks) {
-        for (uint256 i = 0; i < blocksMined.length; i++) {
-            totalBlocks += blocksMined[i];
-        }
-    }
-
-    /// @dev بسته‌بندی چهار ورودی مقیاسی موردنیاز `_payValidators` در یک struct در memory —
-    ///      یک struct با یک اشاره‌گر (یک slot استک) پاس داده می‌شود، نه چهار slot جدا؛ همین
-    ///      باعث می‌شود stack frame خودِ این تابع زیر سقف ۱۶لایه جا بگیرد.
-    struct EpochContext {
-        uint256 epochId;
-        uint256 remainingRewards;
-        uint256 totalFees;
-        uint256 totalBlocks;
-    }
-
-    /// @dev پرداخت یک انتقال ترکیبی واحد (سهم ریوارد + سهم فی) به هر ولیدیتور واجدشرایط، به
-    ///      نسبت بلاک. رفتار دقیقاً همان بدنه‌ی حلقه‌ی inline اصلی در distributeRewards است؛
-    ///      نوشتن‌های storage، انتقال، و event هر ولیدیتور حالا در `_payOneValidator` (با
-    ///      stack frame مستقل خودشان) هستند تا حتی frame خودِ این حلقه هم کوچک بماند — بدون
-    ///      تغییر رفتار، event، یا ترتیب.
-    function _payValidators(
-        address[] calldata validators,
-        uint256[] calldata blocksMined,
-        EpochContext memory ctx
-    ) private returns (uint256 distributedRewards, uint256 distributedFees, uint256 validatorCount) {
-        for (uint256 i = 0; i < validators.length; i++) {
-            // آدرس‌ها باید اکیداً صعودی باشند. این شرط آدرس تکراری (که رکوردهای هر-epoch را بازنویسی می‌کرد در حالی که
-            // همه‌ی ورودی‌ها پرداخت می‌شدند) و فهرست نامرتب را رد می‌کند. RewardRouter باید بلاک‌ها را برای هر تولیدکننده
-            // تجمیع و پیش از ارسال بر اساس آدرس مرتب کند.
-            if (i > 0) {
-                require(validators[i] > validators[i - 1], "BlockRewardDistributor: validators must be strictly ascending");
-            }
-            if (blocksMined[i] == 0) continue;
-
-            address validator = validators[i];
-            require(validator != address(0), "BlockRewardDistributor: zero validator address");
-            // کار مشروع گذشته همیشه پرداخت می‌شود، صرف‌نظر از وضعیت **فعلی** ولیدیتور. `isValidator()`
-            // ولیدیتوری را که از آن‌موقع خروج داده یا معلق شده رد می‌کرد، حتی برای بلاک‌هایی که
-            // واقعاً در دوره‌ی Active تولید کرده. `everActivated()` یک پرچم دائمی و فقط-اضافه‌شونده‌ی Registry است که از
-            // پاک‌شدن در `withdrawStake()` جان سالم به‌در می‌برد؛ فقط «حداقل یک‌بار به‌طور مشروع
-            // فعال شده» را ثابت می‌کند، نه «دقیقاً هنگام تولید همین بلاک فعال بوده» — آن
-            // راستی‌آزمایی زمانی نه ممکن است و نه روی زنجیره انجام می‌شود (Solidity به تاریخچه‌ی
-            // state دسترسی ندارد) و کاملاً مسئولیت RewardRouter می‌ماند: باید از داده‌ی زنجیره
-            // هم تولیدکننده‌ی واقعی هر بلاک را در بازه‌ی تسویه (`eth_getBlockByNumber`) تعیین کند،
-            // هم اینکه آن تولیدکننده دقیقاً در همان ارتفاع بلاک واقعاً Active بوده (با `eth_call`ی
-            // تاریخی روی نود آرشیوی، یا بازپخش رویدادهای `StatusDecisionRecorded`) — پیش از
-            // این‌که اینجا بگنجاندش. این چک فقط یک سدِ حداقلی در برابر آدرسی است که هرگز واقعاً
-            // ولیدیتور نبوده؛ جایگزین آن اثبات سمت اوراکل نیست و این پرداخت را خودش-تأییدشونده
-            // نمی‌کند.
-            require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
-
-            uint256 rewardShare = (ctx.remainingRewards * blocksMined[i]) / ctx.totalBlocks;
-            uint256 feeShare = (ctx.totalFees * blocksMined[i]) / ctx.totalBlocks;
-
-            bool paid = _payOneValidator(ctx.epochId, validator, blocksMined[i], rewardShare, feeShare);
-            if (paid) {
-                distributedRewards += rewardShare;
-                distributedFees += feeShare;
-                validatorCount++;
-            }
-        }
-    }
-
-    /// @dev ثبت سهم‌های epoch یک ولیدیتور، انتقال پرداخت ترکیبی‌اش، و emit event مخصوص همان
-    ///      ولیدیتور. از `_payValidators` جدا شده فقط تا این متغیرهای محلی (payout، success)
-    ///      در stack frame حداقلی خودشان زندگی کنند — بدون تغییر رفتار، event، یا ترتیب نسبت
-    ///      به نسخه‌ی تک‌تابعی اصلی.
-    function _payOneValidator(
-        uint256 epochId,
-        address validator,
-        uint256 blocksMinedByValidator,
-        uint256 rewardShare,
-        uint256 feeShare
-    ) private returns (bool paid) {
+    /// @dev یک دریافت‌کنندهٔ صفحه را می‌پردازد یا به claimable می‌برد. کار گذشتهٔ مشروع همیشه پرداخت می‌شود (everActivated)؛ سنجش زمانی (ماینر در آن بلاک Active بود) همچنان کار RewardRouter است. ثبت هر دریافت‌کننده فقط رویداد است (بدون ذخیرهٔ هر-epoch).
+    function _payOne(OpenDistribution storage c, address validator, uint256 blocksMinedByValidator) private {
+        require(REGISTRY.everActivated(validator), "BlockRewardDistributor: address was never a legitimate validator");
+        uint256 rewardShare = (c.validatorDirectAmount * blocksMinedByValidator) / c.totalBlocks;
+        uint256 feeShare = (c.feesToDistribute * blocksMinedByValidator) / c.totalBlocks;
         uint256 payout = rewardShare + feeShare;
-        if (payout == 0) return false;
+        if (payout == 0) return;
 
-        epochValidatorRewardShare[epochId][validator] = rewardShare;
-        epochValidatorFeeShare[epochId][validator] = feeShare;
-        epochValidatorBlocks[epochId][validator] = blocksMinedByValidator;
         totalRewardsPaid[validator] += rewardShare;
         totalFeesPaid[validator] += feeShare;
         totalBlocksRecorded[validator] += blocksMinedByValidator;
+        c.budgetLeft -= payout;
+        c.distributedRewards += rewardShare;
+        c.distributedFees += feeShare;
+        c.validatorCount++;
 
-        // یک انتقال ترکیبی واحد برای هر ولیدیتور در کل این فراخوانی
-        // RD-12b: پرداخت مستقیم فقط به آدرس بدون کد (EOA). آدرسی که کد دارد (مثلاً قراردادی که بعداً روی آدرس از پیش محاسبه‌شده ساخته شده)
-        // هرگز فراخوانی نمی‌شود: مبلغ به claimable می‌رود و خود مالک claim() می‌زند، پس هیچ پرداخت‌گیری توزیع دیگران را متوقف نمی‌کند.
+        // RD-12b: پرداخت مستقیم فقط به آدرس بدون کد؛ آدرس دارای کد هرگز فراخوانی نمی‌شود: به claimable می‌رود و مالک claim() می‌زند.
         if (validator.code.length == 0) {
             (bool success, ) = validator.call{value: payout}("");
             require(success, "BlockRewardDistributor: validator transfer failed");
-            emit ValidatorRewarded(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+            emit ValidatorRewarded(c.epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
         } else {
             claimable[validator] += payout;
             totalClaimable += payout;
-            emit ValidatorRewardDeferred(epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
+            emit ValidatorRewardDeferred(c.epochId, validator, blocksMinedByValidator, rewardShare, feeShare, payout);
         }
-        return true;
     }
 
-    /// @dev رند کردن خرده‌ریز به خزانه، انتقال سهم خزانه، به‌روزرسانی مجموع‌های تاریخی، ثبت
-    ///      epoch، و emit کردن event نهایی — دنباله‌ی پایانی distributeRewards، که فقط به‌خاطر عمق
-    ///      استک به تابع جدا منتقل شده است.
-    function _finalizeEpoch(
-        uint256 epochId,
-        uint256 totalRewards,
-        uint256 totalFees,
-        uint256 feeBurnAmount,
-        uint256 treasuryAmount,
-        uint256 foundationAmount,
-        uint256 totalBlocks,
-        uint256 validatorCount,
-        uint256 distributedRewards,
-        uint256 distributedFees
-    ) private {
-        // خرده‌ریز رند شده از تقسیم ریوارد و فی، به مبلغ خزانه اضافه می‌شود تا هیچ wei ای
-        // توی قرارداد گیر نکند. فرمول خرده‌ریز سمت ریوارد treasuryAmount، foundationAmount، و
-        // distributedRewards را از totalRewards کم می‌کند — چون totalRewards از نظر جبری
-        // دقیقاً برابر foundationAmount + validatorDirectAmount + treasuryAmount است
-        // (treasuryAmount به‌عنوان باقی‌مانده تعریف شده، پس در آن سطح خرده‌ریزی نیست)، آنچه
-        // اینجا باقی می‌ماند دقیقاً validatorDirectAmount - distributedRewards است — باقی‌مانده‌ی
-        // تقسیم صحیح‌عددی هنگام تقسیم به نسبت بلاک.
-        uint256 rewardDust = totalRewards - treasuryAmount - foundationAmount - distributedRewards;
-        // totalFees اینجا کل استخر فی *قبل از سوزاندن* است (برای شفافیت رکورد epoch/رویداد — به
-        // distributeRewards مراجعه کن). پس feeDust باید هم feeBurnAmount هم distributedFees را کم کند، وگرنه ۳۰٪
-        // سوزانده‌شده به‌اشتباه «خرده‌ریز» حساب و یک بار دیگر به خزانه فرستاده می‌شد.
-        uint256 feeDust = totalFees - feeBurnAmount - distributedFees;
+    /// @dev دنبالهٔ closeDistribution(): باقی‌ماندهٔ گرد کردن به خزانه می‌رود، سپس خزانه، بنیاد و سوزاندن فی پرداخت می‌شود، مجموع‌ها و رکورد epoch نوشته و RewardsDistributed داده می‌شود.
+    function _finalizeEpoch(OpenDistribution storage c) private {
+        uint256 epochId = c.epochId;
+        uint256 foundationAmount = (c.totalRewards * FOUNDATION_SHARE_BPS) / BPS_DENOMINATOR;
+        uint256 treasuryAmount = c.totalRewards - foundationAmount - c.validatorDirectAmount;
+        // باقی‌ماندهٔ گرد کردن: آنچه از تقسیم صحیح بر سهم بلاک در سهم پاداش ولیدیتورها و استخر فی مانده
+        uint256 rewardDust = c.validatorDirectAmount - c.distributedRewards;
+        uint256 feeDust = c.feesToDistribute - c.distributedFees;
         uint256 totalTreasuryAmount = treasuryAmount + rewardDust + feeDust;
+        uint256 feeBurnAmount = c.feeBurnAmount;
 
         if (totalTreasuryAmount > 0) {
             (bool tsuccess, ) = TREASURY.call{value: totalTreasuryAmount}("");
@@ -1093,10 +1026,6 @@ contract BlockRewardDistributor {
             emit FoundationFunded(epochId, foundationAmount);
         }
 
-        // بخش سوزاندنی فی را بسوزان — بعد از انتقال‌های خزانه/بنیاد، صرفاً
-        // برای ترتیب فراخوانی یکدست؛ این مبلغ از قبل، پیش از اجرای _payValidators، از
-        // feesToDistribute کنار گذاشته شده بود، پس اینجا فقط سورنی را که هرگز به کسی پرداخت
-        // نشده به یک عدم‌گردش دائمی و قابل‌راستی‌آزمایی منتقل می‌کنیم.
         if (feeBurnAmount > 0) {
             (bool bsuccess, ) = BURN_ADDRESS.call{value: feeBurnAmount}("");
             require(bsuccess, "BlockRewardDistributor: fee burn transfer failed");
@@ -1104,21 +1033,21 @@ contract BlockRewardDistributor {
             emit FeesBurned(epochId, feeBurnAmount, totalFeesBurned);
         }
 
-        totalDistributedToValidators += (distributedRewards + distributedFees);
+        totalDistributedToValidators += (c.distributedRewards + c.distributedFees);
         totalDistributedToTreasury += totalTreasuryAmount;
         totalDistributedToFoundation += foundationAmount;
-        lastDistributionTime = block.timestamp;
 
         epochs[epochId] = Epoch({
             timestamp: block.timestamp,
-            totalRewards: totalRewards,
-            totalFees: totalFees,
+            totalRewards: c.totalRewards,
+            totalFees: c.totalFees,
             treasuryAmount: totalTreasuryAmount,
-            totalBlocksMined: totalBlocks,
-            validatorCount: validatorCount
+            totalBlocksMined: c.totalBlocks,
+            validatorCount: c.validatorCount
         });
 
-        emit RewardsDistributed(epochId, totalRewards, totalFees, totalTreasuryAmount, totalBlocks, validatorCount);
+        emit RewardsDistributed(epochId, c.totalRewards, c.totalFees, totalTreasuryAmount, c.totalBlocks, c.validatorCount);
+        delete cur; // بسته شد: رزرو آزاد می‌شود (پولش همین حالا خرج شد)
     }
 
     // ------------------------------------------------------------------
@@ -1135,18 +1064,6 @@ contract BlockRewardDistributor {
     ) {
         Epoch storage e = epochs[epochId];
         return (e.timestamp, e.totalRewards, e.totalFees, e.treasuryAmount, e.totalBlocksMined, e.validatorCount);
-    }
-
-    function getValidatorEpochReward(uint256 epochId, address validator)
-        external
-        view
-        returns (uint256 rewardShare, uint256 feeShare, uint256 blocks)
-    {
-        return (
-            epochValidatorRewardShare[epochId][validator],
-            epochValidatorFeeShare[epochId][validator],
-            epochValidatorBlocks[epochId][validator]
-        );
     }
 
     function getValidatorTotals(address validator)
@@ -1207,6 +1124,6 @@ contract BlockRewardDistributor {
 
     /// @notice موجودی که توزیع می‌تواند خرج کند = موجودی قرارداد منهای بدهی claimable.
     function getDistributableBalance() external view returns (uint256) {
-        return address(this).balance - totalClaimable;
+        return address(this).balance - totalClaimable - cur.budgetLeft;
     }
 }

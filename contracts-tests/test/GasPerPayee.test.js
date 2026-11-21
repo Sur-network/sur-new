@@ -1,9 +1,9 @@
-// RD-12b / RD-18: gas per payee of BlockRewardDistributor.distributeRewards (EOA path vs deferred path). Own file: it needs a clean chain (fixed genesis addresses keep storage).
+// RD-12b / RD-18: gas per payee of a BlockRewardDistributor.payPage page (EOA path vs deferred path). Own file: it needs a clean chain (fixed genesis addresses keep storage).
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, mine, increaseTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, mine, increaseTime, now, DAY, distribute } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -37,7 +37,8 @@ async function build(nEoa) {
   return { S, reg, dist, c, eoas, oracle, verifier };
 }
 
-describe("RD-12b / RD-18 - gas per payee (measurement, local Hardhat EVM)", () => {
+describe("RD-12b / RD-18 - gas per payee in a page (measurement, local Hardhat EVM)", () => {
+  /// gas of ONE page holding every payee (first epoch = worst case, lifetime totals zero) and of the same page in the second epoch (steady state)
   async function run(n, contractPayees) {
     const snap = await hre.network.provider.send("evm_snapshot"); // every run starts from a clean chain (fixed genesis addresses keep their storage otherwise)
     const f = await build(n);
@@ -48,30 +49,33 @@ describe("RD-12b / RD-18 - gas per payee (measurement, local Hardhat EVM)", () =
     await mine(n + 5);
     const addrs = sortAsc([f.c.target, ...f.eoas]);
     const total = addrs.length;
-    const tx = await f.dist.connect(f.oracle).distributeRewards({ fromBlock: 1, toBlock: total }, addrs, addrs.map(() => 1), E("2") * BigInt(total), E("1"), { gasLimit: 16_000_000 });
-    const gas = (await tx.wait()).gasUsed;
-    // second epoch: lifetime totals are non-zero now (steady state)
+    const ones = addrs.map(() => 1);
+    const o = { gasLimit: 16_000_000 };
+    const t1 = await distribute(f.dist, f.oracle, { fromBlock: 1, toBlock: total }, addrs, ones, E("2") * BigInt(total), E("1"), 1000, o);
+    const first = (await t1.pages[0].wait()).gasUsed;
+    const fixedOpenClose = (await t1.open.wait()).gasUsed + (await t1.close.wait()).gasUsed;
     await hre.network.provider.send("evm_increaseTime", [24 * 3600]);
     await mine(total + 5);
-    const tx2 = await f.dist.connect(f.oracle).distributeRewards({ fromBlock: total + 1, toBlock: 2 * total }, addrs, addrs.map(() => 1), E("2") * BigInt(total), E("1"), { gasLimit: 16_000_000 });
-    const gas2 = (await tx2.wait()).gasUsed;
+    const t2 = await distribute(f.dist, f.oracle, { fromBlock: total + 1, toBlock: 2 * total }, addrs, ones, E("2") * BigInt(total), E("1"), 1000, o);
+    const steady = (await t2.pages[0].wait()).gasUsed;
     await hre.network.provider.send("evm_revert", [snap]);
-    return [gas, gas2];
+    return { first, steady, fixedOpenClose };
   }
 
-  it("marginal gas of one payee, EOA path and deferred path; implied payee cap at a 45M block gas limit", async function () {
-    this.timeout(600000);
-    const [[a1, a1s], [a2, a2s], [d1, d1s], [d2, d2s]] = [await run(30, false), await run(70, false), await run(30, true), await run(70, true)];
+  it("marginal gas of one payee in a page (EOA path and deferred path) and the implied capacity per page at a 45M block gas limit", async function () {
+    this.timeout(900000);
+    const [a30, a70, d30, d70] = [await run(30, false), await run(70, false), await run(30, true), await run(70, true)];
     const rep = (name, g1, g2) => {
       const per = Number(g2 - g1) / 40, fixed = Number(g1) - per * 31;
-      console.log("      [gas] " + name + ": " + per.toFixed(0) + " per payee, fixed " + fixed.toFixed(0) + "  => cap at 45M ~ " + Math.floor((45e6 - fixed) / per));
+      console.log("      [gas/page] " + name + ": " + per.toFixed(0) + " per payee, page fixed " + fixed.toFixed(0) + " => payees per page at 45M ~ " + Math.floor((45e6 - fixed) / per) + ", at 16.7M tx cap ~ " + Math.floor((16777216 - fixed) / per));
       return per;
     };
-    const eoaPer = rep("EOA payee, first epoch (worst case: lifetime totals zero)", a1, a2);
-    rep("EOA payee, steady state (second epoch)", a1s, a2s);
-    const defPer = rep("deferred payee (owner with code), first epoch", d1, d2);
-    rep("deferred payee (owner with code), steady state", d1s, d2s);
-    expect(eoaPer).to.be.gt(50_000).and.lt(200_000);
-    expect(defPer).to.be.gt(50_000).and.lt(200_000);
+    console.log("      [gas/page] open + close (once per distribution), 70 payees: " + a70.fixedOpenClose);
+    const eoaFirst = rep("EOA, first epoch (worst case)", a30.first, a70.first);
+    rep("EOA, steady state", a30.steady, a70.steady);
+    const defFirst = rep("deferred (owner with code), first epoch", d30.first, d70.first);
+    rep("deferred (owner with code), steady state", d30.steady, d70.steady);
+    expect(eoaFirst).to.be.gt(30_000).and.lt(200_000);
+    expect(defFirst).to.be.gt(30_000).and.lt(200_000);
   });
 });

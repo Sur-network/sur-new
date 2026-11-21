@@ -67,3 +67,16 @@ async function now() {
 const DAY = 86400;
 
 module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, setTime, now, DAY };
+
+/// RD-18: one paginated distribution = open + pages + close (the RewardRouter does the same). Returns the sent transactions.
+async function distribute(dist, oracle, range, addrs, blocks, rewards, fees, pageSize = 1000, overrides = {}) {
+  const total = blocks.reduce((a, b) => a + BigInt(b), 0n);
+  const d = dist.connect(oracle);
+  const out = { open: await d.openDistribution(range, total, rewards, fees, overrides), pages: [] };
+  for (let i = 0; i < addrs.length; i += pageSize) {
+    out.pages.push(await d.payPage(addrs.slice(i, i + pageSize), blocks.slice(i, i + pageSize), overrides));
+  }
+  out.close = await d.closeDistribution(overrides);
+  return out;
+}
+module.exports.distribute = distribute;

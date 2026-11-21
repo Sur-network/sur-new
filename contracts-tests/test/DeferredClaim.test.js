@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, mine, increaseTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, mine, increaseTime, now, DAY, distribute } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -55,20 +55,20 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     const { dist, oracle, c, eoas } = f;
     const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2)); // total 10 blocks: contract 4, three EOAs 2 each
     const before = Object.fromEntries(await Promise.all(addrs.map(async (a) => [a, await ethers.provider.getBalance(a)])));
-    const tx = dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    const txs = await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    const tx = txs.pages[0];
     // validator share of the 20 rewards = 50% = 10 split by 10 blocks => 1 per block; fees 1 - 30% burn = 0.7 => 0.07 per block
     await expect(tx).to.emit(dist, "ValidatorRewardDeferred").withArgs(1, c.target, 4, E("4"), E("0.28"), E("4.28"));
     await expect(tx).to.emit(dist, "ValidatorRewarded").withArgs(1, sortAsc(eoas)[0], 2, E("2"), E("0.14"), E("2.14"));
-    await tx;
     // the contract owner was neither paid nor called
     expect(await ethers.provider.getBalance(c.target)).to.equal(before[c.target]);
     expect(await c.received()).to.equal(0);
     expect(await dist.claimable(c.target)).to.equal(E("4.28"));
     expect(await dist.totalClaimable()).to.equal(E("4.28"));
     for (const a of eoas) expect(await ethers.provider.getBalance(a)).to.equal(before[a] + E("2.14"));
-    // per-epoch records and lifetime totals are kept for the deferred owner too
-    const [rs, fs, bl] = await dist.getValidatorEpochReward(1, c.target);
-    expect([rs, fs, bl]).to.deep.equal([E("4"), E("0.28"), 4n]);
+    // lifetime totals are kept for the deferred owner too (per-epoch records are the events only)
+    const [tr, tf, tb] = await dist.getValidatorTotals(c.target);
+    expect([tr, tf, tb]).to.deep.equal([E("4"), E("0.28"), 4n]);
     expect((await dist.getEpoch(1)).validatorCount).to.equal(4);
     expect(await dist.getDistributableBalance()).to.equal((await ethers.provider.getBalance(dist.target)) - E("4.28"));
   });
@@ -77,7 +77,7 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     const f = await loadFixture(fixture);
     const { dist, oracle, c, S } = f;
     const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2));
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
     await expect(dist.connect(S[15]).claim()).to.be.revertedWith("BlockRewardDistributor: nothing to claim");
     const tx = c.callClaim(dist.target);
     await expect(tx).to.emit(dist, "ClaimableWithdrawn").withArgs(c.target, E("4.28"));
@@ -93,7 +93,7 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     const { dist, oracle, c } = f;
     await c.setReject(true);
     const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2));
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1")); // does not revert
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1")); // does not revert
     expect(await dist.lastSettledBlock()).to.equal(10);
     expect(await dist.claimable(c.target)).to.equal(E("4.28"));
     await expect(c.callClaim(dist.target)).to.be.revertedWith("BlockRewardDistributor: claim transfer failed");
@@ -107,7 +107,7 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     const f = await loadFixture(fixture);
     const { dist, oracle, c } = f;
     const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2));
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
     await c.setAttack(true, dist.target);
     const distBefore = await ethers.provider.getBalance(dist.target);
     await c.callClaim(dist.target);
@@ -123,17 +123,17 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     const f = await loadFixture(fixture);
     const { dist, oracle, c } = f;
     const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2));
-    await dist.connect(oracle).distributeRewards({ fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
     const K = await dist.totalClaimable();
     expect(K).to.equal(E("4.28"));
     await increaseTime(DAY);
     await mine(20);
     const bal = await ethers.provider.getBalance(dist.target);
     // reported rewards that fit the raw balance but not balance - claimable are refused
-    await expect(dist.connect(oracle).distributeRewards({ fromBlock: 11, toBlock: 20 }, addrs, blocks, bal - K / 2n, 0))
+    await expect(dist.connect(oracle).openDistribution({ fromBlock: 11, toBlock: 20 }, 10, bal - K / 2n, 0))
       .to.be.revertedWith("BlockRewardDistributor: insufficient contract balance");
     // everything except the debt can be used (what exceeds the approved reward of the range is burned)
-    await dist.connect(oracle).distributeRewards({ fromBlock: 11, toBlock: 20 }, addrs, blocks, bal - K, 0);
+    await distribute(dist, oracle, { fromBlock: 11, toBlock: 20 }, addrs, blocks, bal - K, 0);
     expect(await ethers.provider.getBalance(dist.target)).to.equal(await dist.totalClaimable()); // nothing but the debt is left
     // and the owner with code can still withdraw everything it is owed (both epochs)
     const owed = await dist.claimable(c.target);
