@@ -6,11 +6,11 @@
 
 ## ۱. نقش کلی — این ابزار دقیقاً چه مشکلی را حل می‌کند
 
-ده قرارداد ساختاری سور (`FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`؛ آدرس‌های پیشنهادی چهار قرارداد تازه: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xAaAa…AaAa`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
+یازده قرارداد ساختاری سور (`FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`, `KmsDirectives` (از ۲۰۲۶-۱۱-۲۱، فقط بایت‌کد، بدون storage؛ بخش ۱۱)؛ آدرس‌های پیشنهادی چهار قرارداد تازه: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xAaAa…AaAa`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
 
 این ابزار یک برنامه‌ی خط‌فرمان (CLI) اجراشونده **یک‌بار** است که:
 1. مقادیر واقعی (آدرس اوراکل‌ها، پارامترهای امنیتی، فهرست ولیدیتور اولیه و صندلی‌های مؤسسان، اعضا و هیأت‌مدیرهٔ بنیاد، فهرست طلبکاران) را از یک فایل پیکربندی می‌خواند.
-2. بایت‌کد نهایی و storage اولیه‌ی هر ده قرارداد را (به دو روش متفاوت، بسته به پیچیدگی قرارداد — بخش ۴ را ببین) تولید می‌کند.
+2. بایت‌کد نهایی و storage اولیه‌ی هر یازده قرارداد را (به دو روش متفاوت، بسته به پیچیدگی قرارداد — بخش ۴ را ببین) تولید می‌کند.
 3. این‌ها را، همراه با تنظیمات شبکه و موجودی کیف‌پول‌های اولیه، در یک فایل `genesis.json` نهایی برای Besu می‌نویسد.
 4. یک حالت «تأیید» دارد که genesis تولیدشده را مستقل دوباره چک می‌کند.
 
@@ -96,7 +96,7 @@
 
 ## ۴. معماری اجرا — دو روش متفاوت، بسته به نوع قرارداد
 
-### ۴.۱ روش ساده (بدون نیاز به شبیه‌سازی) — برای `BlockRewardDistributor`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorLottery`
+### ۴.۱ روش ساده (بدون نیاز به شبیه‌سازی) — برای `BlockRewardDistributor`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorLottery`, `KmsDirectives`
 
 این قراردادها فقط مقادیر مقیاسی ساده (address/uint256) دارند که مستقیم در بدنه‌شان مقداردهی شده‌اند (نه mapping/آرایه)؛ `ValidatorLottery` وضعیت اولیهٔ خاصی ندارد (مجری را از `FoundationDAO` می‌خواند). برای این‌ها:
 
@@ -354,3 +354,33 @@
 | ۶ | ✅ در کد: شش مؤسس `Probation` می‌مانند تا `setOperator` و `recordActivation` (بدون انتظار دوره) بزنند؛ `everActivated` و `activationSeq` هنگام `recordActivation` و به ترتیب فعال‌شدن ثبت می‌شود (نه ترتیب genesis). 🔶 اثر آن بر شکستن تساوی هیأت (ترتیب فعال‌سازی) تأیید مالک می‌خواهد؛ آزمون Besu نشده. |
 
 🔶 **تصمیم باز (آزمون Besu v4، ۲۰۲۶-۱۰-۰۳):** فایل پیکربندی بخش ۳ و خروجی ابزار هیچ ورودی یا خروجی برای `transitions.qbft` ندارد. آزمون v4 نشان داد همهٔ نودها، از جمله نودهای تازه‌وارد، باید همان transition پاداش را در genesis خود داشته باشند (وگرنه در بلاک گذار رد می‌شوند؛ در حالت Shanghai/Cancun مقدار `block` یک timestamp است). اینکه ابزار genesis این را تولید کند یا رویهٔ جداگانه‌ای انجام دهد، **انتخاب نشده است** (`sur-reward-router-spec.md` بخش ۱۰.۳). دور ششم Besu (۲۰۲۶-۱۰-۰۷، release ۲۶.۹.۰، Shanghai/Cancun) نشان داد گذار `blockreward` با کلید timestamp پاداش را دقیقاً در نخستین بلاکِ `timestamp ≥ کلید` عوض می‌کند؛ ولی گذار `validatorselectionmode: blockheader` با کلید timestamp (فهرست صریح ۵ از ۷) زنجیره را متوقف کرد (`governance/sur-emergency-consensus-recovery.md` بخش ۳). پس هر تصمیم برای تولید `transitions.qbft` باید گذار پاداش را از گذار انتخاب ولیدیتور جدا کند و هیچ گذار `blockheader`ای را قبل از آزمودن یک پیکربندی کارکننده تولید نکند.
+
+## ۱۱. به‌روزرسانی پیش از genesis (۲۰۲۶-۱۱-۲۱): `KmsDirectives`، RD-18، چینش storage از compiler، هشدارهای مالک
+
+> وضعیت: ✅ در کد (`Deployments/GenesisBuilder`)؛ آزموده‌شده روی Anvil، **نه روی Besu زنده** (Besu پس از این تغییر اجرا نشده است). عدد آزمون‌ها در `genesisbuilder-review-record.md` دور ۸ آمده است.
+
+### ۱۱.۱ قرارداد تازهٔ `KmsDirectives`
+- آدرس ثابت `0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB` (`SurAddresses.KMS_DIRECTIVES`). **بدون constructor و بدون storage:** فقط بایت‌کد runtime در `alloc` می‌رود، موجودی صفر، بدون کلید `storage`. سه پرچم «فریز» (`frozen(0..2)`) همه `false` شروع می‌شوند.
+- ابزار آن را مثل `ValidatorsTreasury` (بدون کمکی) با creation code روی Anvil شبیه‌سازی می‌کند. اگر شبیه‌سازی حتی یک slot storage باقی بگذارد (مثلاً قرارداد بعداً constructor بگیرد) ساخت با خطا متوقف می‌شود.
+- `KmsDirectives.sol` به فهرست سورس‌های هش‌شده (`SOURCES.json`) و فهرست آدرس‌های ثابت (`constants.ts`، ۱۱ آدرس) افزوده شد؛ آزمونی `SurAddresses.sol` را تجزیه می‌کند و ناسازگاری آدرس را رد می‌کند.
+- بررسی‌های تازهٔ پس از ساخت (روی Anvilِ دوم، بلاک ۰): hash کد؛ `BOARD() == ValidatorsBoard`؛ `FOUNDATION() == FoundationDAO`؛ `frozen(0)`، `frozen(1)`، `frozen(2)` برابر `false`؛ موجودی صفر؛ و اینکه بایت‌کد `ValidatorsBoard` آدرس `KmsDirectives` را (به‌صورت `PUSH20`) در خود دارد (Board از طریق ثابتِ زمان‌کامپایل به آن می‌رسد، پس «سیم‌کشی» یعنی همین).
+
+### ۱۱.۲ چینش storage فقط از خروجی compiler (RD-18 و هر تغییر بعدی)
+هیچ شماره slotی در ابزار ثابت نیست. storage با شبیه‌سازی-و-استخراج می‌آید و overlay اسکالرها با **نام متغیر** در slotی که `storageLayout` همان قرارداد واقعی می‌گوید نوشته می‌شود. در RD-18 سه نگاشت هر-epoch (`epochValidatorRewardShare`، `epochValidatorFeeShare`، `epochValidatorBlocks`) از `BlockRewardDistributor` حذف و `cur`، `claimable`، `totalClaimable` افزوده شد؛ slotها جابه‌جا شدند و ابزار هیچ ویرایشی نخواست. محافظ‌های تازه که در اجرا (نه فقط در آزمون) ساخت را متوقف می‌کنند:
+1. هر چینش با خودش سازگار باشد (دو متغیر روی یک بایت یا عبور از انتهای slot رد می‌شود).
+2. کمکی seed باید **دقیقاً** همان چینش قرارداد واقعی را داشته باشد (وگرنه slotهای استخراج‌شده slotهای قرارداد واقعی نیستند).
+3. متغیرِ overlay باید در چینش باشد (متغیر تغییرنام‌داده یا حذف‌شده → خطا)؛ مقدار نوشته‌شده با همان چینش دوباره خوانده و مقایسه می‌شود؛ مقدار بزرگ‌تر از اندازهٔ متغیر رد می‌شود.
+4. هر slot نوشته‌شده در ناحیهٔ اعلام‌شده (کمتر از ۲^۶۴) باید متعلق به یک متغیر چینش باشد؛ slotهای مشتق از keccak (نگاشت/آرایه) را نمی‌توان به متغیر برگرداند و با بررسی‌های زندهٔ eth_call پوشش داده می‌شوند.
+5. خلاصهٔ ساخت (`summary.layouts`) برای هر قرارداد اثر انگشت sha256 و فهرست کامل (نام، slot، offset، نوع، اندازه) را ثبت می‌کند تا دو نسخهٔ قرارداد قابل مقایسه باشند؛ `npm run contracts:layouts` همان را چاپ می‌کند.
+⚠️ **حد صادقانهٔ محافظ‌ها:** چون storage و چینش هر دو از همان سورس کامپایل‌شده می‌آیند، بندهای ۳ و ۴ در مسیر عادی هرگز فعال نمی‌شوند؛ فقط برابر یک باگ ابزار یا کمکی دست‌ویرایش‌شده سپر هستند (و بند ۲ مقایسهٔ نوع و اندازه را هم دارد). آنچه درستی slotها را واقعاً ثابت می‌کند، خواندن‌های زندهٔ `eth_call` روی Anvilِ دوم (و روی Besu در verify) است؛ حذف سه نگاشتِ RD-18 با «نبودن» آن‌ها در چینش و آن خواندن‌ها پوشش داده می‌شود، نه با بند ۴ (slotهای نگاشت مشتق از keccak‌اند).
+**همگام‌سازی دوباره پس از تغییر قرارداد = یک فرمان:** `npm run contracts:sync -- --from <Plan/contracts>` و سپس `npm test`. (ارجاع شمارهٔ خط به سورس قرارداد هم از پیام‌ها و آزمون‌ها حذف شد، چون با هر تغییر جابه‌جا می‌شود؛ جایش نام تابع/عبارت آمده و آزمون متن را تطبیق می‌دهد.)
+
+### ۱۱.۳ بررسی‌های تازهٔ ساخت
+- `BlockRewardDistributor`: هیچ توزیعِ باز در genesis نیست (`openDistributionInfo()` = «بسته، همه صفر»)، و `epochCount`، `totalClaimable`، `pendingMembershipFees`، `totalDistributedTo{Validators,Treasury,Foundation}`، `lastDistributionTime` همه صفرند.
+- آدرس مؤسسان و هر آدرس دانه‌ای (مؤسس، اپراتور، اوراکل‌ها، بازرس، اعضا، هیأت، طلبکاران) نباید برابر هیچ‌یک از **یازده** آدرس سیستمی از جمله `0xbBbB…bBbB` باشد؛ پیکربندی رد می‌شود (آزمون برای هفت مسیر).
+
+### ۱۱.۴ هشدار ثابت برای مالک: EOA بودن مؤسسان را ابزار نمی‌تواند ثابت کند
+قراردادها از RD-12/RD-12b دارندهٔ صندلی با کد را رد می‌کنند، ولی مؤسسان در genesis با seed نوشته می‌شوند و از آن بررسی نمی‌گذرند و ابزار هم آفلاین است. پس **هر ساخت و هر verify** هشدار «OWNER ACTION REQUIRED before genesis» را در `summary.warnings` و پایان خروجی می‌آورد و هفت آدرس مالک صندلی را فهرست می‌کند: **مالک باید پیش از genesis با دست تأیید کند که هر یک کیف‌پول ساده (EOA) و در اختیار همان شخص است.** این هشدار با هیچ پرچمی خاموش نمی‌شود.
+
+### ۱۱.۵ تغییر نکرد
+پرچم‌ها و مسیرهای خروجی CLI (`build`، `verify`، `--out`، `--summary`، `--contracts-dir`، `--anvil-binary`، `--anvil-port` و …) بدون تغییرند، چون Verifier، RewardRouter و SurKMS آزمون‌های خود را با همین CLI اجرا می‌کنند. تنها افزوده‌ها: کلید `layouts` در فایل summary و اسکریپت `contracts:layouts`.
