@@ -2,6 +2,8 @@
 
 > **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۹۷ آزمون Hardhat در ۱۰ فایل (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`)، تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`)، `ValidatorSeatNFT` (صندلی ERC-721 با انتقال و قواعد خریدار)، هستهٔ بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، جریان مؤسسان، `SelfSuspended`، سوزاندن ۱۰۰٪ جریمه، قواعد فاصلهٔ ورود) و سوزاندن مازاد پاداش در `BlockRewardDistributor`. هنوز نوشته نشده‌اند: `RewardRouter` (سرویس آف‌چین، نه قرارداد)، سرویس‌های Verifier و Identity، ابزار genesis، بررسی‌های آف‌چین Verifier برای تعلیق داوطلبانه و ازسرگیری، و حدود تغییر ریوارد (±۱۰٪ و ۶ ماه فاصله؛ در `proposeRateChange` هنوز نیست). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). فهرست زیر دربارهٔ نرم‌افزارهای آف‌چین و ابزارهاست؛ برنامه‌های آف‌چین (RewardRouter، Verifier، Identity Service، ابزار genesis، اپ‌ها، داشبورد) هنوز هیچ‌کدام نوشته نشده‌اند. ✅ دور اول آزمون زندهٔ Besu برای قراردادهای ۲٫۵ انجام شد (۲۰۲۶-۱۱-۱۹؛ Besu 26.9.0 در Docker، QBFT، فورک London، یک میزبان، اجراهای کوتاه؛ ۲۲ فایل نتیجه؛ دو اجرای اول به‌علت اشکال اسکریپت ناموفق ثبت و نگه داشته شده‌اند، بقیه گذشتند): `testing-evidence/besu-live-test-v25-2026-11-19/REPORT.md`. 🔶 هنوز روی Besu اجرا نشده: هر تایمر ۷۲ ساعت و بیشتر (قفل ۹۰ روزه، انقضا و ارجاع ۷روزه، دورهٔ آزمایشی و مهلت ورود با مقدار واقعی)، آزادسازی ماهانهٔ صندوق طلب‌ها، `recordSuspension`/رخداد جمعی/جریمه/اعتراض/`recordRecovery`، لاتاری دوم، تازه‌سازی ماهانهٔ هیأت، حکمرانی نرخ ریوارد، گذار Shanghai/Cancun، `SurenSale`، `ServiceStaking` و خرج خزانه؛ یافته‌های باز F-1 تا F-7 در `sur-master-open-items.md` بخش ۵. حسابرسی امنیتی هم انجام نشده است؛ این نتیجه آمادگی تولید نیست.
 
+> **وضعیت ساخت (به‌روزرسانی ۲۰۲۶-۱۱-۲۲؛ جایگزین جملهٔ «هیچ‌کدام نوشته نشده‌اند» در بالا):** ساخته و آزموده شده‌اند: RewardRouter، Verifier، SurKMS، Identity Service (امضا از راه SurKMS و `kms_hmac` برای `personKey`)، ابزار genesis (اکنون **دوازده** قرارداد؛ دوازدهم `StandbyValidators` فقط با اولین ولیدیتور seed می‌شود)، NodeCheck (۱۳۵ آزمون) و چهار رابط (GovernanceDashboard، ValidatorApp، SaleDashboard و IdentityApp مرحلهٔ ۱ و ۲). نشده‌اند: ابزار بازیابی (۱۱؛ مشخصاتش در بخش ۱۱ عوض شد)، گزارش عرضه (۱۳)، اتصال صرافی‌ها (۱۴)، رابط لاتاری (۱۵)، IdentityApp مرحلهٔ ۳ (منتظر ارائه‌دهندهٔ eKYC) و IdentityApp-Android. آزمون زندهٔ Besu 26.9.0 (Shanghai/Cancun، سرور Ubuntu) دو دور انجام شد: `testing-evidence/besu-live-v26/` (۴ مرحلهٔ Router، Verifier، KMS) و `besu-live-v26-r2/` (NodeCheck و M9، تایمرهای Verifier، Router با مالک دارای کد، سه رابط روی RPC واقعی). این آزمون‌ها آمادگی تولید یا حسابرسی مستقل نیستند؛ حسابرسی آخرین گام است. یافته‌های عملیاتی: `sur-operations-runbook.md`. یافتهٔ باز: `getLogs` در GovernanceDashboard و ValidatorApp با سقف ۵۰۰۰ بلوکی Besu (رفع در دست اقدام).
+>
 > این سند همه‌ی نرم‌افزارهای آف‌چین/جانبی پروژه (غیر از خودِ قراردادهای هوشمند ساختاری) را فهرست می‌کند، همراه با توضیح مختصر، اولویت، مسئول و وضعیت فعلی.
 
 ## ✅ مسئولیت توسعه و اجرا
@@ -23,18 +25,18 @@
 
 | # | نرم‌افزار | اولویت | وضعیت سند |
 |---|---|---|---|
-| ۱ | RewardRouter | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-reward-router-spec.md` |
-| ۲ | ابزار ساخت genesis.json | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-genesis-builder-tool-spec.md` |
-| ۳ | سرویس Verifier | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-verifier-service-spec.md`؛ توسعه: کمیتهٔ فنی، اجرا: هیأت‌مدیرهٔ مجمع ولیدیتورها |
-| ۴ | اپلیکیشن همراه ولیدیتور (فرانت‌اند `ValidatorsRegistry`) | 🔴 عملاً مسدودکننده | ✅ سند کامل — `sur-validator-app-claudecode-brief.md` |
+| ۱ | RewardRouter | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-reward-router-spec.md`؛ ✅ ساخته شد و روی Besu 26.9.0 آزموده شد (دور ۱ و ۲؛ نیاز به نود archive) |
+| ۲ | ابزار ساخت genesis.json | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-genesis-builder-tool-spec.md`؛ ✅ ساخته شد (۱۲ قرارداد؛ روی Besu آزموده شد) |
+| ۳ | سرویس Verifier | 🔴 ضروری برای راه‌اندازی | ✅ سند کامل — `sur-verifier-service-spec.md`؛ توسعه: کمیتهٔ فنی، اجرا: هیأت‌مدیرهٔ مجمع ولیدیتورها؛ ✅ ساخته و روی Besu 26.9.0 آزموده شد (دور ۱ و ۲: M9، M12، تایمرها)؛ F-V1 فقط رانبوک، F-V2 رفتار طراحی‌شده |
+| ۴ | اپلیکیشن همراه ولیدیتور (فرانت‌اند `ValidatorsRegistry`) | 🔴 عملاً مسدودکننده | ✅ سند کامل — `sur-validator-app-claudecode-brief.md`؛ ✅ به قراردادهای نهایی به‌روز شد (۷۳ آزمون)؛ روی RPC واقعی Besu آزموده شد (۱۱ از ۱۱، بدون مرورگر/کیف‌پول واقعی)؛ 🔶 `getLogs` با تکهٔ ۱۰۰٬۰۰۰ بلوکی در ارتفاع بالای ۵۰۰۰ شکست می‌خورد (رفع در دست اقدام) |
 | ۵ | بلاک اکسپلورر | 🟡 مهم، نه فوری | ✅ **حل شد: Blockscout** (پیکربندی، نه توسعه) |
-| ۶ | داشبورد حکمرانی (بنیاد/ولیدیتورها + پارامترهای امنیتی) | 🟡 مهم، نه فوری | ✅ سند کامل — `sur-governance-dashboard-claudecode-brief.md` |
+| ۶ | داشبورد حکمرانی (بنیاد/ولیدیتورها + پارامترهای امنیتی) | 🟡 مهم، نه فوری | ✅ سند کامل — `sur-governance-dashboard-claudecode-brief.md`؛ ✅ به قراردادهای نهایی به‌روز شد (۵۰ آزمون)؛ روی RPC واقعی Besu آزموده شد (۱۳ از ۱۳)؛ 🔶 `board(user)` و `recovery` با `getLogs` از بلوک ۰ در ارتفاع بالای ۵۰۰۰ شکست می‌خورند (رفع در دست اقدام) |
 | ۷ | پرتال آماری فروش سورن + اتصال صرافی‌ها | 🟢 بخش آماری قابل‌تعویق، 🔴 اتصال صرافی‌ها ضروری | 🔶 سند پرتال: `sur-suren-sale-portal-claudecode-brief.md` (بخش آماری)؛ اتصال صرافی‌ها: بخش ۱۴ همین سند |
 | ۸ | قرارداد `SurenSale` (بدون سرویس آف‌چین دارای کلید) | 🔴 ضروری قبل از شروع فروش | ✅ سند کامل — `sur-suren-sale-spec.md` + `contracts/SurenSale.sol`؛ ✅ کد و ۱۱ آزمون Hardhat (روی Besu اجرا نشده 🔶؛ دور اول آزمون Besu ۲۰۲۶-۱۱-۱۹ آن را شامل نبود) |
-| ۹ | قرارداد `IdentityRegistry` + سرویس Identity Service + eKYC (فقط شخص حقیقی ایرانی) | 🔴 ضروری برای راه‌اندازی — نسخهٔ اولیه از روز اول (پیش‌نیاز ورود ولیدیتورهای غیرمؤسس) | ✅ سند کامل — `sur-identity-registry-spec.md` + `contracts/IdentityRegistry.sol` |
-| ۱۰ | اپلیکیشن احراز هویت عمومی (فرانت‌اند `IdentityRegistry`) | 🟡 مهم، نه فوری | ❌ **سند موجود نیست** — `sur-identity-app-claudecode-brief.md` در پوشهٔ پروژه پیدا نشد؛ نوشتن آن باز است. مرجع موقت: `sur-identity-registry-spec.md` |
-| ۱۱ | ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) | 🟡 باید پیش از راه‌اندازی آماده باشد، ولی فقط در اضطرار اجرا می‌شود | 🔶 **مشخصات همین سند؛ برنامه هنوز نوشته نشده** — سیاست بازیابی: `governance/sur-emergency-consensus-recovery.md` |
-| ۱۲ | سرویس همراه نود برای بررسی دوره‌ی آزمایشی (SUR_NODE_CHECK_V1) | 🟡 پیش‌نیاز پذیرش نودهای تازه | 🔶 **مشخصات کامل، برنامه هنوز نوشته نشده** — `sur-node-check-protocol-spec.md` |
+| ۹ | قرارداد `IdentityRegistry` + سرویس Identity Service + eKYC (فقط شخص حقیقی ایرانی) | 🔴 ضروری برای راه‌اندازی — نسخهٔ اولیه از روز اول (پیش‌نیاز ورود ولیدیتورهای غیرمؤسس) | ✅ سند کامل — `sur-identity-registry-spec.md` + `contracts/IdentityRegistry.sol`؛ ✅ Identity Service ساخته شد (۱۰۹ آزمون؛ امضا از راه SurKMS، `kms_hmac`)؛ eKYC: ارائه‌دهنده در مذاکره است |
+| ۱۰ | اپلیکیشن احراز هویت عمومی (فرانت‌اند `IdentityRegistry`) | 🟡 مهم، نه فوری | ✅ IdentityApp مرحلهٔ ۱ و ۲ ساخته شد (۶۰ آزمون)؛ مرحلهٔ ۳ (eKYC) منتظر ارائه‌دهنده؛ IdentityApp-Android به‌روز نشده. (سند `sur-identity-app-claudecode-brief.md` هنوز در پوشه نیست؛ مرجع: `sur-identity-registry-spec.md`) |
+| ۱۱ | ابزار برنامه‌ی بازیابی اضطراری اجماع (Recovery Plan Tool) | 🟡 باید پیش از راه‌اندازی آماده باشد، ولی فقط در اضطرار اجرا می‌شود | 🔶 **مشخصات همین سند (اصلاح ۲۰۲۶-۱۱-۲۲: گذار `contract`←`contract` به `StandbyValidators`)؛ برنامه هنوز نوشته نشده** — سیاست بازیابی: `governance/sur-emergency-consensus-recovery.md` |
+| ۱۲ | سرویس همراه نود برای بررسی دوره‌ی آزمایشی (SUR_NODE_CHECK_V1) | 🟡 پیش‌نیاز پذیرش نودهای تازه | ✅ **ساخته شد** (۱۳۵ آزمون)؛ روی Besu 26.9.0 با Verifier واقعی آزموده شد (دور ۲: ۲۰ از ۲۰ و ۲۱ از ۲۱)؛ M9 فقط با آدرس عمومی دیده‌شده توسط نود پایش کار می‌کند — `sur-node-check-protocol-spec.md` |
 | ۱۳ | گزارش عرضه و سند تحلیلی دورهٔ آزادسازی | 🟡 پیش از پایان دورهٔ گذار | 🔶 مشخصات در همین سند (بخش ۱۳)؛ برنامه هنوز نوشته نشده |
 | ۱۴ | اتصال صرافی‌های رمزارزی به `SurenSale` (راهنما/API/ابزار کمکی) | 🔴 ضروری قبل از شروع فروش | 🔶 مشخصات در همین سند (بخش ۱۴)؛ جایگزین پرتال مستقیم خرید |
 | ۱۵ | اپ/رابط لاتاری ولیدیتور (`ValidatorLottery`) | 🟢 قابل‌تعویق (لاتاری حداقل یک سال پس از شروع) | 🔶 مشخصات در همین سند (بخش ۱۵) |
@@ -145,19 +147,21 @@
 
 **ورودی‌ها/فایل‌ها (فقط داده، نه برنامه):**
 - `council.json` — فهرست ۷ مسئول مستقل: `threshold` (=۵) و برای هر عضو `person`، `org`، `address`. این فایل **قبل از راه‌اندازی** تعیین و منتشر می‌شود و هشِ آن در مستندات genesis می‌آید. (توضیح کاربردی: این همان فهرستی است که برنامه با آن می‌فهمد یک امضا از «اعضای مجاز شورا» آمده یا نه.)
-- `plan.json` — برنامه‌ی بازیابی: `version`، `chainId`، `genesisHash`، `baseBlock {number, hash}` (آخرین بلاک نهایی‌شده‌ی مورد توافق)، `transitionBlock` (بلاک **آینده**)، `action = "override-validators"`، `validators` (مجموعه‌ی اضطراری)، `returnToContract {block, validatorContractAddress}` (اختیاری)، `evidenceRef`، `issuedAt`.
+- `plan.json` — برنامه‌ی بازیابی (اصلاح ۲۰۲۶-۱۱-۲۲ طبق پژوهش r26): `version`، `chainId`، `genesisHash`، `baseBlock {number, hash, timestamp}` (آخرین بلاک نهایی‌شده‌ی مورد توافق)، `action = "switch-to-standby"`، `transitionTimestamp` (= timestamp آخرین بلاک نهایی‌شده؛ **نه آینده**)، `standbyContract` (آدرس `StandbyValidators`)، `returnToRegistryAtTimestamp` (اختیاری؛ فقط آینده)، `evidenceRef`، `issuedAt`. فهرست ولیدیتورهای اضطراری در برنامه نیست؛ از `StandbyValidators` خوانده می‌شود.
 - فایل امضاها — فهرست امضاهای شخصی (EIP-191) روی هش استاندارد `plan.json` با پیشوند ثابت.
 
 **قواعدی که برنامه باید اعمال کند (این‌ها «آزمون‌های پذیرش» آن‌اند):**
 ۱. شورا: دقیقاً ۷ عضو، آستانه‌ی دقیقاً ۵، آدرس‌ها یکتا؛ هیچ شخص یا سازمانی **۴ کلید یا بیشتر** (اکثریت) نداشته باشد؛ ۳ کلید برای یک سازمان مجاز است ولی توصیه‌ی سیاست: یک کلید برای هر سازمان مستقل.
 ۲. برنامه فقط همین فیلدها را دارد؛ **هر فیلد دیگر** (مثلاً `alloc`، انتقال دارایی، بخشش جریمه) رد می‌شود — اختیار شورا فقط بازیابی اجماع است.
-۳. `transitionBlock` اکیداً بعد از `baseBlock.number`؛ `returnToContract.block` بعد از `transitionBlock`؛ فهرست ولیدیتور غیرخالی، بدون تکرار و آدرس‌های معتبر؛ `evidenceRef` الزامی؛ `chainId` با genesis یکی باشد؛ آدرس بازگشت به قرارداد باید همان `validatorcontractaddress` genesis باشد (قرارداد دیگر = برنامه‌ی جدا و بازبینی‌شده).
+۳. `transitionTimestamp` = `ts(H)` و در بازهٔ `(ts(H−1), ts(H)]` و بزرگ‌تر از کلیدهای قبلی؛ head همهٔ بازماندگان برابر باشد؛ در آدرس `standbyContract` کد باشد و `getValidators()` آن زیرمجموعهٔ نودهای زنده با نصاب باشد (`isReady()` درست)؛ `returnToRegistryAtTimestamp` فقط آینده و بعد از `transitionTimestamp`؛ `evidenceRef` الزامی؛ `chainId` با genesis یکی باشد؛ آدرس بازگشت باید همان `validatorcontractaddress` genesis (Registry) باشد (قرارداد دیگر = برنامه‌ی جدا و بازبینی‌شده).
 ۴. هش برنامه قطعی است (ترتیب کلیدها اثری ندارد)؛ دست‌کاری برنامه پس از امضا امضاها را بی‌اعتبار می‌کند.
 ۵. حداقل ۵ امضای **متمایز** از اعضای شورا لازم است؛ امضای تکراری یک نفر یک‌بار شمرده می‌شود؛ امضای غیرعضو شمرده نمی‌شود.
-۶. ساخت genesis جدید: فقط `config.transitions.qbft` اضافه می‌شود (`validatorselectionmode: "blockheader"` + `validators`، و در صورت وجود، گذار بازگشت `validatorselectionmode: "contract"` + `validatorcontractaddress`)؛ بلاک گذار باید بعد از گذارهای قبلیِ موجود باشد؛ برنامه باید **ثابت کند** هیچ چیز دیگری در genesis (به‌ویژه `alloc`، `extraData`، بقیه‌ی `config`) تغییر نکرده — اگر کوچک‌ترین تغییری بود، خطا بدهد.
+۶. ساخت genesis جدید: فقط `config.transitions.qbft` اضافه می‌شود (مدخل `validatorselectionmode: "contract"` + `validatorcontractaddress` = StandbyValidators با کلید `ts(H)`، و در صورت وجود، مدخل بازگشت `"contract"` + آدرس Registry با کلید آینده)؛ **هر مدخل `blockheader` وقتی `shanghaiTime`/`cancunTime` در genesis هست رد می‌شود**؛ کلید گذار باید از کلیدهای قبلیِ موجود بزرگ‌تر باشد؛ برنامه باید **ثابت کند** هیچ چیز دیگری در genesis (به‌ویژه `alloc`، `extraData`، بقیه‌ی `config`) تغییر نکرده — اگر کوچک‌ترین تغییری بود، خطا بدهد.
 ۷. خروجی: genesis جدید، هش برنامه، فهرست امضاکنندگان؛ همه‌ی این‌ها منتشر می‌شوند.
 
-**نکته‌ی اجرایی:** نام کلیدها و ساختار گذار از مستند رسمی Besu گرفته شده (`validatorselectionmode`، `validators`، `validatorcontractaddress` زیر `config.transitions.qbft`)؛ روش باید روی نسخه‌ی دقیق Besu شبکه عملاً آزموده شود (دستور آزمون: `sur-besu-test-status.md`، فاز ۱۲).
+**پس‌بررسی خودکار پس از اعمال:** head پیش می‌رود و `qbft_getValidatorsByBlockNumber` فهرست standby را نشان می‌دهد.
+
+**نکته‌ی اجرایی:** روش `contract`←`contract` روی Besu 26.9.0 آزموده شده (`testing-evidence/recovery-research-v26/README.md`، بخش ۵ و ۷)؛ با هر نسخهٔ تازهٔ Besu باید دوباره آزموده شود (تمرین دوره‌ای با `tools/lab.mjs` همان پوشه). فهرست `StandbyValidators` باید پیش از بحران آماده و تازه باشد، چون روی زنجیرهٔ ایستاده چیزی نوشته نمی‌شود.
 
 ---
 
@@ -215,4 +219,4 @@
 
 ## پیوست: نتیجه‌ی بررسی نیاز هر قرارداد به UI
 
-فهرست کامل هر ۱۳ قرارداد (یازده قرارداد ساختاری، `SurenSale` و کتابخانه‌ی `SurAddresses`) و این‌که کدام به رابط کاربری نیاز دارند (و کدام‌ها چون فقط با اقدامات حکمرانی/سرویس‌های خودکار سروکار دارند نیازی ندارند) در `sur-contracts-ui-review.md` مستند شده است.
+فهرست کامل هر ۱۴ قرارداد (دوازده قرارداد ساختاری، `SurenSale` و کتابخانه‌ی `SurAddresses`) و این‌که کدام به رابط کاربری نیاز دارند (و کدام‌ها چون فقط با اقدامات حکمرانی/سرویس‌های خودکار سروکار دارند نیازی ندارند) در `sur-contracts-ui-review.md` مستند شده است.
