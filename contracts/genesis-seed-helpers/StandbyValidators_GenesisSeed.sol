@@ -33,4 +33,9 @@ contract StandbyValidators_GenesisSeed {
         version = 1;
         updatedAt = genesisTimestamp;
     }
+
+    /// @dev Only so the genesis tool can read the seeded list back on the temporary chain (the real contract has the same getter).
+    function getValidators() external view returns (address[] memory) {
+        return _members;
+    }
 }
