@@ -18,7 +18,7 @@
 
 ## نقشه‌ی کلی
 
-یازده قرارداد ساختاری، همگی در بلاک genesis با آدرس ثابت و از‌پیش‌توافق‌شده دیپلوی می‌شوند (نه با یک تراکنش عادی بعد از راه‌اندازی شبکه). چون آدرس همه از قبل معلوم است، هرکدام می‌توانند آدرس بقیه را به‌صورت `constant` هاردکد کنند — نیازی به مرحله‌ی «سیم‌کشی بعد از دیپلوی» نیست.
+دوازده قرارداد ساختاری، همگی در بلاک genesis با آدرس ثابت و از‌پیش‌توافق‌شده دیپلوی می‌شوند (نه با یک تراکنش عادی بعد از راه‌اندازی شبکه). چون آدرس همه از قبل معلوم است، هرکدام می‌توانند آدرس بقیه را به‌صورت `constant` هاردکد کنند — نیازی به مرحله‌ی «سیم‌کشی بعد از دیپلوی» نیست.
 
 | آدرس | قرارداد | نقش یک‌خطی |
 |---|---|---|
@@ -33,6 +33,7 @@
 | `0x9999...9999` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | **GenesisClaimsVault** | صندوق مطالبات genesis با برداشت ماهانهٔ محدود (۲۴ قسط؛ موجودی در alloc همان بلاک genesis) |
 | `0xAaAa...AaAa` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | **ValidatorLottery** | لاتاری ولیدیتور (مجری: هیأت‌مدیرهٔ بنیاد؛ حداقل یک سال فاصله بین دو لاتاری) |
 | `0xbBbB...bBbB` (پیشنهادی؛ ✅ کد و آزمون Hardhat) | **KmsDirectives** | کلید قطع (`frozen`) برای هر کلید امضای سرویس SurKMS (`verifier`، `distributionOracle`، `identityOracle`)؛ بدون پول و بدون قدرت دیگر؛ بدون constructor و بدون seed |
+| `0xCcCC...cCcC` (✅ کد و آزمون Hardhat) | **StandbyValidators** | فهرست آمادهٔ ولیدیتورها فقط برای بازیابی اضطراری اجماع (گذار `contract`←`contract`)؛ فقط FoundationDAO می‌نویسد؛ روی زنجیرهٔ سالم اثری ندارد (بخش ۱۳) |
 
 آدرس پنج قرارداد ساختاری تازه در `SurAddresses.sol` **پیشنهاد** شده است (ادامهٔ الگوی آدرس‌های ثابت؛ پنجمی `KmsDirectives` = `0xbBbB…bBbB`): `FoundationMembers` = `0x7777…7777`، `ValidatorSeatNFT` = `0x8888…8888` (نوشته و آزموده شده)، `GenesisClaimsVault` = `0x9999…9999` (نوشته و آزموده شده)، `ValidatorLottery` = `0xAaAa…AaAa` (در کد با چک‌سام EIP-55: `0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa`). تثبیت نهایی با ابزار genesis است. اوراکل پرداخت (`paymentOracle`) از `SurAddresses` حذف شده است: سه اوراکل داریم (`verifier`، `distributionOracle`، `identityOracle`). به‌علاوه `SurenSale` ساختاری نیست و بعد از genesis دیپلوی می‌شود (بخش ۷).
 
@@ -50,6 +51,7 @@ ValidatorSeatNFT       → می‌شناسد: Registry, FoundationDAO (فقط ت
 ValidatorLottery       → می‌شناسد: Registry, IdentityRegistry, FoundationDAO (مجری)
 GenesisClaimsVault     → هیچ قرارداد دیگری را نمی‌شناسد
 KmsDirectives          → می‌شناسد: ValidatorsBoard (قطع verifier و distributionOracle), FoundationDAO (قطع identityOracle)
+StandbyValidators      → می‌شناسد: FoundationDAO (تنها نویسنده), ValidatorsRegistry (فقط برای سنجش اعضا)
 SurenSale (غیرساختاری)  → می‌شناسد: FoundationDAO (مدیرعامل، هیأت‌مدیره)
 ```
 
@@ -579,6 +581,22 @@ commit و reveal را مدیرعامل (نه رأی هیأت) می‌زند چو
 |---|---|---|---|
 | `setFrozen(Slot slot, bool isFrozen)` | slot ۰ (`Verifier`) و ۱ (`DistributionOracle`): **فقط `ValidatorsBoard`**؛ slot ۲ (`IdentityOracle`): **فقط `FoundationDAO`** (از راه پیشنهاد `Execute` موجود) | slot (enum، ABI = `uint8`)، پرچم | وضعیت را می‌گذارد و `FrozenChanged(slot, frozen)` می‌دهد؛ تنظیم مقداری که از قبل همان است بی‌اثر است (بدون رویداد و بدون ریورت، تا پیشنهاد تکراری هرگز گیر نکند)؛ slot بیرون از enum ریورت می‌کند |
 | `frozen(Slot slot)` | هرکسی | slot | `bool` |
+
+---
+
+## ۱۳. `StandbyValidators.sol` — قرارداد ساختاری (آدرس `0xCcCC...cCcC`؛ ✅ کد و ۶ آزمون Hardhat؛ روی Besu آزموده شده)
+
+### نقش
+فهرست آمادهٔ ولیدیتورها فقط برای **بازیابی اضطراری اجماع**. اگر بیش از یک‌سوم ولیدیتورها بمیرند هیچ تراکنشی ماین نمی‌شود، پس تنها راه، مدخل تازه‌ای در `transitions.qbft` ژنزیس است که انتخاب ولیدیتور را به این قرارداد برگرداند (گذار `contract`←`contract` با کلید `ts(H)`؛ `governance/sur-emergency-consensus-recovery.md`). چون تغییر `alloc` پس از راه‌اندازی رد می‌شود، قرارداد از روز اول در ژنزیس است. روی زنجیرهٔ سالم هیچ اثری ندارد.
+
+| فانکشن | چه کسی صدا می‌زند | کار |
+|---|---|---|
+| `getValidators()` | هرکسی (Besu) | فهرست را برمی‌گرداند؛ فقط خواندن storage، هرگز revert نمی‌کند |
+| `setStandby(address[] members)` | فقط `FoundationDAO` (پیشنهاد Execute، ۳ از ۵) | کل فهرست را جایگزین می‌کند؛ ۱ تا ۱۰۰ عضو، اکیداً صعودی و غیرصفر، هر عضو کلید اپراتور فعلی یک صندلی ثبت‌شده؛ `version` یکی زیاد می‌شود و `StandbyUpdated` می‌آید |
+| `staleMembers()` / `isReady()` | هرکسی | اعضایی که دیگر کلید اپراتور فعلی نیستند؛ آماده‌بودن (دست‌کم یک عضو و بدون عضو کهنه) |
+| `memberCount()`, `version`, `updatedAt` | هرکسی | خواندنی |
+
+نکته‌ها: ژنزیس فقط اولین ولیدیتور را seed می‌کند (`version` = ۱، `updatedAt` = زمان ژنزیس؛ تصمیم مالک ۲۰۲۶-۱۱-۲۲)؛ فهرست یک‌نفره هیچ خطایی را تحمل نمی‌کند و بنیاد باید بعداً آن را به ۳ یا ۴ عضو برساند و با هر تغییر کلید اپراتور تازه کند. روی زنجیرهٔ ایستاده چیزی نوشته نمی‌شود، پس فهرست باید از پیش آماده باشد.
 
 ---
 
