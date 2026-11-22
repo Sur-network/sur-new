@@ -61,6 +61,10 @@ library SurAddresses {
     ///      No constructor and no storage seed: only its runtime bytecode goes into the genesis `alloc`.
     address internal constant KMS_DIRECTIVES = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
 
+    /// @dev StandbyValidators — prepared validator list for emergency consensus recovery (a `contract`-to-`contract` genesis transition target).
+    ///      No constructor and no storage seed: only its runtime bytecode goes into the genesis `alloc`.
+    address internal constant STANDBY_VALIDATORS = 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC;
+
     // ------------------------------------------------------------------
     // Operational oracle addresses — unlike the six structural contract addresses above, these
     // are NOT immutable constants baked into every consumer forever: each contract still stores

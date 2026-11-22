@@ -61,6 +61,10 @@ library SurAddresses {
     ///      بدون constructor و بدون seed حافظه: فقط بایت‌کد اجرایی در `alloc` genesis گذاشته می‌شود.
     address internal constant KMS_DIRECTIVES = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
 
+    /// @dev StandbyValidators — فهرست آمادهٔ ولیدیتورها برای بازیابی اضطراری اجماع (مقصد گذار `contract` به `contract` در genesis).
+    ///      بدون constructor و بدون seed: فقط بایت‌کد runtime در `alloc` ژنزیس می‌رود.
+    address internal constant STANDBY_VALIDATORS = 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC;
+
     // ------------------------------------------------------------------
     // آدرس‌های oracle عملیاتی — برخلاف شش آدرس قراردادِ ساختاری بالا، این‌ها ثابت‌های تغییرناپذیری
     // نیستند که برای همیشه در همه‌ی مصرف‌کنندگان جاسازی شوند: هر قرارداد همچنان آدرس oracle خودش را در
