@@ -3,6 +3,8 @@
 > ⚠️ **تاریخی:** این سند دستور دور سوم آزمون Besu است (اجراشده، پیش از اصلاحات L01–L07). دستور جاری برای کد فعلی: `sur-besu-live-test-brief-v4.md`. نتایج این سند برای قراردادهایی که آن اصلاحات تغییرشان داده‌اند دیگر معتبر نیست؛ فقط دانش عملیاتی Besu (بخش ۲.۱) همچنان راهنماست.
 
 > ▶️ **دور ششم (v6) اجرا شد (۲۰۲۶-۱۰-۰۷) روی کد `BlockRewardDistributor` نسخهٔ ۲.۲، genesis حالت Shanghai/Cancun:** ۵۲ ردیف: ۳۶ PASS، ۹ OBSERVATION، ۲ SUPERSEDED، ۱ BLOCKED، ۴ NOT-RUN، ۰ FAIL. گزارش، مشاهدات، انحراف‌ها و محدودیت‌ها در `testing-evidence/besu-live-test-v6-2026-10-07/`. **یافتهٔ مهم:** گذار `blockheader` با کلید timestamp روی Besu release ۲۶.۹.۰ زنجیره را متوقف کرد (برای بازیابی اضطراری — `governance/sur-emergency-consensus-recovery.md`). آمادگی production اعلام نمی‌شود. دستور اجرای آن: `sur-besu-live-test-brief-v6.md`.
+>
+> ▶️ **به‌روزرسانی ۲۰۲۶-۱۱-۲۲:** (۱) پژوهش بازیابی r26 (`testing-evidence/recovery-research-v26/`، Besu 26.9.0، Docker محلی، ۴ نود): علت توقف `blockheader` پیدا شد و روش `contract`←`contract` به StandbyValidators آزموده شد. (۲) آزمون زندهٔ Besu 26.9.0 روی سرور Ubuntu برای کد نهایی ۲٫۵: دور اول `testing-evidence/besu-live-v26/` (۴ مرحله: Router، Verifier، KMS؛ گاز واقعی ۹۰٬۵۷۳ و ۳۱٬۴۰۱ برای هر پرداخت‌شونده؛ نیاز به نود archive) و دور دوم `testing-evidence/besu-live-v26-r2/` (NodeCheck و M9، تایمرهای Verifier، Router با مالک دارای کد، سه رابط روی RPC واقعی؛ یافتهٔ `getLogs` با سقف ۵۰۰۰ بلوکی). هیچ‌کدام آمادگی production یا حسابرسی مستقل نیست.
 
 > ▶️ **دور پنجم (v5) اجرا شد (۲۰۲۶-۱۰-۰۵) روی کد نسخهٔ ۲.۱.۰:** ۲۸ ردیف، ۲۴ PASS و ۴ NOT-RUN؛ `testing-evidence/besu-live-test-v5-2026-10-05/REPORT.md`.
 
