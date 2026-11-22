@@ -171,7 +171,7 @@
    ValidatorsRegistry.isValidator(firstValidator.owner) == true      # مالک، نه اپراتور
    ValidatorsRegistry.operatorOf(firstValidator.owner) == firstValidator.operator
    getValidators() == [firstValidator.operator]                       # فهرست اجماع آدرس اپراتور است
-   ValidatorsRegistry.everActivated(firstValidator.owner) == true     # بدون این پرچم اولین distributeRewards() برای پرداخت به او revert می‌کند
+   ValidatorsRegistry.everActivated(firstValidator.owner) == true     # بدون این پرچم اولین `payPage` برای پرداخت به او revert می‌کند (RD-18: توزیع اکنون `openDistribution`/`payPage`/`closeDistribution` است)
    ValidatorsRegistry.wasActiveAt(firstValidator.owner, 0) == true    # checkpoint مؤسس؛ بدون آن در رأی‌های مجمع واجد نیست
    validators(firstValidator.owner).isPaidEntrant == false            # مؤسس وثیقهٔ صفر دارد
    ValidatorsRegistry.getActiveOwners() == [firstValidator.owner]
