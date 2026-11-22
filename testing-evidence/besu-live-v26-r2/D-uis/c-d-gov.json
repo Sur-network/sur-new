@@ -1,0 +1,86 @@
+{
+  "name": "c-d-governance-dashboard-on-besu",
+  "startedAt": "2026-11-22T12:26:13.436Z",
+  "rows": [
+    {
+      "id": "D.G1",
+      "name": "board read model on Besu: 5 members = owner1..5, BOARD_SIZE 5, quorum 3 of 5, 14-day action expiry, owner1 has authority",
+      "result": "PASS",
+      "detail": "{\"members\":5,\"req\":\"3\",\"authority\":true}"
+    },
+    {
+      "id": "D.G2",
+      "name": "read-only role: a stranger has no seat and no authority",
+      "result": "PASS",
+      "detail": "{\"isSeatHolder\":false,\"hasAuthority\":false,\"isValidator\":false,\"votesUsed\":\"0\"}"
+    },
+    {
+      "id": "D.G3",
+      "name": "KMS panel: KmsDirectives at 0xbBbB…, no slot frozen, oracle addresses = the three SurKMS keys of this net",
+      "result": "PASS",
+      "detail": "[[0,false,\"0x2e180d1c55f7c09f1d8722e344F3a405C0D148e2\"],[1,false,\"0x08aA64373508125f90d729e531fc4D68E9dB0b36\"],[2,false,\"0xc635ea51bdF9f0B59831a359C26e4e22aa3cd674\"]]"
+    },
+    {
+      "id": "D.G4",
+      "name": "the other read models (overview, registry params, treasury, foundation, recovery) load on the Besu RPC without error",
+      "result": "PASS",
+      "detail": "{\"overview\":\"ok\",\"registry\":\"ok\",\"treasury\":\"ok\",\"foundation\":\"ok\",\"recovery\":\"ok\"}"
+    },
+    {
+      "id": "D.G5",
+      "name": "form board-kms-freeze builds proposeKmsFreeze(1,true); the identityOracle slot (2) is refused by the form itself",
+      "result": "PASS",
+      "detail": "{\"fn\":\"proposeKmsFreeze\",\"args\":[\"1\",\"true\"]}"
+    },
+    {
+      "id": "D.G6",
+      "name": "owner1 (1 vote) proposed through the wallet path: action open, 1/3 votes, kind KmsFreeze, decodes to slot 1 frozen=true",
+      "result": "PASS",
+      "detail": "{\"status\":\"open\",\"votes\":\"1\"}"
+    },
+    {
+      "id": "D.G7",
+      "name": "2 of 5 votes: nothing happens (slot 1 not frozen)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "D.G8",
+      "name": "3rd vote executes: only slot 1 (distributionOracle) is frozen on chain",
+      "result": "PASS",
+      "detail": "[false,true,false]"
+    },
+    {
+      "id": "D.G9",
+      "name": "REAL SurKMS honours the on-chain freeze: the distributionOracle slot refuses to sign while frozen",
+      "result": "PASS",
+      "detail": "signer refused eth_signTransaction: FROZEN: FROZEN: the slot is frozen by a board decision"
+    },
+    {
+      "id": "D.G10",
+      "name": "the verifier slot is untouched by the oracle freeze (still signs a permitted call)",
+      "result": "PASS",
+      "detail": "signed"
+    },
+    {
+      "id": "D.G11",
+      "name": "unfreeze needs another 3 of 5; afterwards the chain flag is off and the KMS signs a permitted openDistribution-shaped call again (signing only, nothing sent)",
+      "result": "PASS",
+      "detail": "chain frozen=false; sign: signed"
+    },
+    {
+      "id": "D.G12",
+      "name": "rotation proposal (verifier -> new key) through the form: open with 2 of 3 votes, not executed; the Registry verifier is unchanged (the 3rd vote is deliberately not cast on this net)",
+      "result": "PASS",
+      "detail": "{\"status\":\"open\",\"votes\":\"2\"}"
+    },
+    {
+      "id": "D.G13",
+      "name": "real revert texts mapped to Persian: double vote and non-member vote",
+      "result": "PASS",
+      "detail": "شما قبلاً رأی داده‌اید. | شما در این ماه اختیار هیأت ندارید (عضو نیستید، هنوز در دوره‌ی آزمایشی هستید، یا عضویت‌تان پایان یافته)."
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T12:27:33.915Z"
+}

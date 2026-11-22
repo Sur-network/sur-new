@@ -1,0 +1,9 @@
+(node:8300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B5.0 start: owner7 Active (after resume), set 7 
+PASS B5.1 human registers the recovery case through the real CLI (nothing is recorded on chain by it); the case names owner7, base/return blocks, recovery timestamp read from the chain { "registered": true, "id": 1, "recoveryTimestamp": 1795358398, "cap": 1, "note": "nothing is recorded on chain by this command" } 
+FAIL B5.2 after the objective preconditions (replay ok, Active, in the set at base, no proposal in the window, absent 3 consecutive buckets) the PLANNER sent recordRecoveryRemoval(owner7): mined, owner7 RemovedInRecovery (state Recorded), QBFT set 6 without op7 {"outbox":{"id":10,"state":"confirmed","err":null,"tx":"0x5d6d3e82cbd856f11672f4cb8a05daa5cdf508e488ee0b216a0c1ca82a356195"},"status":5,"recovery":["1","1795358398","0x88ccb5b9ff144edb4fe4204d26012a8b02fa51ccafcbc6beb45fa269741c7b9d","1795358532","1795617732","0","1803134398","0","0"]}
+PASS B5.3 the evidence of the decision: hourly (here 60 s) absence observations were recorded after the return [{"result":"ABSENT","n":4}]
+PASS B5.4 owner7 objects within the window; 3 of 5 board votes against the removal cancel it (VD-4): owner7 SelfSuspended (6) with the resume request open, state Cancelled status 6, state 5
+FAIL B5.5 the planner resumes owner7 only after a successful node check (recordResume, SurKMS) and does NOT record a second removal for the same case recordResume rows 7, removal rows 1
+== 4 PASS, 2 FAIL, 0 OBS ==> runs-c/c-b5.json

@@ -1,0 +1,14 @@
+{
+  "name": "c-b5b",
+  "startedAt": "2026-11-22T14:42:47.126Z",
+  "rows": [
+    {
+      "id": "B5.5b",
+      "name": "after the VD-4 cancellation the planner resumed owner7 only after a node check (second recordResume row, SurKMS), and recorded NO second removal for the same case",
+      "result": "PASS",
+      "detail": "{\"status\":2,\"rows\":[{\"id\":7,\"function_name\":\"recordResume\",\"state\":\"confirmed\",\"tx_hash\":\"0x2fb6be69328bceb91a9a9fcebe6b1f371259346e6e6d138f88c15a93daac59db\"},{\"id\":8,\"function_name\":\"recordRecovery\",\"state\":\"confirmed\",\"tx_hash\":\"0x0071c8f62198b4782ab4816945aae10e9060fd3d9bceae368a6abf77b5955a1d\"},{\"id\":9,\"function_name\":\"recordPreExitViolation\",\"state\":\"confirmed\",\"tx_hash\":\"0xeceaa7c8faf529a4fa757e7ed06574370bd63b6ffe5e6526bb11795e11d386f4\"},{\"id\":10,\"function_name\":\"recordRecoveryRemoval\",\"state\":\"confirmed\",\"tx_hash\":\"0x5d6d3e82cbd856f11672f4cb8a05daa5cdf508e488ee0b216a0c1ca82a356195\"},{\"id\":11,\"function_name\":\"recordResume\",\"state\":\"confirmed\",\"tx_hash\":\"0x976403df9b21765f225b27d402d0189a6441fac09b603eac80ee39933eb460f9\"}],\"pending\":[]}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T14:43:27.258Z"
+}

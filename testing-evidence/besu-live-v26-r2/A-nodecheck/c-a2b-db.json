@@ -1,0 +1,170 @@
+{
+  "outbox": [
+    {
+      "id": 1,
+      "intent_key": "operator_change:0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69:1795953862:498708",
+      "role": "verifier",
+      "kind": "operator_change",
+      "target": "0x3333333333333333333333333333333333333333",
+      "function_name": "confirmOperatorReady",
+      "args_json": "[\"0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69\",\"0x2f2a93295d3415bb51228d18c6598795dc9a32ad\",\"0x8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6\"]",
+      "calldata": "0x814c274d000000000000000000000000fa9121d8f5f770d2b1e71e1a6e51fce87b65af690000000000000000000000002f2a93295d3415bb51228d18c6598795dc9a32ad8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6",
+      "evidence_hash": "0x8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6",
+      "decision_key": "operator_change:0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69:1795953862:498708",
+      "flag": "OPCHANGE",
+      "state": "confirmed",
+      "nonce": 6,
+      "raw_tx": "0xf8ce06865af3107a4000830b60c994333333333333333333333333333333333333333380b864814c274d000000000000000000000000fa9121d8f5f770d2b1e71e1a6e51fce87b65af690000000000000000000000002f2a93295d3415bb51228d18c6598795dc9a32ad8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d68307ff36a00b69ffa63386ce8db3d8fe2e60a9b52f36db4d9b14aa7b60b3c9e959dd272eeda0284a26dd33cf7c0faf2842e7f79674c9a4c66f761d158a4efb1d6feafa73e1a7",
+      "tx_hash": "0x41b6fa1777199859bc94731b791acaf1caf78b3a2cc3a73d85fc51a558e68566",
+      "gas": "745673",
+      "signed_block": 465,
+      "created_at": 1795349191,
+      "updated_at": 1795349398,
+      "attempts": 1,
+      "last_error": null,
+      "receipt_block": 466,
+      "receipt_status": "success",
+      "onchain_decision_id": null
+    },
+    {
+      "id": 2,
+      "intent_key": "operator_change:0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71:1795954308:498708",
+      "role": "verifier",
+      "kind": "operator_change",
+      "target": "0x3333333333333333333333333333333333333333",
+      "function_name": "confirmOperatorReady",
+      "args_json": "[\"0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71\",\"0x674535f09da9ac53c016cffe823e9c01b83c83bd\",\"0x1460a6e3af87e80ab730fb8f92aba45d3f6bea25e6ab26aca69b5ccabd7a17f5\"]",
+      "calldata": "0x814c274d000000000000000000000000a47f9d8905cd83c9f2bb0cf819eec93a637bfc71000000000000000000000000674535f09da9ac53c016cffe823e9c01b83c83bd1460a6e3af87e80ab730fb8f92aba45d3f6bea25e6ab26aca69b5ccabd7a17f5",
+      "evidence_hash": "0x1460a6e3af87e80ab730fb8f92aba45d3f6bea25e6ab26aca69b5ccabd7a17f5",
+      "decision_key": "operator_change:0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71:1795954308:498708",
+      "flag": "OPCHANGE",
+      "state": "confirmed",
+      "nonce": 7,
+      "raw_tx": "0xf8ce07865af3107a4000830b60c994333333333333333333333333333333333333333380b864814c274d000000000000000000000000a47f9d8905cd83c9f2bb0cf819eec93a637bfc71000000000000000000000000674535f09da9ac53c016cffe823e9c01b83c83bd1460a6e3af87e80ab730fb8f92aba45d3f6bea25e6ab26aca69b5ccabd7a17f58307ff36a0d04f36a367c7a7723a630943e832bd3e1a0e32b060de91d13c2ff696a51cca3ca01d11024c7f065dfec9abbe1dbebc3aff5a6d0fc12dff1a97e77dc67a0e6d9063",
+      "tx_hash": "0x3c71a42e6a50f1ff3145ef1d21d277d21ee913c93bc6566a04db14a87bc85af7",
+      "gas": "745673",
+      "signed_block": 549,
+      "created_at": 1795349563,
+      "updated_at": 1795349566,
+      "attempts": 1,
+      "last_error": null,
+      "receipt_block": 550,
+      "receipt_status": "success",
+      "onchain_decision_id": null
+    }
+  ],
+  "checks": [
+    {
+      "id": 1,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "UNKNOWN",
+      "code": "AWAITING_MONITOR_KEY",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 2,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "FAIL",
+      "code": "COMPANION_NO_RESPONSE",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 3,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 4,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 5,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 6,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 7,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 8,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 9,
+      "owner": "0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69",
+      "new_operator": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 10,
+      "owner": "0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71",
+      "new_operator": "0x674535f09da9ac53c016cffe823e9c01b83c83bd",
+      "result": "FAIL",
+      "code": "BAD_SIGNATURE",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 11,
+      "owner": "0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71",
+      "new_operator": "0x674535f09da9ac53c016cffe823e9c01b83c83bd",
+      "result": "OK",
+      "code": "OK",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 12,
+      "owner": "0x660b05c66b0532fc8a4d77813848d202bb9275ad",
+      "new_operator": "0x832d7dfe0d214829955796edcd387ff677887f42",
+      "result": "FAIL",
+      "code": "PEER_ABSENT",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 13,
+      "owner": "0x660b05c66b0532fc8a4d77813848d202bb9275ad",
+      "new_operator": "0x832d7dfe0d214829955796edcd387ff677887f42",
+      "result": "FAIL",
+      "code": "PEER_ABSENT",
+      "check_kind": "sur_node_check_v1"
+    },
+    {
+      "id": 14,
+      "owner": "0x660b05c66b0532fc8a4d77813848d202bb9275ad",
+      "new_operator": "0x832d7dfe0d214829955796edcd387ff677887f42",
+      "result": "FAIL",
+      "code": "PEER_ABSENT",
+      "check_kind": "sur_node_check_v1"
+    }
+  ]
+}

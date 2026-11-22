@@ -1,0 +1,44 @@
+{
+  "name": "c-b5-recovery-removal-m12",
+  "startedAt": "2026-11-22T14:37:16.814Z",
+  "rows": [
+    {
+      "id": "B5.0",
+      "name": "start: owner7 Active (after resume), set 7",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B5.1",
+      "name": "human registers the recovery case through the real CLI (nothing is recorded on chain by it); the case names owner7, base/return blocks, recovery timestamp read from the chain",
+      "result": "PASS",
+      "detail": "{ \"registered\": true, \"id\": 1, \"recoveryTimestamp\": 1795358398, \"cap\": 1, \"note\": \"nothing is recorded on chain by this command\" } "
+    },
+    {
+      "id": "B5.2",
+      "name": "after the objective preconditions (replay ok, Active, in the set at base, no proposal in the window, absent 3 consecutive buckets) the PLANNER sent recordRecoveryRemoval(owner7): mined, owner7 RemovedInRecovery (state Recorded), QBFT set 6 without op7",
+      "result": "FAIL",
+      "detail": "{\"outbox\":{\"id\":10,\"state\":\"confirmed\",\"err\":null,\"tx\":\"0x5d6d3e82cbd856f11672f4cb8a05daa5cdf508e488ee0b216a0c1ca82a356195\"},\"status\":5,\"recovery\":[\"1\",\"1795358398\",\"0x88ccb5b9ff144edb4fe4204d26012a8b02fa51ccafcbc6beb45fa269741c7b9d\",\"1795358532\",\"1795617732\",\"0\",\"1803134398\",\"0\",\"0\"]}"
+    },
+    {
+      "id": "B5.3",
+      "name": "the evidence of the decision: hourly (here 60 s) absence observations were recorded after the return",
+      "result": "PASS",
+      "detail": "[{\"result\":\"ABSENT\",\"n\":4}]"
+    },
+    {
+      "id": "B5.4",
+      "name": "owner7 objects within the window; 3 of 5 board votes against the removal cancel it (VD-4): owner7 SelfSuspended (6) with the resume request open, state Cancelled",
+      "result": "PASS",
+      "detail": "status 6, state 5"
+    },
+    {
+      "id": "B5.5",
+      "name": "the planner resumes owner7 only after a successful node check (recordResume, SurKMS) and does NOT record a second removal for the same case",
+      "result": "FAIL",
+      "detail": "recordResume rows 7, removal rows 1"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T14:42:23.755Z"
+}

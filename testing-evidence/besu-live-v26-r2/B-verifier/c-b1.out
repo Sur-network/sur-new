@@ -1,0 +1,9 @@
+(node:29716) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B1.0 start: Verifier (all classes on, SurKMS signer) running; 7 Active validators outbox rows before: 2
+stopped n6+n7 at 2026-11-22T12:22:51.074Z
+..................................PASS B1.1 two validators silent for > 15 min at once (28.6 % of the set): neither is INACTIVE_CONFIRMED (general outage rule), nothing sent, both still Active, QBFT still lists both operators' slots owner6 results after 900 s: UNKNOWN:NETWORK_UNHEALTHY; owner7: UNKNOWN:NETWORK_UNHEALTHY; outbox 2
+PASS B1.2 with n6 back, owner7 alone is INACTIVE_CONFIRMED: recordSuspension(owner7) signed by SurKMS, mined (receipt success); owner7 Demoted; QBFT set 7 -> 6 without op7 outbox {"id":3,"state":"confirmed","tx":"0x77a1dc57bb656b1e30db6eac20aad5515fa53dd1080f9e41e198a6cb1f1847d7"}; set 6
+PASS B1.2b the decision log shows INACTIVE_CONFIRMED for owner7 with the 900 s test window (rules version recorded) 1 INACTIVE_CONFIRMED rows after n6 restart
+++++++++++++++++++++++++++++++++++PASS B1.3 second silent validator within the same hour: INACTIVE_CONFIRMED is recognised but the rolling cap (max(1, floor(20 % of active))) stops the second recordSuspension: owner6 still Active owner6 results: INACTIVE_CONFIRMED:,UNKNOWN:NETWORK_UNHEALTHY; suspension rows: [{"id":3,"state":"confirmed","err":""},{"id":4,"state":"held","err":"SUSPENSION_CAP: 1 suspensions in the last hour, cap 1 of 6 active"}]
+== 5 PASS, 0 FAIL, 0 OBS ==> runs-c/c-b1.json

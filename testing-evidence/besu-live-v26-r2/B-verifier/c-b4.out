@@ -1,0 +1,7 @@
+(node:32828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B4.0 start: owner6 Active; Verifier running with PRE_EXIT on and SUSPENSION off set 7
+n6 stopped 2026-11-22T14:20:11.318Z
+PASS B4.1 owner6 (contract) requestExit after 16 min of silence while still Active: Exiting, removed from the QBFT set at once status 4, set 6
+PASS B4.2 the Verifier filed recordPreExitViolation(owner6, evidence, violationAt) signed by SurKMS and mined: PreExitCaseRecorded on chain; violationAt is strictly before the exit request {"outbox":{"id":9,"state":"confirmed","err":null},"events":[{"v":"0xC0DE000000000000000000000000000000000006","violationAt":"1795358169","exitRequestedAt":"1795358170"}]}
+== 3 PASS, 0 FAIL, 0 OBS ==> runs-c/c-b4.json

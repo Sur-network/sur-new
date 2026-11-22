@@ -1,0 +1,7 @@
+(node:30156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B3.0 start: owner7 Active again (planner recordRecovery of B2), QBFT set 6 (owner4 still waiting for its own recovery) set 6
+PASS B3.1 selfSuspend by the owner: SelfSuspended, QBFT 6 -> 5 (voluntary suspension is never a violation: no slash case) status 6
+PASS B3.2 node not ready (n7 stopped): the planner refuses to resume (pending NODE_CHECK_FAIL / PEER_ABSENT), no recordResume sent, owner7 stays out of the set [{"kind":"resume","reason":"NODE_CHECK_FAIL"}]
+PASS B3.3 with n7 back and measured OK (admin_peers presence, geo iran, in sync) the PLANNER sends recordResume signed by SurKMS: owner7 Active again, QBFT set back to 6 with op7 {"id":7,"tx":"0x2fb6be69328bceb91a9a9fcebe6b1f371259346e6e6d138f88c15a93daac59db"}
+== 4 PASS, 0 FAIL, 0 OBS ==> runs-c/c-b3.json

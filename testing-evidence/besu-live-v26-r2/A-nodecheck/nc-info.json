@@ -1,0 +1,16 @@
+{
+  "x1": {
+    "port": 19950,
+    "owner": "0xfa9121D8F5F770D2b1E71e1A6e51fce87B65aF69",
+    "operator": "0x2f2A93295d3415Bb51228d18C6598795Dc9a32aD",
+    "nodeId": "889865590cc5eed49b664721b449058e22b90328e752493f0436eed2b5a3f83a05076a7cba2c44bdc3a29f9916c6ee7bdd7a2307cf554aa325d23ec5d56cd057",
+    "monitorAddress": "0xE155A2B0D4AD7755657F89503E46C6b8c1FaC4b2"
+  },
+  "a1": {
+    "port": 19951,
+    "owner": "0xa47F9d8905CD83C9f2BB0cF819eeC93a637bFc71",
+    "operator": "0x674535f09Da9ac53c016CfFe823e9c01B83c83bd",
+    "nodeId": "42d49d0ccb9869bc994fcebae1dd0acd6d4e25b343461bfded087e86436fb4ac8684dc6fcec26060c3c5ec0e6d4b40445f4c9290d749e0b007d4cb6ea2b717f4",
+    "monitorAddress": "0xc00C9f80427D0F019026294C8221Bcbc1c12436c"
+  }
+}

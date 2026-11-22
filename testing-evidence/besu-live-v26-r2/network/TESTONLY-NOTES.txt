@@ -1,0 +1,5 @@
+TEST-ONLY genesis (round 2, net C). Differences from the production genesis:
+1. BlockRewardDistributor runtime code swapped for a scratch copy: MIN_DISTRIBUTION_INTERVAL 23 hours -> 60 seconds, ABORT_DELAY 3 days -> 120 seconds (production runtime 23046 bytes, test-only 23036 bytes).
+2. ValidatorsRegistry initial recoveryPeriod 172800 -> 3700 s (through the builder config; code unchanged).
+3. owner6 is the CONTRACT 0xC0DE000000000000000000000000000000000006 (TestOnlyToggleOwner: receive() reverts until setOpen(true); doClaim(dist); exec(to,data) so that the contract can call the Registry) so that a founder with code exists; the Registry takes founders from the config.
+4. extra balances for the throw-away accounts; docker subnet 198.20.77.0/24 (a public-classified range, local to the server bridge, so that the Verifier geo/transport rules treat node addresses as public).

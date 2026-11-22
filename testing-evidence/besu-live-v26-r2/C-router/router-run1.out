@@ -1,0 +1,33 @@
+{"level":40,"time":1795349933900,"pid":19068,"hostname":"Balon","name":"router","alert":"CONTRACT_PAYEE","subject":"range:1","msg":"0xc0de000000000000000000000000000000000006 has code: its payout is not sent but credited to claimable (RD-12b, event ValidatorRewardDeferred) and the owner must call claim(). A seat owner should be a plain wallet (RD-12)."}
+{
+  "cycleId": 1,
+  "ok": true,
+  "mode": "send-enabled",
+  "headNumber": 668,
+  "replayOk": true,
+  "collected": 668,
+  "incompleteBlocks": 0,
+  "settledBlock": 668,
+  "plan": {
+    "fromBlock": 1,
+    "toBlock": 667,
+    "verdict": "queued",
+    "wouldSend": true,
+    "simulation": "ok"
+  },
+  "executor": {
+    "sent": 5,
+    "confirmed": 5,
+    "reverted": 0,
+    "rejected": 0,
+    "waiting": 0,
+    "steps": 5
+  },
+  "cert": {
+    "action": "disabled"
+  },
+  "alerts": [
+    "CONTRACT_PAYEE"
+  ],
+  "errors": []
+}

@@ -1,0 +1,6 @@
+(node:10456) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B2.5 Verifier HOUSEKEEPING (verifier key via SurKMS) sent resolveMassFailureCheck for its own case (owner7) once the 1-hour demotion epoch had closed: ExemptMassFailure (2 demotions / 7 > 20 %), pendingSlashEpoch 0; the fixture case of owner4 was closed by hand with the same permissionless call planner rows [[5,"permissionless","0x3717f6bcb7caf3f6090b926e6796cf7a111cd24cdebba159a421c98813db8d64"]]; pendingSlashEpoch o7 0 o4 0
+PASS B2.6 after recoveryPeriod (3700 s) the PLANNER sent recordRecovery for owner7 and owner4 (node measurement OK: present in admin_peers, geo iran, in sync, ratio >= 95 %, coverage >= 50 %), signed by SurKMS and mined; both Active outbox [[6,"confirmed","0x16078e8e9371ff210babbb437e6a47f355c0afa0be77894c32cbe4d5b46150df"],[8,"confirmed","0x0071c8f62198b4782ab4816945aae10e9060fd3d9bceae368a6abf77b5955a1d"]]
+PASS B2.7 QBFT set back to 7 validators including op7 and op4 set 7
+== 3 PASS, 0 FAIL, 0 OBS ==> runs-c/c-b2b.json

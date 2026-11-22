@@ -1,0 +1,23 @@
+(node:30044) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS A2.0 start: 7 validators; Verifier running with OPCHANGE on, SurKMS signer, geo table, companion address through the tunnel 7 validators
+PASS A2.1 owner2 (Active) proposeOperator(opX1): pending, consensus untouched (set unchanged) 0x2f2A93295d3415Bb51228d18C6598795Dc9a32aD
+PASS A2.2 Verifier: no node id registered for the proposed key -> waiting (AWAITING_NODE_ID), nothing sent {"kind":"operator_change","reason":"AWAITING_NODE_ID"}
+PASS A2.3 owner2 registers the node id of x1 (PUT /api/v1/node-id, owner-signed): accepted as the PROPOSED node {"ok":true,"owner":"0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69","operator":"0x2f2a93295d3415bb51228d18c6598795dc9a32ad","kind":"proposed","note":"the node is checked in the next hourly cycle"}
+PASS A2.4 Verifier cycle: presence of x1 in admin_peers of the monitor node OK (public address, geo iran, node id derives to the operator) but no monitoring key yet -> UNKNOWN AWAITING_MONITOR_KEY, nothing sent {"id":1,"checked_at":1795349119,"result":"UNKNOWN","code":"AWAITING_MONITOR_KEY","detail":"{\"method\":\"sur_node_check_v1\",\"presence\":{\"code\":\"OK\",\"result\":\"OK\",\"geoStatus\":\"iran\",\"country\":\"IR\",\"geoDbVersion\":\"ranges-sha256:543cdc40266b16b8\",\"nodeIdMatchesOperator\":true,\"
+PASS A2.4b registering the old node key as the monitoring key is refused (422 MONITOR_KEY_NOT_DISTINCT) {"error":"the monitoring key must differ from the owner key, the node (block-signing) keys and the Verifier's key: the block-signing key is never given to the companion service","code":"MONITOR_KEY_NOT_DISTINCT"}
+PASS A2.4c registering the owner key as the monitoring key is refused (422) {"error":"the monitoring key must differ from the owner key, the node (block-signing) keys and the Verifier's key: the block-signing key is never given to the companion service","code":"MONITOR_KEY_NOT_DISTINCT"}
+PASS A2.5 owner2 registers the monitoring key with port 19952 (a NodeCheck whose Besu does not answer) {"ok":true,"owner":"0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69","operator":"0x2f2a93295d3415bb51228d18c6598795dc9a32ad","monitorAddress":"0xe155a2b0d4ad7755657f89503e46c6b8c1fac4b2","companionPort":19952,"note":"the new node is checked with a challenge in the next hourly cycle"}
+PASS A2.6 node not ready: the companion answers 503 -> Verifier FAIL COMPANION_NO_RESPONSE; no confirmOperatorReady, validator set unchanged {"id":2,"checked_at":1795349153,"result":"FAIL","code":"COMPANION_NO_RESPONSE","detail":"{\"method\":\"sur_node_check_v1\",\"presence\":{\"code\":\"OK\",\"result\":\"OK\",\"geoStatus\":\"iran\",\"country\":\"IR\",\"geoDbVersion\":\"ranges-sha256:543cdc40266b16b8\",\"nodeIdMatchesOperator\":true,\"mo
+PASS A2.7 owner2 corrects the port to 19950 (the NodeCheck next to a healthy x1) {"ok":true,"owner":"0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69","operator":"0x2f2a93295d3415bb51228d18c6598795dc9a32ad","monitorAddress":"0xe155a2b0d4ad7755657f89503e46c6b8c1fac4b2","companionPort":19950,"note":"the new node is checked with a challenge in the next hourly cycle"}
+PASS A2.8 Verifier: challenge answered by the REAL NodeCheck, seven controls OK (check_kind sur_node_check_v1) {"id":3,"checked_at":1795349187,"result":"OK","code":"OK","detail":"{\"method\":\"sur_node_check_v1\",\"presence\":{\"code\":\"OK\",\"result\":\"OK\",\"geoStatus\":\"iran\",\"country\":\"IR\",\"geoDbVersion\":\"ranges-sha256:543cdc40266b16b8\",\"nodeIdMatchesOperator\":true,\"monitorHealthy\":true},
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:44
+  for (;;) { const v = await fn(); if (v) return v; if (Date.now() - t > ms) throw new Error("waitFor timeout"); await sleep(step); }
+                                                                                   ^
+
+Error: waitFor timeout
+    at waitFor (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:44:84)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (D:\Amir\Business\SUR\NewSur\Deployments\BesuLive\c-a2.mts:61:15)
+
+Node.js v22.18.0

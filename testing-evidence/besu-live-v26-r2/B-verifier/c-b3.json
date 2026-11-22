@@ -1,0 +1,32 @@
+{
+  "name": "c-b3-selfsuspend-resume",
+  "startedAt": "2026-11-22T14:02:10.051Z",
+  "rows": [
+    {
+      "id": "B3.0",
+      "name": "start: owner7 Active again (planner recordRecovery of B2), QBFT set 6 (owner4 still waiting for its own recovery)",
+      "result": "PASS",
+      "detail": "set 6"
+    },
+    {
+      "id": "B3.1",
+      "name": "selfSuspend by the owner: SelfSuspended, QBFT 6 -> 5 (voluntary suspension is never a violation: no slash case)",
+      "result": "PASS",
+      "detail": "status 6"
+    },
+    {
+      "id": "B3.2",
+      "name": "node not ready (n7 stopped): the planner refuses to resume (pending NODE_CHECK_FAIL / PEER_ABSENT), no recordResume sent, owner7 stays out of the set",
+      "result": "PASS",
+      "detail": "[{\"kind\":\"resume\",\"reason\":\"NODE_CHECK_FAIL\"}]"
+    },
+    {
+      "id": "B3.3",
+      "name": "with n7 back and measured OK (admin_peers presence, geo iran, in sync) the PLANNER sends recordResume signed by SurKMS: owner7 Active again, QBFT set back to 6 with op7",
+      "result": "PASS",
+      "detail": "{\"id\":7,\"tx\":\"0x2fb6be69328bceb91a9a9fcebe6b1f371259346e6e6d138f88c15a93daac59db\"}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T14:06:19.205Z"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "c-b1-silent-validators-cap",
+  "startedAt": "2026-11-22T12:22:46.510Z",
+  "rows": [
+    {
+      "id": "B1.0",
+      "name": "start: Verifier (all classes on, SurKMS signer) running; 7 Active validators",
+      "result": "PASS",
+      "detail": "outbox rows before: 2"
+    },
+    {
+      "id": "B1.1",
+      "name": "two validators silent for > 15 min at once (28.6 % of the set): neither is INACTIVE_CONFIRMED (general outage rule), nothing sent, both still Active, QBFT still lists both operators' slots",
+      "result": "PASS",
+      "detail": "owner6 results after 900 s: UNKNOWN:NETWORK_UNHEALTHY; owner7: UNKNOWN:NETWORK_UNHEALTHY; outbox 2"
+    },
+    {
+      "id": "B1.2",
+      "name": "with n6 back, owner7 alone is INACTIVE_CONFIRMED: recordSuspension(owner7) signed by SurKMS, mined (receipt success); owner7 Demoted; QBFT set 7 -> 6 without op7",
+      "result": "PASS",
+      "detail": "outbox {\"id\":3,\"state\":\"confirmed\",\"tx\":\"0x77a1dc57bb656b1e30db6eac20aad5515fa53dd1080f9e41e198a6cb1f1847d7\"}; set 6"
+    },
+    {
+      "id": "B1.2b",
+      "name": "the decision log shows INACTIVE_CONFIRMED for owner7 with the 900 s test window (rules version recorded)",
+      "result": "PASS",
+      "detail": "1 INACTIVE_CONFIRMED rows after n6 restart"
+    },
+    {
+      "id": "B1.3",
+      "name": "second silent validator within the same hour: INACTIVE_CONFIRMED is recognised but the rolling cap (max(1, floor(20 % of active))) stops the second recordSuspension: owner6 still Active",
+      "result": "PASS",
+      "detail": "owner6 results: INACTIVE_CONFIRMED:,UNKNOWN:NETWORK_UNHEALTHY; suspension rows: [{\"id\":3,\"state\":\"confirmed\",\"err\":\"\"},{\"id\":4,\"state\":\"held\",\"err\":\"SUSPENSION_CAP: 1 suspensions in the last hour, cap 1 of 6 active\"}]"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T13:09:55.435Z"
+}

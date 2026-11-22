@@ -1,0 +1,68 @@
+{
+  "name": "c-d-saledashboard-on-besu",
+  "startedAt": "2026-11-22T13:00:05.939Z",
+  "rows": [
+    {
+      "id": "D.S0",
+      "name": "the final SurenSale deploys on Besu (normal CREATE; deployer = throw-away key)",
+      "result": "PASS",
+      "detail": "0x1dfbfc97530233dbdeeecc9c9b4f38124d2ecc0b at block 1339, gas 4951010"
+    },
+    {
+      "id": "D.S1",
+      "name": "fresh contract: honest 'not started' state with every unmet condition named; price 100 Toman; 90-day fixed + 45-day transition; DAO does not know the contract yet",
+      "result": "PASS",
+      "detail": "headline not-started, blockers cap-unset,unfunded,no-exchange, dao mismatch (mismatch = a sale contract of an earlier attempt on this net is already announced to the DAO: the cross-check rightly refuses the new address)"
+    },
+    {
+      "id": "D.S2",
+      "name": "real DAO decisions (3 of 5): the sale contract announced and the CEO elected; the dashboard's DAO cross-check says match and shows the CEO",
+      "result": "PASS",
+      "detail": "dao match, ceo 0xa70aE7b2A3411ef96051c9fD17908F9d38543527"
+    },
+    {
+      "id": "D.S3",
+      "name": "funded from the DAO treasury, cap 2,000, two exchanges: state 'open', blockers none, quota table and balances as the contract has them (gas deposit 100 each)",
+      "result": "PASS",
+      "detail": "balance 2800000000000000000000, exchanges 2"
+    },
+    {
+      "id": "D.S4",
+      "name": "event history read in chunks: Funded, TotalCapChanged, ExchangeRegistered x2 with timestamps",
+      "result": "PASS",
+      "detail": "[\"Funded\",\"TotalCapChanged\",\"ExchangeRegistered\",\"ExchangeRegistered\"]"
+    },
+    {
+      "id": "D.S5",
+      "name": "a real sale from a registered exchange: the customer receives exactly the dashboard calculator's amount (to the wei); per-exchange numbers, total sold and Toman received follow",
+      "result": "PASS",
+      "detail": "received 1234560000000000000000, expected 1234560000000000000000"
+    },
+    {
+      "id": "D.S6",
+      "name": "SaleExecuted event decoded with the order reference and the price 100,000 milli-Toman",
+      "result": "PASS",
+      "detail": "{\"exchange\":\"0x55A73E49b26eB3bC64aB0ACFb8Ec3e7A94182788\",\"customer\":\"0x5D00000000000000000000000000000000000001\",\"tomanAmount\":\"123456\",\"surenAmount\":\"1234560000000000000000\",\"priceMilliToman\":\"100000\",\"orderRef\":\"0x0000000000000000000000000000000000000000000000000000000000000001\"}"
+    },
+    {
+      "id": "D.S7",
+      "name": "the contract's own refusals on Besu map to Persian: stranger, zero amount, minOut, duplicate order reference",
+      "result": "PASS",
+      "detail": "فقط صرافی ثبت‌شده و فعال می‌تواند سفارش  | مبلغ تومانی سفارش باید بیشتر از صفر باشد | با قیمت همین لحظهٔ قرارداد، سورن دریافتی | شناسهٔ این سفارش پیش‌تر برای همین صرافی "
+    },
+    {
+      "id": "D.S8",
+      "name": "pauseExchange by one DAO board member: exchange A Paused in the dashboard model; B still Active so the sale stays open",
+      "result": "PASS",
+      "detail": "statuses 2,1"
+    },
+    {
+      "id": "D.S9",
+      "name": "the time-dependent parts (monthly price steps at 30 days, transition after 90 days, CEO extension segments) are NOT exercised here: they need 30/90 days of real time on Besu (anvil time travel does not exist)",
+      "result": "OBSERVATION",
+      "detail": "see the unexercised list"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T13:01:43.761Z"
+}

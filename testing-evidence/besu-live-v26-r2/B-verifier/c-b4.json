@@ -1,0 +1,26 @@
+{
+  "name": "c-b4-pre-exit",
+  "startedAt": "2026-11-22T14:20:06.961Z",
+  "rows": [
+    {
+      "id": "B4.0",
+      "name": "start: owner6 Active; Verifier running with PRE_EXIT on and SUSPENSION off",
+      "result": "PASS",
+      "detail": "set 7"
+    },
+    {
+      "id": "B4.1",
+      "name": "owner6 (contract) requestExit after 16 min of silence while still Active: Exiting, removed from the QBFT set at once",
+      "result": "PASS",
+      "detail": "status 4, set 6"
+    },
+    {
+      "id": "B4.2",
+      "name": "the Verifier filed recordPreExitViolation(owner6, evidence, violationAt) signed by SurKMS and mined: PreExitCaseRecorded on chain; violationAt is strictly before the exit request",
+      "result": "PASS",
+      "detail": "{\"outbox\":{\"id\":9,\"state\":\"confirmed\",\"err\":null},\"events\":[{\"v\":\"0xC0DE000000000000000000000000000000000006\",\"violationAt\":\"1795358169\",\"exitRequestedAt\":\"1795358170\"}]}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T14:36:43.788Z"
+}

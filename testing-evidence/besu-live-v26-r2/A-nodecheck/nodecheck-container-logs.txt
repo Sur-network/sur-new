@@ -1,0 +1,32 @@
+== sur25c-nc-x1-19953
+{"level":30,"time":1795348951795,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"STARTED","chainId":262025,"monitorAddress":"0xE155A2B0D4AD7755657F89503E46C6b8c1FaC4b2","listen":"198.20.77.18:19953","allowedClients":1,"msg":"SUR_NODE_CHECK_V1 companion service started"}
+{"level":40,"time":1795348982342,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"FORBIDDEN_CLIENT","msg":"request from an address that is not allowed"}
+== sur25c-nc-x1-19952
+{"level":30,"time":1795348949689,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"STARTED","chainId":262025,"monitorAddress":"0xE155A2B0D4AD7755657F89503E46C6b8c1FaC4b2","listen":"198.20.77.18:19952","allowedClients":1,"msg":"SUR_NODE_CHECK_V1 companion service started"}
+{"level":40,"time":1795348982262,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"NODE_RPC_UNAVAILABLE","why":"eth_chainId: fetch failed","msg":"the local node could not answer"}
+{"level":40,"time":1795349154430,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"NODE_RPC_UNAVAILABLE","why":"eth_chainId: fetch failed","msg":"the local node could not answer"}
+== sur25c-nc-a1-19951
+{"level":30,"time":1795348881119,"pid":1,"hostname":"4d3db7fd8aa2","name":"sur-node-check","code":"STARTED","chainId":262025,"monitorAddress":"0xc00C9f80427D0F019026294C8221Bcbc1c12436c","listen":"198.20.77.19:19951","allowedClients":1,"msg":"SUR_NODE_CHECK_V1 companion service started"}
+{"level":30,"time":1795349528492,"pid":1,"hostname":"4d3db7fd8aa2","name":"sur-node-check","code":"ANSWERED","blocks":[529,183,338],"height":532,"msg":"challenge answered"}
+{"level":30,"time":1795349562100,"pid":1,"hostname":"4d3db7fd8aa2","name":"sur-node-check","code":"ANSWERED","blocks":[546,432,504],"height":549,"msg":"challenge answered"}
+== sur25c-nc-x1-19950
+{"level":30,"time":1795348881157,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"STARTED","chainId":262025,"monitorAddress":"0xE155A2B0D4AD7755657F89503E46C6b8c1FaC4b2","listen":"198.20.77.18:19950","allowedClients":1,"msg":"SUR_NODE_CHECK_V1 companion service started"}
+{"level":30,"time":1795348981252,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[256,103,185],"height":258,"msg":"challenge answered"}
+{"level":30,"time":1795348981852,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[256,26,221],"height":258,"msg":"challenge answered"}
+{"level":30,"time":1795348982435,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[256,133,209],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348982568,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,127,35],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348982671,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,57,250],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348982770,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,238,145],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348982873,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,207,105],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348983049,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,179,225],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348983161,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,245,128],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348983348,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,232,116],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348983483,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,57,195],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795348983587,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[257,122,229],"height":259,"msg":"challenge answered"}
+{"level":30,"time":1795349189259,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[360,317,299],"height":362,"msg":"challenge answered"}
+{"level":30,"time":1795349223546,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[377,31,221],"height":379,"msg":"challenge answered"}
+{"level":30,"time":1795349257879,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[394,195,313],"height":396,"msg":"challenge answered"}
+{"level":30,"time":1795349292107,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[411,44,3],"height":413,"msg":"challenge answered"}
+{"level":30,"time":1795349326570,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[429,394,192],"height":431,"msg":"challenge answered"}
+{"level":30,"time":1795349360749,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[446,420,289],"height":448,"msg":"challenge answered"}
+{"level":30,"time":1795349394610,"pid":1,"hostname":"8f38e8beb6a6","name":"sur-node-check","code":"ANSWERED","blocks":[463,401,448],"height":465,"msg":"challenge answered"}

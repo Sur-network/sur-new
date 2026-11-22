@@ -1,0 +1,8 @@
+(node:34592) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS B2.0 start: owner7 is Demoted (planner suspension of B1), owner4 Active, QBFT set 6 set 6
+PASS B2.1 owner7 (Demoted) registers the node id of its restarted node n7 with the Verifier API {"ok":true,"owner":"0x9194c181f914c1033f9b98e9cd2d250b1e0dccc7","operator":"0xfad401893a7addb4c0b99abcfd0517042493f854","kind":"current","note":"the node is checked in the next hourly cycle"}
+PASS B2.2 owner4 registers the node id of n4 {"ok":true,"owner":"0x660b05c66b0532fc8a4d77813848d202bb9275ad","operator":"0xc8609e4e3cf468b6cd704fd0a70a26726ee9c916","kind":"current","note":"the node is checked in the next hourly cycle"}
+PASS B2.3 FIXTURE (labelled): recordSuspension(owner4) signed by the real SurKMS verifier key (direct call, because the planner's cap forbids a 2nd suspension in the hour); owner4 Demoted; QBFT 6 -> 5 tx 0xfc2addf66e7dad4e4175df9e9baef7baca12a7cd3a8df0371c8667873b72e537
+PASS B2.4 both demotions fall into one demotion epoch (count 2, reference 7): 2 x 10000 > 7 x 2000, so the epoch will be a mass failure (slash paused) epoch 1: count 2, reference 7
+owner7 demoted at 2026-11-22T12:52:44.000Z owner4 at 2026-11-22T13:10:26.000Z epoch start 2026-11-22T12:52:44.000Z

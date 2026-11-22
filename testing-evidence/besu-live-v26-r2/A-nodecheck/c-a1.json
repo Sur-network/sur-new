@@ -1,0 +1,128 @@
+{
+  "name": "c-a1-nodecheck-direct",
+  "startedAt": "2026-11-22T12:03:01.965Z",
+  "rows": [
+    {
+      "id": "A1.1",
+      "name": "NodeCheck next to a real Besu (x1): a fresh challenge is answered 200 and the Verifier's verifyResponse (7 controls, reference = archive node a1) says OK",
+      "result": "PASS",
+      "detail": "200 {\"result\":\"OK\",\"code\":\"OK\",\"facts\":{\"requestedBlocks\":[256,103,185],\"referenceHead\":258,\"answeredHeight\":258,\"lagBlocks\":0}}"
+    },
+    {
+      "id": "A1.1b",
+      "name": "the answer carries 3 block hashes of the asked numbers and chain id 262025; the monitoring address differs from the node (operator) key",
+      "result": "PASS",
+      "detail": "blocks [256,103,185] height 258"
+    },
+    {
+      "id": "A1.2",
+      "name": "wrong key: the same (valid) answer is rejected by the Verifier when another monitoring key is registered (BAD_SIGNATURE)",
+      "result": "PASS",
+      "detail": "{\"result\":\"FAIL\",\"code\":\"BAD_SIGNATURE\",\"facts\":{\"requestedBlocks\":[256,103,185],\"referenceHead\":258,\"signedBy\":\"0xe155a2b0d4ad7755657f89503e46c6b8c1fac4b2\"}}"
+    },
+    {
+      "id": "A1.3",
+      "name": "replay of the same challenge to NodeCheck: 409 CHALLENGE_REPLAY, nothing signed",
+      "result": "PASS",
+      "detail": "409 {\"error\":{\"code\":\"CHALLENGE_REPLAY\",\"message\":\"this challenge was already used\"}}"
+    },
+    {
+      "id": "A1.4",
+      "name": "stale challenge (deadline 10 minutes in the past): 408 DEADLINE_PASSED, nothing signed",
+      "result": "PASS",
+      "detail": "408 {\"error\":{\"code\":\"DEADLINE_PASSED\",\"message\":\"the deadline has passed\"}}"
+    },
+    {
+      "id": "A1.4b",
+      "name": "issuedAt one hour in the future: 400 BAD_TIME",
+      "result": "PASS",
+      "detail": "400 {\"error\":{\"code\":\"BAD_TIME\",\"message\":\"issuedAt is in the future\"}}"
+    },
+    {
+      "id": "A1.4c",
+      "name": "answer window of 600 s (maximum 120 s): 400 BAD_TIME",
+      "result": "PASS",
+      "detail": "400 {\"error\":{\"code\":\"BAD_TIME\",\"message\":\"the time window is empty or longer than accepted\"}}"
+    },
+    {
+      "id": "A1.4d",
+      "name": "stale answer: the Verifier side rejects a valid answer that arrives after the deadline (RESPONSE_AFTER_DEADLINE)",
+      "result": "PASS",
+      "detail": "{\"result\":\"FAIL\",\"code\":\"RESPONSE_AFTER_DEADLINE\",\"facts\":{\"requestedBlocks\":[256,26,221],\"referenceHead\":258,\"lateBySec\":5}}"
+    },
+    {
+      "id": "A1.5a",
+      "name": "challenge for another operator key: 403 WRONG_IDENTITY",
+      "result": "PASS",
+      "detail": "403 {\"error\":{\"code\":\"WRONG_IDENTITY\",\"message\":\"the request is not about the node this service belongs to\"}}"
+    },
+    {
+      "id": "A1.5b",
+      "name": "challenge for another owner: 403 WRONG_IDENTITY",
+      "result": "PASS",
+      "detail": "403 {\"error\":{\"code\":\"WRONG_IDENTITY\",\"message\":\"the request is not about the node this service belongs to\"}}"
+    },
+    {
+      "id": "A1.5c",
+      "name": "challenge naming another node id: 403 WRONG_IDENTITY",
+      "result": "PASS",
+      "detail": "403 {\"error\":{\"code\":\"WRONG_IDENTITY\",\"message\":\"the request is not about the node this service belongs to\"}}"
+    },
+    {
+      "id": "A1.5d",
+      "name": "challenge for the production chain id 262: 409 WRONG_NETWORK",
+      "result": "PASS",
+      "detail": "409 {\"error\":{\"code\":\"WRONG_NETWORK\",\"message\":\"the request is for another network\"}}"
+    },
+    {
+      "id": "A1.5e",
+      "name": "block number above the node's height: 409 BLOCK_NOT_AVAILABLE",
+      "result": "PASS",
+      "detail": "409 {\"error\":{\"code\":\"BLOCK_NOT_AVAILABLE\",\"message\":\"the local node has not reached the asked block height\"}}"
+    },
+    {
+      "id": "A1.5f",
+      "name": "four blocks: 400 BAD_REQUEST",
+      "result": "PASS",
+      "detail": "400 {\"error\":{\"code\":\"BAD_REQUEST\",\"message\":\"blocks must be one to three block numbers\"}}"
+    },
+    {
+      "id": "A1.5g",
+      "name": "wrong protocol version: 400 WRONG_VERSION",
+      "result": "PASS",
+      "detail": "400 {\"error\":{\"code\":\"WRONG_VERSION\",\"message\":\"the protocol version is not SUR_NODE_CHECK_V1\"}}"
+    },
+    {
+      "id": "A1.5h",
+      "name": "a tenth field: 400 BAD_REQUEST",
+      "result": "PASS",
+      "detail": "400 {\"error\":{\"code\":\"BAD_REQUEST\",\"message\":\"the request has missing or unknown fields\"}}"
+    },
+    {
+      "id": "A1.6",
+      "name": "node not ready: NodeCheck whose local Besu does not answer refuses 503 NODE_RPC_UNAVAILABLE (the Verifier reads a non-2xx as no answer = failure of the node)",
+      "result": "PASS",
+      "detail": "503 {\"error\":{\"code\":\"NODE_RPC_UNAVAILABLE\",\"message\":\"the local node could not answer\"}}"
+    },
+    {
+      "id": "A1.7",
+      "name": "source not allowed (instance pinned to 10.9.9.9; the request arrives from the docker gateway 198.20.77.1): 403 FORBIDDEN_CLIENT",
+      "result": "PASS",
+      "detail": "403 {\"error\":{\"code\":\"FORBIDDEN_CLIENT\",\"message\":\"this address may not call the service\"}}"
+    },
+    {
+      "id": "A1.8",
+      "name": "GET on the check path: 405",
+      "result": "PASS",
+      "detail": "405"
+    },
+    {
+      "id": "A1.9",
+      "name": "10 consecutive fresh challenges all answered and verified",
+      "result": "PASS",
+      "detail": "10/10 in 1258 ms"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T12:03:05.076Z"
+}

@@ -1,0 +1,128 @@
+{
+ "outbox": [
+  {
+   "id": 1,
+   "kind": "operator_change",
+   "state": "confirmed",
+   "function_name": "confirmOperatorReady",
+   "tx_hash": "0x41b6fa1777199859bc94731b791acaf1caf78b3a2cc3a73d85fc51a558e68566",
+   "args_json": "[\"0xfa9121d8f5f770d2b1e71e1a6e51fce87b65af69\",\"0x2f2a93295d3415bb51228d18c6598795dc9a32ad\",\"0x8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6\"]",
+   "last_error": null,
+   "role": "verifier"
+  },
+  {
+   "id": 2,
+   "kind": "operator_change",
+   "state": "confirmed",
+   "function_name": "confirmOperatorReady",
+   "tx_hash": "0x3c71a42e6a50f1ff3145ef1d21d277d21ee913c93bc6566a04db14a87bc85af7",
+   "args_json": "[\"0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71\",\"0x674535f09da9ac53c016cffe823e9c01b83c83bd\",\"0x1460a6e3af87e80ab730fb8f92aba45d3f6bea25e6ab26aca69b5ccabd7a17f5\"]",
+   "last_error": null,
+   "role": "verifier"
+  },
+  {
+   "id": 3,
+   "kind": "suspension",
+   "state": "confirmed",
+   "function_name": "recordSuspension",
+   "tx_hash": "0x77a1dc57bb656b1e30db6eac20aad5515fa53dd1080f9e41e198a6cb1f1847d7",
+   "args_json": "[\"0x9194c181f914c1033f9b98e9cd2d250b1e0dccc7\",\"0x4178a3235f7b9c47019bf5aaaff03b98765d03800b34794ab2e2bf5fd2c52b58\"]",
+   "last_error": null,
+   "role": "verifier"
+  },
+  {
+   "id": 4,
+   "kind": "suspension",
+   "state": "expired",
+   "function_name": "recordSuspension",
+   "tx_hash": null,
+   "args_json": "[\"0xc0de000000000000000000000000000000000006\",\"0xfa03f858eb067e68ba1de4c13235ab3a43eb7bd0e7a5ff7ca2a5dbf7e7a53a6f\"]",
+   "last_error": "held for review beyond the maximum evidence age: re-evaluated in a later cycle",
+   "role": "verifier"
+  },
+  {
+   "id": 5,
+   "kind": "housekeeping",
+   "state": "confirmed",
+   "function_name": "resolveMassFailureCheck",
+   "tx_hash": "0x3717f6bcb7caf3f6090b926e6796cf7a111cd24cdebba159a421c98813db8d64",
+   "args_json": "[\"7\"]",
+   "last_error": null,
+   "role": "permissionless"
+  },
+  {
+   "id": 6,
+   "kind": "recovery",
+   "state": "confirmed",
+   "function_name": "recordRecovery",
+   "tx_hash": "0x16078e8e9371ff210babbb437e6a47f355c0afa0be77894c32cbe4d5b46150df",
+   "args_json": "[\"0x9194c181f914c1033f9b98e9cd2d250b1e0dccc7\",\"0x417f0c5bd415fb19750b8c1f48f6282339b22d66c244ab9027bf6adf43576900\"]",
+   "last_error": null,
+   "role": "verifier"
+  },
+  {
+   "id": 7,
+   "kind": "resume",
+   "state": "confirmed",
+   "function_name": "recordResume",
+   "tx_hash": "0x2fb6be69328bceb91a9a9fcebe6b1f371259346e6e6d138f88c15a93daac59db",
+   "args_json": "[\"0x9194c181f914c1033f9b98e9cd2d250b1e0dccc7\",\"0x031461f1df12b09fc0f1cee91d2363cb3be2e5d2ba8a163de17557786812cd82\"]",
+   "last_error": null,
+   "role": "verifier"
+  },
+  {
+   "id": 8,
+   "kind": "recovery",
+   "state": "confirmed",
+   "function_name": "recordRecovery",
+   "tx_hash": "0x0071c8f62198b4782ab4816945aae10e9060fd3d9bceae368a6abf77b5955a1d",
+   "args_json": "[\"0x660b05c66b0532fc8a4d77813848d202bb9275ad\",\"0xb7c2e24ae1406f6b1852bbd771b92266a5ec2572871f90499530d9580468ef14\"]",
+   "last_error": null,
+   "role": "verifier"
+  }
+ ],
+ "decisions": [
+  {
+   "decision_type": "operator_change",
+   "state": "confirmed",
+   "decision_id": null,
+   "eh": "0x8f8d4760993a09f6"
+  },
+  {
+   "decision_type": "operator_change",
+   "state": "confirmed",
+   "decision_id": null,
+   "eh": "0x1460a6e3af87e80a"
+  },
+  {
+   "decision_type": "suspension",
+   "state": "confirmed",
+   "decision_id": 7,
+   "eh": "0x4178a3235f7b9c47"
+  },
+  {
+   "decision_type": "suspension",
+   "state": "expired",
+   "decision_id": null,
+   "eh": "0xfa03f858eb067e68"
+  },
+  {
+   "decision_type": "recovery",
+   "state": "confirmed",
+   "decision_id": 9,
+   "eh": "0x417f0c5bd415fb19"
+  },
+  {
+   "decision_type": "resume",
+   "state": "confirmed",
+   "decision_id": 10,
+   "eh": "0x031461f1df12b09f"
+  },
+  {
+   "decision_type": "recovery",
+   "state": "confirmed",
+   "decision_id": 11,
+   "eh": "0xb7c2e24ae1406f6b"
+  }
+ ]
+}

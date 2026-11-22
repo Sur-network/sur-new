@@ -1,0 +1,33 @@
+== before cleanup
+sur25c-nc-x1-19953	node:22-alpine	Up 3 hours
+sur25c-nc-x1-19952	node:22-alpine	Up 3 hours
+sur25c-nc-a1-19951	node:22-alpine	Up 3 hours
+sur25c-nc-x1-19950	node:22-alpine	Up 3 hours
+sur25c-a1	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-x1	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-n7	hyperledger/besu:26.9.0	Up 38 minutes (healthy)
+sur25c-n6	hyperledger/besu:26.9.0	Up 43 minutes (healthy)
+sur25c-n5	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-n4	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-n3	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-n2	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-n1	hyperledger/besu:26.9.0	Up 3 hours (healthy)
+sur25c-a1-data
+sur25c-n1-data
+sur25c-n2-data
+sur25c-n3-data
+sur25c-n4-data
+sur25c-n5-data
+sur25c-n6-data
+sur25c-n7-data
+sur25c-x1-data
+sur25c-net
+== head
+[m[2m2026-11-22 15:20:20.099+0000[m[2m | [m[2mEthScheduler-Workers-134[m[2m | [m[32mINFO [m[2m | [m[2mPersistBlockTask[m[2m | [m[32mImported empty block #5,081 / 0 tx / 0 om / 0 (0.0
+[m[2m2026-11-22 15:20:22.068+0000[m[2m | [m[2mEthScheduler-Workers-138[m[2m | [m[32mINFO [m[2m | [m[2mPersistBlockTask[m[2m | [m[32mImported empty block #5,082 / 0 tx / 0 om / 0 (0.0
+[m[2m2026-11-22 15:20:22.068+0000[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #5,082 / 0 tx / 4
+[m[2m2026-11-22 15:20:20.088+0000[m[2m | [m[2mEthScheduler-Workers-425[m[2m | [m[32mINFO [m[2m | [m[2mPersistBlockTask[m[2m | [m[32mBlock 5081 (0x349a83d90410b3fab26026c3f6fb279b698e
+[m[2m2026-11-22 15:20:20.088+0000[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #5,081 / 0 tx / 4
+[m[2m2026-11-22 15:20:22.048+0000[m[2m | [m[2mBftProcessorExecutor-QBFT-0[m[2m | [m[32mINFO [m[2m | [m[2mQbftBesuControllerBuilder[m[2m | [m[32mImported empty block #5,082 / 0 tx / 4
+== other containers untouched count:
+32

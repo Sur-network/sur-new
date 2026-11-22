@@ -1,0 +1,50 @@
+{
+  "name": "c-c-router-contract-owner",
+  "startedAt": "2026-11-22T12:19:17.740Z",
+  "rows": [
+    {
+      "id": "C.1",
+      "name": "the real Router (RM12) ran a whole distribution on QBFT/Besu with SurKMS signing: 1 open + N pages + 1 close, all mined",
+      "result": "PASS",
+      "detail": "open 1, pages 3, close 1; range 1-667, totalBlocks 667"
+    },
+    {
+      "id": "C.2",
+      "name": "owner with code (founder owner6 = contract): ValidatorRewardDeferred emitted for exactly that owner, not called",
+      "result": "PASS",
+      "detail": "[{\"validator\":\"0xC0DE000000000000000000000000000000000006\",\"blocks\":\"85\",\"total\":\"110198562218890554722\"}]"
+    },
+    {
+      "id": "C.3",
+      "name": "claimable(owner6) = the deferred total payout and equals totalClaimable (nothing else deferred)",
+      "result": "PASS",
+      "detail": "claimable 110198562218890554722, totalClaimable 110198562218890554722, deferred 110198562218890554722"
+    },
+    {
+      "id": "C.4",
+      "name": "RewardsDistributed: validatorCount covers all payees (6 owners with blocks incl. the deferred one) and totals are consistent",
+      "result": "PASS",
+      "detail": "validatorCount 7, blocks 667"
+    },
+    {
+      "id": "C.5",
+      "name": "claim() by the contract owner while its receive() reverts: refused (the whole claim reverts, the credit stays)",
+      "result": "PASS",
+      "detail": "simulate: The contract function \"doClaim\" reverted with the following reason:\nBlockRewardDistributor: claim transfer failed; tx: {\"status\":\"reverted\",\"hash\":\"0x2cd088efecf6c99eadf2382d8b01e195e08e7cdb1543def9691189efab04e980\"}; claimable after 110198562218890554722"
+    },
+    {
+      "id": "C.6",
+      "name": "after the owner contract accepts ETH, claim() pays exactly the credited amount to the contract: claimable 0, balance +amount, ClaimableWithdrawn emitted, totalClaimable 0",
+      "result": "PASS",
+      "detail": "balance 0 -> 110198562218890554722 (+110198562218890554722), claimable 0, events 1"
+    },
+    {
+      "id": "C.7",
+      "name": "a second claim with nothing credited reverts (no double payment)",
+      "result": "PASS",
+      "detail": "{\"status\":\"reverted\",\"hash\":\"0x47a681f7f87fb2974c5bb47858e0a5d3890cfb4a75c82f4c19f4253c11bc63b6\"}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T12:19:25.888Z"
+}

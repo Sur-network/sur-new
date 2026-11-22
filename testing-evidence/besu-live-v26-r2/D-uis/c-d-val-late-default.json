@@ -1,0 +1,74 @@
+{
+  "name": "c-d-validatorapp-on-besu",
+  "startedAt": "2026-11-22T12:29:25.422Z",
+  "rows": [
+    {
+      "id": "D.V1",
+      "name": "owner snapshots on Besu: owner1 Active founder with board authority and an operator; owner6 is a contract (ownerHasCode) and Active; owner8 None",
+      "result": "PASS",
+      "detail": "{\"o1\":[2,\"0xCDB56f11252dd9c11897F18683e2a26E6c23d358\"],\"o6\":[true,2],\"o8\":0}"
+    },
+    {
+      "id": "D.V2",
+      "name": "frozen flags read from KmsDirectives (none frozen), frozenNotices empty; operatorMode of an Active owner = two-step; canRequestExit true",
+      "result": "PASS",
+      "detail": "{\"0\":false,\"1\":false,\"2\":false}"
+    },
+    {
+      "id": "D.V3",
+      "name": "reward history of the contract owner rebuilt from events on Besu (log chunk app default 100000): 1 closed epoch, 1 deferred row, 1 claim, totals consistent",
+      "result": "PASS",
+      "detail": "{\"rows\":1,\"deferred\":\"110198562218890554722\",\"claimed\":\"110198562218890554722\",\"epochs\":1}"
+    },
+    {
+      "id": "D.V4",
+      "name": "EOA refusal on the real chain: an owner with code (owner6) is refused at requestMembership with the mapped Persian text",
+      "result": "PASS",
+      "detail": "صاحب صندلی باید یک کیف‌پول ساده (EOA) باشد، نه یک قرارداد یا کیف‌پول هوشمند. ورود، شرکت در قرعه‌کشی و دریافت صندلی برای آدرس‌هایی که کد دارند یا تراکنش را از طریق قرارداد می‌فرستند پذیرفته نمی‌شود. از یک کیف‌پول معمولی استفاده کنید."
+    },
+    {
+      "id": "D.V5",
+      "name": "entry checklist model for owner8 (not yet verified identity) reads the real IdentityRegistry/params: canEnter false with at least the identity item failing",
+      "result": "PASS",
+      "detail": "[[\"eoa\",true],[\"fresh\",true],[\"identity\",false],[\"rate\",true]]"
+    },
+    {
+      "id": "D.V6",
+      "name": "an Active owner cannot swap the node key at once (Persian explanation of the two steps)",
+      "result": "PASS",
+      "detail": "ولیدیتور فعال نمی‌تواند کلید نود را فوری عوض کند. ابتدا «پیشنهاد کلید نود جدید» را ثبت کنید؛ تغییر فقط پس از بررسی و تأیید Verifier اعمال می‌شود."
+    },
+    {
+      "id": "D.V7",
+      "name": "proposeOperator(op8) through the app's wallet path: screen state pending (>6 days left), consensus operator unchanged",
+      "result": "PASS",
+      "detail": "{\"kind\":\"pending\",\"operator\":\"0x832d7dfE0D214829955796Edcd387FF677887f42\",\"expiresAt\":\"1795955370\",\"remainingSeconds\":604800}"
+    },
+    {
+      "id": "D.V8",
+      "name": "a second proposal while one is open is refused (Persian text)",
+      "result": "PASS",
+      "detail": "یک پیشنهاد تعویض کلید نود هنوز باز است. ابتدا آن را لغو کنید یا منتظر انقضا بمانید."
+    },
+    {
+      "id": "D.V9",
+      "name": "VD-13 on Besu: confirmOperatorReady naming a different key than the open proposal reverts (eth_call as the Verifier address)",
+      "result": "PASS",
+      "detail": "The contract function \"confirmOperatorReady\" reverted with the following reason:\nValidatorsRegistry: operator differs from the open proposal"
+    },
+    {
+      "id": "D.V10",
+      "name": "cancelOperatorChange: pending cleared, screen state cancelled; a second cancel is refused with the mapped text",
+      "result": "PASS",
+      "detail": "{\"kind\":\"cancelled\",\"operator\":\"0x832d7dfE0D214829955796Edcd387FF677887f42\"}"
+    },
+    {
+      "id": "D.V11",
+      "name": "claim() call spec of the app targets the Distributor (wallet path for EOA owners; the contract-owner claim itself was done by the owner contract in part C)",
+      "result": "PASS",
+      "detail": "owner6 claimable now 0"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T12:29:35.943Z"
+}

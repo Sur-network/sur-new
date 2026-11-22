@@ -1,0 +1,68 @@
+{
+  "name": "c-a2b-m9-resume",
+  "startedAt": "2026-11-22T12:10:58.503Z",
+  "rows": [
+    {
+      "id": "A2.9",
+      "name": "confirmOperatorReady(owner2, opX1, evidenceHash) mined: Registry.operatorOf(owner2) = opX1",
+      "result": "PASS",
+      "detail": "0x2f2a93295d3415bb51228d18c6598795dc9a32ad"
+    },
+    {
+      "id": "A2.10",
+      "name": "QBFT validator set changed on Besu: opX1 in, op2 out, still 7 validators",
+      "result": "PASS",
+      "detail": "[\"0x2f2a93295d3415bb51228d18c6598795dc9a32ad\",\"0x48d0ef51eebf7b3bd6722bd6869504164ed90f1c\",\"0x70a24b0d774291617d9567b1cf4eb6db33483554\",\"0xc8609e4e3cf468b6cd704fd0a70a26726ee9c916\",\"0xcdb56f11252dd9c11897f18683e2a26e6c23d358\",\"0xe10f8b4ceb0038ff40086ad91d53109f8d7a756d\",\"0xfad401893a7addb4c0b99abcfd0517042493f854\"]"
+    },
+    {
+      "id": "A2.11",
+      "name": "OperatorChangeConfirmed event on chain; the outbox row is confirmed; evidence hash in the event equals the stored one (signed through SurKMS)",
+      "result": "PASS",
+      "detail": "{\"events\":[{\"block\":\"466\",\"args\":{\"owner\":\"0xfa9121D8F5F770D2b1E71e1A6e51fce87B65aF69\",\"newOperator\":\"0x2f2A93295d3415Bb51228d18C6598795Dc9a32aD\",\"evidenceHash\":\"0x8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6\"}}],\"outbox\":[{\"kind\":\"operator_change\",\"state\":\"confirmed\",\"tx_hash\":\"0x41b6fa1777199859bc94731b791acaf1caf78b3a2cc3a73d85fc51a558e68566\",\"evidence_hash\":\"0x8f8d4760993a09f6818632316c1a8e7d2173e45c088e21d2ceb8d5357e0a18d6\"}]}"
+    },
+    {
+      "id": "A2.12",
+      "name": "the new operator node x1 proposes blocks within 25 blocks (the replacement is live, not only on paper)",
+      "result": "PASS",
+      "detail": "0xe10f8b4ceb0038ff40086ad91d53109f8d7a756d,0xfad401893a7addb4c0b99abcfd0517042493f854,0x2f2a93295d3415bb51228d18c6598795dc9a32ad,0x48d0ef51eebf7b3bd6722bd6869504164ed90f1c,0x70a24b0d774291617d9567b1cf4eb6db33483554,0xc8609e4e3cf468b6cd704fd0a70a26726ee9c916,0xcdb56f11252dd9c11897f18683e2a26e6c23d358"
+    },
+    {
+      "id": "A2.13",
+      "name": "owner3 proposes opA1 and registers a WRONG monitoring key (not the one NodeCheck-a1 signs with)",
+      "result": "PASS",
+      "detail": "{\"ok\":true,\"owner\":\"0xa47f9d8905cd83c9f2bb0cf819eec93a637bfc71\",\"operator\":\"0x674535f09da9ac53c016cffe823e9c01b83c83bd\",\"monitorAddress\":\"0xc12a55d4a1cb540d8656675a4589fc50c06a53f5\",\"companionPort\":19951,\"note\":\"the new node is checked with a challenge in the next hourly cycle\"}"
+    },
+    {
+      "id": "A2.14",
+      "name": "wrong key: the answer is signed by another key -> Verifier FAIL BAD_SIGNATURE; nothing sent; set unchanged",
+      "result": "PASS",
+      "detail": "{\"id\":10,\"checked_at\":1795349527,\"result\":\"FAIL\",\"code\":\"BAD_SIGNATURE\",\"detail\":\"{\\\"method\\\":\\\"sur_node_check_v1\\\",\\\"presence\\\":{\\\"code\\\":\\\"OK\\\",\\\"result\\\":\\\"OK\\\",\\\"geoStatus\\\":\\\"iran\\\",\\\"country\\\":\\\"IR\\\",\\\"geoDbVersion\\\":\\\"ranges-sha256:543cdc40266b16b8\\\",\\\"nodeIdMatchesOperator\\\":true,\\\"monitorHe"
+    },
+    {
+      "id": "A2.15",
+      "name": "after registering the right key the same proposal passes and confirmOperatorReady(owner3, opA1) lands (a failed check does not poison the proposal)",
+      "result": "PASS",
+      "detail": "{\"id\":11,\"checked_at\":1795349561,\"result\":\"OK\",\"code\":\"OK\",\"detail\":\"{\\\"method\\\":\\\"sur_node_check_v1\\\",\\\"presence\\\":{\\\"code\\\":\\\"OK\\\",\\\"result\\\":\\\"OK\\\",\\\"geoStatus\\\":\\\"iran\\\",\\\"country\\\":\\\"IR\\\",\\\"geoDb"
+    },
+    {
+      "id": "A2.16",
+      "name": "QBFT set on Besu: opA1 in, op3 out",
+      "result": "PASS",
+      "detail": "[\"0x2f2a93295d3415bb51228d18c6598795dc9a32ad\",\"0x48d0ef51eebf7b3bd6722bd6869504164ed90f1c\",\"0x674535f09da9ac53c016cffe823e9c01b83c83bd\",\"0x70a24b0d774291617d9567b1cf4eb6db33483554\",\"0xc8609e4e3cf468b6cd704fd0a70a26726ee9c916\",\"0xcdb56f11252dd9c11897f18683e2a26e6c23d358\",\"0xfad401893a7addb4c0b99abcfd0517042493f854\"]"
+    },
+    {
+      "id": "A2.17",
+      "name": "node not ready (no node with that id exists): presence fails (not in admin_peers), result is not OK, nothing sent",
+      "result": "PASS",
+      "detail": "{\"id\":12,\"checked_at\":1795349597,\"result\":\"FAIL\",\"code\":\"PEER_ABSENT\",\"detail\":\"{\\\"method\\\":\\\"sur_node_check_v1\\\",\\\"presence\\\":{\\\"code\\\":\\\"PEER_ABSENT\\\",\\\"result\\\":\\\"FAIL\\\",\\\"geoStatus\\\":\\\"unknown\\\",\\\"country\\\":null,\\\"geoDbVersion\\\":\\\"ranges-sha256:543cdc40266b16b8\\\",\\\"nodeIdMatchesOperator\\\":true,\\"
+    },
+    {
+      "id": "A2.18",
+      "name": "still unchanged after two more cycles (the proposal stays open and is re-checked, never confirmed)",
+      "result": "PASS",
+      "detail": "2 checks"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T12:14:25.819Z"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "c-b2b-housekeeping-recovery",
+  "startedAt": "2026-11-22T14:01:02.233Z",
+  "rows": [
+    {
+      "id": "B2.5",
+      "name": "Verifier HOUSEKEEPING (verifier key via SurKMS) sent resolveMassFailureCheck for its own case (owner7) once the 1-hour demotion epoch had closed: ExemptMassFailure (2 demotions / 7 > 20 %), pendingSlashEpoch 0; the fixture case of owner4 was closed by hand with the same permissionless call",
+      "result": "PASS",
+      "detail": "planner rows [[5,\"permissionless\",\"0x3717f6bcb7caf3f6090b926e6796cf7a111cd24cdebba159a421c98813db8d64\"]]; pendingSlashEpoch o7 0 o4 0"
+    },
+    {
+      "id": "B2.6",
+      "name": "after recoveryPeriod (3700 s) the PLANNER sent recordRecovery for owner7 and owner4 (node measurement OK: present in admin_peers, geo iran, in sync, ratio >= 95 %, coverage >= 50 %), signed by SurKMS and mined; both Active",
+      "result": "PASS",
+      "detail": "outbox [[6,\"confirmed\",\"0x16078e8e9371ff210babbb437e6a47f355c0afa0be77894c32cbe4d5b46150df\"],[8,\"confirmed\",\"0x0071c8f62198b4782ab4816945aae10e9060fd3d9bceae368a6abf77b5955a1d\"]]"
+    },
+    {
+      "id": "B2.7",
+      "name": "QBFT set back to 7 validators including op7 and op4",
+      "result": "PASS",
+      "detail": "set 7"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T14:12:17.756Z"
+}

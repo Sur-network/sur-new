@@ -1,0 +1,288 @@
+{
+  "_comment": "Besu live validation (v26-r2): throw-away keys, chain id 262025 (NOT the production id 262). Built by gen-netC.mjs.",
+  "allowUnchecksummed": true,
+  "network": {
+    "_comment": "contractSizeLimitBytes (OPTIONAL, 24576..65536): maximum deployed contract code size, written as config.contractSizeLimit into genesis (verified on Besu 26.9.0). Absent = Besu default 24,576 and nothing is written. OWNER DECISION: 36,864 (36 KiB). Raising it is irreversible without a coordinated change on every node, and call cost does not scale with code size (DoS / flat-cost caveat): the build warns. The initcode limit (49,152, cancun profile only) is a separate rule that is not configurable in genesis and does not cap the runtime size.",
+    "chainId": 262025,
+    "genesisTimestamp": 1795348407,
+    "blockPeriodSeconds": 2,
+    "blockRewardWei": "2000000000000000000",
+    "minGasPriceWei": "100000000000000",
+    "gasLimit": "45000000",
+    "contractSizeLimitBytes": 36864,
+    "forks": "cancun"
+  },
+  "oracles": {
+    "distributionOracle": "0x08aA64373508125f90d729e531fc4D68E9dB0b36",
+    "verifier": "0x2e180d1c55f7c09f1d8722e344F3a405C0D148e2",
+    "identityOracle": "0xc635ea51bdF9f0B59831a359C26e4e22aa3cd674"
+  },
+  "validatorsRegistry": {
+    "firstValidator": {
+      "owner": "0x147E891Ed7c9eB9805a631B5BA37CcF2bC0E89C4",
+      "operator": "0xCDB56f11252dd9c11897F18683e2a26E6c23d358"
+    },
+    "otherFounders": [
+      "0xfa9121D8F5F770D2b1E71e1A6e51fce87B65aF69",
+      "0xa47F9d8905CD83C9f2BB0cF819eeC93a637bFc71",
+      "0x660B05c66b0532fC8a4d77813848d202bB9275aD",
+      "0xbc92cea55F72B3818e30a3Eb15f66A97e91F402F",
+      "0xC0DE000000000000000000000000000000000006",
+      "0x9194C181f914C1033F9B98e9CD2d250b1E0DcCc7"
+    ],
+    "seatBaseURI": "https://validator-nft.surnet.org/",
+    "entryCollateral": "500000000000000000000000",
+    "membershipFeeBps": 400,
+    "maxEntriesPerWindow": 1,
+    "entryWindowSeconds": 604800,
+    "probationPeriod": 604800,
+    "recoveryPeriod": 3700,
+    "slashBps": 100,
+    "exitCooldown": 604800
+  },
+  "validatorsBoard": {
+    "initialBoardMembers": [
+      "0x147E891Ed7c9eB9805a631B5BA37CcF2bC0E89C4",
+      "0xfa9121D8F5F770D2b1E71e1A6e51fce87B65aF69",
+      "0xa47F9d8905CD83C9f2BB0cF819eeC93a637bFc71",
+      "0x660B05c66b0532fC8a4d77813848d202bB9275aD",
+      "0xbc92cea55F72B3818e30a3Eb15f66A97e91F402F"
+    ]
+  },
+  "validatorsTreasury": {
+    "perPaymentCap": "50000000000000000000000",
+    "periodCap": "200000000000000000000000"
+  },
+  "foundationMembers": {
+    "members": [
+      {
+        "name": "Test Member 01",
+        "account": "0x1d451A36a606ba599bAdaB3AF1FE2bc2bB095f14",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 02",
+        "account": "0xAADe8944951930EE496A6D10180A10C97543f3D1",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 03",
+        "account": "0xC45815eA6284C1Cc40f2a09fca7b3Afcd072471F",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 04",
+        "account": "0xd82C9F3C3644BC0DA71304277C3BF26fcD58CB53",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 05",
+        "account": "0x415Dae99eB53401041497E1ef5c7b7f4c1fE678B",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 06",
+        "account": "0x571cc7e64E6098cbB554fadBdcA040FeCe2E245e",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 07",
+        "account": "0xc6e3a9973699D71C235D3f4E0fA815D20011829D",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 08",
+        "account": "0x9E5250Fe81D65eD4D68439146515d25FCa4B4c0a",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 09",
+        "account": "0x39e2BA7D740214bd4183fe5B2Ca9E4a7B8765f09",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 10",
+        "account": "0xf8E6C79C43279509F09654836d524341C61fd2EE",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 11",
+        "account": "0x32AeDea74dDbBE89807Ba8375663E51BC24075a5",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 12",
+        "account": "0x92b3bb6b64Cc2C485562278dEb6c0035253F524E",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 13",
+        "account": "0x5C24f2C0c35d4857e87480B53FDA22765C9ac73F",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 14",
+        "account": "0x73Cc256D0e52d401Fb8b07F4729633FE47554dF8",
+        "shareWeight": "50000000"
+      },
+      {
+        "name": "Test Member 15",
+        "account": "0x9194C181f914C1033F9B98e9CD2d250b1E0DcCc7",
+        "shareWeight": "50000000"
+      }
+    ]
+  },
+  "foundationDAO": {
+    "treasuryBalanceWei": "20000000000000000000000000",
+    "initialBoard": {
+      "principal": [
+        "0x1d451A36a606ba599bAdaB3AF1FE2bc2bB095f14",
+        "0xAADe8944951930EE496A6D10180A10C97543f3D1",
+        "0xC45815eA6284C1Cc40f2a09fca7b3Afcd072471F",
+        "0xd82C9F3C3644BC0DA71304277C3BF26fcD58CB53",
+        "0x415Dae99eB53401041497E1ef5c7b7f4c1fE678B"
+      ],
+      "alternates": [
+        "0x571cc7e64E6098cbB554fadBdcA040FeCe2E245e",
+        "0xc6e3a9973699D71C235D3f4E0fA815D20011829D"
+      ]
+    },
+    "initialInspector": "0x00950958AE2c2ccd86A04C9b32B1DC45d12eAd34"
+  },
+  "genesisClaimsVault": {
+    "installments": 24,
+    "gasReserveWei": "100000000000000000000",
+    "claims": [
+      {
+        "to": "0x147E891Ed7c9eB9805a631B5BA37CcF2bC0E89C4",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0xfa9121D8F5F770D2b1E71e1A6e51fce87B65aF69",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0xa47F9d8905CD83C9f2BB0cF819eeC93a637bFc71",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x660B05c66b0532fC8a4d77813848d202bB9275aD",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0xbc92cea55F72B3818e30a3Eb15f66A97e91F402F",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0xC0DE000000000000000000000000000000000006",
+        "totalClaimWei": "1712000000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "0"
+      },
+      {
+        "to": "0x9194C181f914C1033F9B98e9CD2d250b1E0DcCc7",
+        "totalClaimWei": "3133800000000000000000000",
+        "initialValidatorClaimWei": "1712000000000000000000000",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x1d451A36a606ba599bAdaB3AF1FE2bc2bB095f14",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0xAADe8944951930EE496A6D10180A10C97543f3D1",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0xC45815eA6284C1Cc40f2a09fca7b3Afcd072471F",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0xd82C9F3C3644BC0DA71304277C3BF26fcD58CB53",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x415Dae99eB53401041497E1ef5c7b7f4c1fE678B",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x571cc7e64E6098cbB554fadBdcA040FeCe2E245e",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0xc6e3a9973699D71C235D3f4E0fA815D20011829D",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x9E5250Fe81D65eD4D68439146515d25FCa4B4c0a",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x39e2BA7D740214bd4183fe5B2Ca9E4a7B8765f09",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0xf8E6C79C43279509F09654836d524341C61fd2EE",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x32AeDea74dDbBE89807Ba8375663E51BC24075a5",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x92b3bb6b64Cc2C485562278dEb6c0035253F524E",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x5C24f2C0c35d4857e87480B53FDA22765C9ac73F",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      },
+      {
+        "to": "0x73Cc256D0e52d401Fb8b07F4729633FE47554dF8",
+        "totalClaimWei": "1421800000000000000000000",
+        "initialValidatorClaimWei": "0",
+        "foundationMemberClaimWei": "1421800000000000000000000"
+      }
+    ],
+    "rowTotals": {
+      "initialValidatorClaims": "11984000000000000000000000",
+      "foundationMemberClaims": "21327000000000000000000000"
+    }
+  }
+}
