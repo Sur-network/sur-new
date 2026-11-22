@@ -31,7 +31,7 @@ interface IStandbyRegistry {
 ///         نگه‌داری: کلیدهای اپراتور عوض می‌شوند (setOperator، انتقال صندلی). `staleMembers()` و `isReady()` به داشبورد و ابزار
 ///         بازیابی می‌گویند فهرست هنوز معتبر است یا نه؛ بنیاد باید در همان اقدام حاکمیتی که عضوی را تغییر می‌دهد فهرست را تازه کند.
 ///
-///         حساب QBFT: n عضو دست‌کم ceil(2n/3) عضو آنلاین لازم دارند؛ کمینهٔ فهرست ۴ است (یک نود خاموش را تحمل می‌کند). برنامهٔ
+///         حساب QBFT: n عضو دست‌کم ceil(2n/3) عضو آنلاین لازم دارند؛ فهرست ۱تایی هیچ نود خاموشی را تحمل نمی‌کند و ۴تایی یکی را. برنامهٔ
 ///         بازیابی باید اعضایی را بگذارد که خوب اداره می‌شوند و در دسترس‌اند.
 ///
 ///         GENESIS: بدون constructor و بدون seed ذخیره. فقط بایت‌کد runtime در `alloc` می‌رود. فهرست **خالی** شروع می‌شود؛ پس بنیاد
@@ -40,8 +40,10 @@ contract StandbyValidators {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
     IStandbyRegistry public constant REGISTRY = IStandbyRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
-    /// @notice کوچک‌ترین فهرست معتبر (QBFT با ۴ نود یک نود معیوب را تحمل می‌کند).
-    uint256 public constant MIN_MEMBERS = 4;
+    /// @notice کوچک‌ترین فهرست معتبر. یک عضو عمداً مجاز است (تصمیم مالک ۲۰۲۶-۱۱-۲۲): در genesis فقط اولین ولیدیتور در فهرست است و یک نود در دسترس
+    ///         در بحران بسیار محتمل‌تر از دو‌سوم یک فهرست بزرگ‌تر زنده است. یک عضو هیچ خطایی را تحمل نمی‌کند: بنیاد باید پس از آمدن ولیدیتورهای بیشتر
+    ///         فهرست را به ۳ یا ۴ عضو برساند.
+    uint256 public constant MIN_MEMBERS = 1;
     /// @notice سقف فهرست؛ getValidators() را برای Besu ارزان نگه می‌دارد.
     uint256 public constant MAX_MEMBERS = 100;
 

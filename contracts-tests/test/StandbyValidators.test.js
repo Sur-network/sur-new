@@ -50,18 +50,17 @@ describe("StandbyValidators - the contract", () => {
     expect(await sb.updatedAt()).to.equal(0);
     expect(await sb.memberCount()).to.equal(0);
     expect(await sb.isReady()).to.equal(false);
-    expect(await sb.MIN_MEMBERS()).to.equal(4);
+    expect(await sb.MIN_MEMBERS()).to.equal(1);
     expect(await sb.MAX_MEMBERS()).to.equal(100);
     expect(await sb.FOUNDATION()).to.equal(ADDR.FOUNDATION_DAO);
     await expect(sb.connect(S[5]).setStandby(asc(ops.slice(0, 4)))).to.be.revertedWith("StandbyValidators: only FoundationDAO");
     await expect(sb.connect(S[0]).setStandby(asc(ops.slice(0, 4)))).to.be.revertedWith("StandbyValidators: only FoundationDAO");
   });
 
-  it("rejects a bad list: too few, too many, not ascending, duplicate, zero, not an operator key, an owner address", async () => {
+  it("rejects a bad list: empty, too many, not ascending, duplicate, zero, not an operator key, an owner address", async () => {
     const { sb, ops, founders } = await loadFixture(fixture);
     const dao = await asDao();
     const four = asc(ops.slice(0, 4));
-    await expect(sb.connect(dao).setStandby(four.slice(0, 3))).to.be.revertedWith("StandbyValidators: too few members");
     await expect(sb.connect(dao).setStandby([])).to.be.revertedWith("StandbyValidators: too few members");
     const many = asc(Array.from({ length: 101 }, rnd));
     await expect(sb.connect(dao).setStandby(many)).to.be.revertedWith("StandbyValidators: too many members");
@@ -74,6 +73,18 @@ describe("StandbyValidators - the contract", () => {
     // an OWNER address is not a node key
     await expect(sb.connect(dao).setStandby(asc([four[0], four[1], four[2], founders[6].address]))).to.be.revertedWith(notOp);
     expect(await sb.version()).to.equal(0);
+  });
+
+  it("accepts a single member (the genesis case) and then a bigger list, replacing the whole list each time", async () => {
+    const { sb, ops } = await loadFixture(fixture);
+    const dao = await asDao();
+    await expect(sb.connect(dao).setStandby([ops[0]])).to.emit(sb, "StandbyUpdated").withArgs(1, [ops[0]]);
+    expect(await sb.getValidators()).to.deep.equal([ops[0]]);
+    expect(await sb.isReady()).to.equal(true);
+    const three = asc(ops.slice(0, 3));
+    await sb.connect(dao).setStandby(three);
+    expect(await sb.getValidators()).to.deep.equal(three);
+    expect(await sb.version()).to.equal(2);
   });
 
   it("accepts four current operator keys: stores them, bumps the version, emits, becomes ready; the list is replaced as a whole", async () => {

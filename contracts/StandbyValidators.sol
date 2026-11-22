@@ -32,8 +32,8 @@ interface IStandbyRegistry {
 ///         recovery tool whether the list is still valid; the foundation should refresh it in the same governance step as any
 ///         change that touches a member.
 ///
-///         QBFT arithmetic: n members need at least ceil(2n/3) of them online to produce blocks; the minimum list is 4 (tolerates one
-///         down). The recovery plan should list members that are well run and reachable.
+///         QBFT arithmetic: n members need at least ceil(2n/3) of them online to produce blocks; a list of 1 tolerates no
+///         node down, 4 tolerate one. The recovery plan should list members that are well run and reachable.
 ///
 ///         GENESIS: no constructor, no storage seed. Injected into `alloc` with its runtime bytecode only. The list starts EMPTY, so
 ///         the foundation must set it right after launch (launch-kit checklist), or the GenesisBuilder may seed it.
@@ -41,8 +41,10 @@ contract StandbyValidators {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
     IStandbyRegistry public constant REGISTRY = IStandbyRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
-    /// @notice Smallest valid standby list (QBFT with 4 tolerates one faulty node).
-    uint256 public constant MIN_MEMBERS = 4;
+    /// @notice Smallest valid standby list. One member is allowed on purpose (owner decision 2026-11-22): at genesis the list holds only the
+    ///         first validator, and a single reachable node is far likelier to be alive in a crisis than two thirds of a bigger list. A single
+    ///         member tolerates NO fault: the foundation should grow the list to 3 or 4 members once more validators exist.
+    uint256 public constant MIN_MEMBERS = 1;
     /// @notice Upper bound on the list; keeps getValidators() cheap for Besu.
     uint256 public constant MAX_MEMBERS = 100;
 
