@@ -1,0 +1,26 @@
+{"level":50,"time":1795315437824,"pid":242708,"hostname":"Balon","name":"verifier","err":"The request took too long to respond.","msg":"outbox pass failed"}
+{"level":40,"time":1795315437980,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0xb0b3fff6193b77c818f3b7733e1966d60cf8239e","msg":"0xb0b3fff6193b77c818f3b7733e1966d60cf8239e is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438090,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0xf8a13c5a99e617cb22eb184d14266de4b82d3577","msg":"0xf8a13c5a99e617cb22eb184d14266de4b82d3577 is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438224,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0xd0cb65529cd8d0907c53e6ae4d444a2c6c4c1dd2","msg":"0xd0cb65529cd8d0907c53e6ae4d444a2c6c4c1dd2 is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438357,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0xcc7185d2082e647e2d3643596d626ab2f8f028d0","msg":"0xcc7185d2082e647e2d3643596d626ab2f8f028d0 is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438502,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0x3481a641697c8706d924ede2fa2ed7fd40b25e9c","msg":"0x3481a641697c8706d924ede2fa2ed7fd40b25e9c is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438624,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0x10e3f7133f3fc58a30b17ae57846278dbab4044f","msg":"0x10e3f7133f3fc58a30b17ae57846278dbab4044f is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{"level":40,"time":1795315438735,"pid":242708,"hostname":"Balon","name":"verifier","alert":"NETWORK_OR_MONITOR_SUSPICIOUS","subject":"0x6dd6c111587b2124bbd315e451216dab566c609e","msg":"0x6dd6c111587b2124bbd315e451216dab566c609e is quiet but the network or the monitoring cannot confirm it is the validator's fault (MONITOR_UNHEALTHY)"}
+{
+  "cycleId": 1,
+  "ok": true,
+  "monitorHealthy": true,
+  "replayOk": true,
+  "summary": {
+    "owners": 7,
+    "observed": {
+      "active:UNKNOWN:MONITOR_UNHEALTHY": 7
+    },
+    "decisions": [],
+    "alerts": [],
+    "errors": [
+      "outbox: The request took too long to respond."
+    ]
+  },
+  "mode": "observe-only"
+}

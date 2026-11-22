@@ -1,0 +1,31 @@
+{"level":50,"time":1795314593954,"pid":238064,"hostname":"Balon","name":"router","alert":"SENDING_HALTED","subject":"service","msg":"sending is halted: LEASE_NOT_HELD"}
+{
+  "cycleId": 1,
+  "ok": true,
+  "mode": "send-enabled",
+  "headNumber": 2121,
+  "replayOk": true,
+  "collected": 2121,
+  "incompleteBlocks": 0,
+  "settledBlock": 2121,
+  "plan": {
+    "fromBlock": 1,
+    "toBlock": 2120,
+    "verdict": "queued",
+    "wouldSend": true,
+    "simulation": "ok"
+  },
+  "executor": {
+    "sent": 0,
+    "confirmed": 0,
+    "reverted": 0,
+    "rejected": 0,
+    "waiting": 1,
+    "steps": 0
+  },
+  "cert": {
+    "action": "disabled"
+  },
+  "alerts": [],
+  "errors": []
+}

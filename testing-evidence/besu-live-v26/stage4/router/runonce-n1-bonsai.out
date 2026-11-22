@@ -1,0 +1,27 @@
+{"level":40,"time":1795312669804,"pid":240976,"hostname":"Balon","name":"router","err":"The contract function \"operatorOf\" reverted with the following reason:\nInternal error\n\nContract Call:\n  address:   0x3333333333333333333333333333333333333333\n  function:  operatorOf(address)\n  args:                (0xb0b3fff6193b77c818f3b7733e1966d60cf8239e)\n\nDocs: https://viem.sh/docs/contract/readContract\nDetails: Internal error\nVersion: viem@2.58.2","msg":"block-0 state unavailable: replay base taken from the genesis owners file"}
+{"level":40,"time":1795312796265,"pid":240976,"hostname":"Balon","name":"router","alert":"DATA_UNAVAILABLE","subject":"service","msg":"887 unsettled block(s) have incomplete facts (first: block 1: NO_REWARD_ENTRY; BALANCE_UNAVAILABLE). A range containing them is never sent (never read as zero)."}
+{"level":40,"time":1795312796339,"pid":240976,"hostname":"Balon","name":"router","alert":"DATA_UNAVAILABLE","subject":"range:1-1378","msg":"the facts of 887 block(s) of [1, 1378] are missing or incomplete: not collected ; incomplete 1 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), 2 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), 3 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), … (887 in all). Nothing is sent for [1, 1378]."}
+{
+  "cycleId": 1,
+  "ok": true,
+  "mode": "observe-only",
+  "headNumber": 1379,
+  "replayOk": true,
+  "collected": 1379,
+  "incompleteBlocks": 887,
+  "settledBlock": 0,
+  "plan": {
+    "fromBlock": 1,
+    "toBlock": 1378,
+    "verdict": "blocked",
+    "code": "DATA_UNAVAILABLE",
+    "message": "the facts of 887 block(s) of [1, 1378] are missing or incomplete: not collected ; incomplete 1 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), 2 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), 3 (NO_REWARD_ENTRY; BALANCE_UNAVAILABLE), … (887 in all)"
+  },
+  "executor": null,
+  "cert": null,
+  "alerts": [
+    "DATA_UNAVAILABLE",
+    "DATA_UNAVAILABLE"
+  ],
+  "errors": []
+}

@@ -1,0 +1,16 @@
+{
+  "cycleId": 2,
+  "ok": true,
+  "monitorHealthy": true,
+  "replayOk": true,
+  "summary": {
+    "owners": 7,
+    "observed": {
+      "active:UNKNOWN:MONITOR_UNHEALTHY": 7
+    },
+    "decisions": [],
+    "alerts": [],
+    "errors": []
+  },
+  "mode": "observe-only"
+}

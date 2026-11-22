@@ -1,0 +1,1 @@
+fatal: another instance holds the lease on this database (one active instance per database)

@@ -1,0 +1,21 @@
+{
+  "cycleId": 1,
+  "ok": true,
+  "mode": "observe-only",
+  "headNumber": 1459,
+  "replayOk": true,
+  "collected": 1459,
+  "incompleteBlocks": 0,
+  "settledBlock": 1459,
+  "plan": {
+    "fromBlock": 1,
+    "toBlock": 1458,
+    "verdict": "observed",
+    "wouldSend": true,
+    "simulation": "ok"
+  },
+  "executor": null,
+  "cert": null,
+  "alerts": [],
+  "errors": []
+}

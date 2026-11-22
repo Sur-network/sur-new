@@ -1,0 +1,1 @@
+{"version":"c01-rules-v1-besu-live-test","windowSec":900,"maxCheckGapSec":300,"monitorMaxAgeSec":60,"alerts":{"initialSec":300,"seriousSec":600}}

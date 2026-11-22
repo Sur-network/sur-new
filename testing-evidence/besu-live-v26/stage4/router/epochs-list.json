@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "from_block": 1,
+    "to_block": 2120,
+    "state": "confirmed",
+    "step_kind": "close",
+    "steps_done": 9,
+    "chain_epoch_id": 1,
+    "opened_at": 1795314692,
+    "tx_hash": "0x6c4099aa7f3cd229bfd4f8c50038d28b4eb37cf1de54d3a1cacda47c28199f3d",
+    "confirmed_tx_hash": "0x6c4099aa7f3cd229bfd4f8c50038d28b4eb37cf1de54d3a1cacda47c28199f3d",
+    "attempts": 1,
+    "check_status": "ok",
+    "last_error": null,
+    "created_at": 1795314593,
+    "updated_at": 1795315088
+  }
+]

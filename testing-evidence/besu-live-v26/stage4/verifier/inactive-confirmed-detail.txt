@@ -1,0 +1,1 @@
+{"proposed":0,"expectedTurns":41,"missedTurns":41,"blocks":246,"setSizeStart":7,"setSizeEnd":7,"setChanged":false,"maxGapSec":12,"roundChangeShare":"0.1667","silentShare":"0.1429","headAgeSec":0,"inSetWholeWindow":true,"lastProposedAt":null}

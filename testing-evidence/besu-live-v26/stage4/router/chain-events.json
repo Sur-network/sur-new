@@ -1,0 +1,72 @@
+{
+ "rows": [
+  {
+   "epoch": 1,
+   "kind": "DistributionOpened",
+   "gas": 385675,
+   "block": 2391
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 243123,
+   "block": 2392
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2393
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2584
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2585
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2586
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2587
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 157623,
+   "block": 2588
+  },
+  {
+   "epoch": 1,
+   "kind": "RewardsDistributed",
+   "gas": 342236,
+   "block": 2589
+  }
+ ],
+ "fits": {
+  "epoch1": {
+   "slope": null,
+   "fixed": null,
+   "pages": 7
+  }
+ }
+}
