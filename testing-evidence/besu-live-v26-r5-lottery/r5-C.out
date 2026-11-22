@@ -1,0 +1,18 @@
+PASS C.0.1 ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key [object Object]
+PASS C.0.2 3 accounts fully verified (5 flags each); the "outsider" account is not 
+PASS C.1.1 StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3) [object Object]
+PASS C.1.2 lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1 [object Object]
+PASS C.3.1 3 tickets: participants recorded in purchase order, one TicketBought event each 0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f
+PASS C.3.2 pot == 3 x 10 Suren and the contract holds exactly the pot [object Object]
+PASS C.3.3 negative: a second ticket from the same address reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: one ticket per address
+PASS C.5.1 negative: a ticket after closeTime reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS C.5.2 negative: the CEO cannot commit after closeTime The contract function "commitSecret" reverted with the following reason: ValidatorLottery: registration is not open
+PASS C.5.3 SCENARIO 2b: closeLottery with NO commitment cancels automatically ('no commitment before closeTime'); phase Cancelled [object Object]
+PASS C.refund claimRefund for 3 buyers: each receives exactly the ticket price (balance delta + gas == price) [{"n":"buyer1","delta":"10000000000000000000","gas":64642},{"n":"buyer2","delta":"10000000000000000000","gas":64642},{"n":"buyer3","delta":"10000000000000000000","gas":59842}]
+PASS C.refund-pot pot returns to 0 and the lottery contract balance is 0 [object Object]
+PASS C.refund-twice negative: a second claimRefund by the same buyer reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: nothing to refund
+PASS C.refund-stranger negative: claimRefund by a non-buyer reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: nothing to refund
+PASS C.6.drawBatch negative after cancellation: drawBatch reverts The contract function "drawBatch" reverted with the following reason: ValidatorLottery: not ready to draw
+PASS C.6.buyTicket negative after cancellation: buyTicket reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS C.6.closeAgain negative after cancellation: closeAgain reverts The contract function "closeLottery" reverted with the following reason: ValidatorLottery: cannot close now
+== 17 PASS, 0 FAIL, 0 OBS ==> runs/r5-C.json

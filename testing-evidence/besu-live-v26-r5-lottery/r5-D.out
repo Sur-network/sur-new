@@ -1,0 +1,34 @@
+PASS D.0.1 ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key [object Object]
+PASS D.0.2 5 accounts fully verified (5 flags each); the "outsider" account is not 
+PASS D.1.1 StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3) [object Object]
+PASS D.1.2 lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1 [object Object]
+PASS D.3.1 5 tickets: participants recorded in purchase order, one TicketBought event each 0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6,0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9
+PASS D.3.2 pot == 5 x 10 Suren and the contract holds exactly the pot [object Object]
+PASS D.3.3 negative: a second ticket from the same address reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: one ticket per address
+PASS D.4.1 CEO commitSecret stored (SecretCommitted event) 
+PASS D.4.2 SCENARIO 3: a SECOND commit (a different value) reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: commitment already set or empty
+PASS D.5.1 negative: a ticket after closeTime reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS D.5.2 closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed [object Object]
+PASS D.5.3 negative: buyTicket after close reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS D.7.1 reveal landed in the window: block 154 = target+2 (window 1..250); phase Revealed [object Object]
+PASS D.7.2 seed == keccak256(abi.encode(secret, blockhash(target))) recomputed from eth_getBlockByNumber(target).hash [object Object]
+PASS D.8.1 drawBatch(100) with winnersCount 20 > participants 5: only 5 are drawn (min), phase Drawn [object Object]
+PASS D.8.2 the 5 winners equal the off-chain replica of the partial Fisher-Yates draw (same order) and are distinct participants [object Object]
+PASS D.8.3 phase Drawn, pot cleared, lottery contract balance 0, and the whole pot (5 x 10 Suren) arrived in the FoundationDAO treasury in one transfer [object Object]
+PASS D.8.4 every winner who was not already registered: seat entered as Probation (1), zero collateral, not a paid entrant, holds a seat NFT, entryFailed false [object Object],[object Object],[object Object],[object Object]
+PASS D.8.5 ValidatorSeatNFT.totalMinted grew by exactly the number of new winners (4) [object Object]
+PASS D.8.6 a winner who is ALREADY a registered validator (owner2): enterAsLotteryWinner fails inside try/catch -> WinnerEntryFailed event + entryFailed == true; the draw is NOT blocked and the pot is still paid [object Object]
+PASS D.8.7 negative: drawBatch after Drawn reverts The contract function "drawBatch" reverted with the following reason: ValidatorLottery: not ready to draw
+PASS D.8.8 negative: claimRefund on a Drawn lottery reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: not cancelled
+PASS D.8.9 totals read back: lotteryCount 1, participantCount, winners, lastStartedAt == proposal execution block time {
+  "lotteryCount": "1",
+  "lastStartedAt": "1795387366",
+  "participantCount": "5",
+  "winners": 5,
+  "final": {
+    "phase": 4,
+    "ticketPrice": "10000000000000000000",
+    "winnersCount": "20",
+    "closeTime": "1795387462",
+    "commitment": "0x5388f192bf65949b74da5267d432a38522755b043a31ee159
+== 23 PASS, 0 FAIL, 0 OBS ==> runs/r5-D.json

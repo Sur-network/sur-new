@@ -1,0 +1,255 @@
+{
+  "name": "r5-lottery-C",
+  "startedAt": "2026-11-22T22:32:51.286Z",
+  "rows": [
+    {
+      "id": "C.0.1",
+      "name": "ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.0.2",
+      "name": "3 accounts fully verified (5 flags each); the \"outsider\" account is not",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "C.1.1",
+      "name": "StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3)",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.1.2",
+      "name": "lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.3.1",
+      "name": "3 tickets: participants recorded in purchase order, one TicketBought event each",
+      "result": "PASS",
+      "detail": "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f"
+    },
+    {
+      "id": "C.3.2",
+      "name": "pot == 3 x 10 Suren and the contract holds exactly the pot",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.3.3",
+      "name": "negative: a second ticket from the same address reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: one ticket per address"
+    },
+    {
+      "id": "C.5.1",
+      "name": "negative: a ticket after closeTime reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "C.5.2",
+      "name": "negative: the CEO cannot commit after closeTime",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "C.5.3",
+      "name": "SCENARIO 2b: closeLottery with NO commitment cancels automatically ('no commitment before closeTime'); phase Cancelled",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.refund",
+      "name": "claimRefund for 3 buyers: each receives exactly the ticket price (balance delta + gas == price)",
+      "result": "PASS",
+      "detail": "[{\"n\":\"buyer1\",\"delta\":\"10000000000000000000\",\"gas\":64642},{\"n\":\"buyer2\",\"delta\":\"10000000000000000000\",\"gas\":64642},{\"n\":\"buyer3\",\"delta\":\"10000000000000000000\",\"gas\":59842}]"
+    },
+    {
+      "id": "C.refund-pot",
+      "name": "pot returns to 0 and the lottery contract balance is 0",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "C.refund-twice",
+      "name": "negative: a second claimRefund by the same buyer reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: nothing to refund"
+    },
+    {
+      "id": "C.refund-stranger",
+      "name": "negative: claimRefund by a non-buyer reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: nothing to refund"
+    },
+    {
+      "id": "C.6.drawBatch",
+      "name": "negative after cancellation: drawBatch reverts",
+      "result": "PASS",
+      "detail": "The contract function \"drawBatch\" reverted with the following reason: ValidatorLottery: not ready to draw"
+    },
+    {
+      "id": "C.6.buyTicket",
+      "name": "negative after cancellation: buyTicket reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "C.6.closeAgain",
+      "name": "negative after cancellation: closeAgain reverts",
+      "result": "PASS",
+      "detail": "The contract function \"closeLottery\" reverted with the following reason: ValidatorLottery: cannot close now"
+    }
+  ],
+  "notes": {
+    "timeline": {
+      "start": {
+        "utc": "2026-11-22T22:32:51.403Z",
+        "block": 211
+      },
+      "identities_done": {
+        "utc": "2026-11-22T22:33:13.300Z",
+        "block": 233
+      },
+      "lottery_started": {
+        "utc": "2026-11-22T22:33:16.807Z",
+        "block": 237,
+        "closeTime": 1795386861
+      },
+      "tickets_bought": {
+        "utc": "2026-11-22T22:33:20.153Z",
+        "block": 240
+      },
+      "committed": {
+        "utc": "2026-11-22T22:33:20.253Z",
+        "block": 240
+      },
+      "auto_cancelled": {
+        "utc": "2026-11-22T22:34:24.105Z",
+        "block": 304
+      }
+    },
+    "gas": {
+      "FoundationDAO.proposeElectOfficers": {
+        "n": 1,
+        "min": 306088,
+        "max": 306088,
+        "all": [
+          306088
+        ]
+      },
+      "FoundationDAO.vote": {
+        "n": 4,
+        "min": 73400,
+        "max": 240927,
+        "all": [
+          73400,
+          168257,
+          73400,
+          240927
+        ]
+      },
+      "IdentityRegistry.registerIdentity": {
+        "n": 3,
+        "min": 71788,
+        "max": 71788,
+        "all": [
+          71788,
+          71788,
+          71788
+        ]
+      },
+      "IdentityRegistry.setPhoneVerified": {
+        "n": 3,
+        "min": 52304,
+        "max": 52304,
+        "all": [
+          52304,
+          52304,
+          52304
+        ]
+      },
+      "IdentityRegistry.setTelegramVerified": {
+        "n": 3,
+        "min": 35286,
+        "max": 35286,
+        "all": [
+          35286,
+          35286,
+          35286
+        ]
+      },
+      "IdentityRegistry.setBaleVerified": {
+        "n": 3,
+        "min": 35265,
+        "max": 35265,
+        "all": [
+          35265,
+          35265,
+          35265
+        ]
+      },
+      "IdentityRegistry.setEmailVerified": {
+        "n": 3,
+        "min": 35287,
+        "max": 35287,
+        "all": [
+          35287,
+          35287,
+          35287
+        ]
+      },
+      "IdentityRegistry.setKycVerified": {
+        "n": 3,
+        "min": 58183,
+        "max": 58183,
+        "all": [
+          58183,
+          58183,
+          58183
+        ]
+      },
+      "FoundationDAO.proposeStartLottery": {
+        "n": 1,
+        "min": 303509,
+        "max": 303509,
+        "all": [
+          303509
+        ]
+      },
+      "ValidatorLottery.buyTicket": {
+        "n": 3,
+        "min": 105445,
+        "max": 139645,
+        "all": [
+          139645,
+          105445,
+          105445
+        ]
+      },
+      "ValidatorLottery.closeLottery": {
+        "n": 1,
+        "min": 34893,
+        "max": 34893,
+        "all": [
+          34893
+        ]
+      },
+      "ValidatorLottery.claimRefund": {
+        "n": 3,
+        "min": 59842,
+        "max": 64642,
+        "all": [
+          64642,
+          64642,
+          59842
+        ]
+      }
+    }
+  },
+  "finishedAt": "2026-11-22T22:34:27.329Z"
+}

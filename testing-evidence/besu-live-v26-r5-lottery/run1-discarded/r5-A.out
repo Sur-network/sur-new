@@ -1,0 +1,43 @@
+PASS A.0.1 ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key [object Object]
+PASS A.0.2 10 accounts fully verified (5 flags each); the "outsider" account is not 
+PASS A.1.1 StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3) [object Object]
+PASS A.1.2 lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1 [object Object]
+PASS A.2.ceo negative while open: ceo reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: board members and the CEO cannot take part
+PASS A.2.principal negative while open: principal reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: board members and the CEO cannot take part
+FAIL A.2.alternate negative while open: alternate reverts did NOT revert
+PASS A.2.unverified negative while open: unverified reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: identity not fully verified
+PASS A.2.wrongPrice negative while open: wrongPrice reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: wrong ticket price
+PASS A.2.closeEarly negative while open: closeEarly reverts The contract function "closeLottery" reverted with the following reason: ValidatorLottery: cannot close now
+PASS A.2.commitNotCeo negative while open: commitNotCeo reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: only the CEO
+PASS A.2.drawEarly negative while open: drawEarly reverts The contract function "drawBatch" reverted with the following reason: ValidatorLottery: not ready to draw
+PASS A.2.revealEarly negative while open: revealEarly reverts The contract function "reveal" reverted with the following reason: ValidatorLottery: not waiting for the reveal
+PASS A.2.directStart negative while open: directStart reverts The contract function "startLottery" reverted with the following reason: ValidatorLottery: only FoundationDAO
+PASS A.2.refundOpen negative while open: refundOpen reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: not cancelled
+PASS A.2.contract a CONTRACT calling buyTicket (msg.sender has code) is refused: real tx mined as reverted, reason 'a seat owner must be a plain wallet (EOA)' The contract function "buy" reverted with the following reason: ValidatorLottery: a seat owner must be a plain wallet (EOA)
+PASS A.2.ctor a contract buying from its CONSTRUCTOR (code.length == 0 but msg.sender != tx.origin) is refused: real deployment tx mined as reverted (this is the case only the tx.origin rule catches) {"code":3,"message":"Execution reverted (ValidatorLottery: a seat owner must be a plain wallet (EOA))","data":"0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003b56616c696461746f724c6f74746572793a20612073656174206
+PASS A.2.no-contract-participant neither attempt left a participant or pot behind 
+PASS A.3.1 7 tickets: participants recorded in purchase order, one TicketBought event each 0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6,0x11438D721c9a1F87CD1ad27fb82abC72A807DB16,0xb69270B0ef22CD8eAFEc349cACEba9d7BC102680,0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9
+PASS A.3.2 pot == 7 x 10 Suren and the contract holds exactly the pot [object Object]
+PASS A.3.3 negative: a second ticket from the same address reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: one ticket per address
+PASS A.3.4 negative: CEO and DAO board members (principal and alternate) still cannot buy after others bought 
+PASS A.4.1 CEO commitSecret stored (SecretCommitted event) 
+PASS A.4.2 SCENARIO 3: a SECOND commit (a different value) reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: commitment already set or empty
+PASS A.4.3 negative: committing the same value again also reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: commitment already set or empty
+PASS A.5.1 negative: a ticket after closeTime reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS A.5.2 closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed [object Object]
+PASS A.5.3 negative: buyTicket after close reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS A.6.1 SCENARIO 3: reveal with a WRONG secret reverts (target block already mined) The contract function "reveal" reverted with the following reason: ValidatorLottery: secret does not match the commitment
+PASS A.6.2 negative: reveal by a non-CEO reverts The contract function "reveal" reverted with the following reason: ValidatorLottery: only the CEO
+PASS A.6.3 a REAL wrong-caller reveal tx is mined as reverted and does not consume the lottery (phase still Closed) 
+22:40:36 [A] revealing at about target+240 (late, still inside the 250-block window)
+PASS A.7.1 reveal landed in the window: block 683 = target+241 (window 1..250); phase Revealed [object Object]
+PASS A.7.2 seed == keccak256(abi.encode(secret, blockhash(target))) recomputed from eth_getBlockByNumber(target).hash [object Object]
+PASS A.7.3 negative: a second reveal reverts The contract function "reveal" reverted with the following reason: ValidatorLottery: not waiting for the reveal
+PASS A.8.1 drawBatch in 3 batches (1, 2, rest): state kept between batches, phase Revealed until the last, then Drawn [object Object],[object Object],[object Object]
+PASS A.8.2 the 4 winners equal the off-chain replica of the partial Fisher-Yates draw (same order) and are distinct participants [object Object]
+PASS A.8.3 phase Drawn, pot cleared, lottery contract balance 0, and the whole pot (7 x 10 Suren) arrived in the FoundationDAO treasury in one transfer [object Object]
+FATAL TypeError: Cannot read properties of undefined (reading 'toString')
+    at main (D:\Amir\Business\SUR\NewSur\Deployments\BesuLive\c-t-lottery.mts:347:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+FAIL A.FATAL script aborted TypeError: Cannot read properties of undefined (reading 'toString')
+== 36 PASS, 2 FAIL, 0 OBS ==> runs/r5-A.json

@@ -1,0 +1,29 @@
+PASS B.0.1 ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key [object Object]
+PASS B.0.2 4 accounts fully verified (5 flags each); the "outsider" account is not 
+PASS B.1.1 StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3) [object Object]
+PASS B.1.2 lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1 [object Object]
+PASS B.3.1 4 tickets: participants recorded in purchase order, one TicketBought event each 0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6
+PASS B.3.2 pot == 4 x 10 Suren and the contract holds exactly the pot [object Object]
+PASS B.3.3 negative: a second ticket from the same address reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: one ticket per address
+PASS B.4.1 CEO commitSecret stored (SecretCommitted event) 
+PASS B.4.2 SCENARIO 3: a SECOND commit (a different value) reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: commitment already set or empty
+PASS B.5.1 negative: a ticket after closeTime reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS B.5.2 closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed [object Object]
+PASS B.5.3 negative: buyTicket after close reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS B.6.1 negative: reveal before the target block is mined reverts The contract function "reveal" reverted with the following reason: ValidatorLottery: target block not mined yet
+PASS B.6.2 negative: cancelLottery inside the reveal window (target+100) reverts The contract function "cancelLottery" reverted with the following reason: ValidatorLottery: cannot cancel now
+22:39:06 [B] probing blockhash(target) at offsets 247..262 and (after +251) reveal attempts
+PASS B.7.1 SCENARIO 5 (observation): blockhash(target) inside the 256-block horizon equals the real hash (offsets seen 247,248,249,250,251,252,253,254,255,256) 247,true,248,true,249,true,250,true,251,true,252,true,253,true,254,true,255,true,256,true
+PASS B.7.2 SCENARIO 5 (observation): blockhash(target) == 0 once the offset exceeds 256 (offsets seen 257,258,259,260,261,262) 257,true,258,true,259,true,260,true,261,true,262,true
+PASS B.7.3 SCENARIO 2a/5: REAL reveal transactions with the CORRECT secret after the window (offsets 252,253,254,255,256,257,258,259,260,261,262) are all mined as reverted - none succeeded [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]
+PASS B.7.4 reveal after the window is refused with 'reveal window over' (the window check fires BEFORE the blockhash check, so the 'target blockhash expired' branch is not reachable on this chain: 250 < 256) The contract function "reveal" reverted with the following reason: ValidatorLottery: reveal window over
+PASS B.8.1 SCENARIO 2a: cancelLottery by ANYONE after the window: phase Cancelled, reason 'secret not revealed in the window' [object Object]
+PASS B.8.2 negative: cancelLottery a second time reverts The contract function "cancelLottery" reverted with the following reason: ValidatorLottery: cannot cancel now
+PASS B.refund claimRefund for 4 buyers: each receives exactly the ticket price (balance delta + gas == price) [{"n":"buyer1","delta":"10000000000000000000","gas":64642},{"n":"buyer2","delta":"10000000000000000000","gas":64642},{"n":"buyer3","delta":"10000000000000000000","gas":64642},{"n":"buyer4","delta":"10000000000000000000","gas":59842}]
+PASS B.refund-pot pot returns to 0 and the lottery contract balance is 0 [object Object]
+PASS B.refund-twice negative: a second claimRefund by the same buyer reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: nothing to refund
+PASS B.refund-stranger negative: claimRefund by a non-buyer reverts The contract function "claimRefund" reverted with the following reason: ValidatorLottery: nothing to refund
+PASS B.9.drawBatch negative after cancellation: drawBatch reverts The contract function "drawBatch" reverted with the following reason: ValidatorLottery: not ready to draw
+PASS B.9.revealAfterCancel negative after cancellation: revealAfterCancel reverts The contract function "reveal" reverted with the following reason: ValidatorLottery: not waiting for the reveal
+PASS B.9.dao the FoundationDAO treasury received nothing from the cancelled lottery (contract balance 0, no transfer event) 
+== 27 PASS, 0 FAIL, 0 OBS ==> runs/r5-B.json

@@ -1,0 +1,459 @@
+{
+  "name": "r5-lottery-B",
+  "startedAt": "2026-11-22T22:32:51.284Z",
+  "rows": [
+    {
+      "id": "B.0.1",
+      "name": "ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.0.2",
+      "name": "4 accounts fully verified (5 flags each); the \"outsider\" account is not",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.1.1",
+      "name": "StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3)",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.1.2",
+      "name": "lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.3.1",
+      "name": "4 tickets: participants recorded in purchase order, one TicketBought event each",
+      "result": "PASS",
+      "detail": "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6"
+    },
+    {
+      "id": "B.3.2",
+      "name": "pot == 4 x 10 Suren and the contract holds exactly the pot",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.3.3",
+      "name": "negative: a second ticket from the same address reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: one ticket per address"
+    },
+    {
+      "id": "B.4.1",
+      "name": "CEO commitSecret stored (SecretCommitted event)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "B.4.2",
+      "name": "SCENARIO 3: a SECOND commit (a different value) reverts",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: commitment already set or empty"
+    },
+    {
+      "id": "B.5.1",
+      "name": "negative: a ticket after closeTime reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "B.5.2",
+      "name": "closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.5.3",
+      "name": "negative: buyTicket after close reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "B.6.1",
+      "name": "negative: reveal before the target block is mined reverts",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: target block not mined yet"
+    },
+    {
+      "id": "B.6.2",
+      "name": "negative: cancelLottery inside the reveal window (target+100) reverts",
+      "result": "PASS",
+      "detail": "The contract function \"cancelLottery\" reverted with the following reason: ValidatorLottery: cannot cancel now"
+    },
+    {
+      "id": "B.7.1",
+      "name": "SCENARIO 5 (observation): blockhash(target) inside the 256-block horizon equals the real hash (offsets seen 247,248,249,250,251,252,253,254,255,256)",
+      "result": "PASS",
+      "detail": "247,true,248,true,249,true,250,true,251,true,252,true,253,true,254,true,255,true,256,true"
+    },
+    {
+      "id": "B.7.2",
+      "name": "SCENARIO 5 (observation): blockhash(target) == 0 once the offset exceeds 256 (offsets seen 257,258,259,260,261,262)",
+      "result": "PASS",
+      "detail": "257,true,258,true,259,true,260,true,261,true,262,true"
+    },
+    {
+      "id": "B.7.3",
+      "name": "SCENARIO 2a/5: REAL reveal transactions with the CORRECT secret after the window (offsets 252,253,254,255,256,257,258,259,260,261,262) are all mined as reverted - none succeeded",
+      "result": "PASS",
+      "detail": "[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object]"
+    },
+    {
+      "id": "B.7.4",
+      "name": "reveal after the window is refused with 'reveal window over' (the window check fires BEFORE the blockhash check, so the 'target blockhash expired' branch is not reachable on this chain: 250 < 256)",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: reveal window over"
+    },
+    {
+      "id": "B.8.1",
+      "name": "SCENARIO 2a: cancelLottery by ANYONE after the window: phase Cancelled, reason 'secret not revealed in the window'",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.8.2",
+      "name": "negative: cancelLottery a second time reverts",
+      "result": "PASS",
+      "detail": "The contract function \"cancelLottery\" reverted with the following reason: ValidatorLottery: cannot cancel now"
+    },
+    {
+      "id": "B.refund",
+      "name": "claimRefund for 4 buyers: each receives exactly the ticket price (balance delta + gas == price)",
+      "result": "PASS",
+      "detail": "[{\"n\":\"buyer1\",\"delta\":\"10000000000000000000\",\"gas\":64642},{\"n\":\"buyer2\",\"delta\":\"10000000000000000000\",\"gas\":64642},{\"n\":\"buyer3\",\"delta\":\"10000000000000000000\",\"gas\":64642},{\"n\":\"buyer4\",\"delta\":\"10000000000000000000\",\"gas\":59842}]"
+    },
+    {
+      "id": "B.refund-pot",
+      "name": "pot returns to 0 and the lottery contract balance is 0",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "B.refund-twice",
+      "name": "negative: a second claimRefund by the same buyer reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: nothing to refund"
+    },
+    {
+      "id": "B.refund-stranger",
+      "name": "negative: claimRefund by a non-buyer reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: nothing to refund"
+    },
+    {
+      "id": "B.9.drawBatch",
+      "name": "negative after cancellation: drawBatch reverts",
+      "result": "PASS",
+      "detail": "The contract function \"drawBatch\" reverted with the following reason: ValidatorLottery: not ready to draw"
+    },
+    {
+      "id": "B.9.revealAfterCancel",
+      "name": "negative after cancellation: revealAfterCancel reverts",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: not waiting for the reveal"
+    },
+    {
+      "id": "B.9.dao",
+      "name": "the FoundationDAO treasury received nothing from the cancelled lottery (contract balance 0, no transfer event)",
+      "result": "PASS",
+      "detail": ""
+    }
+  ],
+  "notes": {
+    "blockhashRows": [
+      {
+        "executedInBlock": 589,
+        "offset": 247,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 590,
+        "offset": 248,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 591,
+        "offset": 249,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 592,
+        "offset": 250,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 593,
+        "offset": 251,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 594,
+        "offset": 252,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 595,
+        "offset": 253,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 596,
+        "offset": 254,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 597,
+        "offset": 255,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 598,
+        "offset": 256,
+        "blockhashReturned": "0x8ee71f5c96facd65c8f58c74416e11a60180a842e56943db745cb4fb182786b5",
+        "equalsReal": true,
+        "isZero": false
+      },
+      {
+        "executedInBlock": 599,
+        "offset": 257,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      },
+      {
+        "executedInBlock": 600,
+        "offset": 258,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      },
+      {
+        "executedInBlock": 601,
+        "offset": 259,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      },
+      {
+        "executedInBlock": 602,
+        "offset": 260,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      },
+      {
+        "executedInBlock": 603,
+        "offset": 261,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      },
+      {
+        "executedInBlock": 604,
+        "offset": 262,
+        "blockhashReturned": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "equalsReal": false,
+        "isZero": true
+      }
+    ],
+    "timeline": {
+      "start": {
+        "utc": "2026-11-22T22:32:51.403Z",
+        "block": 213
+      },
+      "identities_done": {
+        "utc": "2026-11-22T22:33:18.850Z",
+        "block": 241
+      },
+      "lottery_started": {
+        "utc": "2026-11-22T22:33:22.157Z",
+        "block": 244,
+        "closeTime": 1795386887
+      },
+      "tickets_bought": {
+        "utc": "2026-11-22T22:33:25.902Z",
+        "block": 248
+      },
+      "committed": {
+        "utc": "2026-11-22T22:33:26.790Z",
+        "block": 249
+      },
+      "closed": {
+        "utc": "2026-11-22T22:34:49.816Z",
+        "block": 332,
+        "closeBlock": 332,
+        "target": 342
+      },
+      "cancelled": {
+        "utc": "2026-11-22T22:39:22.878Z",
+        "block": 605
+      }
+    },
+    "gas": {
+      "FoundationDAO.proposeElectOfficers": {
+        "n": 1,
+        "min": 306088,
+        "max": 306088,
+        "all": [
+          306088
+        ]
+      },
+      "FoundationDAO.vote": {
+        "n": 4,
+        "min": 73400,
+        "max": 240927,
+        "all": [
+          73400,
+          168257,
+          73400,
+          240927
+        ]
+      },
+      "IdentityRegistry.registerIdentity": {
+        "n": 4,
+        "min": 71788,
+        "max": 71788,
+        "all": [
+          71788,
+          71788,
+          71788,
+          71788
+        ]
+      },
+      "IdentityRegistry.setPhoneVerified": {
+        "n": 4,
+        "min": 52304,
+        "max": 52304,
+        "all": [
+          52304,
+          52304,
+          52304,
+          52304
+        ]
+      },
+      "IdentityRegistry.setTelegramVerified": {
+        "n": 4,
+        "min": 35286,
+        "max": 35286,
+        "all": [
+          35286,
+          35286,
+          35286,
+          35286
+        ]
+      },
+      "IdentityRegistry.setBaleVerified": {
+        "n": 4,
+        "min": 35265,
+        "max": 35265,
+        "all": [
+          35265,
+          35265,
+          35265,
+          35265
+        ]
+      },
+      "IdentityRegistry.setEmailVerified": {
+        "n": 4,
+        "min": 35287,
+        "max": 35287,
+        "all": [
+          35287,
+          35287,
+          35287,
+          35287
+        ]
+      },
+      "IdentityRegistry.setKycVerified": {
+        "n": 4,
+        "min": 58183,
+        "max": 58183,
+        "all": [
+          58183,
+          58183,
+          58183,
+          58183
+        ]
+      },
+      "FoundationDAO.proposeStartLottery": {
+        "n": 1,
+        "min": 303509,
+        "max": 303509,
+        "all": [
+          303509
+        ]
+      },
+      "ValidatorLottery.buyTicket": {
+        "n": 4,
+        "min": 105445,
+        "max": 139645,
+        "all": [
+          139645,
+          105445,
+          105445,
+          105445
+        ]
+      },
+      "ValidatorLottery.commitSecret": {
+        "n": 1,
+        "min": 57449,
+        "max": 57449,
+        "all": [
+          57449
+        ]
+      },
+      "ValidatorLottery.closeLottery": {
+        "n": 1,
+        "min": 59005,
+        "max": 59005,
+        "all": [
+          59005
+        ]
+      },
+      "ValidatorLottery.cancelLottery": {
+        "n": 1,
+        "min": 33146,
+        "max": 33146,
+        "all": [
+          33146
+        ]
+      },
+      "ValidatorLottery.claimRefund": {
+        "n": 4,
+        "min": 59842,
+        "max": 64642,
+        "all": [
+          64642,
+          64642,
+          64642,
+          59842
+        ]
+      }
+    }
+  },
+  "finishedAt": "2026-11-22T22:39:27.046Z"
+}

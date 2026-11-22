@@ -1,0 +1,22 @@
+PASS D.0.1 ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key [object Object]
+PASS D.0.2 5 accounts fully verified (5 flags each); the "outsider" account is not 
+PASS D.1.1 StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3) [object Object]
+PASS D.1.2 lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1 [object Object]
+PASS D.3.1 5 tickets: participants recorded in purchase order, one TicketBought event each 0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6,0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9
+PASS D.3.2 pot == 5 x 10 Suren and the contract holds exactly the pot [object Object]
+PASS D.3.3 negative: a second ticket from the same address reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: one ticket per address
+PASS D.4.1 CEO commitSecret stored (SecretCommitted event) 
+PASS D.4.2 SCENARIO 3: a SECOND commit (a different value) reverts The contract function "commitSecret" reverted with the following reason: ValidatorLottery: commitment already set or empty
+PASS D.5.1 negative: a ticket after closeTime reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS D.5.2 closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed [object Object]
+PASS D.5.3 negative: buyTicket after close reverts The contract function "buyTicket" reverted with the following reason: ValidatorLottery: registration is not open
+PASS D.7.1 reveal landed in the window: block 362 = target+2 (window 1..250); phase Revealed [object Object]
+PASS D.7.2 seed == keccak256(abi.encode(secret, blockhash(target))) recomputed from eth_getBlockByNumber(target).hash [object Object]
+PASS D.8.1 drawBatch(100) with winnersCount 20 > participants 5: only 5 are drawn (min), phase Drawn [object Object]
+PASS D.8.2 the 5 winners equal the off-chain replica of the partial Fisher-Yates draw (same order) and are distinct participants [object Object]
+PASS D.8.3 phase Drawn, pot cleared, lottery contract balance 0, and the whole pot (5 x 10 Suren) arrived in the FoundationDAO treasury in one transfer [object Object]
+FATAL TypeError: Cannot read properties of undefined (reading 'toString')
+    at main (D:\Amir\Business\SUR\NewSur\Deployments\BesuLive\c-t-lottery.mts:347:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+FAIL D.FATAL script aborted TypeError: Cannot read properties of undefined (reading 'toString')
+== 17 PASS, 1 FAIL, 0 OBS ==> runs/r5-D.json

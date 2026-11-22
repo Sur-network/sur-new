@@ -1,0 +1,450 @@
+{
+  "name": "r5-lottery-A",
+  "startedAt": "2026-11-22T22:32:51.279Z",
+  "rows": [
+    {
+      "id": "A.0.1",
+      "name": "ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.0.2",
+      "name": "10 accounts fully verified (5 flags each); the \"outsider\" account is not",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.1.1",
+      "name": "StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3)",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.1.2",
+      "name": "lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.2.ceo",
+      "name": "negative while open: ceo reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: board members and the CEO cannot take part"
+    },
+    {
+      "id": "A.2.principal",
+      "name": "negative while open: principal reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: board members and the CEO cannot take part"
+    },
+    {
+      "id": "A.2.alternate",
+      "name": "negative while open: alternate reverts",
+      "result": "FAIL",
+      "detail": "did NOT revert"
+    },
+    {
+      "id": "A.2.unverified",
+      "name": "negative while open: unverified reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: identity not fully verified"
+    },
+    {
+      "id": "A.2.wrongPrice",
+      "name": "negative while open: wrongPrice reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: wrong ticket price"
+    },
+    {
+      "id": "A.2.closeEarly",
+      "name": "negative while open: closeEarly reverts",
+      "result": "PASS",
+      "detail": "The contract function \"closeLottery\" reverted with the following reason: ValidatorLottery: cannot close now"
+    },
+    {
+      "id": "A.2.commitNotCeo",
+      "name": "negative while open: commitNotCeo reverts",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: only the CEO"
+    },
+    {
+      "id": "A.2.drawEarly",
+      "name": "negative while open: drawEarly reverts",
+      "result": "PASS",
+      "detail": "The contract function \"drawBatch\" reverted with the following reason: ValidatorLottery: not ready to draw"
+    },
+    {
+      "id": "A.2.revealEarly",
+      "name": "negative while open: revealEarly reverts",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: not waiting for the reveal"
+    },
+    {
+      "id": "A.2.directStart",
+      "name": "negative while open: directStart reverts",
+      "result": "PASS",
+      "detail": "The contract function \"startLottery\" reverted with the following reason: ValidatorLottery: only FoundationDAO"
+    },
+    {
+      "id": "A.2.refundOpen",
+      "name": "negative while open: refundOpen reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: not cancelled"
+    },
+    {
+      "id": "A.2.contract",
+      "name": "a CONTRACT calling buyTicket (msg.sender has code) is refused: real tx mined as reverted, reason 'a seat owner must be a plain wallet (EOA)'",
+      "result": "PASS",
+      "detail": "The contract function \"buy\" reverted with the following reason: ValidatorLottery: a seat owner must be a plain wallet (EOA)"
+    },
+    {
+      "id": "A.2.ctor",
+      "name": "a contract buying from its CONSTRUCTOR (code.length == 0 but msg.sender != tx.origin) is refused: real deployment tx mined as reverted (this is the case only the tx.origin rule catches)",
+      "result": "PASS",
+      "detail": "{\"code\":3,\"message\":\"Execution reverted (ValidatorLottery: a seat owner must be a plain wallet (EOA))\",\"data\":\"0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003b56616c696461746f724c6f74746572793a20612073656174206"
+    },
+    {
+      "id": "A.2.no-contract-participant",
+      "name": "neither attempt left a participant or pot behind",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.3.1",
+      "name": "7 tickets: participants recorded in purchase order, one TicketBought event each",
+      "result": "PASS",
+      "detail": "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6,0x11438D721c9a1F87CD1ad27fb82abC72A807DB16,0xb69270B0ef22CD8eAFEc349cACEba9d7BC102680,0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9"
+    },
+    {
+      "id": "A.3.2",
+      "name": "pot == 7 x 10 Suren and the contract holds exactly the pot",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.3.3",
+      "name": "negative: a second ticket from the same address reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: one ticket per address"
+    },
+    {
+      "id": "A.3.4",
+      "name": "negative: CEO and DAO board members (principal and alternate) still cannot buy after others bought",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.4.1",
+      "name": "CEO commitSecret stored (SecretCommitted event)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.4.2",
+      "name": "SCENARIO 3: a SECOND commit (a different value) reverts",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: commitment already set or empty"
+    },
+    {
+      "id": "A.4.3",
+      "name": "negative: committing the same value again also reverts",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: commitment already set or empty"
+    },
+    {
+      "id": "A.5.1",
+      "name": "negative: a ticket after closeTime reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "A.5.2",
+      "name": "closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.5.3",
+      "name": "negative: buyTicket after close reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "A.6.1",
+      "name": "SCENARIO 3: reveal with a WRONG secret reverts (target block already mined)",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: secret does not match the commitment"
+    },
+    {
+      "id": "A.6.2",
+      "name": "negative: reveal by a non-CEO reverts",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: only the CEO"
+    },
+    {
+      "id": "A.6.3",
+      "name": "a REAL wrong-caller reveal tx is mined as reverted and does not consume the lottery (phase still Closed)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "A.7.1",
+      "name": "reveal landed in the window: block 683 = target+241 (window 1..250); phase Revealed",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.7.2",
+      "name": "seed == keccak256(abi.encode(secret, blockhash(target))) recomputed from eth_getBlockByNumber(target).hash",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.7.3",
+      "name": "negative: a second reveal reverts",
+      "result": "PASS",
+      "detail": "The contract function \"reveal\" reverted with the following reason: ValidatorLottery: not waiting for the reveal"
+    },
+    {
+      "id": "A.8.1",
+      "name": "drawBatch in 3 batches (1, 2, rest): state kept between batches, phase Revealed until the last, then Drawn",
+      "result": "PASS",
+      "detail": "[object Object],[object Object],[object Object]"
+    },
+    {
+      "id": "A.8.2",
+      "name": "the 4 winners equal the off-chain replica of the partial Fisher-Yates draw (same order) and are distinct participants",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.8.3",
+      "name": "phase Drawn, pot cleared, lottery contract balance 0, and the whole pot (7 x 10 Suren) arrived in the FoundationDAO treasury in one transfer",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "A.FATAL",
+      "name": "script aborted",
+      "result": "FAIL",
+      "detail": "TypeError: Cannot read properties of undefined (reading 'toString')"
+    }
+  ],
+  "notes": {
+    "timeline": {
+      "start": {
+        "utc": "2026-11-22T22:32:51.356Z",
+        "block": 217
+      },
+      "identities_done": {
+        "utc": "2026-11-22T22:33:55.183Z",
+        "block": 281
+      },
+      "lottery_started": {
+        "utc": "2026-11-22T22:33:57.994Z",
+        "block": 284,
+        "closeTime": 1795386983
+      },
+      "tickets_bought": {
+        "utc": "2026-11-22T22:34:08.165Z",
+        "block": 294
+      },
+      "committed": {
+        "utc": "2026-11-22T22:34:08.894Z",
+        "block": 295
+      },
+      "closed": {
+        "utc": "2026-11-22T22:36:25.872Z",
+        "block": 432,
+        "closeBlock": 432,
+        "target": 442
+      },
+      "revealed": {
+        "utc": "2026-11-22T22:40:37.161Z",
+        "block": 683,
+        "revealBlock": 683
+      }
+    },
+    "gas": {
+      "FoundationDAO.proposeElectOfficers": {
+        "n": 1,
+        "min": 306088,
+        "max": 306088,
+        "all": [
+          306088
+        ]
+      },
+      "FoundationDAO.vote": {
+        "n": 4,
+        "min": 73400,
+        "max": 240927,
+        "all": [
+          73400,
+          168257,
+          73400,
+          240927
+        ]
+      },
+      "IdentityRegistry.registerIdentity": {
+        "n": 10,
+        "min": 71752,
+        "max": 71800,
+        "all": [
+          71788,
+          71788,
+          71788,
+          71788,
+          71788,
+          71788,
+          71788,
+          71752,
+          71800,
+          71800
+        ]
+      },
+      "IdentityRegistry.setPhoneVerified": {
+        "n": 10,
+        "min": 52304,
+        "max": 52304,
+        "all": [
+          52304,
+          52304,
+          52304,
+          52304,
+          52304,
+          52304,
+          52304,
+          52304,
+          52304,
+          52304
+        ]
+      },
+      "IdentityRegistry.setTelegramVerified": {
+        "n": 10,
+        "min": 35286,
+        "max": 35286,
+        "all": [
+          35286,
+          35286,
+          35286,
+          35286,
+          35286,
+          35286,
+          35286,
+          35286,
+          35286,
+          35286
+        ]
+      },
+      "IdentityRegistry.setBaleVerified": {
+        "n": 10,
+        "min": 35265,
+        "max": 35265,
+        "all": [
+          35265,
+          35265,
+          35265,
+          35265,
+          35265,
+          35265,
+          35265,
+          35265,
+          35265,
+          35265
+        ]
+      },
+      "IdentityRegistry.setEmailVerified": {
+        "n": 10,
+        "min": 35287,
+        "max": 35287,
+        "all": [
+          35287,
+          35287,
+          35287,
+          35287,
+          35287,
+          35287,
+          35287,
+          35287,
+          35287,
+          35287
+        ]
+      },
+      "IdentityRegistry.setKycVerified": {
+        "n": 10,
+        "min": 58183,
+        "max": 58183,
+        "all": [
+          58183,
+          58183,
+          58183,
+          58183,
+          58183,
+          58183,
+          58183,
+          58183,
+          58183,
+          58183
+        ]
+      },
+      "FoundationDAO.proposeStartLottery": {
+        "n": 1,
+        "min": 303509,
+        "max": 303509,
+        "all": [
+          303509
+        ]
+      },
+      "ValidatorLottery.buyTicket": {
+        "n": 7,
+        "min": 105445,
+        "max": 139645,
+        "all": [
+          139645,
+          105445,
+          105445,
+          105445,
+          105445,
+          105445,
+          105445
+        ]
+      },
+      "ValidatorLottery.commitSecret": {
+        "n": 1,
+        "min": 57449,
+        "max": 57449,
+        "all": [
+          57449
+        ]
+      },
+      "ValidatorLottery.closeLottery": {
+        "n": 1,
+        "min": 59005,
+        "max": 59005,
+        "all": [
+          59005
+        ]
+      },
+      "ValidatorLottery.reveal": {
+        "n": 1,
+        "min": 63118,
+        "max": 63118,
+        "all": [
+          63118
+        ]
+      },
+      "ValidatorLottery.drawBatch": {
+        "n": 3,
+        "min": 227855,
+        "max": 436258,
+        "all": [
+          289350,
+          436258,
+          227855
+        ]
+      }
+    }
+  },
+  "finishedAt": "2026-11-22T22:40:40.073Z"
+}

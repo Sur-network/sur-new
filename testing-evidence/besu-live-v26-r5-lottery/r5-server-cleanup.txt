@@ -1,0 +1,17 @@
+containers: sur25t-td sur25t-ta sur25t-tc sur25t-tb
+volumes: sur25t-ta-data sur25t-tb-data sur25t-tc-data sur25t-td-data
+networks: sur25t-net
+22:50:19Z removed container sur25t-td
+22:50:21Z removed container sur25t-ta
+22:50:22Z removed container sur25t-tc
+22:50:23Z removed container sur25t-tb
+22:50:23Z removed volume sur25t-ta-data
+22:50:23Z removed volume sur25t-tb-data
+22:50:23Z removed volume sur25t-tc-data
+22:50:23Z removed volume sur25t-td-data
+22:50:24Z removed network sur25t-net
+22:50:24Z left: containers [] volumes [] networks []
+sur25 objects left:
+none
+running containers: 32  all: 33
+sur25i-n1

@@ -1,0 +1,386 @@
+{
+  "name": "r5-lottery-D",
+  "startedAt": "2026-11-22T22:42:10.161Z",
+  "rows": [
+    {
+      "id": "D.0.1",
+      "name": "ElectOfficers proposal executed by the 3rd of 5 votes: ceo() == the elected CEO key",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.0.2",
+      "name": "5 accounts fully verified (5 flags each); the \"outsider\" account is not",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "D.1.1",
+      "name": "StartLottery proposal: proposer's vote counts (1), 2 votes still Pending, 3rd vote executes (required 3)",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.1.2",
+      "name": "lottery #1 is Open with the proposal's price / winnersCount / closeTime; lotteryCount == 1",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.3.1",
+      "name": "5 tickets: participants recorded in purchase order, one TicketBought event each",
+      "result": "PASS",
+      "detail": "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542,0x2434d150B55066Fe9c4C456076d187FFfA8c3767,0x035df9C18b041a090FA3D507e8AE3D294359247f,0x32C84b0d87e309d8C0f2283f12f761c72641e0D6,0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9"
+    },
+    {
+      "id": "D.3.2",
+      "name": "pot == 5 x 10 Suren and the contract holds exactly the pot",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.3.3",
+      "name": "negative: a second ticket from the same address reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: one ticket per address"
+    },
+    {
+      "id": "D.4.1",
+      "name": "CEO commitSecret stored (SecretCommitted event)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "D.4.2",
+      "name": "SCENARIO 3: a SECOND commit (a different value) reverts",
+      "result": "PASS",
+      "detail": "The contract function \"commitSecret\" reverted with the following reason: ValidatorLottery: commitment already set or empty"
+    },
+    {
+      "id": "D.5.1",
+      "name": "negative: a ticket after closeTime reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "D.5.2",
+      "name": "closeLottery by ANYONE (deployer): targetBlock == close block + 10; participants frozen; phase Closed",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.5.3",
+      "name": "negative: buyTicket after close reverts",
+      "result": "PASS",
+      "detail": "The contract function \"buyTicket\" reverted with the following reason: ValidatorLottery: registration is not open"
+    },
+    {
+      "id": "D.7.1",
+      "name": "reveal landed in the window: block 154 = target+2 (window 1..250); phase Revealed",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.7.2",
+      "name": "seed == keccak256(abi.encode(secret, blockhash(target))) recomputed from eth_getBlockByNumber(target).hash",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.1",
+      "name": "drawBatch(100) with winnersCount 20 > participants 5: only 5 are drawn (min), phase Drawn",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.2",
+      "name": "the 5 winners equal the off-chain replica of the partial Fisher-Yates draw (same order) and are distinct participants",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.3",
+      "name": "phase Drawn, pot cleared, lottery contract balance 0, and the whole pot (5 x 10 Suren) arrived in the FoundationDAO treasury in one transfer",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.4",
+      "name": "every winner who was not already registered: seat entered as Probation (1), zero collateral, not a paid entrant, holds a seat NFT, entryFailed false",
+      "result": "PASS",
+      "detail": "[object Object],[object Object],[object Object],[object Object]"
+    },
+    {
+      "id": "D.8.5",
+      "name": "ValidatorSeatNFT.totalMinted grew by exactly the number of new winners (4)",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.6",
+      "name": "a winner who is ALREADY a registered validator (owner2): enterAsLotteryWinner fails inside try/catch -> WinnerEntryFailed event + entryFailed == true; the draw is NOT blocked and the pot is still paid",
+      "result": "PASS",
+      "detail": "[object Object]"
+    },
+    {
+      "id": "D.8.7",
+      "name": "negative: drawBatch after Drawn reverts",
+      "result": "PASS",
+      "detail": "The contract function \"drawBatch\" reverted with the following reason: ValidatorLottery: not ready to draw"
+    },
+    {
+      "id": "D.8.8",
+      "name": "negative: claimRefund on a Drawn lottery reverts",
+      "result": "PASS",
+      "detail": "The contract function \"claimRefund\" reverted with the following reason: ValidatorLottery: not cancelled"
+    },
+    {
+      "id": "D.8.9",
+      "name": "totals read back: lotteryCount 1, participantCount, winners, lastStartedAt == proposal execution block time",
+      "result": "PASS",
+      "detail": "{\n  \"lotteryCount\": \"1\",\n  \"lastStartedAt\": \"1795387366\",\n  \"participantCount\": \"5\",\n  \"winners\": 5,\n  \"final\": {\n    \"phase\": 4,\n    \"ticketPrice\": \"10000000000000000000\",\n    \"winnersCount\": \"20\",\n    \"closeTime\": \"1795387462\",\n    \"commitment\": \"0x5388f192bf65949b74da5267d432a38522755b043a31ee15936b4f46bdc1d81f\",\n    \"targetBlock\": \"152\",\n    \"seed\": \"0x17b27766942f2eeb8a9db0940fc0c9c136541d0cca270dddc6d4fcf2d5b55611\",\n    \"drawn\": \"5\",\n    \"pot\": \"0\"\n  }\n}"
+    }
+  ],
+  "notes": {
+    "timeline": {
+      "start": {
+        "utc": "2026-11-22T22:42:10.252Z",
+        "block": 7
+      },
+      "identities_done": {
+        "utc": "2026-11-22T22:42:44.554Z",
+        "block": 41
+      },
+      "lottery_started": {
+        "utc": "2026-11-22T22:42:48.068Z",
+        "block": 45,
+        "closeTime": 1795387462
+      },
+      "tickets_bought": {
+        "utc": "2026-11-22T22:42:52.790Z",
+        "block": 50
+      },
+      "committed": {
+        "utc": "2026-11-22T22:42:54.163Z",
+        "block": 51
+      },
+      "closed": {
+        "utc": "2026-11-22T22:44:25.286Z",
+        "block": 142,
+        "closeBlock": 142,
+        "target": 152
+      },
+      "revealed": {
+        "utc": "2026-11-22T22:44:37.189Z",
+        "block": 154,
+        "revealBlock": 154
+      },
+      "drawn": {
+        "utc": "2026-11-22T22:44:38.994Z",
+        "block": 156
+      }
+    },
+    "gas": {
+      "FoundationDAO.proposeElectOfficers": {
+        "n": 1,
+        "min": 306088,
+        "max": 306088,
+        "all": [
+          306088
+        ]
+      },
+      "FoundationDAO.vote": {
+        "n": 4,
+        "min": 73400,
+        "max": 240927,
+        "all": [
+          73400,
+          168257,
+          73400,
+          240927
+        ]
+      },
+      "IdentityRegistry.registerIdentity": {
+        "n": 5,
+        "min": 71788,
+        "max": 71788,
+        "all": [
+          71788,
+          71788,
+          71788,
+          71788,
+          71788
+        ]
+      },
+      "IdentityRegistry.setPhoneVerified": {
+        "n": 5,
+        "min": 52304,
+        "max": 52304,
+        "all": [
+          52304,
+          52304,
+          52304,
+          52304,
+          52304
+        ]
+      },
+      "IdentityRegistry.setTelegramVerified": {
+        "n": 5,
+        "min": 35286,
+        "max": 35286,
+        "all": [
+          35286,
+          35286,
+          35286,
+          35286,
+          35286
+        ]
+      },
+      "IdentityRegistry.setBaleVerified": {
+        "n": 5,
+        "min": 35265,
+        "max": 35265,
+        "all": [
+          35265,
+          35265,
+          35265,
+          35265,
+          35265
+        ]
+      },
+      "IdentityRegistry.setEmailVerified": {
+        "n": 5,
+        "min": 35287,
+        "max": 35287,
+        "all": [
+          35287,
+          35287,
+          35287,
+          35287,
+          35287
+        ]
+      },
+      "IdentityRegistry.setKycVerified": {
+        "n": 5,
+        "min": 58183,
+        "max": 58183,
+        "all": [
+          58183,
+          58183,
+          58183,
+          58183,
+          58183
+        ]
+      },
+      "FoundationDAO.proposeStartLottery": {
+        "n": 1,
+        "min": 303509,
+        "max": 303509,
+        "all": [
+          303509
+        ]
+      },
+      "ValidatorLottery.buyTicket": {
+        "n": 5,
+        "min": 105445,
+        "max": 139645,
+        "all": [
+          139645,
+          105445,
+          105445,
+          105445,
+          105445
+        ]
+      },
+      "ValidatorLottery.commitSecret": {
+        "n": 1,
+        "min": 57449,
+        "max": 57449,
+        "all": [
+          57449
+        ]
+      },
+      "ValidatorLottery.closeLottery": {
+        "n": 1,
+        "min": 59005,
+        "max": 59005,
+        "all": [
+          59005
+        ]
+      },
+      "ValidatorLottery.reveal": {
+        "n": 1,
+        "min": 63118,
+        "max": 63118,
+        "all": [
+          63118
+        ]
+      },
+      "ValidatorLottery.drawBatch": {
+        "n": 1,
+        "min": 902911,
+        "max": 902911,
+        "all": [
+          902911
+        ]
+      }
+    },
+    "participants": [
+      "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542",
+      "0x2434d150B55066Fe9c4C456076d187FFfA8c3767",
+      "0x035df9C18b041a090FA3D507e8AE3D294359247f",
+      "0x32C84b0d87e309d8C0f2283f12f761c72641e0D6",
+      "0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9"
+    ],
+    "winners": [
+      "0x32C84b0d87e309d8C0f2283f12f761c72641e0D6",
+      "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542",
+      "0x035df9C18b041a090FA3D507e8AE3D294359247f",
+      "0x2434d150B55066Fe9c4C456076d187FFfA8c3767",
+      "0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9"
+    ],
+    "statuses": [
+      {
+        "w": "0x32C84b0d87e309d8C0f2283f12f761c72641e0D6",
+        "status": 1,
+        "lockedStake": "0",
+        "isPaidEntrant": false,
+        "seat": "8",
+        "entryFailed": false
+      },
+      {
+        "w": "0xD596E44Bc8ECbBDfbfce8c8b2B3Eb679BD3F3542",
+        "status": 1,
+        "lockedStake": "0",
+        "isPaidEntrant": false,
+        "seat": "9",
+        "entryFailed": false
+      },
+      {
+        "w": "0x035df9C18b041a090FA3D507e8AE3D294359247f",
+        "status": 1,
+        "lockedStake": "0",
+        "isPaidEntrant": false,
+        "seat": "10",
+        "entryFailed": false
+      },
+      {
+        "w": "0x2434d150B55066Fe9c4C456076d187FFfA8c3767",
+        "status": 1,
+        "lockedStake": "0",
+        "isPaidEntrant": false,
+        "seat": "11",
+        "entryFailed": false
+      },
+      {
+        "w": "0x37BE1C24E4f5b69c410AF3163bdB3d5e2bF6BAe9",
+        "status": 1,
+        "lockedStake": "0",
+        "isPaidEntrant": false,
+        "seat": "2",
+        "entryFailed": true
+      }
+    ]
+  },
+  "finishedAt": "2026-11-22T22:44:39.006Z"
+}
