@@ -1,0 +1,15 @@
+# server cleanup 2026-11-22T23:29:45Z
+containers: sur25i-n1
+volumes: sur25i-n1-data
+networks: sur25i-net
+23:29:45Z removed container sur25i-n1
+23:29:45Z removed volume sur25i-n1-data
+23:29:45Z removed network sur25i-net
+23:29:45Z left: containers [] volumes [] networks []
+removed ~/sur25i-live
+--- after: containers total: 32
+sur25* containers: []
+sur25* volumes: []
+sur25* networks: []
+dirs: []
+listening 19911: 0

@@ -1,0 +1,15 @@
+# serve (real CLI process), port 18791 on 127.0.0.1
+--- /health
+{"indexedUpToBlock":5378,"ok":true,"schemaVersion":1,"chainId":"262025","genesisHash":"0x8a1c5332a49b551f430fe5474c016acc7b015aa8f6158ad174a4d13aae67bf63","chainHead":5378,"lagBlocks":0,"lastSyncAt":"2026-11-22T23:29:30.351Z","syncing":false,"lastError":null,"allowList":["BlockRewardDistributor.ValidatorRewarded","BlockRewardDistributor.ValidatorRewardDeferred","BlockRewardDistributor.ClaimableWithdrawn","BlockRewardDistributor.DistributionOpened","BlockRewardDistributor.DistributionPage","BlockRewardDistributor.RewardsDistributed","BlockRewardDistributor.DistributionAborted","BlockRewardDistributor.RateChangeBoardVoted","BlockRewardDistributor.RateChangeValidatorVoted","BlockRewardDistributor.ShareChangeBoardVoted","BlockRewardDistributor.ShareChangeValidatorVoted","ValidatorsBoard.ActionProposed","ValidatorsBoard.ActionVoted","ValidatorsBoard.VoteCast","ValidatorsBoard.VoteWithdrawn","
+--- /rewards/owner1 (first 700 chars)
+{"indexedUpToBlock":5382,"items":[{"block":79,"logIndex":0,"txHash":"0xeea522f3c5abc2a689d4fe8d06de5354e6dc7ee7b44107b30fa53f891768c982","timestamp":1795384867,"contract":"BlockRewardDistributor","address":"0x2222222222222222222222222222222222222222","event":"ValidatorRewarded","subject":"0xe82c3046406241c2465302fdc8cabcb9460d31ab","ref":"1","args":{"epochId":"1","validator":"0xe82c3046406241C2465302FdC8cAbCB9460d31aB","blocksMined":"63","rewardShare":"63000000000000000000","feeShare":"26010950000000000000","totalPayout":"89010950000000000000"}}],"nextCursor":null,"address":"0xe82c3046406241c2465302fdc8cabcb9460d31ab","totals":{"payments":1,"rewardShare":"63000000000000000000","feeShare":"26
+--- POST /health
+HTTP/1.1 405 Method Not Allowed
+content-type: application/json; charset=utf-8
+cache-control: no-store
+x-content-type-options: nosniff
+allow: GET
+--- listening address
+  TCP    127.0.0.1:18791        0.0.0.0:0              LISTENING       57176
+  TCP    127.0.0.1:60142        127.0.0.1:18791        TIME_WAIT       0
+  TCP    127.0.0.1:60144        127.0.0.1:18791        TIME_WAIT       0

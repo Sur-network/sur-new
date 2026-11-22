@@ -1,0 +1,5 @@
+chunk=2000 concurrency=4: {"fromBlock":0,"toBlock":5356,"head":5356,"eventsAdded":6,"requests":3,"halvings":0,"ms":127,"peakRssMb":153}
+chunk=2000 concurrency=1: {"fromBlock":0,"toBlock":5358,"head":5358,"eventsAdded":6,"requests":3,"halvings":0,"ms":107,"peakRssMb":149}
+chunk=500 concurrency=1: {"fromBlock":0,"toBlock":5360,"head":5360,"eventsAdded":6,"requests":11,"halvings":0,"ms":171,"peakRssMb":149}
+chunk=100 concurrency=1: {"fromBlock":0,"toBlock":5362,"head":5362,"eventsAdded":6,"requests":54,"halvings":0,"ms":607,"peakRssMb":150}
+chunk=100 concurrency=4: {"fromBlock":0,"toBlock":5365,"head":5365,"eventsAdded":6,"requests":54,"halvings":0,"ms":889,"peakRssMb":149}

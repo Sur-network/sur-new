@@ -43,6 +43,7 @@
 - **گاز صریح:** Besu `gasLimit × gasPrice` را از موجودی طلب می‌کند؛ ValidatorApp برای `selfSuspend`/`requestExit`/`transferSeat` ۳٬۰۰۰٬۰۰۰ گاز صریح می‌گذارد؛ به کمینهٔ قیمت گاز شبکه وابسته است.
 - گاز واقعی: `confirmOperatorReady` ۶۴٬۴۳۲؛ `recordSuspension` ۳۸۳٬۶۳۱؛ `recordRecovery` ≈۲۴۸٬۸۴۰؛ `recordResume` ۲۴۵٬۳۵۵؛ `recordPreExitViolation` ۳۲۲٬۸۱۱؛ `recordRecoveryRemoval` ۲۷۳٬۷۰۹؛ `resolveMassFailureCheck` ۱۰۲٬۹۷۱.
 - Router با مالک دارای کد: ۷ از ۷؛ توزیع کامل با `ValidatorRewardDeferred`، و `claim()` فقط پس از باز شدن `receive()`.
+- **ایندکسر رویدادها (دور r4، `testing-evidence/besu-live-v26-r4-indexer/`):** (۱) Besu برای بازهٔ بیش از ۵۰۰۰ بلوک `-32005` می‌دهد و برای `toBlock` بالاتر از سر زنجیره `-32602 Invalid params`؛ ایندکسر هر دو را «رد بازه» می‌شمارد ولی خطای شبکه را نه. (۲) API بدون احراز هویت است و پیش‌فرض فقط روی `127.0.0.1` گوش می‌دهد؛ دسترسی عمومی فقط پشت پروکسی. (۳) پس از تغییر فهرست رویدادها یا پس از ریست زنجیره، ایندکسر عمداً می‌ایستد؛ برای خواندن دوباره از بلوک ۰ دستور `reindex` یا پایگاه تازه لازم است. (۴) در آزمون، خواندن ۵۳۰۰ بلوک با ۳ درخواست و حدود ۱۰۰ ms انجام شد؛ برای ارتفاع‌های خیلی بالا و حجم رویداد زیاد اندازه‌گیری نشده است.
 
 ## ۷. بازیابی اضطراری
 روش: گذار `contract`←`contract` به `StandbyValidators` با کلید `ts(H)` (`governance/sur-emergency-consensus-recovery.md` بخش ۳). گذار `blockheader` در ژنزیس Shanghai/Cancun ممنوع است. فهرست standby را پیش از بحران آماده و تازه نگه دارید (`isReady()`)؛ در ژنزیس فقط اولین ولیدیتور در آن است و بنیاد باید به ۳ یا ۴ عضو برساند.

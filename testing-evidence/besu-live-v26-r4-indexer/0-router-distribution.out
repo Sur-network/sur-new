@@ -1,0 +1,30 @@
+{
+  "cycleId": 1,
+  "ok": true,
+  "mode": "send-enabled",
+  "headNumber": 64,
+  "replayOk": true,
+  "collected": 64,
+  "incompleteBlocks": 0,
+  "settledBlock": 64,
+  "plan": {
+    "fromBlock": 1,
+    "toBlock": 63,
+    "verdict": "queued",
+    "wouldSend": true,
+    "simulation": "ok"
+  },
+  "executor": {
+    "sent": 3,
+    "confirmed": 3,
+    "reverted": 0,
+    "rejected": 0,
+    "waiting": 0,
+    "steps": 3
+  },
+  "cert": {
+    "action": "disabled"
+  },
+  "alerts": [],
+  "errors": []
+}

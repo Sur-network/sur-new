@@ -1,0 +1,26 @@
+node http://127.0.0.1:19911  chainId 262025  head 5333
+PASS  head is above 5200 blocks  — head 5333
+PASS  Besu itself refuses eth_getLogs 0..latest on this chain  — -32005 Requested range exceeds maximum RPC range limit
+PASS  Besu refuses a 6001-block span  — -32602 Invalid params
+PASS  Besu accepts a 5000-block span
+PASS  CLI sync from block 0 with the default chunk finished  — {"fromBlock":0,"toBlock":5334,"head":5334,"eventsAdded":6,"requests":3,"halvings":0,"ms":119,"peakRssMb":150}
+PASS  no halving needed with the 2000-block chunk  — requests 3, wall 1176 ms (process start included), peak RSS 150 MB
+PASS  events stored and cursor at the head  — 6 rows, cursor 5334
+PASS  with a 6000-block chunk Besu refuses the window and the indexer halves it  — halvings 1, requests 3
+PASS  the halved read stores exactly the same rows as the normal read  — 6 rows
+PASS  a sync killed with SIGKILL in the middle left a partial cursor  — attempt 1, cursor 814 of 5333
+PASS  the restart continues right after the stored cursor  — fromBlock 815
+PASS  after kill and restart the database equals the uninterrupted read up to the same block (no duplicates, no gaps)  — 6 rows up to block 5334
+PASS  /health ok  — indexedUpToBlock 5334, lag 12
+PASS  /rewards/:owner1 shows at least one real payment  — 1 payment(s), 1 item(s)
+PASS  sum of rewardShare equals totalRewardsPaid(owner1) from the contract  — 63000000000000000000
+PASS  sum of feeShare equals totalFeesPaid(owner1) from the contract  — 26010950000000000000
+PASS  sum of blocksMined equals totalBlocksRecorded(owner1) from the contract  — 63
+PASS  deferred minus withdrawn equals claimable(owner1) from the contract  — 0
+PASS  /rounds lists the real distribution  — 1
+PASS  /rounds/:id close event equals the contract's epochs() record  — totalBlocksMined 63
+PASS  /votes/:owner1 returns the real ActionVoted event  — ActionVoted@43
+PASS  ValidatorRewarded count equals a plain chunked eth_getLogs count  — 1
+PASS  invalid address is rejected with 400
+PASS  a later pass reads only the blocks produced since  — from 5335 to 5346, requests 1
+ALL STEPS PASSED
