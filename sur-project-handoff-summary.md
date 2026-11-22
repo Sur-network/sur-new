@@ -98,6 +98,7 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 | ابزار genesis.json | `sur-genesis-builder-tool-spec.md` |
 | سرویس Verifier (شامل پروتکل تازه‌ی بررسی نود `SUR_NODE_CHECK_V1`) | `sur-verifier-service-spec.md`, `sur-node-check-protocol-spec.md` |
 | اپ ولیدیتور | `sur-validator-app-claudecode-brief.md` |
+| ایندکسر رویدادها (سرویس ۱۸؛ تاریخچهٔ پاداش و آرا بدون خواندن زنجیره از بلوک ۰) | `sur-event-indexer-spec.md` |
 | داشبورد حکمرانی | `sur-governance-dashboard-claudecode-brief.md` |
 | صفحهٔ عمومی فروش و اتصال صرافی‌ها | `sur-suren-sale-portal-claudecode-brief.md` |
 | IdentityRegistry (سرویس + قرارداد) | `sur-identity-registry-spec.md` |
