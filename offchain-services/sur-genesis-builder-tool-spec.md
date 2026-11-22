@@ -6,11 +6,11 @@
 
 ## ۱. نقش کلی — این ابزار دقیقاً چه مشکلی را حل می‌کند
 
-یازده قرارداد ساختاری سور (`FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`, `KmsDirectives` (از ۲۰۲۶-۱۱-۲۱، فقط بایت‌کد، بدون storage؛ بخش ۱۱)؛ آدرس‌های پیشنهادی چهار قرارداد تازه: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xAaAa…AaAa`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
+دوازده قرارداد ساختاری سور (دوازدهم `StandbyValidators` است — فهرست آمادهٔ بازیابی اضطراری در `0xCcCC…cCcC`، فقط با اولین ولیدیتور seed می‌شود؛ ساخته و آزموده‌شده، `genesisbuilder-review-record.md` دور ۹ — و در ادامهٔ فهرست نیامده: `FoundationDAO`, `FoundationMembers`, `BlockRewardDistributor`, `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `IdentityRegistry`, `ValidatorSeatNFT`, `GenesisClaimsVault`, `ValidatorLottery`, `KmsDirectives` (از ۲۰۲۶-۱۱-۲۱، فقط بایت‌کد، بدون storage؛ بخش ۱۱)؛ آدرس‌های پیشنهادی چهار قرارداد تازه: `0x7777…7777`، `0x8888…8888`، `0x9999…9999`، `0xAaAa…AaAa`) هیچ‌کدام `constructor` ندارند — چون مستقیم در بخش `alloc` بلاک genesis تزریق می‌شوند (بایت‌کد + storage نهایی، نه یک تراکنش دیپلوی). دلیل این تصمیم: قراردادهای دارای `constructor` که به این روش genesis می‌شوند، در عمل نمی‌توانند روی اکسپلوررهایی مثل Blockscout وریفای شوند (گزارش باگ رسمی Blockscout، GitHub issue #631).
 
 این ابزار یک برنامه‌ی خط‌فرمان (CLI) اجراشونده **یک‌بار** است که:
 1. مقادیر واقعی (آدرس اوراکل‌ها، پارامترهای امنیتی، فهرست ولیدیتور اولیه و صندلی‌های مؤسسان، اعضا و هیأت‌مدیرهٔ بنیاد، فهرست طلبکاران) را از یک فایل پیکربندی می‌خواند.
-2. بایت‌کد نهایی و storage اولیه‌ی هر یازده قرارداد را (به دو روش متفاوت، بسته به پیچیدگی قرارداد — بخش ۴ را ببین) تولید می‌کند.
+2. بایت‌کد نهایی و storage اولیه‌ی هر دوازده قرارداد را (به دو روش متفاوت، بسته به پیچیدگی قرارداد — بخش ۴ را ببین) تولید می‌کند.
 3. این‌ها را، همراه با تنظیمات شبکه و موجودی کیف‌پول‌های اولیه، در یک فایل `genesis.json` نهایی برای Besu می‌نویسد.
 4. یک حالت «تأیید» دارد که genesis تولیدشده را مستقل دوباره چک می‌کند.
 
@@ -353,7 +353,7 @@
 | ۵-ب | 🔶 برداشتن سقف اندازهٔ کد برای deploy کمکی‌های `FoundationDAO` و `ValidatorsRegistry` (حدود ۳۶٬۸۷۹ بایت) روی Anvil (بخش ۴.۲). |
 | ۶ | ✅ در کد: شش مؤسس `Probation` می‌مانند تا `setOperator` و `recordActivation` (بدون انتظار دوره) بزنند؛ `everActivated` و `activationSeq` هنگام `recordActivation` و به ترتیب فعال‌شدن ثبت می‌شود (نه ترتیب genesis). 🔶 اثر آن بر شکستن تساوی هیأت (ترتیب فعال‌سازی) تأیید مالک می‌خواهد؛ آزمون Besu نشده. |
 
-🔶 **تصمیم باز (آزمون Besu v4، ۲۰۲۶-۱۰-۰۳):** فایل پیکربندی بخش ۳ و خروجی ابزار هیچ ورودی یا خروجی برای `transitions.qbft` ندارد. آزمون v4 نشان داد همهٔ نودها، از جمله نودهای تازه‌وارد، باید همان transition پاداش را در genesis خود داشته باشند (وگرنه در بلاک گذار رد می‌شوند؛ در حالت Shanghai/Cancun مقدار `block` یک timestamp است). اینکه ابزار genesis این را تولید کند یا رویهٔ جداگانه‌ای انجام دهد، **انتخاب نشده است** (`sur-reward-router-spec.md` بخش ۱۰.۳). دور ششم Besu (۲۰۲۶-۱۰-۰۷، release ۲۶.۹.۰، Shanghai/Cancun) نشان داد گذار `blockreward` با کلید timestamp پاداش را دقیقاً در نخستین بلاکِ `timestamp ≥ کلید` عوض می‌کند؛ ولی گذار `validatorselectionmode: blockheader` با کلید timestamp (فهرست صریح ۵ از ۷) زنجیره را متوقف کرد (`governance/sur-emergency-consensus-recovery.md` بخش ۳). پس هر تصمیم برای تولید `transitions.qbft` باید گذار پاداش را از گذار انتخاب ولیدیتور جدا کند و هیچ گذار `blockheader`ای را قبل از آزمودن یک پیکربندی کارکننده تولید نکند.
+🔶 **تصمیم باز (آزمون Besu v4، ۲۰۲۶-۱۰-۰۳):** فایل پیکربندی بخش ۳ و خروجی ابزار هیچ ورودی یا خروجی برای `transitions.qbft` ندارد. آزمون v4 نشان داد همهٔ نودها، از جمله نودهای تازه‌وارد، باید همان transition پاداش را در genesis خود داشته باشند (وگرنه در بلاک گذار رد می‌شوند؛ در حالت Shanghai/Cancun مقدار `block` یک timestamp است). اینکه ابزار genesis این را تولید کند یا رویهٔ جداگانه‌ای انجام دهد، **انتخاب نشده است** (`sur-reward-router-spec.md` بخش ۱۰.۳). دور ششم Besu (۲۰۲۶-۱۰-۰۷، release ۲۶.۹.۰، Shanghai/Cancun) نشان داد گذار `blockreward` با کلید timestamp پاداش را دقیقاً در نخستین بلاکِ `timestamp ≥ کلید` عوض می‌کند؛ ولی گذار `validatorselectionmode: blockheader` با کلید timestamp (فهرست صریح ۵ از ۷) زنجیره را متوقف کرد (`governance/sur-emergency-consensus-recovery.md` بخش ۳). پس هر تصمیم برای تولید `transitions.qbft` باید گذار پاداش را از گذار انتخاب ولیدیتور جدا کند و هرگز گذار `blockheader` تولید نکند (ممنوع در Shanghai/Cancun؛ اصلاح ۲۰۲۶-۱۱-۲۲: بازیابی فقط گذار `contract`←`contract` به StandbyValidators است، `testing-evidence/recovery-research-v26/`).
 
 ## ۱۱. به‌روزرسانی پیش از genesis (۲۰۲۶-۱۱-۲۱): `KmsDirectives`، RD-18، چینش storage از compiler، هشدارهای مالک
 
@@ -377,7 +377,7 @@
 
 ### ۱۱.۳ بررسی‌های تازهٔ ساخت
 - `BlockRewardDistributor`: هیچ توزیعِ باز در genesis نیست (`openDistributionInfo()` = «بسته، همه صفر»)، و `epochCount`، `totalClaimable`، `pendingMembershipFees`، `totalDistributedTo{Validators,Treasury,Foundation}`، `lastDistributionTime` همه صفرند.
-- آدرس مؤسسان و هر آدرس دانه‌ای (مؤسس، اپراتور، اوراکل‌ها، بازرس، اعضا، هیأت، طلبکاران) نباید برابر هیچ‌یک از **یازده** آدرس سیستمی از جمله `0xbBbB…bBbB` باشد؛ پیکربندی رد می‌شود (آزمون برای هفت مسیر).
+- آدرس مؤسسان و هر آدرس دانه‌ای (مؤسس، اپراتور، اوراکل‌ها، بازرس، اعضا، هیأت، طلبکاران) نباید برابر هیچ‌یک از **دوازده** آدرس سیستمی از جمله `0xbBbB…bBbB` باشد؛ پیکربندی رد می‌شود (آزمون برای هفت مسیر).
 
 ### ۱۱.۴ هشدار ثابت برای مالک: EOA بودن مؤسسان را ابزار نمی‌تواند ثابت کند
 قراردادها از RD-12/RD-12b دارندهٔ صندلی با کد را رد می‌کنند، ولی مؤسسان در genesis با seed نوشته می‌شوند و از آن بررسی نمی‌گذرند و ابزار هم آفلاین است. پس **هر ساخت و هر verify** هشدار «OWNER ACTION REQUIRED before genesis» را در `summary.warnings` و پایان خروجی می‌آورد و هفت آدرس مالک صندلی را فهرست می‌کند: **مالک باید پیش از genesis با دست تأیید کند که هر یک کیف‌پول ساده (EOA) و در اختیار همان شخص است.** این هشدار با هیچ پرچمی خاموش نمی‌شود.
