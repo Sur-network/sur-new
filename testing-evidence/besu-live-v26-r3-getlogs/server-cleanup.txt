@@ -1,0 +1,12 @@
+sur25l-n1	hyperledger/besu:26.9.0	Up About an hour (healthy)
+sur25l-n1-data
+sur25l-net
+32
+17:28:47Z removed container sur25l-n1
+17:28:47Z removed volume sur25l-n1-data
+17:28:48Z removed network sur25l-net
+17:28:48Z left: containers [] volumes [] networks []
+32
+0
+0
+0

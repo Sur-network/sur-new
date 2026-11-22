@@ -1,0 +1,5 @@
+code under test: C:/Users/Amir/AppData/Local/Temp/claude/34fa239c20b2cbb6/634ee04d-e2b2-4b6d-9d55-c19aa5ea1371/scratchpad/old | DEFAULT_LOG_CHUNK = 100000 | head 5286
+readOwnerSnapshot: OK status 2 operator 0xD3e49dA4cd698b1aFdcEdDaf26A7e694f430C950
+fetchRewardHistory: FAILED Request exceeds defined limit.
+fetchOperatorEvents: FAILED Request exceeds defined limit.
+RESULT FAIL

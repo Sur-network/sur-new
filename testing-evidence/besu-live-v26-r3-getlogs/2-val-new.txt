@@ -1,0 +1,5 @@
+code under test: D:/Amir/Business/SUR/NewSur/Deployments | DEFAULT_LOG_CHUNK = 2000 | head 5283
+readOwnerSnapshot: OK status 2 operator 0xD3e49dA4cd698b1aFdcEdDaf26A7e694f430C950
+fetchRewardHistory: OK {"rows":[["paid","1","158","184010950000000000000"]],"epochs":[["1","closed",1]],"totalPaid":"184010950000000000000"}
+fetchOperatorEvents: OK 0 events
+RESULT PASS

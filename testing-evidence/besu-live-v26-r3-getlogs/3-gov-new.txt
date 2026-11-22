@@ -1,0 +1,8 @@
+code under test: D:/Amir/Business/SUR/NewSur/Deployments | head 5304
+board(user=owner1)   OK | action 1: votes 1, votedByUser true
+recovery             OK
+treasury             OK
+registry             OK
+board(no user)       OK
+overview             OK
+RESULT PASS

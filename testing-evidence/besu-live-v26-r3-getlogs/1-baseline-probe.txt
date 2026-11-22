@@ -1,0 +1,9 @@
+head 5279
+0..4998 (4999 blocks)              OK 10 logs
+0..4999 (5000 blocks)              OK 10 logs
+1..5000 (5000 blocks)              OK 10 logs
+1..5001 (5001 blocks)              OK 10 logs
+0..latest                          REFUSED eth_getLogs: {"code":-32005,"message":"Requested range exceeds maximum RPC range limit"}
+3280..5279 (2000 blocks)           OK 0 logs
+280..5279 (5000 blocks)            OK 0 logs
+281..5279 (4999 blocks)            OK 0 logs
