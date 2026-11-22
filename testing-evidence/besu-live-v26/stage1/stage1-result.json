@@ -1,0 +1,79 @@
+{
+  "checks": [
+    {
+      "name": "genesis hash identical on all 9 nodes",
+      "pass": true,
+      "detail": "0x8189f2d4947598025a9dd8bd611111dbd3303e92c5936391d09cdc54a90fc374"
+    },
+    {
+      "name": "eleven contracts: code equals compiled runtime on all 9 nodes",
+      "pass": true,
+      "detail": "FoundationDAO=28365B BlockRewardDistributor=23046B ValidatorsRegistry=37346B ValidatorsBoard=21160B ValidatorsTreasury=5755B IdentityRegistry=5908B FoundationMembers=5970B ValidatorSeatNFT=5871B GenesisClaimsVault=2120B ValidatorLottery=8327B KmsDirectives=952B"
+    },
+    {
+      "name": "ValidatorsRegistry above EIP-170 (24,576) and above the contractSizeLimit (36,864) is present in alloc",
+      "pass": true,
+      "detail": "37346 bytes"
+    },
+    {
+      "name": "FoundationDAO balance 20,000,000 Suren",
+      "pass": true
+    },
+    {
+      "name": "GenesisClaimsVault balance = totalHeld()",
+      "pass": true,
+      "detail": "33308900000000000000000000"
+    },
+    {
+      "name": "Registry.getValidators() callable (eth_call into the 37 KB contract)",
+      "pass": true,
+      "detail": "[\"0x379Aa0d55F82c299be13F3daacdC6dBb080a3E6e\"]"
+    },
+    {
+      "name": "QBFT validator set == Registry.getValidators()",
+      "pass": true,
+      "detail": "qbft=0x379aa0d55f82c299be13f3daacdc6dbb080a3e6e registry=0x379Aa0d55F82c299be13F3daacdC6dBb080a3E6e head=32"
+    },
+    {
+      "name": "first validator's operator = op1",
+      "pass": true
+    },
+    {
+      "name": "Registry.getValidatorInfo(owner1) readable",
+      "pass": true,
+      "detail": "[ 2, \"0\", \"1795307606\", \"0\", \"0\", false ]"
+    },
+    {
+      "name": "isFounder(owner2) and not isValidator(op2)",
+      "pass": true
+    },
+    {
+      "name": "block gas limit 45,000,000 on chain",
+      "pass": true,
+      "detail": "0x2aea540"
+    },
+    {
+      "name": "trace_block available (TRACE api)",
+      "pass": true,
+      "detail": "traces 1"
+    }
+  ],
+  "verifier": "0xF29AfEBF9816D885EE6ba5Dc2cB2fFC988913d42",
+  "entryCollateral": "500000000000000000000000",
+  "membershipFeeBps": "400",
+  "probationPeriod": "604800",
+  "recoveryPeriod": "172800",
+  "MIN_ACTIVE_VALIDATORS": "1",
+  "header": {
+    "number": "0x21",
+    "parentBeaconBlockRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "blobGasUsed": "0x0",
+    "excessBlobGas": "0x0",
+    "gasLimit": "0x2aea540",
+    "baseFeePerGas": "0x0",
+    "miner": "0x379aa0d55f82c299be13f3daacdc6dbb080a3e6e",
+    "extraDataLen": 107
+  },
+  "eip4788Code": 2,
+  "eip4788": 2
+}

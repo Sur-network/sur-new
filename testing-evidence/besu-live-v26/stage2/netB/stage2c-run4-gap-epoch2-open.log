@@ -1,0 +1,15 @@
+PASS S2c.11 the gap counted from OPEN has long passed after the wait (23 min > 60 s): no 'too soon' revert now did not revert
+PASS S2c.12 opening while one is open is refused even after the gap The contract function "openDistribution" reverted with the following reason:
+BlockRewardDistributor: another distribution is open
+PASS S2c.13 STEADY STATE: real maximum payees in ONE payPage under 45,000,000 gas (eth_estimateGas binary search, all lifetime totals already non-zero) max 1400 payees, estimated gas 44528743 (capped by list of 1400); Hardhat reference ~34,000 gas/payee => ~1,300
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24
+  if (r.status !== "success" && !o.allowRevert) throw new Error(`${abiName}.${fn} reverted (${hash})`);
+                                                      ^
+
+Error: BlockRewardDistributor.payPage reverted (0xfd012e8dfd3ae12d99644204cedcae7edc5aab896d3aacfd566a8daf899d540f)
+    at tx (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async gasOfPage (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-resume3.mjs:17:44)
+    at async file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-resume3.mjs:49:16
+
+Node.js v22.18.0

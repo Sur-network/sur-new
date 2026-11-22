@@ -1,0 +1,55 @@
+1 2026-11-22T01:09:43.000Z key_created verifier system ok 
+2 2026-11-22T01:09:43.000Z key_created distributionOracle system ok 
+3 2026-11-22T01:09:43.000Z key_created identityOracle system ok 
+4 2026-11-22T01:09:43.000Z hmac_created personKey system ok 
+5 2026-11-22T01:09:43.000Z envelope_declared  admin:Amir ok 
+6 2026-11-22T01:09:43.000Z init  admin:Amir ok 
+7 2026-11-22T01:11:30.000Z key_activated verifier chain ok 
+8 2026-11-22T01:11:30.000Z key_activated distributionOracle chain ok 
+9 2026-11-22T01:11:30.000Z key_activated identityOracle chain ok 
+10 2026-11-22T01:11:31.000Z service_started  system ok 
+11 2026-11-22T01:11:31.000Z unlock_attempt  127.0.0.1 denied wrong-passphrase
+12 2026-11-22T01:11:32.000Z unlock_attempt  127.0.0.1 ok 
+13 2026-11-22T01:11:32.000Z server_list_changed  admin:Amir ok server verifier-signer added: slots verifier, ips 127.0.0.1
+14 2026-11-22T01:11:32.000Z server_list_changed  admin:Amir ok server router-signer added: slots distributionOracle, ips 127.0.0.1
+15 2026-11-22T01:11:32.000Z sign_transaction verifier verifier-signer ok 
+16 2026-11-22T01:11:32.000Z sign_refused  ip:127.0.0.1 denied NOT_AUTHORIZED: this client is not an authorised server
+17 2026-11-22T01:11:32.000Z sign_refused verifier router-signer denied NOT_AUTHORIZED: this server may not use that slot from this address
+18 2026-11-22T01:11:36.000Z sign_transaction verifier verifier-signer ok 
+19 2026-11-22T01:12:02.000Z sign_transaction verifier verifier-signer ok 
+20 2026-11-22T01:12:07.000Z sign_transaction verifier verifier-signer ok 
+21 2026-11-22T01:12:11.000Z sign_transaction verifier verifier-signer ok 
+22 2026-11-22T01:12:21.000Z sign_transaction verifier verifier-signer ok 
+23 2026-11-22T01:12:25.000Z sign_transaction verifier verifier-signer ok 
+24 2026-11-22T01:12:27.000Z login  0xb0b3fff6193b77c818f3b7733e1966d60cf8239e ok 
+25 2026-11-22T01:12:27.000Z login  0x1fff3cc3f1df0c9c48bccdc188e2d9d9da23faf8 ok 
+26 2026-11-22T01:12:28.000Z login  0x71b4273909c23d2b71026f619293cdee1d045311 denied not a board member
+27 2026-11-22T01:12:28.000Z login  0x6dd6c111587b2124bbd315e451216dab566c609e denied not a board member
+28 2026-11-22T01:12:28.000Z login  0x1fff3cc3f1df0c9c48bccdc188e2d9d9da23faf8 ok 
+29 2026-11-22T01:12:28.000Z sign_transaction verifier verifier-signer ok 
+30 2026-11-22T01:12:33.000Z sign_transaction verifier verifier-signer ok 
+31 2026-11-22T01:12:35.000Z sign_transaction verifier verifier-signer ok 
+32 2026-11-22T01:12:35.000Z slot_frozen verifier chain ok 
+33 2026-11-22T01:12:35.000Z sign_refused verifier verifier-signer denied FROZEN: the slot is frozen by a board decision
+34 2026-11-22T01:12:41.000Z sign_refused verifier verifier-signer denied FROZEN: the slot is frozen by a board decision
+35 2026-11-22T01:12:41.000Z slot_unfrozen verifier chain ok 
+36 2026-11-22T01:12:42.000Z sign_transaction verifier verifier-signer ok 
+37 2026-11-22T01:12:47.000Z slot_frozen identityOracle chain ok 
+38 2026-11-22T01:12:53.000Z slot_unfrozen identityOracle chain ok 
+39 2026-11-22T01:12:54.000Z key_created verifier system ok 
+40 2026-11-22T01:12:54.000Z key_new verifier 0xb0b3fff6193b77c818f3b7733e1966d60cf8239e ok 
+41 2026-11-22T01:13:01.000Z key_retired verifier system ok superseded by the key the chain registered
+42 2026-11-22T01:13:01.000Z key_activated verifier chain ok 
+43 2026-11-22T01:13:01.000Z key_created distributionOracle system ok 
+44 2026-11-22T01:13:01.000Z key_new distributionOracle 0xb0b3fff6193b77c818f3b7733e1966d60cf8239e ok 
+45 2026-11-22T01:13:09.000Z key_retired distributionOracle system ok superseded by the key the chain registered
+46 2026-11-22T01:13:09.000Z key_activated distributionOracle chain ok 
+47 2026-11-22T01:13:09.000Z login  0x1fff3cc3f1df0c9c48bccdc188e2d9d9da23faf8 ok 
+48 2026-11-22T01:13:10.000Z key_created identityOracle system ok 
+49 2026-11-22T01:13:10.000Z key_new identityOracle 0x1fff3cc3f1df0c9c48bccdc188e2d9d9da23faf8 ok 
+50 2026-11-22T01:13:17.000Z key_retired identityOracle system ok superseded by the key the chain registered
+51 2026-11-22T01:13:17.000Z key_activated identityOracle chain ok 
+52 2026-11-22T01:13:18.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+53 2026-11-22T01:13:19.000Z rule_changed  admin:Amir ok rule enabled: verifier 0x3333333333333333333333333333333333333333 confirmOperatorReady (OPCHANGE besu-live)
+54 2026-11-22T01:13:19.000Z sign_transaction verifier verifier-signer ok 
+55 2026-11-22T01:13:20.000Z sign_refused verifier verifier-signer denied NOT_ACTIVE: the key is retired, not active

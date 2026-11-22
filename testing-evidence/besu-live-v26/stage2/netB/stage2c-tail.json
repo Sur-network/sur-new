@@ -1,0 +1,20 @@
+{
+  "name": "stage2c3-tail",
+  "startedAt": "2026-11-22T02:12:09.448Z",
+  "rows": [
+    {
+      "id": "S2c.18",
+      "name": "the block 4303 holding the 1414-payee page (gasUsed 44581648 of gasLimit 45000000) has the same hash on all four nodes b1..b4",
+      "result": "PASS",
+      "detail": "0x187b41a32c2060242a5cb5ccaeb3ab85ba860f81787142fd076a78c7cbaccab1"
+    },
+    {
+      "id": "S2c.19",
+      "name": "epoch 3 closes after the max page (paid blocks = declared total)",
+      "result": "PASS",
+      "detail": "close gas 215884"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T02:12:10.721Z"
+}

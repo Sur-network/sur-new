@@ -1,0 +1,11 @@
+PASS S2d.0 start state: no distribution open, ABORT_DELAY 120 s (test-only), lastSettledBlock known lastSettled 4294
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24
+  if (r.status !== "success" && !o.allowRevert) throw new Error(`${abiName}.${fn} reverted (${hash})`);
+                                                      ^
+
+Error: BlockRewardDistributor.openDistribution reverted (0x0fb05cde29a87be0c02a49b06313385fa475c7eef8ecabc114d20ef372231c89)
+    at tx (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2d.mjs:24:15
+
+Node.js v22.18.0

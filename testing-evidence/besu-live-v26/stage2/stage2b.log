@@ -1,0 +1,35 @@
+PASS S2.8a INITIAL_REWARD_PER_BLOCK equals the genesis blockreward (2 Suren) 2000000000000000000
+PASS S2.8b balance identity per block on the archive-format (FOREST) node a1: delta(Distributor balance) = 2 Suren reward + fees of the block's txs (+20,000 in the entry block); blocks 1..379 ok 379/379 bad [] 
+PASS S2.8c same identity on the normal (BONSAI, non-archive) node n1 for the last 101 blocks ok 101 bad [] 
+OBS  S2.8d OBSERVATION: historical state of old blocks (1..5) on the BONSAI node n1 (archive vs non-archive behaviour) ok 5/5 err=none bad=[]
+PASS S2.8e fees really flow to the Distributor (miningbeneficiary) and the miner field is the proposer's operator key txs 129 in 54 blocks, fees 1070137100000000000000 wei
+PASS S2.8f every block's proposer maps to an owner through Registry.ownerOfOperator (old and new key of owner6 both map to owner6) payees 7, blocks per payee 43,46,37,102,48,50,53
+PASS S2.9a maxRewardsForRange(from,to) = blocks x 2 Suren 
+PASS S2.9b openDistribution by a non-oracle key is refused The contract function "openDistribution" reverted with the following reason:
+BlockRewardDistributor: caller is not the distribution oracle
+PASS S2.9c openDistribution mined on Besu; DistributionOpened carries fee pool = (fees - 30% burn) + pending membership fees gas 383675; feePool 20749095970000000000000 pendingMembership 20000000000000000000000
+PASS S2.9d state after open: isOpen, budgetLeft = rewards + fees (+membership) budgetLeft 21828137100000000000000
+PASS S2.9e a second open while one is open is refused The contract function "openDistribution" reverted with the following reason:
+BlockRewardDistributor: another distribution is open
+PASS S2.9f payPage with a descending list is refused (strictly ascending) The contract function "payPage" reverted with the following reason:
+BlockRewardDistributor: validators must be strictly ascending
+PASS S2.9g payPage with a zero-block entry is refused The contract function "payPage" reverted with the following reason:
+BlockRewardDistributor: zero blocks - leave the address out
+PASS S2.9h payPage by a non-oracle is refused The contract function "payPage" reverted with the following reason:
+BlockRewardDistributor: caller is not the distribution oracle
+PASS S2.9i payPage for an address that was never a validator is refused The contract function "payPage" reverted with the following reason:
+BlockRewardDistributor: address was never a legitimate validator
+PASS S2.9j closeDistribution before all blocks are paged is refused The contract function "closeDistribution" reverted with the following reason:
+BlockRewardDistributor: paged blocks differ from the declared total
+PASS S2.9k abortDistribution before ABORT_DELAY (3 days, real time) is refused The contract function "abortDistribution" reverted with the following reason:
+BlockRewardDistributor: too early to abort
+PASS S2.9l after the pages: paidBlocks = totalBlocks, lastPayee = highest address paid 379/379
+PASS S2.9m an address already paid cannot be paid again / exceeds declared total The contract function "payPage" reverted with the following reason:
+BlockRewardDistributor: validators must be strictly ascending
+PASS S2.9n closeDistribution: RewardsDistributed emitted only now; validatorCount 7 close gas 342236; totalFees 21070137100000000000000 treasury 265300000000000000005
+PASS S2.9o each payee's balance grew by exactly blocks/total x (direct reward share + fee pool): paid by the real contract on Besu 0x10e3f7:43=ok 0x3481a6:46=ok 0x6dd6c1:37=ok 0xb0b3ff:102=ok 0xcc7185:48=ok 0xd0cb65:50=ok 0xf8a13c:53=ok validatorDirectShareBps=5000
+PASS S2.9p conservation: Distributor balance fell by rewards+fees(+pending membership) reserved (treasury, foundation, burn, validators) fell by 21646231400000000000000; reserved 21828137100000000000000
+PASS S2.9q a second distribution straight after the first is refused: 'too soon since last distribution' (23 h gap counted from open, real chain time) The contract function "openDistribution" reverted with the following reason:
+BlockRewardDistributor: too soon since last distribution
+OBS  S2.10 OBSERVATION: gas per page (first epoch, EOA payees) on real Besu EVM pages [{"payees":1,"gas":243111},{"payees":2,"gas":243345},{"payees":2,"gas":243345},{"payees":2,"gas":243345}]; page(2)-page(1) = 234 gas per extra payee; open 383675; close 342236
+== 22 PASS, 0 FAIL, 2 OBS ==> runs/stage2b.json

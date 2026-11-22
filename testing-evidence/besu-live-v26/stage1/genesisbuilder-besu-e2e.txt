@@ -1,0 +1,17 @@
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > without any setting the default applies: 24,576 deploys, 24,577 and 30,000 bytes do not 19269ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > config.contractSizeLimit = 36864: runtime 24,577 .. 36,864 deploys under the DEFAULT initcode limit, 36,865 does not 19622ms
+ ✓ test/e2e/verify.besu.e2e.test.ts > verify on a real Besu (hyperledger/besu:26.9.0) > a cancun genesis passes every check and produces blocks 54393ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > the initcode limit stays 49,152 and `initCodeSizeLimit` in genesis config is NOT an option (ignored): a 36,864-byte runtime fits with up to 12,276 bytes of constructor data 24949ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > london profile has NO initcode limit: with contractSizeLimit 36864 a 36,864-byte runtime deploys with 49,153 and 59,876 bytes of initcode, 36,865 still fails 15419ms
+ ✓ test/e2e/verify.besu.e2e.test.ts > verify on a real Besu (hyperledger/besu:26.9.0) > a london genesis passes every check and produces blocks 53334ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > pre-Shanghai (london profile, no initcode limit at all): contractSizeLimit = 36864 behaves the same for the code size 14716ms
+ ✓ test/e2e/verify.besu.e2e.test.ts > verify on a real Besu (hyperledger/besu:26.9.0) > fails WITHOUT starting any node (the real key never runs) when the genesis does not match the config, naming the slot 39742ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > UNMODIFIED tool output with contractSizeLimitBytes 36864 (the example config): a 36,864-byte runtime deploys on a real node, 36,865 fails 37180ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > UNMODIFIED tool output built WITHOUT the field: no contractSizeLimit in genesis, the default applies (24,577 fails) 38273ms
+ ✓ test/e2e/verify.besu.e2e.test.ts > verify on a real Besu (hyperledger/besu:26.9.0) > containment: the node produces blocks on the --internal network, outbound connections from the container FAIL, --keep-container leaves it STOPPED 40114ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > the initcode limit does NOT cap the runtime size: a 7-byte constructor returning zeroed memory deploys 49,153 .. 65,536 bytes under contractSizeLimit 65536 (65,537 fails) 30992ms
+ ✓ test/e2e/contractSize.besu.e2e.test.ts > Besu hyperledger/besu:26.9.0: contract size options in genesis config > leaves no Docker resources behind 477ms
+ ✓ test/e2e/verify.besu.e2e.test.ts > verify on a real Besu (hyperledger/besu:26.9.0) > overall timeout: verify aborts with a clear message and the container, network and volume are removed 174536ms
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Duration  363.38s (transform 253ms, setup 0ms, collect 1.76s, tests 583.37s, environment 0ms, prepare 269ms)

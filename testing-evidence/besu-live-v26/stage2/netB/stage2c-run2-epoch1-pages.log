@@ -1,0 +1,25 @@
+PASS S2c.4b epoch 1 pages already paid (reconstructed from DistributionPage events + receipts) [{"payees":5,"gas":590627,"gasPerPayee":118125},{"payees":20,"gas":1881690,"gasPerPayee":94085},{"payees":50,"gas":4600595,"gasPerPayee":92012},{"payees":100,"gas":9132111,"gasPerPayee":91321},{"payees":200,"gas":18196601,"gasPerPayee":90983},{"payees":400,"gas":36326214,"gasPerPayee":90816}]
+PASS S2c.5 FIRST EPOCH measured gas per page (EOA payees, real Besu) and fitted marginal gas per payee pages [{"payees":5,"gas":590627,"gasPerPayee":118125},{"payees":20,"gas":1881690,"gasPerPayee":94085},{"payees":50,"gas":4600595,"gasPerPayee":92012},{"payees":100,"gas":9132111,"gasPerPayee":91321},{"payees":200,"gas":18196601,"gasPerPayee":90983},{"payees":400,"gas":36326214,"gasPerPayee":90816},{
+PASS S2c.6 DEFERRED payees (owner with code -> credited to claimable, never called) in a page of 40 in the first epoch {"payees":40,"gas":3342153,"gasPerPayee":83554}
+PASS S2c.7 closeDistribution of 1440 payees (1400 EOA + 40 deferred): RewardsDistributed, validatorCount 1440, after 12+ pages close gas 270604
+PASS S2c.8 deferred payee: claimable(claimer) > 0 and the claimer was NOT called (no payment to code); totalClaimable = 40 shares claimable 1000000000000000000, total 40000000000000000000
+PASS S2c.9 claim() by a stranger with nothing owed is refused The contract function "claim" reverted with the following reason:
+BlockRewardDistributor: nothing to claim
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/node_modules/viem/_esm/actions/public/waitForTransactionReceipt.js:124
+            reject(new WaitForTransactionReceiptTimeoutError({ hash }));
+                   ^
+
+WaitForTransactionReceiptTimeoutError: Timed out while waiting for transaction with hash "0x7fe5f0edc2aa2226ddc9d6400aa06d3ec9d018d0bc1fbd603eb214c6ae73de65" to be confirmed.
+
+Version: viem@2.58.4
+    at Timeout.<anonymous> (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/node_modules/viem/_esm/actions/public/waitForTransactionReceipt.js:124:20)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7) {
+  details: undefined,
+  docsPath: undefined,
+  metaMessages: undefined,
+  shortMessage: 'Timed out while waiting for transaction with hash "0x7fe5f0edc2aa2226ddc9d6400aa06d3ec9d018d0bc1fbd603eb214c6ae73de65" to be confirmed.',
+  version: '2.58.4'
+}
+
+Node.js v22.18.0

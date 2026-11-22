@@ -1,0 +1,179 @@
+{
+  "name": "stage2b-accrual-and-paginated-distribution",
+  "startedAt": "2026-11-22T00:55:20.124Z",
+  "rows": [
+    {
+      "id": "S2.8a",
+      "name": "INITIAL_REWARD_PER_BLOCK equals the genesis blockreward (2 Suren)",
+      "result": "PASS",
+      "detail": "2000000000000000000"
+    },
+    {
+      "id": "S2.8b",
+      "name": "balance identity per block on the archive-format (FOREST) node a1: delta(Distributor balance) = 2 Suren reward + fees of the block's txs (+20,000 in the entry block); blocks 1..379",
+      "result": "PASS",
+      "detail": "ok 379/379 bad [] "
+    },
+    {
+      "id": "S2.8c",
+      "name": "same identity on the normal (BONSAI, non-archive) node n1 for the last 101 blocks",
+      "result": "PASS",
+      "detail": "ok 101 bad [] "
+    },
+    {
+      "id": "S2.8d",
+      "name": "OBSERVATION: historical state of old blocks (1..5) on the BONSAI node n1 (archive vs non-archive behaviour)",
+      "result": "OBSERVATION",
+      "detail": "ok 5/5 err=none bad=[]"
+    },
+    {
+      "id": "S2.8e",
+      "name": "fees really flow to the Distributor (miningbeneficiary) and the miner field is the proposer's operator key",
+      "result": "PASS",
+      "detail": "txs 129 in 54 blocks, fees 1070137100000000000000 wei"
+    },
+    {
+      "id": "S2.8f",
+      "name": "every block's proposer maps to an owner through Registry.ownerOfOperator (old and new key of owner6 both map to owner6)",
+      "result": "PASS",
+      "detail": "payees 7, blocks per payee 43,46,37,102,48,50,53"
+    },
+    {
+      "id": "S2.9a",
+      "name": "maxRewardsForRange(from,to) = blocks x 2 Suren",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.9b",
+      "name": "openDistribution by a non-oracle key is refused",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: caller is not the distribution oracle"
+    },
+    {
+      "id": "S2.9c",
+      "name": "openDistribution mined on Besu; DistributionOpened carries fee pool = (fees - 30% burn) + pending membership fees",
+      "result": "PASS",
+      "detail": "gas 383675; feePool 20749095970000000000000 pendingMembership 20000000000000000000000"
+    },
+    {
+      "id": "S2.9d",
+      "name": "state after open: isOpen, budgetLeft = rewards + fees (+membership)",
+      "result": "PASS",
+      "detail": "budgetLeft 21828137100000000000000"
+    },
+    {
+      "id": "S2.9e",
+      "name": "a second open while one is open is refused",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: another distribution is open"
+    },
+    {
+      "id": "S2.9f",
+      "name": "payPage with a descending list is refused (strictly ascending)",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: validators must be strictly ascending"
+    },
+    {
+      "id": "S2.9g",
+      "name": "payPage with a zero-block entry is refused",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: zero blocks - leave the address out"
+    },
+    {
+      "id": "S2.9h",
+      "name": "payPage by a non-oracle is refused",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: caller is not the distribution oracle"
+    },
+    {
+      "id": "S2.9i",
+      "name": "payPage for an address that was never a validator is refused",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: address was never a legitimate validator"
+    },
+    {
+      "id": "S2.9j",
+      "name": "closeDistribution before all blocks are paged is refused",
+      "result": "PASS",
+      "detail": "The contract function \"closeDistribution\" reverted with the following reason:\nBlockRewardDistributor: paged blocks differ from the declared total"
+    },
+    {
+      "id": "S2.9k",
+      "name": "abortDistribution before ABORT_DELAY (3 days, real time) is refused",
+      "result": "PASS",
+      "detail": "The contract function \"abortDistribution\" reverted with the following reason:\nBlockRewardDistributor: too early to abort"
+    },
+    {
+      "id": "S2.9l",
+      "name": "after the pages: paidBlocks = totalBlocks, lastPayee = highest address",
+      "result": "PASS",
+      "detail": "paid 379/379"
+    },
+    {
+      "id": "S2.9m",
+      "name": "an address already paid cannot be paid again / exceeds declared total",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: validators must be strictly ascending"
+    },
+    {
+      "id": "S2.9n",
+      "name": "closeDistribution: RewardsDistributed emitted only now; validatorCount 7",
+      "result": "PASS",
+      "detail": "close gas 342236; totalFees 21070137100000000000000 treasury 265300000000000000005"
+    },
+    {
+      "id": "S2.9o",
+      "name": "each payee's balance grew by exactly blocks/total x (direct reward share + fee pool): paid by the real contract on Besu",
+      "result": "PASS",
+      "detail": "0x10e3f7:43=ok 0x3481a6:46=ok 0x6dd6c1:37=ok 0xb0b3ff:102=ok 0xcc7185:48=ok 0xd0cb65:50=ok 0xf8a13c:53=ok validatorDirectShareBps=5000"
+    },
+    {
+      "id": "S2.9p",
+      "name": "conservation: Distributor balance fell by rewards+fees(+pending membership) reserved (treasury, foundation, burn, validators)",
+      "result": "PASS",
+      "detail": "fell by 21646231400000000000000; reserved 21828137100000000000000"
+    },
+    {
+      "id": "S2.9q",
+      "name": "a second distribution straight after the first is refused: 'too soon since last distribution' (23 h gap counted from open, real chain time)",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: too soon since last distribution"
+    },
+    {
+      "id": "S2.10",
+      "name": "OBSERVATION: gas per page (first epoch, EOA payees) on real Besu EVM",
+      "result": "OBSERVATION",
+      "detail": "pages (first epoch, EOA payees, in the order paid): 1 payee=243111 gas (the first page also pays the one-time zero->nonzero writes of the open distribution record), then 2 payees=243345 gas three times. open=383675, close=342236. NOTE: the page(2)-page(1) difference (234) is NOT a marginal cost (the first page has one-time writes); the marginal gas per payee is measured on the test-only net B with many payees (stage 2c)."
+    }
+  ],
+  "notes": {
+    "pageGas": [
+      {
+        "payees": 1,
+        "gas": 243111
+      },
+      {
+        "payees": 2,
+        "gas": 243345
+      },
+      {
+        "payees": 2,
+        "gas": 243345
+      },
+      {
+        "payees": 2,
+        "gas": 243345
+      }
+    ],
+    "openGas": 383675,
+    "closeGas": 342236,
+    "range": {
+      "from": 1,
+      "to": 379,
+      "totalBlocks": 379
+    },
+    "lastOpenTs": 1795308931
+  },
+  "finishedAt": "2026-11-22T00:55:57.952Z"
+}

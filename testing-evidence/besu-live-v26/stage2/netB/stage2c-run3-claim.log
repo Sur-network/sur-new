@@ -1,0 +1,10 @@
+PASS S2c.10 the claimer contract claims: balance = claimable, claimable cleared, totalClaimable reduced; a reverting-code payee never blocked the distribution gas 50756
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-resume2.mjs:40
+r = await expectRevert("distributionOracle", "BlockRewardDistributor", "openDistribution", [{ fromBlock: BigInt(N1 + 1), toBlock: BigInt(N1 + N2) }, BigInt(N2), BigInt(N2) * rate, 0n], "too soon since last distribution");
+  ^
+
+ReferenceError: r is not defined
+    at file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-resume2.mjs:40:3
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v22.18.0

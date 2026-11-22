@@ -1,0 +1,5 @@
+BlockRewardDistributor.sol (TEST-ONLY copy, Plan\contracts and GenesisBuilder\contracts are NOT changed)
+- uint256 public constant MIN_DISTRIBUTION_INTERVAL = 23 hours;
++ uint256 public constant MIN_DISTRIBUTION_INTERVAL = 60 seconds;
+- uint256 public constant ABORT_DELAY = 3 days;
++ uint256 public constant ABORT_DELAY = 120 seconds;

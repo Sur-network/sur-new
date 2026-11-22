@@ -1,0 +1,17 @@
+PASS S2c.13b epoch 2 is open with nothing paid (the earlier attempt to mine a 1400-payee page ran out of gas because the tx gas limit was set to 44,000,000 < the 44,528,743 it needs) paid 0 of 1440
+PASS S2c.13c STEADY STATE gas curve by eth_estimateGas on Besu (page of n EOA payees, all lifetime totals non-zero) [{"payees":10,"gas":476600},{"payees":50,"gas":1743784},{"payees":150,"gas":4911770},{"payees":400,"gas":12833677},{"payees":800,"gas":25511226},{"payees":1200,"gas":38189417},{"payees":1400,"gas":44528743}]; fit 31692 gas/payee + 158376 fixed
+PASS S2c.13d STEADY STATE real maximum payees in one payPage at 45,000,000 (list = 1400 EOA + 40 contract payees, ascending) max 1414 payees (estimate 44973932 gas = 31806 per payee); 1440 payees do NOT fit
+PASS S2c.15 STEADY STATE (epoch 2) REAL mined pages of 10, 50, 150, 400, 700 and the rest, EOA payees; fitted marginal gas per payee [{"payees":10,"gas":451789,"gasPerPayee":45179},{"payees":50,"gas":1640595,"gasPerPayee":32812},{"payees":150,"gas":4783637,"gasPerPayee":31891},{"payees":400,"gas":12645674,"gasPerPayee":31614},{"payees":700,"gas":22079456,"gasPerPayee":31542},{"payees":90,"gas":2898887,"gasPerPayee":32210}]; fit 3
+PASS S2c.16 epoch 2 closes with 1440 payees close gas 215884
+PASS S2c.17 ONE page of 1414 payees (the measured maximum) is mined with status success on Besu: gas used 44581648 of the 45,000,000 limit 31529 gas per payee; block gasUsed share 99.1 %
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-epoch2.mjs:65
+check("S2c.18", "the block that holds the max page is accepted by all validators (hash identical on b1..b4) and its gas limit is 45,000,000", BigInt(blk.gasLimit) === 45_000_000n && (await Promise.all(["b1", "b2", "b3", "b4"].map(async (n) => (await rpc("eth_getBlockByNumber", ["0x" + rc3.blockNumber.toString(16), false], n)).hash))).every((h) => h === blk.hash), `block ${rc3.blockNumber}, gasUsed ${BigInt(blk.gasUsed)}`);
+                                                                                                                                                                                                                                                                                                                                        ^
+
+TypeError: Cannot read properties of null (reading 'hash')
+    at file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-epoch2.mjs:65:329
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 3)
+    at async file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c-epoch2.mjs:65:184
+
+Node.js v22.18.0

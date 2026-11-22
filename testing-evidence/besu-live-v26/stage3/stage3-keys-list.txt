@@ -1,0 +1,6 @@
+distributionOracle   retired  0x74621a3e840773e48ca5ab425f745d19e1d63931  created 2026-11-22T01:09:43.000Z
+distributionOracle   active   0x583d25162c8e004434f1594dfc67673863eba1ff  created 2026-11-22T01:13:01.000Z
+identityOracle       retired  0x9d4a0febccf5e3d4cbf0d39326fdf692f6706e5f  created 2026-11-22T01:09:43.000Z
+identityOracle       active   0x832d6c152cafec2c028908371c2043921bd2699b  created 2026-11-22T01:13:10.000Z
+verifier             retired  0xb39f3c3b666377e065448bd9d4ea897f3e156d93  created 2026-11-22T01:09:43.000Z
+verifier             active   0x66a447f0325f5dbe729940b2b2132f3149014398  created 2026-11-22T01:12:54.000Z

@@ -1,0 +1,17 @@
+PASS S2c.0 LABEL: this net uses the TEST-ONLY Distributor (MIN_DISTRIBUTION_INTERVAL 60 s, ABORT_DELAY 120 s); all else final ABORT_DELAY=120, MIN_DISTRIBUTION_INTERVAL=60
+PASS S2c.1 net B: 3 validators (b1..b3) through the real activation flow; 1-second blocks 
+PASS S2c.2 test-only overlay works: everActivated(synthetic payee) = true for 1400 EOA payees + 40 payees with code (storage slot 19 verified) 
+PASS S2c.2b payees with code are real contracts on Besu (claimer + 39 reverting-code addresses) 
+PASS S2c.3 payee list is strictly ascending (EOAs 0xabc0..., contract payees 0xabd0...) 
+PASS S2c.4 FIRST EPOCH (worst case): real maximum payees in ONE payPage under the 45,000,000 block gas limit, found by eth_estimateGas binary search on Besu max 490 payees, estimated gas 44924298
+file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24
+  if (r.status !== "success" && !o.allowRevert) throw new Error(`${abiName}.${fn} reverted (${hash})`);
+                                                      ^
+
+Error: BlockRewardDistributor.payPage reverted (0xac9a3f3345bebdc10e9461b43cbf4112d9318edd2cc0133f88e27ed12b110860)
+    at tx (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/lib/t.mjs:24:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async gasOfPage (file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c.mjs:17:44)
+    at async file:///D:/Amir/Business/SUR/NewSur/Deployments/BesuLive/stage2c.mjs:57:13
+
+Node.js v22.18.0

@@ -1,0 +1,49 @@
+PASS S2.1 founders 2..7 setOperator + Verifier.recordActivation: QBFT validator set grows from 1 to 7 and equals Registry.getValidators() blocks 101..104
+PASS S2.1b every one of the 7 operator keys proposed blocks within 40 blocks after the set reached 7 distinct proposers 7
+PASS S2.1c ValidatorsBoard: 5 members = owner1..5, all have board authority after activation 0xb0B3fFf6193b77C818f3b7733E1966D60Cf8239e,0xF8A13C5a99E617cB22Eb184d14266DE4B82D3577,0xD0cB65529CD8d0907C53E6Ae4D444A2c6c4C1Dd2,0xcC7185D2082e647E2D3643596D626Ab2f8f028d0,0x3481A641697C8706D924EDE2fa2eD7fD40b25e9c
+PASS S2.2a IdentityRegistry on Besu: register + five oracle flags -> isFullyVerified(owner8) 
+PASS S2.2b entry price = 500,000 + 4% fee = 520,000 Suren 520000000000000000000000
+PASS S2.2c requestMembership with an operator key of another owner is refused The contract function "requestMembership" reverted with the following reason:
+ValidatorsRegistry: operator belongs to another owner
+PASS S2.2d requestMembership with a wrong amount is refused The contract function "requestMembership" reverted with the following reason:
+ValidatorsRegistry: incorrect payment amount
+PASS S2.2e paid entry: status Probation, lockedStake 500,000, isPaidEntrant, Registry holds the collateral status=1 gasUsed=369471
+PASS S2.2f membership fee 20,000 Suren arrives in the Distributor (plus block rewards of the blocks mined meanwhile) delta 20046947100000000000000
+PASS S2.2h recordActivation of the entrant before the 7-day probation is refused (real chain time) The contract function "recordActivation" reverted with the following reason:
+ValidatorsRegistry: probation period not elapsed
+PASS S2.2i a second paid entry by an unverified identity is refused The contract function "requestMembership" reverted with the following reason:
+ValidatorsRegistry: identity not fully verified
+PASS S2.3 a contract owner is refused (EOA rule, RD-12): revert text contains 'plain wallet (EOA)' The contract function "enter" reverted with the following reason:
+ValidatorsRegistry: a seat owner must be a plain wallet (EOA)
+PASS S2.4a proposeOperator: pendingOperator set, consensus list unchanged 
+PASS S2.4b VD-13: confirmOperatorReady(owner, checkedKey) after the owner swapped the proposal is refused The contract function "confirmOperatorReady" reverted with the following reason:
+ValidatorsRegistry: operator differs from the open proposal
+PASS S2.4c VD-13: zero operator also refused The contract function "confirmOperatorReady" reverted with the following reason:
+ValidatorsRegistry: operator differs from the open proposal
+PASS S2.4d confirmOperatorReady by the owner is refused (verifier only) The contract function "confirmOperatorReady" reverted with the following reason:
+ValidatorsRegistry: caller is not the verifier
+PASS S2.4e confirmOperatorReady with the right key switches the list in the Verifier's transaction (op6 out, opA1 in) gas 64432
+PASS S2.4f node a1 (new key, FOREST-format node) takes over: it proposes blocks, op6 does not; 7 proposers proposers 7
+PASS S2.5a recordRecoveryRemoval: owner7 Removed, out of the QBFT list (6 validators), permanentlyExited 
+PASS S2.5b 3 board votes to cancel: state Cancelled(5), validator SelfSuspended(6) NOT Active, ban lifted, still out of the list (VD-4) state=5
+PASS S2.5c the owner cannot resume itself The contract function "recordResume" reverted with the following reason:
+ValidatorsRegistry: caller is not the verifier
+PASS S2.5d Verifier.recordResume brings owner7 back to Active; QBFT list back to 7 
+PASS S2.5e a second recordResume is refused The contract function "recordResume" reverted with the following reason:
+ValidatorsRegistry: not self-suspended
+PASS S2.6a KmsDirectives starts with nothing frozen 
+PASS S2.6b the board cannot freeze the identityOracle slot The contract function "proposeKmsFreeze" reverted with the following reason:
+ValidatorsBoard: the board freezes only the verifier and distributionOracle keys
+PASS S2.6c a non-board validator cannot propose a freeze The contract function "proposeKmsFreeze" reverted with the following reason:
+ValidatorsBoard: caller has no board authority
+PASS S2.6d direct KmsDirectives.setFrozen by a stranger is refused The contract function "setFrozen" reverted with the following reason:
+KmsDirectives: this key is frozen only by ValidatorsBoard
+PASS S2.6-0f slot 0 freeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted gas of the executing vote 254257
+PASS S2.6-1f slot 1 freeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted gas of the executing vote 254257
+PASS S2.6-0u slot 0 unfreeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted gas of the executing vote 232357
+PASS S2.6-1u slot 1 unfreeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted gas of the executing vote 232357
+PASS S2.6g identityOracle freeze through the FoundationDAO Execute proposal (not applied after 2 votes, applied with the 3rd) 
+PASS S2.6h identityOracle unfreeze through the DAO 
+PASS S2.7 after all of the above: 7 validators, chain healthy 
+PASS S2.7b same block hash at head-5 on all 9 nodes (no fork) 0x8782fe6cc54211ba3e24712648b4373bc33fd53821c14b47ba547fb64b691806
+== 35 PASS, 0 FAIL, 0 OBS ==> runs/stage2a.json

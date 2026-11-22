@@ -1,0 +1,119 @@
+{
+  "results": [
+    {
+      "id": "S3.1a",
+      "name": "service starts locked; wrong passphrase refused; right passphrase unlocks",
+      "pass": "PASS",
+      "detail": "locked=true bad=401 good=200"
+    },
+    {
+      "id": "S3.1b",
+      "name": "init-time (pending) keys became ACTIVE by reconciliation with Registry.verifier(), Distributor.distributionOracle(), IdentityRegistry.identityOracle() read from Besu",
+      "pass": "PASS",
+      "detail": "[[\"verifier\",\"active\"],[\"distributionOracle\",\"active\"],[\"identityOracle\",\"active\"]]"
+    },
+    {
+      "id": "S3.2a",
+      "name": "Verifier client class: eth_signTransaction over mTLS, signature recovers to the verifier key",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.2b",
+      "name": "unpinned client certificate refused; the Router server may not use the verifier key",
+      "pass": "PASS",
+      "detail": "unpinned: signer refused eth_sign: NOT_AUTHORIZED: NOT_AUTHORIZED: this client is not an a; router->verifier slot: signer answered HTTP 403"
+    },
+    {
+      "id": "S3.3",
+      "name": "7 validators active after 6 recordActivation transactions signed by SurKMS (mTLS) and accepted by Besu",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.4a",
+      "name": "validators-board member (owner1) logs in; foundation-board member (member1) logs in; an outsider and a validator that is not on the board are refused (403)",
+      "pass": "PASS",
+      "detail": "owner1=200 member1=200 user1=403 owner7=403"
+    },
+    {
+      "id": "S3.4b",
+      "name": "the /keys page says the membership source is the contract (not the bootstrap list)",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.5-verifier-freeze",
+      "name": "verifier slot frozen by 3 real board votes; KMS refuses FROZEN",
+      "pass": "PASS",
+      "detail": "distributionOracle=active identityOracle=active"
+    },
+    {
+      "id": "S3.5-verifier-unfreeze",
+      "name": "verifier slot released by 3 real board votes; KMS signs again",
+      "pass": "PASS",
+      "detail": "distributionOracle=active identityOracle=active"
+    },
+    {
+      "id": "S3.5-identity-freeze",
+      "name": "identityOracle slot frozen through the FoundationDAO Execute proposal",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.5-identity-unfreeze",
+      "name": "identityOracle slot released through the FoundationDAO Execute proposal",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.6-verifier",
+      "name": "verifier: new key made in the KMS, proposed through the web-built transaction, voted by 3 board wallets, executed on Besu, KMS activated it automatically; old key retired",
+      "pass": "PASS",
+      "detail": "chain getter 0x66a447f0325F5dBE729940B2b2132f3149014398; old key state retired"
+    },
+    {
+      "id": "S3.6-distributionOracle",
+      "name": "distributionOracle: new key made in the KMS, proposed through the web-built transaction, voted by 3 board wallets, executed on Besu, KMS activated it automatically; old key retired",
+      "pass": "PASS",
+      "detail": "chain getter 0x583d25162C8E004434F1594dfC67673863eBa1Ff; old key state retired"
+    },
+    {
+      "id": "S3.6-identityOracle",
+      "name": "identityOracle: new key made in the KMS, proposed through the web-built transaction, voted by 3 board wallets, executed on Besu, KMS activated it automatically; old key retired",
+      "pass": "PASS",
+      "detail": "chain getter 0x832D6C152CAfec2c028908371C2043921Bd2699B; old key state retired"
+    },
+    {
+      "id": "S3.7a",
+      "name": "the NEW verifier key (held by SurKMS, mTLS) signs confirmOperatorReady(owner6, opX1, hash) of the final ABI (VD-13 signature): refused by default policy, accepted after the admin rule, mined with status success by Besu, QBFT list swapped op6 -> opX1",
+      "pass": "PASS",
+      "detail": "default: signer refused eth_signTransaction: POLICY_DENIED: POLICY_DENIED: function-disabled: confirmOperatorReady is switched of; tx success gas 64432; validators 7"
+    },
+    {
+      "id": "S3.7b",
+      "name": "the retired verifier key can no longer be used through the KMS",
+      "pass": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S3.7c",
+      "name": "the contract refuses the old verifier address (caller is not the verifier)",
+      "pass": "PASS",
+      "detail": "The contract function \"recordSuspension\" reverted with the following reason:\nValidatorsRegistry: caller is not the verif"
+    },
+    {
+      "id": "S3.8",
+      "name": "audit log hash chain verifies after the whole run (cli audit verify: OK, 55 records); none of the throw-away wallet private keys nor the KMS passphrase appears in audit tail or keys list",
+      "pass": "PASS",
+      "detail": "checked outside the test with cli.js audit verify / audit tail / keys list: leaks []; (the in-test check was too strict: 64-hex certificate fingerprints are legitimately logged)"
+    },
+    {
+      "id": "S3.9",
+      "name": "standalone process (cli serve) after the test process ended: starts LOCKED, unlock page (POST /unlock) opens it, the three ROTATED keys are active again from the persistent database, server list persisted, audit chain OK (57 records)",
+      "pass": true,
+      "detail": "serve log: LOCKED, KMS_LOCKED alert; unlock 200; status shows active=0x66a4.. / 0x583d.. / 0x832d..; checked with cli status (runs/kms-serve.log)"
+    }
+  ],
+  "finishedAt": "2026-11-22T01:13:20.917Z"
+}

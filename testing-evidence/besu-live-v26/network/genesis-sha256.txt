@@ -1,0 +1,3 @@
+d3fddd172166597cdd7f42294ae988ac98ab7798474c9351a13ef30641ed1158 *net/genesis.json
+10ae2c82b08b12ae80e8c974eafa42c8334e42ef6ee8359293e8b948ab0b1cfd *netB/genesis.json
+5d970fc22775fea3b22a93e746d6da4733d2856f91183a151ae1ff05423b6abf *runs/netA1-stage2-genesis.json

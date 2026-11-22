@@ -1,0 +1,216 @@
+{
+ "rows": [
+  {
+   "epoch": 1,
+   "kind": "DistributionOpened",
+   "gas": 325867,
+   "block": 1448
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 5,
+   "gas": 590627,
+   "block": 1460
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 20,
+   "gas": 1881690,
+   "block": 1461
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 50,
+   "gas": 4600595,
+   "block": 1462
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 100,
+   "gas": 9132111,
+   "block": 1463
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 200,
+   "gas": 18196601,
+   "block": 1465
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 400,
+   "gas": 36326214,
+   "block": 1468
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 300,
+   "gas": 27261886,
+   "block": 1600
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 325,
+   "gas": 29527955,
+   "block": 1602
+  },
+  {
+   "epoch": 1,
+   "kind": "DistributionPage",
+   "payees": 40,
+   "gas": 3342153,
+   "block": 1604
+  },
+  {
+   "epoch": 1,
+   "kind": "RewardsDistributed",
+   "gas": 270604,
+   "block": 1605
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionOpened",
+   "gas": 274579,
+   "block": 2989
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 10,
+   "gas": 451789,
+   "block": 3091
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 50,
+   "gas": 1640595,
+   "block": 3092
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 150,
+   "gas": 4783637,
+   "block": 3093
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 400,
+   "gas": 12645674,
+   "block": 3094
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 700,
+   "gas": 22079456,
+   "block": 3096
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 90,
+   "gas": 2898887,
+   "block": 3098
+  },
+  {
+   "epoch": 2,
+   "kind": "DistributionPage",
+   "payees": 40,
+   "gas": 1290153,
+   "block": 3099
+  },
+  {
+   "epoch": 2,
+   "kind": "RewardsDistributed",
+   "gas": 215884,
+   "block": 3100
+  },
+  {
+   "epoch": 3,
+   "kind": "DistributionOpened",
+   "gas": 274591,
+   "block": 4301
+  },
+  {
+   "epoch": 3,
+   "kind": "DistributionPage",
+   "payees": 1414,
+   "gas": 44581648,
+   "block": 4303
+  },
+  {
+   "epoch": 3,
+   "kind": "RewardsDistributed",
+   "gas": 215884,
+   "block": 4324
+  },
+  {
+   "epoch": 4,
+   "kind": "DistributionOpened",
+   "gas": 274567,
+   "block": 4442
+  },
+  {
+   "epoch": 4,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 168907,
+   "block": 4443
+  },
+  {
+   "epoch": 4,
+   "kind": "DistributionPage",
+   "payees": 1,
+   "gas": 100507,
+   "block": 4444
+  },
+  {
+   "epoch": 4,
+   "kind": "DistributionAborted",
+   "gas": 186396,
+   "block": 4564
+  },
+  {
+   "epoch": 5,
+   "kind": "DistributionOpened",
+   "gas": 274591,
+   "block": 4565
+  },
+  {
+   "epoch": 5,
+   "kind": "DistributionPage",
+   "payees": 5,
+   "gas": 294639,
+   "block": 4566
+  },
+  {
+   "epoch": 5,
+   "kind": "RewardsDistributed",
+   "gas": 215884,
+   "block": 4567
+  }
+ ],
+ "fits": {
+  "epoch1": {
+   "slope": 90573,
+   "fixed": 89460,
+   "pages": 8
+  },
+  "epoch2": {
+   "slope": 31401,
+   "fixed": 89749,
+   "pages": 6
+  }
+ }
+}

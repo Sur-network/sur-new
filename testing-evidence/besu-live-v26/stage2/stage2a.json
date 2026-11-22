@@ -1,0 +1,218 @@
+{
+  "name": "stage2a-contracts-registry-board-kms",
+  "startedAt": "2026-11-22T00:46:12.423Z",
+  "rows": [
+    {
+      "id": "S2.1",
+      "name": "founders 2..7 setOperator + Verifier.recordActivation: QBFT validator set grows from 1 to 7 and equals Registry.getValidators()",
+      "result": "PASS",
+      "detail": "blocks 101..104"
+    },
+    {
+      "id": "S2.1b",
+      "name": "every one of the 7 operator keys proposed blocks within 40 blocks after the set reached 7",
+      "result": "PASS",
+      "detail": "distinct proposers 7"
+    },
+    {
+      "id": "S2.1c",
+      "name": "ValidatorsBoard: 5 members = owner1..5, all have board authority after activation",
+      "result": "PASS",
+      "detail": "0xb0B3fFf6193b77C818f3b7733E1966D60Cf8239e,0xF8A13C5a99E617cB22Eb184d14266DE4B82D3577,0xD0cB65529CD8d0907C53E6Ae4D444A2c6c4C1Dd2,0xcC7185D2082e647E2D3643596D626Ab2f8f028d0,0x3481A641697C8706D924EDE2fa2eD7fD40b25e9c"
+    },
+    {
+      "id": "S2.2a",
+      "name": "IdentityRegistry on Besu: register + five oracle flags -> isFullyVerified(owner8)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.2b",
+      "name": "entry price = 500,000 + 4% fee = 520,000 Suren",
+      "result": "PASS",
+      "detail": "520000000000000000000000"
+    },
+    {
+      "id": "S2.2c",
+      "name": "requestMembership with an operator key of another owner is refused",
+      "result": "PASS",
+      "detail": "The contract function \"requestMembership\" reverted with the following reason:\nValidatorsRegistry: operator belongs to another owner"
+    },
+    {
+      "id": "S2.2d",
+      "name": "requestMembership with a wrong amount is refused",
+      "result": "PASS",
+      "detail": "The contract function \"requestMembership\" reverted with the following reason:\nValidatorsRegistry: incorrect payment amount"
+    },
+    {
+      "id": "S2.2e",
+      "name": "paid entry: status Probation, lockedStake 500,000, isPaidEntrant, Registry holds the collateral",
+      "result": "PASS",
+      "detail": "status=1 gasUsed=369471"
+    },
+    {
+      "id": "S2.2f",
+      "name": "membership fee 20,000 Suren arrives in the Distributor (plus block rewards of the blocks mined meanwhile)",
+      "result": "PASS",
+      "detail": "delta 20046947100000000000000"
+    },
+    {
+      "id": "S2.2h",
+      "name": "recordActivation of the entrant before the 7-day probation is refused (real chain time)",
+      "result": "PASS",
+      "detail": "The contract function \"recordActivation\" reverted with the following reason:\nValidatorsRegistry: probation period not elapsed"
+    },
+    {
+      "id": "S2.2i",
+      "name": "a second paid entry by an unverified identity is refused",
+      "result": "PASS",
+      "detail": "The contract function \"requestMembership\" reverted with the following reason:\nValidatorsRegistry: identity not fully verified"
+    },
+    {
+      "id": "S2.3",
+      "name": "a contract owner is refused (EOA rule, RD-12): revert text contains 'plain wallet (EOA)'",
+      "result": "PASS",
+      "detail": "The contract function \"enter\" reverted with the following reason:\nValidatorsRegistry: a seat owner must be a plain wallet (EOA)"
+    },
+    {
+      "id": "S2.4a",
+      "name": "proposeOperator: pendingOperator set, consensus list unchanged",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.4b",
+      "name": "VD-13: confirmOperatorReady(owner, checkedKey) after the owner swapped the proposal is refused",
+      "result": "PASS",
+      "detail": "The contract function \"confirmOperatorReady\" reverted with the following reason:\nValidatorsRegistry: operator differs from the open proposal"
+    },
+    {
+      "id": "S2.4c",
+      "name": "VD-13: zero operator also refused",
+      "result": "PASS",
+      "detail": "The contract function \"confirmOperatorReady\" reverted with the following reason:\nValidatorsRegistry: operator differs from the open proposal"
+    },
+    {
+      "id": "S2.4d",
+      "name": "confirmOperatorReady by the owner is refused (verifier only)",
+      "result": "PASS",
+      "detail": "The contract function \"confirmOperatorReady\" reverted with the following reason:\nValidatorsRegistry: caller is not the verifier"
+    },
+    {
+      "id": "S2.4e",
+      "name": "confirmOperatorReady with the right key switches the list in the Verifier's transaction (op6 out, opA1 in)",
+      "result": "PASS",
+      "detail": "gas 64432"
+    },
+    {
+      "id": "S2.4f",
+      "name": "node a1 (new key, FOREST-format node) takes over: it proposes blocks, op6 does not; 7 proposers",
+      "result": "PASS",
+      "detail": "proposers 7"
+    },
+    {
+      "id": "S2.5a",
+      "name": "recordRecoveryRemoval: owner7 Removed, out of the QBFT list (6 validators), permanentlyExited",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.5b",
+      "name": "3 board votes to cancel: state Cancelled(5), validator SelfSuspended(6) NOT Active, ban lifted, still out of the list (VD-4)",
+      "result": "PASS",
+      "detail": "state=5"
+    },
+    {
+      "id": "S2.5c",
+      "name": "the owner cannot resume itself",
+      "result": "PASS",
+      "detail": "The contract function \"recordResume\" reverted with the following reason:\nValidatorsRegistry: caller is not the verifier"
+    },
+    {
+      "id": "S2.5d",
+      "name": "Verifier.recordResume brings owner7 back to Active; QBFT list back to 7",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.5e",
+      "name": "a second recordResume is refused",
+      "result": "PASS",
+      "detail": "The contract function \"recordResume\" reverted with the following reason:\nValidatorsRegistry: not self-suspended"
+    },
+    {
+      "id": "S2.6a",
+      "name": "KmsDirectives starts with nothing frozen",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.6b",
+      "name": "the board cannot freeze the identityOracle slot",
+      "result": "PASS",
+      "detail": "The contract function \"proposeKmsFreeze\" reverted with the following reason:\nValidatorsBoard: the board freezes only the verifier and distributionOracle keys"
+    },
+    {
+      "id": "S2.6c",
+      "name": "a non-board validator cannot propose a freeze",
+      "result": "PASS",
+      "detail": "The contract function \"proposeKmsFreeze\" reverted with the following reason:\nValidatorsBoard: caller has no board authority"
+    },
+    {
+      "id": "S2.6d",
+      "name": "direct KmsDirectives.setFrozen by a stranger is refused",
+      "result": "PASS",
+      "detail": "The contract function \"setFrozen\" reverted with the following reason:\nKmsDirectives: this key is frozen only by ValidatorsBoard"
+    },
+    {
+      "id": "S2.6-0f",
+      "name": "slot 0 freeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted",
+      "result": "PASS",
+      "detail": "gas of the executing vote 254257"
+    },
+    {
+      "id": "S2.6-1f",
+      "name": "slot 1 freeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted",
+      "result": "PASS",
+      "detail": "gas of the executing vote 254257"
+    },
+    {
+      "id": "S2.6-0u",
+      "name": "slot 0 unfreeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted",
+      "result": "PASS",
+      "detail": "gas of the executing vote 232357"
+    },
+    {
+      "id": "S2.6-1u",
+      "name": "slot 1 unfreeze: not applied after 2 of 5 votes, applied with the 3rd, KmsDirectives.FrozenChanged + Board.KmsFreezeApplied emitted",
+      "result": "PASS",
+      "detail": "gas of the executing vote 232357"
+    },
+    {
+      "id": "S2.6g",
+      "name": "identityOracle freeze through the FoundationDAO Execute proposal (not applied after 2 votes, applied with the 3rd)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.6h",
+      "name": "identityOracle unfreeze through the DAO",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.7",
+      "name": "after all of the above: 7 validators, chain healthy",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2.7b",
+      "name": "same block hash at head-5 on all 9 nodes (no fork)",
+      "result": "PASS",
+      "detail": "0x8782fe6cc54211ba3e24712648b4373bc33fd53821c14b47ba547fb64b691806"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T00:54:33.140Z"
+}

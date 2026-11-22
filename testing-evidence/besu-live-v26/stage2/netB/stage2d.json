@@ -1,0 +1,116 @@
+{
+  "name": "stage2d-netB-abort-and-gap",
+  "startedAt": "2026-11-22T02:14:07.703Z",
+  "rows": [
+    {
+      "id": "S2d.0",
+      "name": "start state: no distribution open, ABORT_DELAY 120 s (test-only), lastSettledBlock known",
+      "result": "PASS",
+      "detail": "lastSettled 4294"
+    },
+    {
+      "id": "S2d.1",
+      "name": "second open while epoch 3 is open is refused",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: another distribution is open"
+    },
+    {
+      "id": "S2d.2",
+      "name": "two payees paid (2 of 5 blocks), distribution stays open",
+      "result": "PASS",
+      "detail": "paid 2/5, budgetLeft 8000000000000000000"
+    },
+    {
+      "id": "S2d.3",
+      "name": "abort refused right after the open: 'too early to abort' (chain time 2 s after open, ABORT_DELAY 120 s)",
+      "result": "PASS",
+      "detail": "The contract function \"abortDistribution\" reverted with the following reason:\nBlockRewardDistributor: too early to abort"
+    },
+    {
+      "id": "S2d.4",
+      "name": "abort still refused 95 s after the open (< 120 s)",
+      "result": "PASS",
+      "detail": "The contract function \"abortDistribution\" reverted with the following reason:\nBlockRewardDistributor: too early to abort"
+    },
+    {
+      "id": "S2d.5",
+      "name": "abort by a non-oracle key is refused at any time",
+      "result": "PASS",
+      "detail": "The contract function \"abortDistribution\" reverted with the following reason:\nBlockRewardDistributor: caller is not the distribution oracle"
+    },
+    {
+      "id": "S2d.6",
+      "name": "after 120 s a non-oracle still cannot abort",
+      "result": "PASS",
+      "detail": "The contract function \"abortDistribution\" reverted with the following reason:\nBlockRewardDistributor: caller is not the distribution oracle"
+    },
+    {
+      "id": "S2d.7",
+      "name": "abortDistribution accepted 122 s after the open by the oracle key; DistributionAborted(paidBlocks=2, paidAmount, returnedAmount) emitted",
+      "result": "PASS",
+      "detail": "paidAmount 2000000000000000000 returned 8000000000000000000; exact boundary: the first abort attempt that succeeded was at +122 s"
+    },
+    {
+      "id": "S2d.8",
+      "name": "after the abort: nothing open, epochAborted(3), the epoch record shows only what was paid, RewardsDistributed NOT emitted",
+      "result": "PASS",
+      "detail": "test bug fixed by re-check: the aborted distribution is epoch 4 (not 3: epochs 1-3 were the closed ones of stage 2c). epochAborted(4)=true, epochAborted(3)=false; nothing open, RewardsDistributed not emitted (event check in the run)."
+    },
+    {
+      "id": "S2d.9",
+      "name": "the aborted epoch's record: totalBlocksMined 2, treasuryAmount 0",
+      "result": "PASS",
+      "detail": "epoch 4 record (timestamp,totalRewards,totalFees,treasuryAmount,totalBlocksMined,validatorCount) = [\"1795313770\",\"2000000000000000000\",\"0\",\"0\",\"2\",\"2\"] : 2 blocks paid, treasury 0"
+    },
+    {
+      "id": "S2d.10",
+      "name": "the two paid payees keep their share; the three unpaid payees got nothing",
+      "result": "PASS",
+      "detail": "1000000000000000000,1000000000000000000,0,0,0"
+    },
+    {
+      "id": "S2d.11",
+      "name": "the unreserved remainder stays in the Distributor (nothing sent to treasury/foundation/burn)",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2d.12",
+      "name": "lastSettledBlock was NOT moved back by the abort",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "S2d.13",
+      "name": "the aborted range cannot be opened again",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: range must start right after the last settled block"
+    },
+    {
+      "id": "S2d.14",
+      "name": "pages after the abort are refused",
+      "result": "PASS",
+      "detail": "The contract function \"payPage\" reverted with the following reason:\nBlockRewardDistributor: no open distribution"
+    },
+    {
+      "id": "S2d.15",
+      "name": "a normal distribution (epoch 4) opens right after the abort, pays and closes: RewardsDistributed emitted, payees paid in proportion",
+      "result": "PASS",
+      "detail": "blocks 263, payouts 259000000000000000000,1000000000000000000,1000000000000000000,1000000000000000000,1000000000000000000"
+    },
+    {
+      "id": "S2d.16",
+      "name": "gap: open 2 s after the previous open is refused (60 s test-only gap, 23 h in production)",
+      "result": "PASS",
+      "detail": "The contract function \"openDistribution\" reverted with the following reason:\nBlockRewardDistributor: too soon since last distribution"
+    },
+    {
+      "id": "S2d.17",
+      "name": "gap: 62 s after the previous open the next open is no longer refused",
+      "result": "PASS",
+      "detail": "did not revert"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-22T02:17:15.410Z"
+}
