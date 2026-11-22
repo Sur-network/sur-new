@@ -370,3 +370,10 @@
 **GenesisBuilder:** قرارداد `KmsDirectives` در `0xbBbB…bBbB` (فقط بایت‌کد، بدون storage)؛ runtime تازهٔ `ValidatorsRegistry`، `ValidatorsBoard`، `BlockRewardDistributor`، `ValidatorSeatNFT`، `ValidatorLottery`؛ بررسی EOA بودن آدرس مؤسسان؛ توجه: چینش storage `BlockRewardDistributor` عوض شد (سه نگاشت حذف، `claimable`، `totalClaimable`، `cur` افزوده)؛ ابزار باید از artifact تازه محاسبه کند، نه شماره‌ٔ slot قدیمی.
 
 **داشبوردها و اسناد:** `totalDistributedToValidators` و `validatorCount` مبلغ مؤجل را هم می‌شمارند؛ مشخصات Router (بخش ۶ و ۱۱)، README Router و Verifier هنوز به `distributeRewards` اشاره می‌کنند.
+
+## ۱۱. کلید نود ولیدیتور (پیشنهاد ۲۰۲۶-۱۱-۲۲؛ **تصمیم نهایی با مالک**)
+
+- **مسئله:** کیت راه‌اندازی می‌گفت «کلید نود از Vault تحویل داده می‌شود». Vault/OpenBao کنار گذاشته شد و Besu 26.9.0 کلید نود را فقط از فایل می‌خواند (`node-private-key-file`)؛ امضای بلاک از راه دور یا با KMS ندارد.
+- **پیشنهاد:** کلید نود (= کلید اپراتور) فایلی روی خودِ نود است و **هر ولیدیتور کلید خودش را نگه می‌دارد**؛ نه SurKMS و نه بنیاد. حداقل‌ها: `0400` با uid اختصاصی بدون ورود، دیسک رمزشده، پشتیبان رمزشدهٔ آفلاین، هرگز در مخزن/تصویر/لاگ. SurKMS فقط سه کلید سرویس و `personKey` را نگه می‌دارد.
+- **چرا نه SurKMS:** کلید بلاک هر چند ثانیه امضا می‌کند و باید روی خود نود باشد؛ نقطهٔ شکست مشترک و تأخیر شبکه برای تولید بلاک نمی‌خواهیم.
+- **اعمال‌شده در:** `launch-kit/README.md` (بند ۵، چک‌لیست‌ها)، `.env.example`، `docker-compose.yml` (فقط توضیح)، `genesis-config.json` (فقط `_comment`)، `genesis.TEST-ONLY.README.md`؛ `SHA256SUMS` دوباره ساخته شد (۱۳ فایل OK).

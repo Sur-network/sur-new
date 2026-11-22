@@ -12,7 +12,7 @@
     "forks": "cancun"
   },
   "oracles": {
-    "_comment": "v2.5 reference values from SurAddresses.sol (distributionOracle, verifier, identityOracle). OWNER CONFIRM before launch that each oracle key exists in the Vault (separate policy per key) and that these are the final addresses; the three keys are never part of this kit.",
+    "_comment": "v2.5 reference values from SurAddresses.sol (distributionOracle, verifier, identityOracle). OWNER CONFIRM before launch that each oracle key exists in SurKMS (the three service keys are created inside SurKMS) and that these are the final addresses; the three keys are never part of this kit.",
     "distributionOracle": "0xbCBAc7d286eA11EC57fb4e0f5D16d960D6d202b6",
     "verifier": "0x1A5E86f3333291B3332C0f9Eddb04269940566bc",
     "identityOracle": "0xbE7e65512Eada6F4c6a9DEDDf2eFb75547A065e9"
