@@ -1,0 +1,78 @@
+{
+  "exp": "e1",
+  "spec": {
+    "forks": "cancun0",
+    "subnet": 91,
+    "portBase": 18910,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": [
+      {
+        "block": "now+150",
+        "validatorselectionmode": "blockheader",
+        "validators": "@ALL"
+      },
+      {
+        "block": "now+450",
+        "validatorselectionmode": "contract",
+        "validatorcontractaddress": "0x3333333333333333333333333333333333333333"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0x27a3069ac8c916d35ac5ee3971d3eeb2d8b381285848bbf1b9444a274df5edc2",
+      "address": "0xeb9d848aCA4aaE3E52b0cfE051f0ef01629bB9a9",
+      "pub": "a8f8612a0caa041e14dd9104cf587788ec15f399d4c9f96e2c6f02b512da06249db265ae0bbfb4ce587fea1526a2a1d963fcfa5aa554d14dcd3de60d6fec6c59",
+      "ip": "172.29.91.11",
+      "port": 18910
+    },
+    {
+      "name": "n2",
+      "key": "0x56911459787a2c3cf8c55225d48caccefbca895a5c509ac29d4ec9e55fb716fe",
+      "address": "0x221cdc30A8c4Fc1E9e952121e681C102cc7Ebf33",
+      "pub": "71c328a16b4981a6ff680279812f8cf70eb7855d338a46cdc43d183dbcba21d0468e606a6ca618eaae8372f629b30c36c1bea797799a7653efffb777f0d1392a",
+      "ip": "172.29.91.12",
+      "port": 18911
+    },
+    {
+      "name": "n3",
+      "key": "0xbcc832ce8191624496c6cd0edef25b42b872ef982c137e65ba63654613750311",
+      "address": "0xE543Ac4A5178B78478464Eb4d87A9b7fB5450811",
+      "pub": "5bc5e3c623c2f07c47945ee8b4d8e37a9a76bd835d709281ae0ea8b9bdfbd15b37f8d2b6265492634e8a97828532348510e45199ba569a50fef552f06c580aaa",
+      "ip": "172.29.91.13",
+      "port": 18912
+    },
+    {
+      "name": "n4",
+      "key": "0xb6e528bbb6df53ed3b4d6446480e72f462b21a22c66c10d03b2789c0dfc2b4c5",
+      "address": "0x3E085Eb3c62D502A0e707A611E57985a29a1d949",
+      "pub": "3a13400585fe80b639a39fecf81f015753761c8ad0e2c7d6e48aeeccaeeea7f1abb2b0a593d619a85eec61236cbf54b3d2806b804fab19c76081ad9fd27ec0ad",
+      "ip": "172.29.91.14",
+      "port": 18913
+    }
+  ],
+  "genesisTs": 1795344478,
+  "now": 1795344488,
+  "transitions": [
+    {
+      "block": "now+150",
+      "validatorselectionmode": "blockheader",
+      "validators": "@ALL"
+    },
+    {
+      "block": "now+450",
+      "validatorselectionmode": "contract",
+      "validatorcontractaddress": "0x3333333333333333333333333333333333333333"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

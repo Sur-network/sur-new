@@ -1,0 +1,12 @@
+stop sur25r-e3-n3 ok
+stop sur25r-e3-n4 ok
+now=1795344833
+n1: #11 ts=1795344789 peers=1 validators=[4,3,2,1] miner=1
+n2: #11 ts=1795344789 peers=1 validators=[4,3,2,1] miner=1
+n3: down
+n4: down
+now=1795344849
+n1: #11 ts=1795344789 peers=1 validators=[4,3,2,1] miner=1
+n2: #11 ts=1795344789 peers=1 validators=[4,3,2,1] miner=1
+n3: down
+n4: down

@@ -1,0 +1,16 @@
+2026-11-22 11:13:51.424+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0]
+2026-11-22 11:13:58.181+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=1, Round=1}, hash=0x10ae40eed1682dd4225fb3277c25e30bd12e5a31520f9479a139c97692c53c37
+2026-11-22 11:13:58.202+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #1 / 0 tx / 0 pending / 0 (0.0%) gas / (0x10ae40eed1682dd4225fb3277c25e30bd12e5a31520f9479a139c97692c53c37)
+2026-11-22 11:14:00.082+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #2 / 0 tx / 0 pending / 0 (0.0%) gas / (0x430642ed725f002a91952d223c0e5db9c3cf75dc8f2c74443cb4496b16ca1c51)
+2026-11-22 11:14:02.089+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #3 / 0 tx / 0 pending / 0 (0.0%) gas / (0x0c3f5c7464f6f075a8e3b94c596c12c9256e0582e0b614d079b7671510ed8c5b)
+2026-11-22 11:14:24.009+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 11:14:24.039+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:14:53.001+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795346138]
+2026-11-22 11:15:06.500+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 11:15:08.442+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:15:22.500+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 3 which will expire in 32 seconds
+2026-11-22 11:15:24.441+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:15:54.497+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 4 which will expire in 64 seconds
+2026-11-22 11:15:56.438+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:16:58.496+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 5 which will expire in 128 seconds
+2026-11-22 11:17:00.436+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)

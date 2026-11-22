@@ -1,0 +1,62 @@
+{
+  "exp": "e6",
+  "spec": {
+    "forks": "cancun0",
+    "subnet": 96,
+    "portBase": 18960,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": []
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0xb2752ae77b053c2490bf98ad9593a3d36d6a61bdce1efc0e68a67b8df19c20d9",
+      "address": "0x6A6CeB61F45Ceb66239477dc988454C805D46a0e",
+      "pub": "44c4d708a3c5feba13592ccdfffecda1adfda1014e88732bfbf51558e8c95c51a9975dad448340ba846b069cd2cb52a064c46aa416d3ca22022feea8f35046e6",
+      "ip": "172.29.96.11",
+      "port": 18960
+    },
+    {
+      "name": "n2",
+      "key": "0x2567c16c066d2604767b5a2fffa1d67700156da17f87b2cf7c2d6161e1791036",
+      "address": "0xe28E2107ff1eCa2031df5e1A7a82d3D6C8A69b19",
+      "pub": "7eeeddefcf41699ff93ccec0a40769b8cdcac6609143df056313c151c38436af8c2703923da7f97635d71866854b1b3146aa5fc726101c0e09af1fbb8c7124ca",
+      "ip": "172.29.96.12",
+      "port": 18961
+    },
+    {
+      "name": "n3",
+      "key": "0x8aca8d6f531e43e91714f494fa37435129f2a1036b4d9acd1d9a1d019afbdd82",
+      "address": "0x0F73a75480c1F5f91fd8228CaD567213Dbec1E53",
+      "pub": "c92228093cefc1ed72c0cb2b3b12f4f3e47b95e182466565b8b325f065dd30fc3be373162c5dab58ddc06fd8ab3f52419b7ad0a7556c686d9fede8beadcf256a",
+      "ip": "172.29.96.13",
+      "port": 18962
+    },
+    {
+      "name": "n4",
+      "key": "0xbe07a0b6604bfc65b843d298b132b8c6d24665c108c7d7a371e47ee94a8281b1",
+      "address": "0x9CcdEC85fA8E4a808B90b65637a554aC06A6eFFB",
+      "pub": "142b8975aeed82768faf968b5ba33987f6189168ecda871b020f4265eb246c7d34f741ba9db4a93ab0360edc9690b105409b7c0afd9d7fffbeae775378f9985c",
+      "ip": "172.29.96.14",
+      "port": 18963
+    }
+  ],
+  "genesisTs": 1795345848,
+  "now": 1795345930,
+  "transitions": [
+    {
+      "block": 1795345895,
+      "validatorselectionmode": "blockheader",
+      "validators": "@0,1"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

@@ -1,0 +1,7 @@
+stop sur25r-e2-n3 ok
+stop sur25r-e2-n4 ok
+now=1795345077
+n1: #156 ts=1795345033 peers=1 validators=[1,4,2,3] miner=1
+n2: #156 ts=1795345033 peers=1 validators=[1,4,2,3] miner=1
+n3: down
+n4: down

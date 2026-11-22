@@ -1,0 +1,8 @@
+2026-11-22 11:17:48.994+0000 | main | INFO  | FlatDbStrategyProvider | Flat db mode found FULL
+2026-11-22 11:17:48.994+0000 | main | INFO  | FlatDbStrategyProvider | DB mode with code stored using code hash enabled = true
+2026-11-22 11:17:49.194+0000 | main | ERROR | Besu | Failed to start Besu: Supplied genesis block does not match chain data stored in /data
+Please specify a different data directory with --data-path, specify the original genesis file with --genesis-file or supply a testnet/mainnet option with --network.
+Supplied genesis block does not match chain data stored in /data
+Please specify a different data directory with --data-path, specify the original genesis file with --genesis-file or supply a testnet/mainnet option with --network.
+To display full help:
+besu [COMMAND] --help

@@ -1,0 +1,67 @@
+{
+  "exp": "e3",
+  "spec": {
+    "forks": "london",
+    "subnet": 93,
+    "portBase": 18930,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": []
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0xf6cf7d8546593ae9100a15c14074ac78e8292bdfff1ebd15fc3d9b63c72d6790",
+      "address": "0xc395DC83AcECf6A29B18b4153498b8d1CB639980",
+      "pub": "300558bd05c6058e67b929f8b3e43fa950cd1ef08d041622fad21f4997210fb5c51d2738143ff569c79cff56502f22f36ab82cd9e79dbc745216bc8879238a06",
+      "ip": "172.29.93.11",
+      "port": 18930
+    },
+    {
+      "name": "n2",
+      "key": "0x96d748949d4bf350cd2ef02f6323fc9e6b19c3e319d90b791f0292eec337ba68",
+      "address": "0x8a32ad84860c3237A1692ACF44b0686BAC480589",
+      "pub": "ea6928a4c1376779205b80c44c3e5752a7ec9503774e83d2b91951465483f189ef4e4a5df5606883e2798fbdfab2c3efc0497741473cdee03d131f78b14831fe",
+      "ip": "172.29.93.12",
+      "port": 18931
+    },
+    {
+      "name": "n3",
+      "key": "0x59b37f70b50ce844a938b66658e184098a8c9f911fd773f2862179d69ad558cc",
+      "address": "0x4EC84aE136C959d2Ccf5D205549204831771E7f7",
+      "pub": "42e4982b4b7775ccadfd440fed267a87971235de35d4c546704be42f1210a438cb47f0a17f59f9a8e7028afee3e45af0715c43f88ff2423f43942cf3b8a0335a",
+      "ip": "172.29.93.13",
+      "port": 18932
+    },
+    {
+      "name": "n4",
+      "key": "0xdfe26fa3515a672aa9045464436c5055cfa4151d6a8097a7cd41f1534ad6af84",
+      "address": "0x32788e090C1809E75B091d29CdC3042898acD8B6",
+      "pub": "647bf8234154b21e8bd9d33343acf5c16c9304ba4dd5ed997e899cecc6b97d58ce72aaca219555f24992eda7d74cdd44ec3150ee732c00d5c8d8ed4999ed3fb2",
+      "ip": "172.29.93.14",
+      "port": 18933
+    }
+  ],
+  "genesisTs": 1795344743,
+  "now": 1795344946,
+  "transitions": [
+    {
+      "block": 12,
+      "validatorselectionmode": "blockheader",
+      "validators": "@0,1"
+    },
+    {
+      "block": 72,
+      "validatorselectionmode": "contract",
+      "validatorcontractaddress": "0x3333333333333333333333333333333333333333"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

@@ -1,0 +1,62 @@
+{
+  "exp": "e4",
+  "spec": {
+    "forks": "cancun0",
+    "subnet": 94,
+    "portBase": 18940,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": []
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0xe5f0463a2e25f8428646b9e57ea4921db3eecc4defa1a9ab2a4d5561cd9c7a13",
+      "address": "0x658c35FE7bFF1C6da2045f5537FaE7AF680962F3",
+      "pub": "536b55a12999ede7c0be4efb542217cc2e9b70a3c104cfb500a7a32c75c5ffee7436f0e11c99caf3d63836bf2e0c944f8abc9f58842c9bc8a99838abf357078a",
+      "ip": "172.29.94.11",
+      "port": 18940
+    },
+    {
+      "name": "n2",
+      "key": "0x5716aedeb61c606527cd743c46d178c2db8522af6bafcbcbdd74c7c0596ad9ca",
+      "address": "0x5FECF8F128f04345d76B2eC6De8D50d0462c9b52",
+      "pub": "ab110ca597dc3602535ad272dd4675e1e915fd94cf43f2f6c65105bce562c62140661b182b3d0b9fcca6a9dc7a2cd2492d0e48e1414405c7ea975749864ca4ea",
+      "ip": "172.29.94.12",
+      "port": 18941
+    },
+    {
+      "name": "n3",
+      "key": "0xc98db81bf2bf34ccbc34cad474262bfe2c39923cdf743a3b5d64c9956253d458",
+      "address": "0xB641902D2bC85d0Adc44b31fDbb2f94a71808D3d",
+      "pub": "2ea33804949230e84870bb6f38746c6b772b7cd644c08c760150e100b45e75bc0b47e553e6f3bcb48e49e49a42e28bfed2b3a07cefbb6897b35a3e6134652168",
+      "ip": "172.29.94.13",
+      "port": 18942
+    },
+    {
+      "name": "n4",
+      "key": "0xf8ee0e39397812b4af7a7f0eb0f2b826011d78dbb6c8ba1ba44e1257aa3e0a76",
+      "address": "0x5F59a414C0863d6685D076eC63390c796A0DCcb8",
+      "pub": "7a01b76b1a9585220d73b5a80a0096b272820c9ba2a0ada6fa946d990fa3c47d1e9b6d1754db1baf7baff274cde5e448cd1608892458c5f8e599f3d4c6eae1c4",
+      "ip": "172.29.94.14",
+      "port": 18943
+    }
+  ],
+  "genesisTs": 1795345601,
+  "now": 1795345693,
+  "transitions": [
+    {
+      "block": 14,
+      "validatorselectionmode": "blockheader",
+      "validators": "@0,1"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

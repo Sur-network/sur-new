@@ -1,0 +1,9 @@
+2026-11-22 11:07:05.863+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0]
+2026-11-22 11:07:09.126+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #1 / 0 tx / 0 pending / 0 (0.0%) gas / (0x2522c5db4d61eb3709a6ac1545a26fab10b0904868cbed205a1529eae41dfb02)
+2026-11-22 11:07:11.053+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #2 / 0 tx / 0 pending / 0 (0.0%) gas / (0xe422fbd370cc7cc6858639b1099316c1b36be48f7fc26fe2fd8b1e4cc3270b41)
+2026-11-22 11:07:47.002+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 11:07:47.007+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:08:02.999+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 3 which will expire in 32 seconds
+2026-11-22 11:08:03.003+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:08:29.030+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:14]
+2026-11-22 11:08:36.628+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=14, Round=1}, hash=0xc9a77559efb3c538196bc56bb4ffd91fefca9d642d3982adf5fec6e1d57a36b9

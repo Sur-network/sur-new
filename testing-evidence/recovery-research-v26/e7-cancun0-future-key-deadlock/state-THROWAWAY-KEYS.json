@@ -1,0 +1,66 @@
+{
+  "exp": "e7",
+  "spec": {
+    "forks": "cancun0",
+    "subnet": 97,
+    "portBase": 18970,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "recovery": [
+      0,
+      1
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": []
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0x14d0a56c154c36d52e76c2109eae3b7ef384ac116345294f2b4b0eb5b3caeb78",
+      "address": "0x5AA2A28D36B995b5ef029E5e50Ac5dC7c38bF270",
+      "pub": "41111ad1bb2737f6672f8ba15747e2a0fb92cc6fd50c94dc8e6974bce55672e3bd461df7240e2858e20dbc06f79eba986f40eeb9b2c6eff35bc0ace0964085c5",
+      "ip": "172.29.97.11",
+      "port": 18970
+    },
+    {
+      "name": "n2",
+      "key": "0x1bae5cdd31b6dc0c8f2c196598fb034d22f737d4af5dfcdd70493328dcad8dcd",
+      "address": "0xf2d49481c6DE7a87DceD306272B905569D5325e9",
+      "pub": "c24f6989679323e52f9fb2e28a22994303d0a6c63561baec040a9d449beb4316e4b8e0d288561a080c0854161e0f7dec114d08625fb3dda3371dfa2ad51b79d9",
+      "ip": "172.29.97.12",
+      "port": 18971
+    },
+    {
+      "name": "n3",
+      "key": "0x21835477ea7b2b6cfda131c307ef985cc9408d46df2dd0c2dc4fbd4e75adcffb",
+      "address": "0x941B7109586a79c01c40112E6fED8A1A5Ce98f38",
+      "pub": "c434597aa1398b3894daab3793849e75710eefe0f76ed56bf878c60fb7497c5ee025c3723f6d687d1fc2e472d6cd3ae47c2f3682e758685db288f4f54879ff50",
+      "ip": "172.29.97.13",
+      "port": 18972
+    },
+    {
+      "name": "n4",
+      "key": "0x96a63dc770208d606dd1b6c21549c2367cd8f40dcd121fa5ed565b1fcc96709b",
+      "address": "0xA238EDcF71c2ccE14df8705f0b6Cb2B05c3d96be",
+      "pub": "5b368e215a39d42baf67337177a6698c7c349ee7c1d7bdfd656d160c8fd9c4b25861cc89fd7170a3c3f1b99e31e0048ba992aac135137c0841a821ddb71716e3",
+      "ip": "172.29.97.14",
+      "port": 18973
+    }
+  ],
+  "genesisTs": 1795346008,
+  "now": 1795346078,
+  "transitions": [
+    {
+      "block": "now+60",
+      "validatorselectionmode": "contract",
+      "validatorcontractaddress": "0x4444444444444444444444444444444444444444"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

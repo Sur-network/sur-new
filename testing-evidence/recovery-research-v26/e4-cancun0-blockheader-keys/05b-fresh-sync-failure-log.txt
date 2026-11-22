@@ -1,0 +1,2 @@
+2026-11-22 11:09:54.225+0000 | EthScheduler-Services-5 (importBlock) | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x5f59a414c0863d6685d076ec63390c796a0dccb8, validators=[]
+2026-11-22 11:09:56.800+0000 | EthScheduler-Services-0 (importBlock) | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x5f59a414c0863d6685d076ec63390c796a0dccb8, validators=[]

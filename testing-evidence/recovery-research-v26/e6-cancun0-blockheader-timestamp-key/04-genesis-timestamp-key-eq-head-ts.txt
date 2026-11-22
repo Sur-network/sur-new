@@ -1,0 +1,1 @@
+regenerated genesis.json for e6 at now=1795345930; transitions=[{"block":1795345895,"validatorselectionmode":"blockheader","validators":["0x6A6CeB61F45Ceb66239477dc988454C805D46a0e","0xe28E2107ff1eCa2031df5e1A7a82d3D6C8A69b19"]}]

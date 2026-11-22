@@ -1,0 +1,71 @@
+{
+  "exp": "e5",
+  "spec": {
+    "forks": "cancun0",
+    "subnet": 95,
+    "portBase": 18950,
+    "nodes": 4,
+    "validators": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "recovery": [
+      0,
+      1
+    ],
+    "requestTimeout": 4,
+    "blockPeriod": 2,
+    "transitions": []
+  },
+  "nodes": [
+    {
+      "name": "n1",
+      "key": "0x415ffdee72079cb91e6e879150630079fb8eb6fa6c6b9b59b0103888e6d143c7",
+      "address": "0x46E451a7043cF465c452eF0B97eb313D81d13aAc",
+      "pub": "8dd925437479d5bcb5a78fdf7ff00e41b8549a64af69a3d9e7f6ff669470f1322c49d0e6d538552d3f95c56624b022957f277fd5bacddda959485720a812b554",
+      "ip": "172.29.95.11",
+      "port": 18950
+    },
+    {
+      "name": "n2",
+      "key": "0x1a7d2b06ee14a1de69d2817ded0cc3b669d93aa5cbdca4c0c41c65fb8743aa97",
+      "address": "0x2A30521239EB57aF52f017566a7CFF3a355ceFD2",
+      "pub": "d25577a34d9a759e0ae359217642c6d6ded385b9fee7c4dd04feb0bfeb20b8869d4e980e43948ab58dbfd63326e045f6f454091f079b6e18d5b40183db465ee7",
+      "ip": "172.29.95.12",
+      "port": 18951
+    },
+    {
+      "name": "n3",
+      "key": "0xa06f39877f9d4fbd7e730f18ecbf625ab3ec3a772f8770010faedeacc34a9c0d",
+      "address": "0x700E140f3A1a34fAe8200cF94691F1ed170De43e",
+      "pub": "92b3c826630b4cdfffcd1444dafa53130ad34333cece6098471e0baff94829bd38e852d6d3c4edb7a1d689df3dc4e5724d44972ce8351554af9df8e91f9d98c2",
+      "ip": "172.29.95.13",
+      "port": 18952
+    },
+    {
+      "name": "n4",
+      "key": "0x53f4194371665c731097b74f381b86e9474f9a4d9c992e2c16344110508cb380",
+      "address": "0x3a74E8660364Cb8b2d91DB332DCF512C5f463633",
+      "pub": "f282a090f28b15b08112e63361eddef674c7ca6fd44a0a5b227e964fbf469e07eb5c46fc5694f8ac6efc5687318c07d0a35f7049f231612a73093cb8eb137fd1",
+      "ip": "172.29.95.14",
+      "port": 18953
+    }
+  ],
+  "genesisTs": 1795345282,
+  "now": 1795346310,
+  "transitions": [
+    {
+      "block": 1795345339,
+      "validatorselectionmode": "contract",
+      "validatorcontractaddress": "0x4444444444444444444444444444444444444444"
+    },
+    {
+      "block": "now+60",
+      "validatorselectionmode": "contract",
+      "validatorcontractaddress": "0x3333333333333333333333333333333333333333"
+    }
+  ],
+  "note": "THROW-AWAY KEYS — never reuse"
+}

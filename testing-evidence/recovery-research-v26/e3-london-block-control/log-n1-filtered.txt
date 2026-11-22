@@ -1,0 +1,16 @@
+2026-11-22 10:52:43.414+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [London:0]
+2026-11-22 10:52:49.910+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=1, Round=1}, hash=0x32f0179511dd539d737ccdb006072bf725336a50159abd0db0be6c5954c7fc65
+2026-11-22 10:52:49.997+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #1 / 0 tx / 0 pending / 0 (0.0%) gas / (0x32f0179511dd539d737ccdb006072bf725336a50159abd0db0be6c5954c7fc65)
+2026-11-22 10:52:51.067+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #2 / 0 tx / 0 pending / 0 (0.0%) gas / (0xd96f4ddfcf8c25348736244b7e5c3612a6b0b781de47efa40c807bf43a0b51ec)
+2026-11-22 10:53:23.006+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 10:53:23.009+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:53:39.005+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 3 which will expire in 32 seconds
+2026-11-22 10:53:39.014+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:54:11.006+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 4 which will expire in 64 seconds
+2026-11-22 10:54:11.009+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:54:26.272+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [London:0, London:12]
+2026-11-22 10:54:34.348+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=12, Round=1}, hash=0xcd8c65ca7948c31281afaab058b28c3da4450a5e4b40bb0874e835f8be1bfc20
+2026-11-22 10:55:58.486+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [London:0, London:12, London:72]
+2026-11-22 10:56:06.349+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=49, Round=1}, hash=0xc5ccdba4c14144ac7f87fe4690027513f3a058d3d9096f0ca289206983b68e43
+2026-11-22 11:09:46.046+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=457, Round=1}, hash=0x0e08356b8ccc92fe86ffe16985378760f0e61c4cd9a7b799fb66441e81e3a24d
+2026-11-22 11:09:56.031+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=460, Round=1}, hash=0xe13fe09ae6ffce373ccb1b15daa5088507d72a26d330ce7cbb956fa1c2fe096a

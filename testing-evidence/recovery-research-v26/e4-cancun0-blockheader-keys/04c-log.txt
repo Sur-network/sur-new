@@ -1,0 +1,4 @@
+[m[2m2026-11-22 11:07:05.863+0000[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mProtocolScheduleBuilder[m[2m | [m[32mProtocol schedule created with milestones: [Cancun:0]
+[m[2m2026-11-22 11:07:07.744+0000[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness
+[m[2m2026-11-22 11:08:29.030+0000[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mProtocolScheduleBuilder[m[2m | [m[32mProtocol schedule created with milestones: [Cancun:0, Cancun:14]
+[m[2m2026-11-22 11:08:30.625+0000[m[2m | [m[2mmain[m[2m | [m[32mINFO [m[2m | [m[2mFullSyncTargetManager[m[2m | [m[32mUnable to find sync target. Waiting for 5 peers minimum. Currently checking 0 peers for usefulness

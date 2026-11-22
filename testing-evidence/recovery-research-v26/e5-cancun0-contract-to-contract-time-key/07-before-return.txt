@@ -1,0 +1,5 @@
+now=1795345522
+n1: #61 ts=1795345520 peers=3 validators=[2,1] miner=2
+n2: #61 ts=1795345520 peers=3 validators=[2,1] miner=2
+n3: #61 ts=1795345520 peers=3 validators=[2,1] miner=2
+n4: #62 ts=1795345522 peers=3 validators=[2,1] miner=1

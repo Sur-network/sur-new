@@ -1,0 +1,21 @@
+2026-11-22 11:01:46.444+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0]
+2026-11-22 11:01:53.443+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=1, Round=1}, hash=0x53cdf6efc529d287f6a7fd3b4cdb9da0b15346916cb35ade5365ab18b0a7a0c5
+2026-11-22 11:01:53.528+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #1 / 0 tx / 0 pending / 0 (0.0%) gas / (0x53cdf6efc529d287f6a7fd3b4cdb9da0b15346916cb35ade5365ab18b0a7a0c5)
+2026-11-22 11:01:57.059+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #3 / 0 tx / 0 pending / 0 (0.0%) gas / (0xd5280cd9f654b7911b91b2e0afec86c7d6561972d1a50f467a52b80050656656)
+2026-11-22 11:02:33.003+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 11:02:33.011+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:02:49.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:02:49.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 3 which will expire in 32 seconds
+2026-11-22 11:02:49.005+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 11:03:18.421+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795345339]
+2026-11-22 11:03:27.298+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=15, Round=1}, hash=0x4c98b4d2a7f3f0af248d37d8b25151306ffbb29aab94cf169ebc5c5718efd412
+2026-11-22 11:04:54.437+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795345339, Cancun:1795345539]
+2026-11-22 11:05:03.065+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=52, Round=1}, hash=0x64246faba32143331c00441a03307d9d99901e95712838373d9f346c82e7d593
+2026-11-22 11:17:11.223+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795345339, Cancun:1795346276]
+2026-11-22 11:17:18.404+0000 | EthScheduler-Workers-5 | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x700e140f3a1a34fae8200cf94691f1ed170de43e, validators=[0x2a30521239eb57af52f017566a7cff3a355cefd2, 0x46e451a7043cf465c452ef0b97eb313d81d13aac]
+2026-11-22 11:17:19.009+0000 | EthScheduler-Services-12 (importBlock) | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x700e140f3a1a34fae8200cf94691f1ed170de43e, validators=[0x2a30521239eb57af52f017566a7cff3a355cefd2, 0x46e451a7043cf465c452ef0b97eb313d81d13aac]
+2026-11-22 11:17:21.712+0000 | EthScheduler-Services-9 (importBlock) | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x700e140f3a1a34fae8200cf94691f1ed170de43e, validators=[0x2a30521239eb57af52f017566a7cff3a355cefd2, 0x46e451a7043cf465c452ef0b97eb313d81d13aac]
+2026-11-22 11:17:24.406+0000 | EthScheduler-Services-12 (downloadHeaders) | ERROR | PipelineChainDownloader | Chain download failed. Restarting after short delay.
+2026-11-22 11:17:27.105+0000 | EthScheduler-Services-3 (importBlock) | INFO  | BftCoinbaseValidationRule | Invalid block header: Block proposer is not a member of the validators. proposer=0x700e140f3a1a34fae8200cf94691f1ed170de43e, validators=[0x2a30521239eb57af52f017566a7cff3a355cefd2, 0x46e451a7043cf465c452ef0b97eb313d81d13aac]
+2026-11-22 11:17:48.617+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795345339, Cancun:1795346314]
+2026-11-22 11:17:49.194+0000 | main | ERROR | Besu | Failed to start Besu: Supplied genesis block does not match chain data stored in /data

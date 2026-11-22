@@ -1,0 +1,2 @@
+{"forks":"cancun0","subnet":91,"portBase":18910,"nodes":4,"validators":[0,1,2,3],"requestTimeout":4,"blockPeriod":2,
+ "transitions":[{"block":"now+150","validatorselectionmode":"blockheader","validators":"@ALL"},{"block":"now+450","validatorselectionmode":"contract","validatorcontractaddress":"0x3333333333333333333333333333333333333333"}]}

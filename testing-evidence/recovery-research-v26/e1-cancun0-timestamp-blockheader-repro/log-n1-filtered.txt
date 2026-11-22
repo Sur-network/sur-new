@@ -1,0 +1,38 @@
+2026-11-22 10:48:20.379+0000 | main | INFO  | ProtocolScheduleBuilder | Protocol schedule created with milestones: [Cancun:0, Cancun:1795344638, Cancun:1795344938]
+2026-11-22 10:48:27.918+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=1, Round=1}, hash=0x40763805d48ac520e28c0fe91ca4ecf8c944de8bb5be5bf1f43d8e56e177ae84
+2026-11-22 10:48:27.980+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #1 / 0 tx / 0 pending / 0 (0.0%) gas / (0x40763805d48ac520e28c0fe91ca4ecf8c944de8bb5be5bf1f43d8e56e177ae84)
+2026-11-22 10:48:29.059+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftBesuControllerBuilder | Imported empty block #2 / 0 tx / 0 pending / 0 (0.0%) gas / (0xea49a82bfb0bbc5cbe1123a60098d483f033bf24d1d005d89bddc5279c250dae)
+2026-11-22 10:50:39.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:50:43.008+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:50:51.002+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 2 which will expire in 16 seconds
+2026-11-22 10:50:51.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:50:51.006+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:50:51.008+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:50:51.012+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:51:07.005+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 3 which will expire in 32 seconds
+2026-11-22 10:51:07.022+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:07.031+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:07.035+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:07.042+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:51:39.003+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:39.005+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:39.006+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:51:39.007+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 4 which will expire in 64 seconds
+2026-11-22 10:51:39.010+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:52:43.000+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:52:43.003+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:52:43.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:52:43.005+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 5 which will expire in 128 seconds
+2026-11-22 10:52:43.012+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:54:50.999+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 6 which will expire in 256 seconds
+2026-11-22 10:54:51.004+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:54:51.007+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:54:51.009+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:54:51.013+0000 | BftProcessorExecutor-QBFT-0 | INFO  | BftValidatorsValidationRule | Invalid block header: Incorrect validators. Expected [0x221cdc30a8c4fc1e9e952121e681c102cc7ebf33, 0x3e085eb3c62d502a0e707a611e57985a29a1d949, 0xe543ac4a5178b78478464eb4d87a9b7fb5450811, 0xeb9d848aca4aae3e52b0cfe051f0ef01629bb9a9] but got [].
+2026-11-22 10:59:06.983+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:59:06.986+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:59:06.987+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundTimer | Moved to round 7 which will expire in 512 seconds
+2026-11-22 10:59:06.988+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:59:06.990+0000 | BftProcessorExecutor-QBFT-0 | INFO  | RoundChangeManager | BFT round summary (quorum = 3)
+2026-11-22 10:59:07.002+0000 | BftProcessorExecutor-QBFT-0 | INFO  | QbftRound | Importing proposed block to chain. round=ConsensusRoundIdentifier{Sequence=67, Round=7}, hash=0x5b449d5e3294f8d19ef004bdb6a04b946c7c11c1905990fad33b103748c33609
+2026-11-22 11:13:34.028+0000 | BftProcessorExecutor-QBFT-0 | ERROR | EventMultiplexer | State machine threw exception while processing event \{org.hyperledger.besu.consensus.common.bft.events.BftReceivedMessageEvent@2b642908\}
