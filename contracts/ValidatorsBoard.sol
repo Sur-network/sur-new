@@ -98,7 +98,11 @@ interface IValidatorsTreasury {
 ///           - The election votes the old address cast and received move to the new address (for every migrating validator, board
 ///             member or not), so neither the person's approvals nor the approvals given to the person vanish. Votes recorded for
 ///             the old address by voters that can never count again (permanently exited, sold, or withdrawn: see `clearDeadVotes`) are
-///             dropped instead of moved, which bounds the work.
+///             dropped instead of moved. The migration itself moves only the person's CAST votes (at most 5) and records a PENDING move
+///             of the RECEIVED votes, so its gas never depends on how many votes the person received; anyone finishes the move in
+///             chunks with `moveReceivedVotes(old, max)`. While any such move is pending `refreshBoard` and `fillVacancies` wait
+///             (half-moved votes could seat or drop the person wrongly; `syncBoard` still clears void seats and leaves the vacancies
+///             for later), and an address that is the target of an unfinished move cannot be migrated again until it is complete.
 ///           - No double counting: a person's vote on a board action, on a removal case here, and on the board chambers of
 ///             BlockRewardDistributor (share and rate changes) is recorded under `boardVoterKey(address)`, the FIRST address of
 ///             the person's migration chain. The new address therefore cannot vote on a proposal the old address already voted
@@ -421,6 +425,7 @@ contract ValidatorsBoard {
     function refreshBoard(address[] calldata votersToSync) external {
         uint256 month = currentMonthId();
         require(boardMembers.length == 0 || month > boardMonthId, "ValidatorsBoard: this month's board is already set");
+        _requireNoPendingMove();
 
         for (uint256 i = 0; i < votersToSync.length; i++) {
             _syncVoter(votersToSync[i]);
@@ -547,6 +552,11 @@ contract ValidatorsBoard {
         return _hasAuthority(who);
     }
 
+    /// @dev Shared guard of `refreshBoard` and `fillVacancies`: while a migrated seat's received votes are half moved, a selection could seat or drop the person wrongly.
+    function _requireNoPendingMove() private view {
+        require(pendingVoteMoves == 0, "ValidatorsBoard: move pending");
+    }
+
     function _syncNeeded() private view returns (bool) {
         for (uint256 i = 0; i < boardMembers.length; i++) {
             if (!_hasAuthority(boardMembers[i])) return true;
@@ -589,10 +599,12 @@ contract ValidatorsBoard {
     ///         seated members, treasury payments and key rotations are halted until a seat is filled.
     function fillVacancies() external {
         require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
+        _requireNoPendingMove();
         if (_fillVacancies()) boardVersion++;
     }
 
     function _fillVacancies() private returns (bool filledAny) {
+        if (pendingVoteMoves != 0) return false; // wait: votes of a migrated seat are half moved (the vacancies stay pending for fillVacancies)
         uint256 room = BOARD_SIZE - boardMembers.length;
         uint256 want = pendingVacancies < room ? pendingVacancies : room;
         if (want == 0) return false;
@@ -643,13 +655,19 @@ contract ValidatorsBoard {
     // Seat migration after a lost owner key
     // ------------------------------------------------------------------
 
-    /// @notice A seat's board state moved to a new address of the same person (`heldSeat`: the old address held a still-valid board seat). `votesReceivedDropped` counts received votes of voters that can never count again, which are dropped instead of moved.
-    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved, uint256 votesReceivedDropped);
+    /// @notice Progress of one `moveReceivedVotes` call: entries moved, dropped (dead voter), merged (the voter already voted for the new address), and entries still waiting.
+    event ReceivedVotesMoved(address indexed oldOwner, address indexed newOwner, uint256 moved, uint256 dropped, uint256 merged, uint256 remaining);
+    /// @notice The pending move from `oldOwner` to `newOwner` is complete.
+    event ReceivedVotesMoveCompleted(address indexed oldOwner, address indexed newOwner);
 
-    /// @notice Called by ValidatorsRegistry.migrateSeat, and only by it, after the seat record moved from `oldOwner` to `newOwner`, a new address of the SAME person. REQUIRED call: if it reverts the whole migration reverts. `seatWasValid` is `hasValidSeat(oldOwner)` read by the Registry BEFORE it moved the record (the move bumps the old address's membership epoch). (1) If `seatWasValid`, `newOwner` takes the seat in place for the rest of the month (see the contract header), whether or not the month is still current; a seat that had already ended is left for `syncBoard` to clear. (2) The election votes `oldOwner` cast and received move to `newOwner` (received votes of dead voters are dropped). (3) `newOwner` inherits `oldOwner`'s vote key. Never called for a seat sale. The Registry only migrates to an address that never was a validator, so `newOwner` holds no seat and no votes of its own.
+    /// @notice A seat's board state moved to a new address of the same person (`heldSeat`: the old address held a still-valid board seat). `votesGivenMoved` are the person's cast votes (moved now); `votesReceivedPending` is the number of received votes still to be moved by `moveReceivedVotes` (0 = no pending move).
+    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedPending);
+
+    /// @notice Called by ValidatorsRegistry.migrateSeat, and only by it, after the seat record moved from `oldOwner` to `newOwner`, a new address of the SAME person. REQUIRED call: if it reverts the whole migration reverts. `seatWasValid` is `hasValidSeat(oldOwner)` read by the Registry BEFORE it moved the record (the move bumps the old address's membership epoch). Does bounded work only: (1) if `seatWasValid`, `newOwner` takes the seat in place for the rest of the month (see the contract header), whether or not the month is still current; a seat that had already ended is left for `syncBoard` to clear. (2) `newOwner` inherits `oldOwner`'s vote key. (3) The votes `oldOwner` CAST (at most MAX_VOTES_PER_VOTER) move to `newOwner`. (4) The votes `oldOwner` RECEIVED are recorded as a pending move, finished by the permissionless `moveReceivedVotes`. Reverts if `oldOwner` is itself the target of an unfinished move (finish it first). Never called for a seat sale. The Registry only migrates to an address that never was a validator, so `newOwner` holds no seat and no votes of its own.
     function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external {
         require(msg.sender == address(REGISTRY), "ValidatorsBoard: caller is not the validators registry");
         require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsBoard: bad migration addresses");
+        require(pendingSource[oldOwner] == address(0), "ValidatorsBoard: move pending"); // finish it first: no chain of half-moved votes
 
         bool held = seatWasValid && isBoardMember[oldOwner];
         if (held) {
@@ -667,12 +685,18 @@ contract ValidatorsBoard {
         }
         voterRoot[newOwner] = boardVoterKey(oldOwner); // on EVERY migration: later votes of `newOwner` map to the same key as `oldOwner`'s
 
-        (uint256 given, uint256 received, uint256 dropped) = _moveVotes(oldOwner, newOwner);
-        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received, dropped);
+        uint256 given = _moveCastVotes(oldOwner, newOwner);
+        uint256 pending = candidateVoters[oldOwner].length; // received votes: moved later, in chunks
+        if (pending > 0) {
+            pendingVoteMove[oldOwner] = newOwner;
+            pendingSource[newOwner] = oldOwner;
+            pendingVoteMoves++;
+        }
+        emit BoardSeatMigrated(oldOwner, newOwner, held, given, pending);
     }
 
-    /// @dev Moves the election votes of `oldOwner` to `newOwner`: first the votes it cast (a self-vote becomes a self-vote of the new address), then the votes it received; a received vote of a voter that can never count again (`_isDeadVoter`) is removed and not re-added. Counters follow through `_removeVote`/`_addVote`. Loop size: at most MAX_VOTES_PER_VOTER plus the number of voters recorded for `oldOwner`; `clearDeadVotes` lets anyone shrink that list beforehand.
-    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received, uint256 dropped) {
+    /// @dev Moves the votes `oldOwner` CAST to `newOwner` (a self-vote becomes a self-vote of the new address). Bounded: at most MAX_VOTES_PER_VOTER.
+    function _moveCastVotes(address oldOwner, address newOwner) private returns (uint256 given) {
         _syncVoter(oldOwner); // make the counters consistent first: the Registry's own best-effort notification may have failed
         _syncVoter(newOwner);
 
@@ -683,16 +707,41 @@ contract ValidatorsBoard {
             _removeVote(oldOwner, cand);
             _addVote(newOwner, cand == oldOwner ? newOwner : cand); // a vote for itself stays a vote for itself
         }
+    }
 
-        address[] memory voters = candidateVoters[oldOwner];
-        for (uint256 i = 0; i < voters.length; i++) {
-            _removeVote(voters[i], oldOwner);
-            if (_isDeadVoter(voters[i])) {
-                dropped++; // a dead voter's entry is dropped, not moved
+    /// @notice Permissionless. Moves the next chunk (at most `max` entries, taken from the end of the list) of the votes `oldOwner` RECEIVED to the
+    ///         address its seat was migrated to. Per entry: the vote of a voter that can never count again is dropped; a voter that already votes
+    ///         for the new address directly only loses its old entry (one vote per voter and candidate); every other vote is moved. Counters stay exact
+    ///         after every call. Emits the progress of each call and, when the list is empty, `ReceivedVotesMoveCompleted`, which also ends the pending
+    ///         state (until then `refreshBoard` and `fillVacancies` wait). Voters may still withdraw their own votes meanwhile.
+    function moveReceivedVotes(address oldOwner, uint256 max) external {
+        address to = pendingVoteMove[oldOwner];
+        require(to != address(0), "ValidatorsBoard: nothing pending");
+        require(max > 0, "ValidatorsBoard: max is zero");
+        address[] storage cv = candidateVoters[oldOwner];
+        uint256 steps = max < cv.length ? max : cv.length;
+        uint256 moved;
+        uint256 dropped;
+        uint256 merged;
+        for (uint256 i = 0; i < steps; i++) {
+            address v = cv[cv.length - 1];
+            _removeVote(v, oldOwner);
+            if (_isDeadVoter(v)) {
+                dropped++;
+            } else if (hasVotedFor[v][to]) {
+                merged++;
             } else {
-                _addVote(voters[i], newOwner);
-                received++;
+                _addVote(v, to);
+                moved++;
             }
+        }
+        uint256 remaining = cv.length;
+        emit ReceivedVotesMoved(oldOwner, to, moved, dropped, merged, remaining);
+        if (remaining == 0) {
+            delete pendingVoteMove[oldOwner];
+            delete pendingSource[to];
+            pendingVoteMoves--;
+            emit ReceivedVotesMoveCompleted(oldOwner, to);
         }
     }
 
@@ -880,6 +929,13 @@ contract ValidatorsBoard {
 
     /// @dev A migrated board seat's new address => the first address of that person's chain. Zero for every other address. Appended at the end of storage so the genesis seed layout above is unchanged.
     mapping(address => address) private voterRoot;
+
+    /// @notice Old address of a migrated seat => the new address its RECEIVED votes are still being moved to (zero = nothing pending). Cleared by the last `moveReceivedVotes`.
+    mapping(address => address) public pendingVoteMove;
+    /// @dev Reverse of pendingVoteMove: new address => the old address whose votes are still moving to it. Blocks a second migration of that address meanwhile.
+    mapping(address => address) private pendingSource;
+    /// @notice Number of unfinished received-vote moves. While it is not zero, `refreshBoard` and `fillVacancies` wait.
+    uint256 public pendingVoteMoves;
 
     event RecoveryRemovalVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
     event RecoveryAssemblyVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);

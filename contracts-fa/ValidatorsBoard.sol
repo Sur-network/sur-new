@@ -89,7 +89,12 @@ interface IValidatorsTreasury {
 ///           - رأی‌های انتخاباتی که آدرس قدیمی داده و گرفته به آدرس تازه می‌روند (برای هر ولیدیتور مهاجرت‌کننده، عضو هیأت باشد
 ///             یا نه)، پس نه رأی‌های خودِ شخص گم می‌شود و نه رأی‌هایی که به او داده شده. رأی‌هایی که برای آدرس قدیمی ثبت شده ولی
 ///             رأی‌دهنده‌اش دیگر هرگز شمرده نمی‌شود (برای همیشه رفته: خروج، فروش یا برداشت؛ `clearDeadVotes` را ببینید) منتقل
-///             نمی‌شود و حذف می‌شود، که حجم کار را کراندار می‌کند.
+///             نمی‌شود و حذف می‌شود. خودِ مهاجرت فقط رأی‌های **داده‌شدهٔ** شخص را (حداکثر ۵) منتقل می‌کند و انتقال رأی‌های **گرفته‌شده**
+///             را «در انتظار» ثبت می‌کند، پس گازش هرگز به تعداد رأی‌های گرفته‌شده بستگی ندارد؛ هر کس با
+///             `moveReceivedVotes(old, max)` انتقال را تکه‌تکه تمام می‌کند. تا وقتی چنین انتقالی در انتظار است `refreshBoard` و
+///             `fillVacancies` صبر می‌کنند (رأی‌های نیمه‌منتقل ممکن است شخص را اشتباه کرسی بدهند یا حذف کنند؛ `syncBoard` هنوز
+///             کرسی‌های باطل را پاک می‌کند و جاهای خالی را برای بعد می‌گذارد)، و آدرسی که مقصد یک انتقال ناتمام است تا پایان آن
+///             دوباره مهاجرت نمی‌کند.
 ///           - شمارش دوباره نیست: رأی یک شخص به اقدام هیأت، به پروندهٔ حذف در همین قرارداد و به اتاق‌های هیأت در
 ///             BlockRewardDistributor (تغییر سهم و نرخ) با `boardVoterKey(address)` ثبت می‌شود، یعنی **نخستین** آدرس زنجیرهٔ
 ///             مهاجرت شخص. پس آدرس تازه نمی‌تواند به پیشنهادی که آدرس قدیمی به آن رأی داده دوباره رأی بدهد، و به پیشنهادی که
@@ -403,6 +408,7 @@ contract ValidatorsBoard {
     function refreshBoard(address[] calldata votersToSync) external {
         uint256 month = currentMonthId();
         require(boardMembers.length == 0 || month > boardMonthId, "ValidatorsBoard: this month's board is already set");
+        _requireNoPendingMove();
 
         for (uint256 i = 0; i < votersToSync.length; i++) {
             _syncVoter(votersToSync[i]);
@@ -526,6 +532,11 @@ contract ValidatorsBoard {
         return _hasAuthority(who);
     }
 
+    /// @dev محافظِ مشترک `refreshBoard` و `fillVacancies`: تا وقتی رأی‌های گرفته‌شدهٔ یک صندلیِ مهاجرت‌کرده نیمه‌منتقل است، انتخاب ممکن است شخص را اشتباه کرسی بدهد یا حذف کند.
+    function _requireNoPendingMove() private view {
+        require(pendingVoteMoves == 0, "ValidatorsBoard: move pending");
+    }
+
     function _syncNeeded() private view returns (bool) {
         for (uint256 i = 0; i < boardMembers.length; i++) {
             if (!_hasAuthority(boardMembers[i])) return true;
@@ -568,10 +579,12 @@ contract ValidatorsBoard {
     ///         متوقف است.
     function fillVacancies() external {
         require(_boardIsCurrent(), "ValidatorsBoard: board term ended - call refreshBoard for the new month");
+        _requireNoPendingMove();
         if (_fillVacancies()) boardVersion++;
     }
 
     function _fillVacancies() private returns (bool filledAny) {
+        if (pendingVoteMoves != 0) return false; // صبر: رأی‌های یک صندلیِ مهاجرت‌کرده نیمه‌منتقل است (جاهای خالی برای fillVacancies می‌ماند)
         uint256 room = BOARD_SIZE - boardMembers.length;
         uint256 want = pendingVacancies < room ? pendingVacancies : room;
         if (want == 0) return false;
@@ -622,13 +635,19 @@ contract ValidatorsBoard {
     // مهاجرت صندلی پس از گم‌شدن کلید مالک
     // ------------------------------------------------------------------
 
-    /// @notice وضعیت هیأتیِ یک صندلی به آدرس تازهٔ همان شخص رفت (`heldSeat`: آدرس قدیمی کرسیِ هنوز معتبر داشت). `votesReceivedDropped` تعداد رأی‌های گرفته‌شده از رأی‌دهندگانی است که دیگر هرگز شمرده نمی‌شوند و به‌جای انتقال حذف می‌شوند.
-    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved, uint256 votesReceivedDropped);
+    /// @notice پیشرفت یک فراخوان `moveReceivedVotes`: ورودی‌های منتقل‌شده، حذف‌شده (رأی‌دهندهٔ مرده)، ادغام‌شده (رأی‌دهنده از قبل به آدرس تازه رأی داده) و ورودی‌های باقی‌مانده.
+    event ReceivedVotesMoved(address indexed oldOwner, address indexed newOwner, uint256 moved, uint256 dropped, uint256 merged, uint256 remaining);
+    /// @notice انتقال در انتظار از `oldOwner` به `newOwner` تمام شد.
+    event ReceivedVotesMoveCompleted(address indexed oldOwner, address indexed newOwner);
 
-    /// @notice فقط ValidatorsRegistry.migrateSeat صدایش می‌زند، پس از آن‌که رکورد صندلی از `oldOwner` به `newOwner` (آدرس تازهٔ **همان شخص**) رفته. فراخوان الزامی: اگر revert کند کل مهاجرت revert می‌شود. `seatWasValid` همان `hasValidSeat(oldOwner)` است که Registry **پیش از** جابه‌جاکردن رکورد می‌خواند (جابه‌جایی epoch عضویت آدرس قدیمی را بالا می‌برد). (۱) اگر `seatWasValid` درست باشد، `newOwner` کرسی را در همان جا تا پایان ماه می‌گیرد (سرآغاز قرارداد را ببینید)، چه ماه هنوز جاری باشد چه نه؛ کرسیِ از قبل پایان‌یافته را `syncBoard` پاک می‌کند. (۲) رأی‌های انتخاباتی که `oldOwner` داده و گرفته به `newOwner` می‌روند (رأی‌های گرفته‌شده از رأی‌دهندگانِ مرده حذف می‌شود). (۳) `newOwner` کلید رأیِ `oldOwner` را به ارث می‌برد. برای فروش صندلی هرگز صدا زده نمی‌شود. Registry فقط به آدرسی مهاجرت می‌دهد که هرگز ولیدیتور نبوده، پس `newOwner` کرسی و رأی خودی ندارد.
+    /// @notice وضعیت هیأتیِ یک صندلی به آدرس تازهٔ همان شخص رفت (`heldSeat`: آدرس قدیمی کرسیِ هنوز معتبر داشت). `votesGivenMoved` رأی‌های دادهٔ شخص است (همین حالا منتقل شد)؛ `votesReceivedPending` تعداد رأی‌های گرفته‌شده‌ای است که `moveReceivedVotes` باید هنوز منتقل کند (۰ = انتقال در انتظار نیست).
+    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedPending);
+
+    /// @notice فقط ValidatorsRegistry.migrateSeat صدایش می‌زند، پس از آن‌که رکورد صندلی از `oldOwner` به `newOwner` (آدرس تازهٔ **همان شخص**) رفته. فراخوان الزامی: اگر revert کند کل مهاجرت revert می‌شود. `seatWasValid` همان `hasValidSeat(oldOwner)` است که Registry **پیش از** جابه‌جاکردن رکورد می‌خواند (جابه‌جایی epoch عضویت آدرس قدیمی را بالا می‌برد). فقط کار کراندار می‌کند: (۱) اگر `seatWasValid` درست باشد، `newOwner` کرسی را در همان جا تا پایان ماه می‌گیرد (سرآغاز قرارداد را ببینید)، چه ماه هنوز جاری باشد چه نه؛ کرسیِ از قبل پایان‌یافته را `syncBoard` پاک می‌کند. (۲) `newOwner` کلید رأیِ `oldOwner` را به ارث می‌برد. (۳) رأی‌هایی که `oldOwner` **داده** (حداکثر MAX_VOTES_PER_VOTER) به `newOwner` می‌روند. (۴) رأی‌هایی که `oldOwner` **گرفته** به‌صورت انتقال در انتظار ثبت می‌شود و `moveReceivedVotes` (بدون مجوز) تمامش می‌کند. اگر خودِ `oldOwner` مقصد یک انتقال ناتمام باشد revert می‌کند (اول آن را تمام کنید). برای فروش صندلی هرگز صدا زده نمی‌شود. Registry فقط به آدرسی مهاجرت می‌دهد که هرگز ولیدیتور نبوده، پس `newOwner` کرسی و رأی خودی ندارد.
     function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external {
         require(msg.sender == address(REGISTRY), "ValidatorsBoard: caller is not the validators registry");
         require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsBoard: bad migration addresses");
+        require(pendingSource[oldOwner] == address(0), "ValidatorsBoard: move pending"); // اول آن را تمام کنید: زنجیرهٔ رأی‌های نیمه‌منتقل نداریم
 
         bool held = seatWasValid && isBoardMember[oldOwner];
         if (held) {
@@ -646,12 +665,18 @@ contract ValidatorsBoard {
         }
         voterRoot[newOwner] = boardVoterKey(oldOwner); // در **هر** مهاجرت: رأی‌های بعدی `newOwner` به همان کلیدِ `oldOwner` می‌رسد
 
-        (uint256 given, uint256 received, uint256 dropped) = _moveVotes(oldOwner, newOwner);
-        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received, dropped);
+        uint256 given = _moveCastVotes(oldOwner, newOwner);
+        uint256 pending = candidateVoters[oldOwner].length; // received votes: moved later, in chunks
+        if (pending > 0) {
+            pendingVoteMove[oldOwner] = newOwner;
+            pendingSource[newOwner] = oldOwner;
+            pendingVoteMoves++;
+        }
+        emit BoardSeatMigrated(oldOwner, newOwner, held, given, pending);
     }
 
-    /// @dev رأی‌های انتخاباتی `oldOwner` را به `newOwner` می‌برد: اول رأی‌هایی که داده (رأی به خود، رأی به خودِ آدرس تازه می‌شود)، بعد رأی‌هایی که گرفته؛ رأیِ گرفته‌شده از رأی‌دهنده‌ای که دیگر هرگز شمرده نمی‌شود (`_isDeadVoter`) حذف می‌شود و دوباره اضافه نمی‌شود. شمارنده‌ها از طریق `_removeVote`/`_addVote` دنبال می‌شوند. اندازهٔ حلقه: حداکثر MAX_VOTES_PER_VOTER به‌علاوهٔ تعداد رأی‌دهندگان ثبت‌شده برای `oldOwner`؛ `clearDeadVotes` به هر کس اجازه می‌دهد آن فهرست را از قبل کوتاه کند.
-    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received, uint256 dropped) {
+    /// @dev رأی‌هایی را که `oldOwner` **داده** به `newOwner` می‌برد (رأی به خود، رأی به خودِ آدرس تازه می‌شود). کراندار: حداکثر MAX_VOTES_PER_VOTER.
+    function _moveCastVotes(address oldOwner, address newOwner) private returns (uint256 given) {
         _syncVoter(oldOwner); // اول شمارنده‌ها را سازگار می‌کند: اعلان best-effort خودِ Registry ممکن است شکست خورده باشد
         _syncVoter(newOwner);
 
@@ -662,16 +687,41 @@ contract ValidatorsBoard {
             _removeVote(oldOwner, cand);
             _addVote(newOwner, cand == oldOwner ? newOwner : cand); // رأی به خود، رأی به خود می‌ماند
         }
+    }
 
-        address[] memory voters = candidateVoters[oldOwner];
-        for (uint256 i = 0; i < voters.length; i++) {
-            _removeVote(voters[i], oldOwner);
-            if (_isDeadVoter(voters[i])) {
-                dropped++; // ورودیِ رأی‌دهندهٔ مرده منتقل نمی‌شود، حذف می‌شود
+    /// @notice بدون مجوز. تکهٔ بعدی (حداکثر `max` ورودی، از انتهای فهرست) رأی‌هایی را که `oldOwner` **گرفته** به آدرسی می‌برد که صندلیِ او
+    ///         به آن مهاجرت کرده. برای هر ورودی: رأی رأی‌دهنده‌ای که دیگر هرگز شمرده نمی‌شود حذف می‌شود؛ رأی‌دهنده‌ای که از قبل مستقیم به
+    ///         آدرس تازه رأی داده فقط ورودی قدیمش را از دست می‌دهد (یک رأی برای هر رأی‌دهنده و نامزد)؛ بقیه منتقل می‌شوند. شمارنده‌ها پس از
+    ///         هر فراخوان دقیق می‌مانند. پیشرفت هر فراخوان و، وقتی فهرست خالی شد، `ReceivedVotesMoveCompleted` را emit می‌کند که حالت
+    ///         «در انتظار» را هم پایان می‌دهد (تا آن زمان `refreshBoard` و `fillVacancies` صبر می‌کنند). رأی‌دهندگان در این فاصله هنوز می‌توانند رأی خودشان را پس بگیرند.
+    function moveReceivedVotes(address oldOwner, uint256 max) external {
+        address to = pendingVoteMove[oldOwner];
+        require(to != address(0), "ValidatorsBoard: nothing pending");
+        require(max > 0, "ValidatorsBoard: max is zero");
+        address[] storage cv = candidateVoters[oldOwner];
+        uint256 steps = max < cv.length ? max : cv.length;
+        uint256 moved;
+        uint256 dropped;
+        uint256 merged;
+        for (uint256 i = 0; i < steps; i++) {
+            address v = cv[cv.length - 1];
+            _removeVote(v, oldOwner);
+            if (_isDeadVoter(v)) {
+                dropped++;
+            } else if (hasVotedFor[v][to]) {
+                merged++;
             } else {
-                _addVote(voters[i], newOwner);
-                received++;
+                _addVote(v, to);
+                moved++;
             }
+        }
+        uint256 remaining = cv.length;
+        emit ReceivedVotesMoved(oldOwner, to, moved, dropped, merged, remaining);
+        if (remaining == 0) {
+            delete pendingVoteMove[oldOwner];
+            delete pendingSource[to];
+            pendingVoteMoves--;
+            emit ReceivedVotesMoveCompleted(oldOwner, to);
         }
     }
 
@@ -859,6 +909,13 @@ contract ValidatorsBoard {
 
     /// @dev آدرس تازهٔ یک کرسی هیأت مهاجرت‌کرده => نخستین آدرس زنجیرهٔ آن شخص. برای هر آدرس دیگر صفر. ته ذخیره‌سازی اضافه شد تا چینش seed ژنزیس بالا عوض نشود.
     mapping(address => address) private voterRoot;
+
+    /// @notice آدرس قدیمیِ یک صندلی مهاجرت‌کرده => آدرس تازه‌ای که رأی‌های «گرفته‌شده»اش هنوز به آن منتقل می‌شود (صفر = چیزی در انتظار نیست). آخرین `moveReceivedVotes` پاکش می‌کند.
+    mapping(address => address) public pendingVoteMove;
+    /// @dev معکوس pendingVoteMove: آدرس تازه => آدرس قدیمی‌ای که رأی‌هایش هنوز به آن می‌رود. مهاجرت دوم آن آدرس را تا آن زمان می‌بندد.
+    mapping(address => address) private pendingSource;
+    /// @notice تعداد انتقال‌های ناتمام رأی‌های گرفته‌شده. تا صفر نشده `refreshBoard` و `fillVacancies` صبر می‌کنند.
+    uint256 public pendingVoteMoves;
 
     event RecoveryRemovalVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
     event RecoveryAssemblyVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
