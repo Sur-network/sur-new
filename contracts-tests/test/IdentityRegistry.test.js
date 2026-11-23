@@ -84,7 +84,10 @@ describe("IdentityRegistry v2.5", () => {
     await idr.connect(user).registerIdentity(0, "Ali");
     await verifyAll(idr, oracle, user);
     expect(await idr.isFullyVerified(user.address)).to.equal(true);
+    expect(await idr.migratedTo(user.address)).to.equal(ZERO);
     await idr.connect(oracle).migrateIdentity(user.address, user2.address);
+    expect(await idr.migratedTo(user.address)).to.equal(user2.address); // read by ValidatorsRegistry.migrateSeat
+    expect(await idr.migratedTo(user2.address)).to.equal(ZERO);
     expect(await idr.isFullyVerified(user2.address)).to.equal(true);
     expect(await idr.isFullyVerified(user.address)).to.equal(false);
     expect([...(await idr.getVerificationStatus(user.address))]).to.deep.equal([false, false, false, false, false, false]);

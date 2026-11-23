@@ -5,6 +5,7 @@ import "./SurAddresses.sol";
 
 interface IBlockRewardDistributor {
     function receiveMembershipFee() external payable;
+    function migrateClaimable(address from, address to) external; // seat migration after a lost owner key: moves what is owed to the old owner
 }
 
 interface IValidatorsBoardSync {
@@ -14,6 +15,7 @@ interface IValidatorsBoardSync {
 interface IValidatorSeatNFT {
     function mintSeat(address to) external returns (uint256);
     function burnSeat(address owner) external;
+    function reassignSeat(address from, address to) external returns (uint256 seatId); // seat migration: moves the token, no hook
     function ownerOf(uint256 tokenId) external view returns (address); // reverts for a token that does not exist
 }
 
@@ -23,6 +25,7 @@ interface IBoardAuthority {
 
 interface IIdentityFullyVerified {
     function isFullyVerified(address who) external view returns (bool);
+    function migratedTo(address who) external view returns (address); // non-zero: the identity was migrated (old address burned) to that address
 }
 
 /// @title ValidatorsRegistry
@@ -59,9 +62,10 @@ interface IIdentityFullyVerified {
 ///         Governance has two tracks:
 ///           - ECONOMIC ENTRY PARAMETERS (entryCollateral, membershipFeeBps) are changed
 ///             only by ValidatorsBoard's internal vote.
-///           - EVERYTHING ELSE (rate limit, probation length, recovery period, slashing bps, exit cooldown) requires a
+///           - THE REMAINING PARAMETERS (entry window length, recovery period, exit cooldown) require a
 ///             majority of the validators that were Active when the proposal was created
-///             (proposeParameterChange / voteParameterChange).
+///             (proposeParameterChange / voteParameterChange). The maximum of one paid entry per window, the 1-week probation and the
+///             1% slash are FIXED constants (owner decision) and cannot be changed by any vote.
 ///
 ///         MEMBERSHIP PAYMENT: a new validator pays two amounts in native currency (Suren) with requestMembership:
 ///           - COLLATERAL (= currentEntryThreshold()): locked here, refundable on exit, slashable.
@@ -198,17 +202,24 @@ contract ValidatorsRegistry {
     uint256 public membershipFeeBps = 400;
 
 
-    /// @notice Maximum number of new membership requests allowed within entryWindowSeconds.
-    uint256 public maxEntriesPerWindow = 1;
+    /// @notice FIXED (owner decision; no longer a parameter, no vote can change it): at most ONE new paid membership per entry window.
+    ///         It is counted when the Verifier ACTIVATES a paying entrant (recordActivation), not when the membership is requested.
+    ///         Kept as a constant under the old getter name so the ABI getter and the genesis-builder checks stay valid.
+    uint256 public constant maxEntriesPerWindow = 1;
+    /// @notice The entry window: at most one paid activation per window. The only entry parameter the validators can still change
+    ///         (1..30 days, +-1 day per change, 6 months between changes, none in the first 6 months).
     uint256 public entryWindowSeconds = 7 days; // v2.5: at most one new paying validator per week
 
-    uint256 public probationPeriod = 604800; // 1 week
+    /// @notice FIXED (owner decision): the minimum probation of a paying entrant before activation, 1 week. A constant under the old getter name.
+    uint256 public constant probationPeriod = 7 days;
 
     /// @notice Minimum time between a suspension and the recording of a recovery (48 hours initially).
     uint256 public recoveryPeriod = 172800;      // 48 hours
-    uint256 public slashBps = 100;               // 1% — deliberately light: the entry threshold is kept low to broaden who
-    // can afford to become a validator, so a heavy slash on that smaller collateral would punish an honest infrastructure
-    // mistake too hard. 1% is a real consequence without being catastrophic for any collateral size.
+    /// @notice FIXED (owner decision; no vote can change it): the slash is 1% (100 bps) of the locked collateral. Deliberately light: the
+    ///         entry threshold is kept low to broaden who can afford to become a validator, so a heavy slash on that smaller collateral
+    ///         would punish an honest infrastructure mistake too hard. 1% is a real consequence without being catastrophic for any
+    ///         collateral size. A constant under the old getter name.
+    uint256 public constant slashBps = 100;
     uint256 public exitCooldown = 604800;        // 1 week
 
     /// @notice A fixed time window (MASS_DEMOTION_WINDOW) during which suspensions are grouped. A suspension's slash is
@@ -236,9 +247,8 @@ contract ValidatorsRegistry {
 
     /// @dev Set by the genesis tool to the real genesis timestamp (not the block.timestamp of the machine that runs the
     ///      seeding simulation); see sur-contracts-deploy-notes.md.
-    // rolling rate-limit window state
-    uint256 public windowStart = 0;
-    uint256 public entriesInWindow;
+    // entry window state: the time of the last PAID activation (0 = none yet). Lottery winners and founders are exempt and never set it.
+    uint256 public lastPaidActivationAt;
 
     // ------------------------------------------------------------------
     // Off-chain verification. The verifier checks every node's liveness off-chain (hourly) and records on-chain only
@@ -391,6 +401,8 @@ contract ValidatorsRegistry {
     // parameters above (those are ValidatorsBoard-governed; see ValidatorsBoard.sol).
     // ------------------------------------------------------------------
 
+    /// @dev The ORDER is part of the ABI and is not changed. MaxEntriesPerWindow (0), ProbationPeriod (2) and SlashBps (4) are FIXED by owner
+    ///      decision and kept only so the numbering of the other keys stays: they are refused when proposed and when applied.
     enum ParamKey {
         MaxEntriesPerWindow,
         EntryWindowSeconds,
@@ -512,7 +524,7 @@ contract ValidatorsRegistry {
     }
 
     // ------------------------------------------------------------------
-    // Entry threshold / rate limiting
+    // Entry threshold / entry window
     // ------------------------------------------------------------------
 
     /// @notice Collateral needed to request membership NOW (fixed; see entryCollateral).
@@ -557,13 +569,22 @@ contract ValidatorsRegistry {
         require(proposed * 10 >= current * 9 && proposed * 10 <= current * 11, "ValidatorsRegistry: change exceeds +-10%");
     }
 
-    function _enforceRateLimit() private {
-        if (block.timestamp >= windowStart + entryWindowSeconds) {
-            windowStart = block.timestamp;
-            entriesInWindow = 0;
-        }
-        require(entriesInWindow < maxEntriesPerWindow, "ValidatorsRegistry: entry rate limit reached");
-        entriesInWindow++;
+    /// @dev The entry window rule (owner decision): at most ONE new paid membership per entry window, counted at ACTIVATION. A paying entrant
+    ///      may request membership at any time and waits in Probation; the Verifier's recordActivation is refused while the window is used
+    ///      (the last paid activation is less than entryWindowSeconds ago). With the fixed maximum of one, "per window" is exactly
+    ///      "at least entryWindowSeconds after the previous paid activation". The first paid activation is never delayed.
+    function _enforceEntryWindow() private {
+        require(
+            lastPaidActivationAt == 0 || block.timestamp >= lastPaidActivationAt + entryWindowSeconds,
+            "ValidatorsRegistry: entry window used - only one new paid validator per window"
+        );
+        lastPaidActivationAt = block.timestamp;
+    }
+
+    /// @notice Earliest time the Verifier can activate the next paying entrant (0 = no paid activation yet, so any time after probation).
+    ///         Not a promise: the probation period of the candidate still applies.
+    function nextPaidActivationAllowedAt() external view returns (uint256) {
+        return lastPaidActivationAt == 0 ? 0 : lastPaidActivationAt + entryWindowSeconds;
     }
 
     // ------------------------------------------------------------------
@@ -583,8 +604,6 @@ contract ValidatorsRegistry {
         uint256 collateral = entryCollateral;
         uint256 fee = currentMembershipFee();
         require(msg.value == collateral + fee, "ValidatorsRegistry: incorrect payment amount");
-
-        _enforceRateLimit();
 
         if (fee > 0) {
             DISTRIBUTOR.receiveMembershipFee{value: fee}();
@@ -617,7 +636,7 @@ contract ValidatorsRegistry {
     mapping(address => address) public ownerOfOperator;
     /// @notice The CURRENT operator (node key) of an owner (zero until set).
     mapping(address => address) public operatorOf;
-    /// @notice Genesis founders: no collateral, outside the entry rate limit, no probation wait before activation.
+    /// @notice Genesis founders: no collateral, outside the entry window, no probation wait before activation.
     mapping(address => bool) public isFounder;
     /// @notice Genesis timestamp (set by the seed helper).
     uint256 public genesisTime;
@@ -744,6 +763,9 @@ contract ValidatorsRegistry {
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
+        // The entry window counts here, at activation. Only a PAYING entrant (isPaidEntrant, also after a seat sale) uses a window slot: founders
+        // and lottery winners are exempt by decision (their record has isPaidEntrant == false).
+        if (v.isPaidEntrant) _enforceEntryWindow();
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
         _notifyBoard(candidate);
@@ -1262,6 +1284,10 @@ contract ValidatorsRegistry {
         // by its demotion epoch, which is unambiguous only if one validator can never be suspended twice inside one epoch
         // (suspend, recover, suspend). Validated at proposal time (so an invalid proposal can neither be created nor jam its own
         // final vote) and again in _applyParam().
+        require(
+            key != ParamKey.MaxEntriesPerWindow && key != ParamKey.ProbationPeriod && key != ParamKey.SlashBps,
+            "ValidatorsRegistry: this parameter is fixed and cannot be changed"
+        );
         if (key == ParamKey.RecoveryPeriod) {
             require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
         } else if (key == ParamKey.ExitCooldown) {
@@ -1310,9 +1336,7 @@ contract ValidatorsRegistry {
     }
 
     function _applyParam(ParamKey key, uint256 value) private {
-        if (key == ParamKey.MaxEntriesPerWindow) {
-            maxEntriesPerWindow = value;
-        } else if (key == ParamKey.EntryWindowSeconds) {
+        if (key == ParamKey.EntryWindowSeconds) {
             // v2.5: 1..30 days, each change at most +-1 day, at least 6 months between changes, none in the first 6 months
             require(value >= 1 days && value <= 30 days, "ValidatorsRegistry: entryWindowSeconds outside 1-30 days");
             require(
@@ -1323,17 +1347,14 @@ contract ValidatorsRegistry {
             require(block.timestamp >= lastEntryWindowChange + 180 days, "ValidatorsRegistry: at least 6 months between changes");
             lastEntryWindowChange = block.timestamp;
             entryWindowSeconds = value;
-        } else if (key == ParamKey.ProbationPeriod) {
-            probationPeriod = value;
         } else if (key == ParamKey.RecoveryPeriod) {
             require(value > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
             recoveryPeriod = value;
-        } else if (key == ParamKey.SlashBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
-            slashBps = value;
         } else if (key == ParamKey.ExitCooldown) {
             require(value > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
             exitCooldown = value;
+        } else {
+            revert("ValidatorsRegistry: this parameter is fixed and cannot be changed"); // MaxEntriesPerWindow, ProbationPeriod, SlashBps
         }
         emit ParameterChangeApplied(key, value);
     }
@@ -1416,8 +1437,8 @@ contract ValidatorsRegistry {
 
     event LotteryWinnerEntered(address indexed winner);
 
-    /// @notice A lottery winner takes a seat WITHOUT collateral and WITHOUT membership fee, outside the entry rate limit and
-    ///         not counted as a paid entrant. The seat starts in Probation like any entry: the node still has to be verified
+    /// @notice A lottery winner takes a seat WITHOUT collateral and WITHOUT membership fee, outside the entry window (its activation
+    ///         neither waits for nor uses a window slot) and not counted as a paid entrant. The seat starts in Probation like any entry: the node still has to be verified
     ///         (and the agreement signed) before the Verifier activates it, so the vote is not live before that. An address
     ///         that is already registered or has ever exited cannot take a seat (one seat per person, permanent ban).
     function enterAsLotteryWinner(address winner) external {
@@ -1642,10 +1663,15 @@ contract ValidatorsRegistry {
     // v2.5: seat NFT. The owner of ValidatorSeatNFT token = the owner of the seat (reference doc §9).
     // ------------------------------------------------------------------
     // The buyer's acceptance of the validators' agreement is a GATE (owner decision): a seat cannot be transferred to an address that
-    // has not recorded its acceptance FOR THAT SEAT beforehand, so nobody becomes the owner of a seat without having accepted. The
-    // signature itself stays off-chain (a document the buyer signs with its own key); the chain records only that the buyer's OWN key
-    // accepted the agreement for this seat id. The acceptance is made BEFORE the transfer (acceptSeatAgreement), is bound to one
-    // seat id, and is CONSUMED by the transfer that uses it (a later transfer of the same seat to the same address needs a fresh one).
+    // has not recorded its acceptance FOR THAT SEAT beforehand, so nobody becomes the owner of a seat without having accepted.
+    //
+    // Legal flow (owner decision): the buyer signs the agreement with the Foundation BEFORE the transfer, effective from the transfer;
+    // the Foundation countersigns AFTER the transfer and is obliged to sign, so NOTHING waits on the Foundation on-chain. The signature
+    // itself stays off-chain; the chain records only that the buyer's OWN key accepted, for this seat id, an agreement document with the
+    // given hash (acceptSeatAgreement). The acceptance is made BEFORE the transfer, is bound to one seat id and one agreement hash, and is
+    // CONSUMED by the transfer that uses it (a later transfer of the same seat to the same address needs a fresh one). The hash travels
+    // into the transfer: it is stored as the seat's agreement hash and emitted (SeatAgreementBound) so the document that binds the
+    // current owner can always be found.
     // Seats minted at entry, by the lottery or at genesis never pass through the transfer hook, so this gate does not touch those
     // paths; they never used the old post-transfer acceptance either.
 
@@ -1654,19 +1680,30 @@ contract ValidatorsRegistry {
     ///         never be applied to a different seat than the one it names. Set by the buyer's own key only
     ///         (acceptSeatAgreement), cleared by revokeSeatAcceptance or consumed by the transfer.
     mapping(address => uint256) public seatAcceptedFor;
+    /// @notice The hash of the signed agreement document recorded together with that acceptance (non-zero while an acceptance is open).
+    mapping(address => bytes32) public seatAcceptedAgreementHash;
+    /// @notice The agreement hash that bound the CURRENT owner of a seat when the seat reached it by a transfer (0 = the seat did not come
+    ///         by transfer: entry, lottery or genesis, or it was never accepted on-chain). Overwritten by the next transfer; the full
+    ///         history is in the SeatAgreementBound events. A seat migrated after a lost owner key keeps its hash: same person, same agreement.
+    mapping(uint256 => bytes32) public seatAgreementHash;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
-    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId);
+    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
+    /// @notice Emitted by the transfer that consumed an acceptance: `owner` now holds `seatId` under the agreement with this hash.
+    event SeatAgreementBound(uint256 indexed seatId, address indexed owner, bytes32 agreementHash);
 
     /// @notice The future buyer records, with its own key and BEFORE the seat is transferred to it, that it accepts the validators'
-    ///         agreement for seat `seatId` (the signature itself is off-chain). Nobody can record it for another address. The seat
-    ///         must exist and must not already be owned by the caller. The record only authorises the transfer of THIS seat to the
-    ///         caller; every other transfer rule is still checked when the seat moves. Replaces any earlier acceptance of the caller.
-    function acceptSeatAgreement(uint256 seatId) external {
+    ///         agreement for seat `seatId`; `agreementHash` is the hash of the signed agreement document (non-zero; the signature itself is
+    ///         off-chain). Nobody can record it for another address. The seat must exist and must not already be owned by the caller.
+    ///         The record only authorises the transfer of THIS seat to the caller; every other transfer rule is still checked when the
+    ///         seat moves. Replaces any earlier acceptance of the caller.
+    function acceptSeatAgreement(uint256 seatId, bytes32 agreementHash) external {
+        require(agreementHash != bytes32(0), "ValidatorsRegistry: empty agreement hash");
         require(IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).ownerOf(seatId) != msg.sender, "ValidatorsRegistry: caller already owns this seat");
         seatAcceptedFor[msg.sender] = seatId;
-        emit SeatAgreementAccepted(msg.sender, seatId);
+        seatAcceptedAgreementHash[msg.sender] = agreementHash;
+        emit SeatAgreementAccepted(msg.sender, seatId, agreementHash);
     }
 
     /// @notice The buyer withdraws its recorded acceptance (for example the sale fell through), so the seat can no longer be
@@ -1675,13 +1712,14 @@ contract ValidatorsRegistry {
         uint256 seatId = seatAcceptedFor[msg.sender];
         require(seatId != 0, "ValidatorsRegistry: no acceptance recorded");
         delete seatAcceptedFor[msg.sender];
+        delete seatAcceptedAgreementHash[msg.sender];
         emit SeatAcceptanceRevoked(msg.sender, seatId);
     }
 
     /// @notice Called by ValidatorSeatNFT after the token moved; reverts (so the token transfer reverts) unless the transfer is
     ///         allowed. Moves the whole validator record from `from` to `to`. Besides the seat-status and penalty rules, the buyer
     ///         must be new, fully verified and not an operator key, and must have recorded the acceptance of the agreement for
-    ///         exactly this seat (acceptSeatAgreement); that acceptance is consumed here.
+    ///         exactly this seat (acceptSeatAgreement); that acceptance is consumed here and its agreement hash is bound to the seat.
     function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
         require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
         ValidatorInfo storage v = validators[from];
@@ -1698,11 +1736,25 @@ contract ValidatorsRegistry {
         require(to != from, "ValidatorsRegistry: same owner");
         // the buyer must have accepted the validators' agreement for THIS seat before the transfer; the acceptance is used up now
         require(seatAcceptedFor[to] == seatId, "ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat");
+        bytes32 agreementHash = seatAcceptedAgreementHash[to];
         delete seatAcceptedFor[to];
+        delete seatAcceptedAgreementHash[to];
 
-        // An Active seat STAYS Active (decision 2026-11-19): the buyer takes the owner place in the active set at the same
-        // position, with the same operator key, so the node keeps validating without interruption. The seller's vote ends and the
-        // buyer is a new voter from now (fresh checkpoints), so the buyer cannot vote on proposals created before the transfer.
+        _moveSeatRecord(from, to, st, false);
+
+        seatAgreementHash[seatId] = agreementHash;
+        emit SeatAgreementBound(seatId, to, agreementHash);
+        emit SeatTransferred(seatId, from, to, st);
+    }
+
+    /// @dev Moves the whole validator record of a seat from `from` to `to` (shared by a sale and by a migration after a lost owner key; the
+    ///      callers have already checked every rule). An Active seat STAYS Active (decision 2026-11-19): the new owner takes the owner place in
+    ///      the active set at the same position, with the same operator key, so the node keeps validating without interruption. The old
+    ///      owner's vote ends and the new owner is a new voter from now (fresh checkpoints), so it cannot vote on proposals created before.
+    ///      The old address is marked permanentlyExited (it can never be a validator again) and its board authority ends.
+    ///      `keepResumeRequest`: a migration keeps an open resume request (same person), a sale does not.
+    function _moveSeatRecord(address from, address to, Status st, bool keepResumeRequest) private {
+        ValidatorInfo storage v = validators[from];
         if (st == Status.Active) {
             uint256 idx = activeIndex[from];
             activeValidators[idx - 1] = to;
@@ -1727,11 +1779,11 @@ contract ValidatorsRegistry {
         }
         everActivated[to] = everActivated[from];
         activationSeq[to] = activationSeq[from];
-        resumeRequested[to] = false;
+        resumeRequested[to] = keepResumeRequest && resumeRequested[from];
         resumeRequested[from] = false;
         {
-            // the seller's leftovers must not survive the transfer: an open node-key proposal (and its key reservation) and any
-            // acceptance the seller had recorded as a possible buyer; the buyer starts clean and must make its own proposal if it
+            // the old owner's leftovers must not survive: an open node-key proposal (and its key reservation) and any
+            // acceptance it had recorded as a possible buyer; the new owner starts clean and must make its own proposal if it
             // wants another node key
             address proposed = pendingOperator[from];
             if (proposed != address(0)) {
@@ -1740,14 +1792,58 @@ contract ValidatorsRegistry {
                 delete pendingOperatorExpiresAt[from];
             }
             delete seatAcceptedFor[from];
+            delete seatAcceptedAgreementHash[from];
         }
 
-        // the seller is treated as exited: permanent ban, board authority over
+        // the old owner is treated as exited: permanent ban, board authority over
         permanentlyExited[from] = true;
         membershipEpoch[from]++;
 
-        emit SeatTransferred(seatId, from, to, st);
         _notifyBoard(from);
         _notifyBoard(to);
+    }
+
+    // ------------------------------------------------------------------
+    // Lost owner key: the whole seat moves to the person's new address after an authorised identity migration (audit A4)
+    // ------------------------------------------------------------------
+    /// @notice A seat was moved to a new address of the SAME person after the owner key was lost.
+    event SeatMigrated(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+
+    /// @notice Lost owner key (validator agreement 5-5, change proposal 32 answer 6): moves the WHOLE seat from `oldOwner` to `newOwner`
+    ///         (the validator record with its collateral and status, the operator (node-key) link, the founder flag, the activation history,
+    ///         the place in the active set and the vote as a new voter from now, the seat NFT, and what BlockRewardDistributor owes to the old
+    ///         owner). It is the single exception to the permanent ban: the person is the same, so the new address is NOT treated as exited,
+    ///         while the old address becomes permanently exited and its board authority ends.
+    ///
+    ///         AUTHORISATION (two independent keys, the strictest reading of the documents): (1) the identity oracle must already have run
+    ///         IdentityRegistry.migrateIdentity(oldOwner, newOwner) after the off-chain identity check (this contract reads
+    ///         migratedTo(oldOwner) == newOwner), and (2) this call is made by the Verifier. Neither key alone can move a seat: the identity
+    ///         oracle cannot touch the Registry, and the Verifier cannot name an address the oracle did not migrate to. The old owner cannot
+    ///         call it (its key is lost). The new address must be fully verified (the migration copies the flags), a plain wallet (EOA), must
+    ///         never have been a validator or an operator key, and must hold no seat. The old seat must be Probation, Active, Demoted or
+    ///         SelfSuspended with no open penalty case; an Exiting or RemovedInRecovery seat cannot be migrated.
+    function migrateSeat(address oldOwner, address newOwner) external onlyVerifier nonReentrant {
+        require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsRegistry: bad new owner");
+        ValidatorInfo storage v = validators[oldOwner];
+        Status st = v.status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            "ValidatorsRegistry: seat cannot be migrated in this status"
+        );
+        require(v.pendingSlashEpoch == 0 && pendingSlashDecisionId[oldOwner] == 0, "ValidatorsRegistry: open penalty case - migration blocked");
+        require(
+            IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).migratedTo(oldOwner) == newOwner,
+            "ValidatorsRegistry: the identity of the old owner was not migrated to this address"
+        );
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(newOwner), "ValidatorsRegistry: new owner identity not fully verified");
+        require(newOwner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
+        require(validators[newOwner].status == Status.None && !permanentlyExited[newOwner] && !everActivated[newOwner], "ValidatorsRegistry: new owner was a validator before");
+        require(ownerOfOperator[newOwner] == address(0) && operatorOf[newOwner] == address(0), "ValidatorsRegistry: new owner is an operator key");
+
+        uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).reassignSeat(oldOwner, newOwner);
+        _moveSeatRecord(oldOwner, newOwner, st, true);
+        DISTRIBUTOR.migrateClaimable(oldOwner, newOwner);
+
+        emit SeatMigrated(seatId, oldOwner, newOwner, st);
     }
 }

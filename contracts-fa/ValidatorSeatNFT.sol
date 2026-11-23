@@ -26,7 +26,8 @@ interface ISeatRegistryHook {
 ///           - فروشنده خروج‌کرده محسوب می‌شود و دیگر هرگز نمی‌تواند ولیدیتور شود (توافق‌نامه ۱۵-۶)؛
 ///           - جایگاه Active «Active می‌ماند»: خریدار جایگاه، کلید اپراتور و موقعیت در مجموعهٔ فعال را یکجا تحویل می‌گیرد
 ///             و رأی خریدار از لحظهٔ انتقال شمرده می‌شود (رأی‌دهندهٔ جدید).
-///         فقط ValidatorsRegistry mint می‌کند (ورود، برد قرعه‌کشی، مؤسسین genesis) و burn می‌کند (وقتی مالک خارج می‌شود).
+///         فقط ValidatorsRegistry mint می‌کند (ورود، برد قرعه‌کشی، مؤسسین genesis)، burn می‌کند (وقتی مالک خارج می‌شود) و
+///         جابه‌جا می‌کند (`reassignSeat`: مهاجرت صندلی به آدرس تازهٔ همان شخص پس از گم‌شدن کلید مالک).
 ///         `tokenURI(id)` = baseURI + id؛ آدرس پایه (در آغاز https://validator-nft.surnet.org/) را فقط
 ///         FoundationDAO می‌تواند تغییر دهد (پیشنهاد Execute که `setBaseURI` را صدا می‌زند).
 ///
@@ -167,6 +168,25 @@ contract ValidatorSeatNFT {
         delete seatOf[owner];
         _balances[owner] = 0;
         emit Transfer(owner, address(0), id);
+    }
+
+    /// @notice فقط Registry: صندلیِ `from` را «بدون» صدا زدن hook ی Registry به `to` می‌برد (Registry رکورد ولیدیتور را در همان تراکنش
+    ///         از قبل جابه‌جا کرده است). فقط برای مهاجرت صندلی به آدرس تازهٔ «همان شخص» پس از گم‌شدن کلید مالک
+    ///         (ValidatorsRegistry.migrateSeat) به کار می‌رود. گیرنده باید کیف‌پول معمولی باشد و صندلی نداشته باشد؛ هر approval توکن
+    ///         پاک می‌شود. شناسهٔ صندلی را برمی‌گرداند.
+    function reassignSeat(address from, address to) external onlyRegistry returns (uint256 id) {
+        id = seatOf[from];
+        require(id != 0, "ValidatorSeatNFT: no seat to reassign");
+        require(to != address(0) && to != from, "ValidatorSeatNFT: bad recipient");
+        require(to.code.length == 0, "ValidatorSeatNFT: a seat owner must be a plain wallet (EOA)");
+        require(_balances[to] == 0, "ValidatorSeatNFT: recipient already holds a seat");
+        delete _approved[id];
+        _balances[from] = 0;
+        _balances[to] = 1;
+        _owners[id] = to;
+        delete seatOf[from];
+        seatOf[to] = id;
+        emit Transfer(from, to, id);
     }
 
     function _mintSeat(address to) internal returns (uint256 id) {

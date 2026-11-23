@@ -1239,6 +1239,20 @@ contract BlockRewardDistributor {
     event ClaimableWithdrawn(address indexed owner, uint256 amount);
 
     /// @notice The owner (with code) withdraws its own deferred balance. Only the caller's own balance; if its receive() reverts only this claim fails.
+    event ClaimableMigrated(address indexed from, address indexed to, uint256 amount);
+
+    /// @notice ValidatorsRegistry only, as part of migrating a seat to a new address of the same person after a lost owner key: whatever is
+    ///         credited to `from` as claimable (only an owner that had code when it was paid has any) becomes claimable by `to`. The sum of
+    ///         all claimable is unchanged. Nothing else moves: amounts already paid stay paid, and the reward statistics stay with the address.
+    function migrateClaimable(address from, address to) external {
+        require(msg.sender == REGISTRY_ADDRESS, "BlockRewardDistributor: only ValidatorsRegistry may migrate a claim");
+        uint256 amount = claimable[from];
+        if (amount == 0) return;
+        claimable[from] = 0;
+        claimable[to] += amount;
+        emit ClaimableMigrated(from, to, amount);
+    }
+
     function claim() external nonReentrant {
         uint256 amount = claimable[msg.sender];
         require(amount > 0, "BlockRewardDistributor: nothing to claim");

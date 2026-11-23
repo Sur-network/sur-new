@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, setTime, increaseTime, now, DAY } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -43,7 +43,7 @@ async function asDao() {
 }
 
 describe("StandbyValidators - the contract", () => {
-  it("starts empty and not ready; only FoundationDAO may write; constants are fixed", async () => {
+  it("the bare contract (no genesis seed here; the real genesis seeds the first validator) starts empty and not ready; only FoundationDAO may write; constants are fixed", async () => {
     const { sb, S, ops } = await loadFixture(fixture);
     expect(await sb.getValidators()).to.deep.equal([]);
     expect(await sb.version()).to.equal(0);
@@ -129,6 +129,62 @@ describe("StandbyValidators - the contract", () => {
     // the old key is no longer a valid member
     await expect(sb.connect(dao).setStandby(asc([ops[1], ops[2], ops[3], ops[4]]))).to.be.revertedWith(
       "StandbyValidators: not the current operator key of a registered seat");
+  });
+});
+
+describe("StandbyValidators - the member must be the operator of a LIVE seat (audit A5)", () => {
+  const notOp = "StandbyValidators: not the current operator key of a registered seat";
+
+  it("an owner that exited (Exiting), withdrew its stake (record deleted) or was removed in a network recovery makes its member stale; setStandby refuses such a key", async () => {
+    const { sb, reg, ops, founders } = await loadFixture(fixture);
+    const dao = await asDao();
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VERIFIER, "0x56BC75E2D63100000"]);
+    const verifier = await ethers.getImpersonatedSigner(ADDR.VERIFIER);
+    // live statuses are accepted: ops[0] Active, ops[1..3] Probation founders
+    await sb.connect(dao).setStandby(asc(ops.slice(0, 4)));
+    expect(await sb.isReady()).to.equal(true);
+
+    // 1) voluntary exit: the key mappings stay (the Registry never frees a key) but the owner is Exiting
+    await reg.connect(founders[2]).requestExit();
+    expect(await reg.ownerOfOperator(ops[2])).to.equal(founders[2].address); // still mapped
+    expect(await sb.staleMembers()).to.deep.equal([ops[2]]);
+    expect(await sb.isReady()).to.equal(false);
+    await expect(sb.connect(dao).setStandby(asc(ops.slice(0, 4)))).to.be.revertedWith(notOp);
+
+    // 2) after the stake is withdrawn the Registry record is gone (status None): still stale
+    await increaseTime(8 * DAY);
+    await reg.connect(founders[2]).withdrawStake();
+    expect((await reg.validators(founders[2].address)).status).to.equal(0);
+    expect(await sb.staleMembers()).to.deep.equal([ops[2]]);
+
+    // 3) removal in a network recovery: needs an Active validator (activate the other founders first)
+    for (const f of [founders[1], founders[3], founders[4], founders[5], founders[6]]) await reg.connect(verifier).recordActivation(f.address, ethers.id("e"));
+    await reg.connect(verifier).recordRecoveryRemoval(founders[3].address, await now(), ethers.id("e"));
+    expect((await reg.validators(founders[3].address)).status).to.equal(5); // RemovedInRecovery
+    expect(await reg.ownerOfOperator(ops[3])).to.equal(founders[3].address);
+    expect(asc(await sb.staleMembers())).to.deep.equal(asc([ops[2], ops[3]]));
+    expect(await sb.isReady()).to.equal(false);
+    await expect(sb.connect(dao).setStandby(asc([ops[0], ops[3]]))).to.be.revertedWith(notOp);
+
+    // refreshing the list without them makes it ready again
+    await sb.connect(dao).setStandby(asc([ops[0], ops[1], ops[4]]));
+    expect(await sb.staleMembers()).to.deep.equal([]);
+    expect(await sb.isReady()).to.equal(true);
+  });
+
+  it("other live statuses stay valid: a self-suspended or a demoted owner still holds a registered seat", async () => {
+    const { sb, reg, ops, founders } = await loadFixture(fixture);
+    const dao = await asDao();
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VERIFIER, "0x56BC75E2D63100000"]);
+    const verifier = await ethers.getImpersonatedSigner(ADDR.VERIFIER);
+    for (const f of founders.slice(1)) await reg.connect(verifier).recordActivation(f.address, ethers.id("e"));
+    await sb.connect(dao).setStandby(asc([ops[5], ops[6]])); // founders 5 and 6 are not board members
+    await reg.connect(founders[5]).selfSuspend(); // status SelfSuspended
+    await reg.connect(verifier).recordSuspension(founders[6].address, ethers.id("e")); // status Demoted
+    expect((await reg.validators(founders[5].address)).status).to.equal(6);
+    expect((await reg.validators(founders[6].address)).status).to.equal(3);
+    expect(await sb.staleMembers()).to.deep.equal([]);
+    expect(await sb.isReady()).to.equal(true);
   });
 });
 

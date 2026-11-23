@@ -11,6 +11,7 @@ const ZERO = ethers.ZeroAddress;
 const HASH = ethers.id("evidence");
 const START = Math.floor(Date.UTC(2027, 2, 2) / 1000);
 const rnd = () => ethers.Wallet.createRandom().address;
+const AGR = ethers.id("signed validators agreement v1"); // hash of the signed agreement document (any non-zero bytes32)
 const EOA_REG = "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)";
 const EOA_NFT = "ValidatorSeatNFT: a seat owner must be a plain wallet (EOA)";
 
@@ -82,7 +83,7 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
     await expect(nft.connect(seller).transferFrom(seller.address, await c.getAddress(), id)).to.be.revertedWith(EOA_NFT);
     await expect(nft.connect(seller)["safeTransferFrom(address,address,uint256)"](seller.address, await c.getAddress(), id)).to.be.revertedWith(EOA_NFT);
     expect(await nft.ownerOf(id)).to.equal(seller.address);
-    await reg.connect(buyer).acceptSeatAgreement(id); // the buyer must accept the validators' agreement for this seat first
+    await reg.connect(buyer).acceptSeatAgreement(id, AGR); // the buyer must accept the validators' agreement for this seat first
     await nft.connect(seller).transferFrom(seller.address, buyer.address, id);
     expect(await nft.ownerOf(id)).to.equal(buyer.address);
     expect((await reg.validators(buyer.address)).status).to.equal(2); // an Active seat stays Active

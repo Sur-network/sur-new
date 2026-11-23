@@ -199,7 +199,7 @@ contract SurenSale {
     function currentPriceMilliToman() public view returns (uint256) {
         uint256 t = block.timestamp;
         if (t < fixedEnd) return _fixedPriceAt(t);
-        return transitionPriceMilliToman == 0 ? lastFixedPriceMilli() : transitionPriceMilliToman;
+        return transitionPriceMilliToman == 0 ? _clampToBand(lastFixedPriceMilli()) : transitionPriceMilliToman;
     }
 
     /// @notice Rounded price for display only; never use it for calculations.
@@ -254,17 +254,25 @@ contract SurenSale {
         return (block.timestamp - fixedEnd) / 1 days;
     }
 
+    /// @dev The 90..150 Toman band of the transition period is ABSOLUTE: the price used by any sale during the transition is
+    ///      always inside [TRANSITION_FLOOR_TOMAN, TRANSITION_CEILING_TOMAN]. The price of a CEO extension of the fixed period stays
+    ///      free (decision), so the last fixed price can lie outside the band; the transition then starts at the nearest end of the band.
+    function _clampToBand(uint256 priceMilli) private pure returns (uint256) {
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
+        if (priceMilli < floorMilli) return floorMilli;
+        if (priceMilli > ceilingMilli) return ceilingMilli;
+        return priceMilli;
+    }
+
     function advanceTransitionPrice() public {
         if (block.timestamp < fixedEnd) return;
         if (transitionPriceMilliToman == 0) {
-            transitionPriceMilliToman = lastFixedPriceMilli(); // seeded with the last fixed-period price
+            transitionPriceMilliToman = _clampToBand(lastFixedPriceMilli()); // seeded with the last fixed-period price, clamped into the band
         }
         uint256 maxDay = (TRANSITION_DURATION + transitionExtraDays * 1 days) / 1 days;
         uint256 today = currentTransitionDay();
         if (today > maxDay) today = maxDay;
-
-        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
-        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
@@ -273,13 +281,12 @@ contract SurenSale {
             if (avg > 0) {
                 uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR;
                 if (dayVolume > (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR) {
-                    uint256 raised = transitionPriceMilliToman + step;
-                    transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
+                    transitionPriceMilliToman = transitionPriceMilliToman + step;
                 } else if (dayVolume < (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR) {
-                    uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
-                    transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
+                    transitionPriceMilliToman = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
                 }
             }
+            transitionPriceMilliToman = _clampToBand(transitionPriceMilliToman); // after EVERY day, whatever happened (also day 0 and neutral days)
             emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / PRICE_PRECISION);
             lastPricedTransitionDay++;
         }

@@ -112,6 +112,12 @@ contract IdentityRegistry {
         emit IdentityRegistered(msg.sender, personType, name);
     }
 
+    /// @notice The address this identity was migrated to (zero if it was not migrated). ValidatorsRegistry.migrateSeat reads it: a seat can move
+    ///         only to the address the identity oracle migrated the old owner's identity to.
+    function migratedTo(address who) external view returns (address) {
+        return identities[who].migratedTo;
+    }
+
     /// @notice Tier-zero check (open access, no dApp registration required), equivalent to SIP002 section 6-1: "has this
     ///         address registered an identity at all?", revealing nothing else. A migrated address (`migratedTo != 0`)
     ///         returns false.

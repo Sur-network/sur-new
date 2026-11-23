@@ -26,7 +26,8 @@ interface ISeatRegistryHook {
 ///           - the seller is treated as exited and can never become a validator again (agreement 15-6);
 ///           - an Active seat STAYS Active: the buyer takes over the seat, the operator key and the position in the active set
 ///             at once, and the buyer's vote counts from the transfer (a new voter).
-///         Only ValidatorsRegistry mints (entry, lottery win, genesis founders) and burns (when the owner exits).
+///         Only ValidatorsRegistry mints (entry, lottery win, genesis founders), burns (when the owner exits) and reassigns
+///         (`reassignSeat`: the migration of a seat to a new address of the same person after a lost owner key).
 ///         `tokenURI(id)` = baseURI + id; the base URI (initially https://validator-nft.surnet.org/) can be changed only by
 ///         FoundationDAO (an Execute proposal calling `setBaseURI`).
 ///
@@ -167,6 +168,25 @@ contract ValidatorSeatNFT {
         delete seatOf[owner];
         _balances[owner] = 0;
         emit Transfer(owner, address(0), id);
+    }
+
+    /// @notice Registry-only: moves the seat of `from` to `to` WITHOUT calling the Registry hook (the Registry has already moved the validator
+    ///         record in the same transaction). Used only for the migration of a seat to a new address of the SAME person after the owner
+    ///         key was lost (ValidatorsRegistry.migrateSeat). The recipient must be a plain wallet and hold no seat; any approval of the
+    ///         token is cleared. Returns the seat id.
+    function reassignSeat(address from, address to) external onlyRegistry returns (uint256 id) {
+        id = seatOf[from];
+        require(id != 0, "ValidatorSeatNFT: no seat to reassign");
+        require(to != address(0) && to != from, "ValidatorSeatNFT: bad recipient");
+        require(to.code.length == 0, "ValidatorSeatNFT: a seat owner must be a plain wallet (EOA)");
+        require(_balances[to] == 0, "ValidatorSeatNFT: recipient already holds a seat");
+        delete _approved[id];
+        _balances[from] = 0;
+        _balances[to] = 1;
+        _owners[id] = to;
+        delete seatOf[from];
+        seatOf[to] = id;
+        emit Transfer(from, to, id);
     }
 
     function _mintSeat(address to) internal returns (uint256 id) {

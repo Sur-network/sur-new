@@ -88,6 +88,24 @@ describe("RD-12b - deferred payment to an owner with code", () => {
     await expect(c.callClaim(dist.target)).to.be.revertedWith("BlockRewardDistributor: nothing to claim");
   });
 
+  it("migrateClaimable (lost owner key): only the Registry; the claim of an owner with code moves to the new address, the total debt is unchanged; nothing owed = no-op", async () => {
+    const f = await loadFixture(fixture);
+    const { dist, oracle, c, S } = f;
+    const { addrs, blocks } = listOf(f, (a) => (a === c.target ? 4 : 2));
+    await distribute(dist, oracle, { fromBlock: 1, toBlock: 10 }, addrs, blocks, E("20"), E("1"));
+    const fresh = rnd();
+    await expect(dist.connect(S[15]).migrateClaimable(c.target, fresh)).to.be.revertedWith("BlockRewardDistributor: only ValidatorsRegistry may migrate a claim");
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATORS_REGISTRY, "0x56BC75E2D63100000"]);
+    const registry = await ethers.getImpersonatedSigner(ADDR.VALIDATORS_REGISTRY);
+    await expect(dist.connect(registry).migrateClaimable(c.target, fresh)).to.emit(dist, "ClaimableMigrated").withArgs(c.target, fresh, E("4.28"));
+    expect(await dist.claimable(c.target)).to.equal(0);
+    expect(await dist.claimable(fresh)).to.equal(E("4.28"));
+    expect(await dist.totalClaimable()).to.equal(E("4.28")); // the same debt, a new creditor
+    await dist.connect(registry).migrateClaimable(c.target, fresh); // nothing left on the old address: no-op, no revert
+    expect(await dist.claimable(fresh)).to.equal(E("4.28"));
+    await expect(c.callClaim(dist.target)).to.be.revertedWith("BlockRewardDistributor: nothing to claim"); // the old owner can no longer claim
+  });
+
   it("an owner whose receive() reverts cannot halt the distribution; only its own claim() fails (and works again later)", async () => {
     const f = await loadFixture(fixture);
     const { dist, oracle, c } = f;

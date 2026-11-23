@@ -50,7 +50,11 @@ contract MockLotteryRegistry {
 }
 
 contract MockDistributor {
+    address public lastMigrateFrom;
+    address public lastMigrateTo;
     function receiveMembershipFee() external payable {}
+    /// @dev records the seat-migration hook (the real Distributor.migrateClaimable is tested in DeferredClaim.test.js)
+    function migrateClaimable(address from, address to) external { lastMigrateFrom = from; lastMigrateTo = to; }
 }
 
 contract MockToken {

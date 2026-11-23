@@ -3,10 +3,12 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
-/// @dev The only two ValidatorsRegistry getters this contract needs.
+/// @dev The only three ValidatorsRegistry getters this contract needs.
 interface IStandbyRegistry {
     function ownerOfOperator(address operator) external view returns (address);
     function operatorOf(address owner) external view returns (address);
+    /// @dev status first (enum Status: 0 None, 1 Probation, 2 Active, 3 Demoted, 4 Exiting, 5 RemovedInRecovery, 6 SelfSuspended)
+    function getValidatorInfo(address who) external view returns (uint8 status, uint256 lockedStake, uint256 periodStartedAt, uint256 demotedAt, uint256 pendingSlashEpoch, bool isPaidEntrant);
 }
 
 /// @title StandbyValidators
@@ -26,7 +28,9 @@ interface IStandbyRegistry {
 ///         if the validators fail their board is probably unable to act; the foundation board does not depend on the validator
 ///         set being alive. Every change replaces the whole list and is checked here: size, strictly ascending addresses (so no
 ///         duplicates, same rule as payPage), non-zero, and every member must be the CURRENT operator (node key) of a seat
-///         registered in ValidatorsRegistry.
+///         registered in ValidatorsRegistry whose owner is still LIVE there (status Probation, Active, Demoted or SelfSuspended; not
+///         None, Exiting, RemovedInRecovery). The Registry deliberately never frees an operator key, so the key-to-owner mappings
+///         survive an exit, a withdrawal and a recovery removal; this contract therefore checks the owner's status itself.
 ///
 ///         Maintenance: operator keys change (setOperator, seat transfer). `staleMembers()` and `isReady()` tell dashboards and the
 ///         recovery tool whether the list is still valid; the foundation should refresh it in the same governance step as any
@@ -35,8 +39,9 @@ interface IStandbyRegistry {
 ///         QBFT arithmetic: n members need at least ceil(2n/3) of them online to produce blocks; a list of 1 tolerates no
 ///         node down, 4 tolerate one. The recovery plan should list members that are well run and reachable.
 ///
-///         GENESIS: no constructor, no storage seed. Injected into `alloc` with its runtime bytecode only. The list starts EMPTY, so
-///         the foundation must set it right after launch (launch-kit checklist), or the GenesisBuilder may seed it.
+///         GENESIS: no constructor. Injected into `alloc` with its runtime bytecode plus a storage seed written by
+///         genesis-seed-helpers/StandbyValidators_GenesisSeed.sol: the list holds exactly ONE member, the first validator's operator
+///         key (version 1, updatedAt = the genesis timestamp). The foundation grows it to 3 or 4 members once more validators exist.
 contract StandbyValidators {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
     IStandbyRegistry public constant REGISTRY = IStandbyRegistry(SurAddresses.VALIDATORS_REGISTRY);
@@ -84,7 +89,8 @@ contract StandbyValidators {
         emit StandbyUpdated(version, members);
     }
 
-    /// @notice Members that are no longer the current operator key of a seat (the list needs a refresh).
+    /// @notice Members that are no longer the current operator key of a LIVE seat (an exited, withdrawn or recovery-removed owner, or a
+    ///         changed key: the list needs a refresh).
     function staleMembers() public view returns (address[] memory stale) {
         uint256 n = _members.length;
         address[] memory tmp = new address[](n);
@@ -103,6 +109,9 @@ contract StandbyValidators {
 
     function _isCurrentOperator(address m) private view returns (bool) {
         address owner_ = REGISTRY.ownerOfOperator(m);
-        return owner_ != address(0) && REGISTRY.operatorOf(owner_) == m;
+        if (owner_ == address(0) || REGISTRY.operatorOf(owner_) != m) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(owner_);
+        // live = Probation(1), Active(2), Demoted(3) or SelfSuspended(6); not None(0, e.g. after the stake was withdrawn), Exiting(4), RemovedInRecovery(5)
+        return status == 1 || status == 2 || status == 3 || status == 6;
     }
 }

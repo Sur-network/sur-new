@@ -108,6 +108,12 @@ contract IdentityRegistry {
         emit IdentityRegistered(msg.sender, personType, name);
     }
 
+    /// @notice آدرسی که این هویت به آن مهاجرت کرده است (اگر مهاجرت نکرده باشد صفر). ValidatorsRegistry.migrateSeat آن را می‌خواند: صندلی فقط
+    ///         به آدرسی می‌رود که اوراکل هویت هویتِ مالک قدیم را به آن مهاجرت داده است.
+    function migratedTo(address who) external view returns (address) {
+        return identities[who].migratedTo;
+    }
+
     /// @notice بررسی سطح صفر (دسترسی آزاد، بدون ثبت‌نام dApp)، معادل بخش ۶-۱ SIP002: «آیا این آدرس اصلاً هویتی ثبت کرده؟»،
     ///         بدون افشای چیز دیگر. آدرس منتقل‌شده (`migratedTo != 0`) false برمی‌گرداند.
     function hasIdentity(address who) external view returns (bool) {

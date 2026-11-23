@@ -189,6 +189,73 @@ describe("SurenSale v2.5", () => {
     expect(await sale.lastPricedTransitionDay()).to.equal(41);
   });
 
+  describe("transition price band 90..150 Toman is absolute (audit A3)", () => {
+    const band = (p) => { expect(p).to.be.gte(90000n); expect(p).to.be.lte(150000n); };
+
+    it("the last fixed price (a free CEO extension price) of 200 Toman: the transition starts at 150, and the very first sale is priced at 150", async () => {
+      const { sale, ceo, ex1, customer, run } = await loadFixture(fixture);
+      await run("proposeSetExchangeQuota", [ex1.address, E("40000")]);
+      await sale.connect(ceo).extendFixedPeriod(10, 200);
+      await increaseTime(95 * DAY);
+      expect(await sale.currentPriceMilliToman()).to.equal(200000); // inside the extension: its price itself stays free
+      await increaseTime(6 * DAY); // day 101: transition, day 0
+      expect(await sale.currentPeriod()).to.equal(1);
+      expect(await sale.currentPriceMilliToman()).to.equal(150000); // the view is inside the band even before the first advance
+      const before = (await sale.getExchange(ex1.address)).quotaLeft;
+      await sale.connect(ex1).sellTo(customer.address, 15000, 0, ref("hi")); // 15000 Toman at 150 = 100 Suren (at 200 it would be 75)
+      expect(before - (await sale.getExchange(ex1.address)).quotaLeft).to.equal(E("100"));
+      expect(await sale.transitionPriceMilliToman()).to.equal(150000);
+    });
+
+    it("the last fixed price of 50 Toman: the transition starts at 90; a low-volume day cannot push it below 90", async () => {
+      const { sale, ceo, ex1, customer, run } = await loadFixture(fixture);
+      await run("proposeSetExchangeQuota", [ex1.address, E("40000")]);
+      await sale.connect(ceo).extendFixedPeriod(10, 50);
+      await increaseTime(101 * DAY);
+      expect(await sale.currentPriceMilliToman()).to.equal(90000);
+      const before = (await sale.getExchange(ex1.address)).quotaLeft;
+      await sale.connect(ex1).sellTo(customer.address, 9000, 0, ref("lo")); // 9000 Toman at 90 = 100 Suren
+      expect(before - (await sale.getExchange(ex1.address)).quotaLeft).to.equal(E("100"));
+      await increaseTime(DAY);
+      await sale.advanceTransitionPrice(); // day 0 closes (no average yet)
+      expect(await sale.transitionPriceMilliToman()).to.equal(90000);
+      await increaseTime(DAY);
+      await sale.advanceTransitionPrice(); // day 1 closes with zero volume: below 80% of the average, the step would go under 90
+      expect(await sale.transitionPriceMilliToman()).to.equal(90000);
+    });
+
+    it("every daily step, including day 0 and neutral days, ends inside the band; seeded at 200, a high-volume day cannot go above 150 and a later low-volume day steps down from 150, never inverting", async () => {
+      const { sale, ceo, ex1, customer, run } = await loadFixture(fixture);
+      await run("proposeSetExchangeQuota", [ex1.address, E("40000")]);
+      await sale.connect(ceo).extendFixedPeriod(10, 200);
+      await increaseTime(101 * DAY);
+      await sale.connect(ex1).sellTo(customer.address, 1500, 0, ref("d0")); // day 0
+      await increaseTime(DAY);
+      await sale.advanceTransitionPrice();
+      band(await sale.transitionPriceMilliToman()); // day 0 step
+      await sale.connect(ex1).sellTo(customer.address, 150000, 0, ref("d1")); // day 1: big volume
+      await increaseTime(DAY);
+      await sale.advanceTransitionPrice();
+      expect(await sale.transitionPriceMilliToman()).to.equal(150000); // +0.5% would be 150750: clamped
+      await increaseTime(DAY); // day 2: nothing sold: below 80% of the average
+      await sale.advanceTransitionPrice();
+      expect(await sale.transitionPriceMilliToman()).to.equal(149250); // 150000 - 0.5%
+      for (let i = 0; i < 5; i++) { // further days stay in the band
+        await increaseTime(DAY);
+        await sale.advanceTransitionPrice();
+        band(await sale.transitionPriceMilliToman());
+      }
+    });
+
+    it("a seed inside the band is untouched (last fixed price 110)", async () => {
+      const { sale, ex1, customer, run } = await loadFixture(fixture);
+      await run("proposeSetExchangeQuota", [ex1.address, E("40000")]);
+      await increaseTime(91 * DAY);
+      await sale.advanceTransitionPrice();
+      expect(await sale.transitionPriceMilliToman()).to.equal(110000);
+    });
+  });
+
   it("EndSale stops sales; sweep only after the sale is over; swept to the chosen address", async () => {
     const { sale, saleAddr, dao, run, ex1, customer, other } = await loadFixture(fixture);
     await run("proposeSweepUnsold", [other.address]).catch(() => {});

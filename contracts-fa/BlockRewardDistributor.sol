@@ -1217,6 +1217,20 @@ contract BlockRewardDistributor {
     );
     event ClaimableWithdrawn(address indexed owner, uint256 amount);
 
+    event ClaimableMigrated(address indexed from, address indexed to, uint256 amount);
+
+    /// @notice فقط ValidatorsRegistry، در مهاجرت صندلی به آدرس تازهٔ همان شخص پس از گم‌شدن کلید مالک: آنچه به `from` به‌صورت claimable
+    ///         اعتبار داده شده (فقط مالکی که هنگام پرداخت کد داشته چیزی دارد) به `to` قابل‌برداشت می‌شود. جمع همهٔ claimable عوض نمی‌شود.
+    ///         چیز دیگری نمی‌رود: مبالغ پرداخت‌شده پرداخت‌شده می‌مانند و آمار پاداش با آدرس می‌ماند.
+    function migrateClaimable(address from, address to) external {
+        require(msg.sender == REGISTRY_ADDRESS, "BlockRewardDistributor: only ValidatorsRegistry may migrate a claim");
+        uint256 amount = claimable[from];
+        if (amount == 0) return;
+        claimable[from] = 0;
+        claimable[to] += amount;
+        emit ClaimableMigrated(from, to, amount);
+    }
+
     /// @notice مالکِ دارای کد موجودی مؤجل خودش را برمی‌دارد. فقط برای موجودی خود فراخواننده؛ اگر receive او revert کند فقط همین claim شکست می‌خورد.
     function claim() external nonReentrant {
         uint256 amount = claimable[msg.sender];

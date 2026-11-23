@@ -62,8 +62,8 @@ contract ValidatorsTreasury {
     // ✅ NEW — spending rules (assembly-governed limits the board must operate within)
     // ------------------------------------------------------------------
 
-    /// @notice Ceiling for any single board-approved payment. Any payment at or above this is
-    ///         rejected outright — there is deliberately NO alternate path for a larger payment
+    /// @notice Ceiling for any single board-approved payment. Any payment ABOVE this is
+    ///         rejected outright (a payment exactly equal to the cap is allowed: "<= cap") — there is deliberately NO alternate path for a larger payment
     ///         (see the contract-level doc comment: the old "full validator vote for any amount"
     ///         escape hatch was removed on purpose). The only way to make a larger payment is to
     ///         first raise this cap via proposeCapChange() below, wait out

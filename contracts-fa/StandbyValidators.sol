@@ -3,10 +3,12 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
-/// @dev تنها دو getter از ValidatorsRegistry که این قرارداد لازم دارد.
+/// @dev تنها سه getter از ValidatorsRegistry که این قرارداد لازم دارد.
 interface IStandbyRegistry {
     function ownerOfOperator(address operator) external view returns (address);
     function operatorOf(address owner) external view returns (address);
+    /// @dev اول status (enum Status: 0 None, 1 Probation, 2 Active, 3 Demoted, 4 Exiting, 5 RemovedInRecovery, 6 SelfSuspended)
+    function getValidatorInfo(address who) external view returns (uint8 status, uint256 lockedStake, uint256 periodStartedAt, uint256 demotedAt, uint256 pendingSlashEpoch, bool isPaidEntrant);
 }
 
 /// @title StandbyValidators
@@ -26,7 +28,9 @@ interface IStandbyRegistry {
 ///         نویسنده: **فقط FoundationDAO** (پیشنهاد `Execute` که `setStandby` را صدا می‌زند، ۳ از ۵). ValidatorsBoard نه، چون
 ///         اگر ولیدیتورها از کار بیفتند هیأتشان هم احتمالاً نمی‌تواند عمل کند؛ هیأت بنیاد به زنده‌بودن مجموعهٔ ولیدیتورها وابسته
 ///         نیست. هر تغییر کل فهرست را جایگزین می‌کند و همین‌جا سنجیده می‌شود: اندازه، آدرس‌های اکیداً صعودی (پس تکراری نیست؛ همان
-///         قاعدهٔ payPage)، غیرصفر، و هر عضو باید **کلید اپراتور فعلی** (کلید نود) یک صندلی ثبت‌شده در ValidatorsRegistry باشد.
+///         قاعدهٔ payPage)، غیرصفر، و هر عضو باید **کلید اپراتور فعلی** (کلید نود) یک صندلی ثبت‌شده در ValidatorsRegistry باشد که مالکش هنوز آن‌جا «زنده» است
+///         (وضعیت Probation، Active، Demoted یا SelfSuspended؛ نه None، Exiting، RemovedInRecovery). Registry عمداً هرگز کلید اپراتور را
+///         آزاد نمی‌کند؛ پس نگاشت کلید-به-مالک پس از خروج، برداشت و حذف در بازیابی می‌ماند و این قرارداد خودش وضعیت مالک را می‌سنجد.
 ///
 ///         نگه‌داری: کلیدهای اپراتور عوض می‌شوند (setOperator، انتقال صندلی). `staleMembers()` و `isReady()` به داشبورد و ابزار
 ///         بازیابی می‌گویند فهرست هنوز معتبر است یا نه؛ بنیاد باید در همان اقدام حاکمیتی که عضوی را تغییر می‌دهد فهرست را تازه کند.
@@ -34,8 +38,9 @@ interface IStandbyRegistry {
 ///         حساب QBFT: n عضو دست‌کم ceil(2n/3) عضو آنلاین لازم دارند؛ فهرست ۱تایی هیچ نود خاموشی را تحمل نمی‌کند و ۴تایی یکی را. برنامهٔ
 ///         بازیابی باید اعضایی را بگذارد که خوب اداره می‌شوند و در دسترس‌اند.
 ///
-///         GENESIS: بدون constructor و بدون seed ذخیره. فقط بایت‌کد runtime در `alloc` می‌رود. فهرست **خالی** شروع می‌شود؛ پس بنیاد
-///         باید بلافاصله بعد از راه‌اندازی آن را پر کند (چک‌لیست کیت راه‌اندازی)، یا GenesisBuilder می‌تواند seed کند.
+///         GENESIS: بدون constructor. بایت‌کد runtime در `alloc` می‌رود، همراه seed ذخیره‌ای که
+///         genesis-seed-helpers/StandbyValidators_GenesisSeed.sol می‌نویسد: فهرست دقیقاً **یک** عضو دارد، کلید اپراتور اولین ولیدیتور
+///         (version برابر ۱، updatedAt برابر زمان genesis). بنیاد وقتی ولیدیتورهای بیشتری آمدند آن را به ۳ یا ۴ عضو می‌رساند.
 contract StandbyValidators {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
     IStandbyRegistry public constant REGISTRY = IStandbyRegistry(SurAddresses.VALIDATORS_REGISTRY);
@@ -83,7 +88,8 @@ contract StandbyValidators {
         emit StandbyUpdated(version, members);
     }
 
-    /// @notice اعضایی که دیگر کلید اپراتور فعلی یک صندلی نیستند (فهرست باید تازه شود).
+    /// @notice اعضایی که دیگر کلید اپراتور فعلیِ یک صندلی «زنده» نیستند (مالکِ خارج‌شده، برداشت‌کرده یا حذف‌شده در بازیابی، یا کلید
+    ///         عوض‌شده: فهرست باید تازه شود).
     function staleMembers() public view returns (address[] memory stale) {
         uint256 n = _members.length;
         address[] memory tmp = new address[](n);
@@ -102,6 +108,9 @@ contract StandbyValidators {
 
     function _isCurrentOperator(address m) private view returns (bool) {
         address owner_ = REGISTRY.ownerOfOperator(m);
-        return owner_ != address(0) && REGISTRY.operatorOf(owner_) == m;
+        if (owner_ == address(0) || REGISTRY.operatorOf(owner_) != m) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(owner_);
+        // زنده = Probation(1)، Active(2)، Demoted(3) یا SelfSuspended(6)؛ نه None(0، مثلاً پس از برداشت وثیقه)، Exiting(4)، RemovedInRecovery(5)
+        return status == 1 || status == 2 || status == 3 || status == 6;
     }
 }

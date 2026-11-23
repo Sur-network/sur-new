@@ -84,15 +84,16 @@ describe("Registry v2.5 - paying entry", () => {
     expect(await ethers.provider.getBalance(ADDR.BLOCK_REWARD_DISTRIBUTOR)).to.equal(E("20000"));
   });
 
-  it("the collateral does not grow with the number of validators (no growth curve); one paying entry per entry window", async () => {
+  it("the collateral does not grow with the number of validators (no growth curve); requests are not rate-limited (the entry window is counted at activation, see EntryWindowAndFixedParams.test.js)", async () => {
     const { reg, buyers } = await loadFixture(fixture);
     const p = await price(reg);
     await reg.connect(buyers[0]).requestMembership(rnd(), { value: p });
-    await expect(reg.connect(buyers[1]).requestMembership(rnd(), { value: p })).to.be.revertedWith("ValidatorsRegistry: entry rate limit reached");
+    await reg.connect(buyers[1]).requestMembership(rnd(), { value: p }); // allowed at once: Probation until the Verifier activates it
+    expect(await reg.paidValidatorCount()).to.equal(2);
     await increaseTime(7 * DAY + 10);
     expect(await price(reg)).to.equal(p); // unchanged after one more paid entrant
-    await reg.connect(buyers[1]).requestMembership(rnd(), { value: p });
-    expect(await reg.paidValidatorCount()).to.equal(2);
+    await reg.connect(buyers[2]).requestMembership(rnd(), { value: p });
+    expect(await reg.paidValidatorCount()).to.equal(3);
   });
 
   it("operator keys are unique: zero, another owner's operator and another owner's address are refused", async () => {

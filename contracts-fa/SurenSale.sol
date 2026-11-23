@@ -199,7 +199,7 @@ contract SurenSale {
     function currentPriceMilliToman() public view returns (uint256) {
         uint256 t = block.timestamp;
         if (t < fixedEnd) return _fixedPriceAt(t);
-        return transitionPriceMilliToman == 0 ? lastFixedPriceMilli() : transitionPriceMilliToman;
+        return transitionPriceMilliToman == 0 ? _clampToBand(lastFixedPriceMilli()) : transitionPriceMilliToman;
     }
 
     /// @notice قیمت گردشده فقط برای نمایش؛ هرگز در محاسبات از آن استفاده نکن.
@@ -254,17 +254,25 @@ contract SurenSale {
         return (block.timestamp - fixedEnd) / 1 days;
     }
 
+    /// @dev بازهٔ ۹۰ تا ۱۵۰ تومان در دوره‌ی گذار «مطلق» است: قیمتی که هر فروشِ دوره‌ی گذار به کار می‌برد همیشه درون
+    ///      [TRANSITION_FLOOR_TOMAN, TRANSITION_CEILING_TOMAN] است. قیمت تمدیدِ CEO برای دوره‌ی ثابت آزاد می‌ماند (تصمیم)، پس آخرین
+    ///      قیمت ثابت می‌تواند بیرون از بازه باشد؛ در این حالت دوره‌ی گذار از نزدیک‌ترین سرِ بازه شروع می‌شود.
+    function _clampToBand(uint256 priceMilli) private pure returns (uint256) {
+        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
+        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
+        if (priceMilli < floorMilli) return floorMilli;
+        if (priceMilli > ceilingMilli) return ceilingMilli;
+        return priceMilli;
+    }
+
     function advanceTransitionPrice() public {
         if (block.timestamp < fixedEnd) return;
         if (transitionPriceMilliToman == 0) {
-            transitionPriceMilliToman = lastFixedPriceMilli(); // با آخرین قیمت دوره‌ی ثابت مقداردهی اولیه شده
+            transitionPriceMilliToman = _clampToBand(lastFixedPriceMilli()); // با آخرین قیمت دوره‌ی ثابت، گیرکرده در بازه، مقداردهی اولیه شده
         }
         uint256 maxDay = (TRANSITION_DURATION + transitionExtraDays * 1 days) / 1 days;
         uint256 today = currentTransitionDay();
         if (today > maxDay) today = maxDay;
-
-        uint256 floorMilli = TRANSITION_FLOOR_TOMAN * PRICE_PRECISION;
-        uint256 ceilingMilli = TRANSITION_CEILING_TOMAN * PRICE_PRECISION;
 
         while (lastPricedTransitionDay < today) {
             uint256 dayIndex = lastPricedTransitionDay;
@@ -273,13 +281,12 @@ contract SurenSale {
             if (avg > 0) {
                 uint256 step = (transitionPriceMilliToman * TRANSITION_PRICE_STEP_BPS) / BPS_DENOMINATOR;
                 if (dayVolume > (avg * TRANSITION_HIGH_VOLUME_BPS) / BPS_DENOMINATOR) {
-                    uint256 raised = transitionPriceMilliToman + step;
-                    transitionPriceMilliToman = raised > ceilingMilli ? ceilingMilli : raised;
+                    transitionPriceMilliToman = transitionPriceMilliToman + step;
                 } else if (dayVolume < (avg * TRANSITION_LOW_VOLUME_BPS) / BPS_DENOMINATOR) {
-                    uint256 lowered = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
-                    transitionPriceMilliToman = lowered < floorMilli ? floorMilli : lowered;
+                    transitionPriceMilliToman = transitionPriceMilliToman > step ? transitionPriceMilliToman - step : 0;
                 }
             }
+            transitionPriceMilliToman = _clampToBand(transitionPriceMilliToman); // بعد از «هر» روز، هرچه شده باشد (روز ۰ و روزهای خنثی هم)
             emit TransitionPriceUpdated(dayIndex, dayVolume, avg, transitionPriceMilliToman, transitionPriceMilliToman / PRICE_PRECISION);
             lastPricedTransitionDay++;
         }

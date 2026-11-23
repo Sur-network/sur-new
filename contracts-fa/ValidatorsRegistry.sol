@@ -5,6 +5,7 @@ import "./SurAddresses.sol";
 
 interface IBlockRewardDistributor {
     function receiveMembershipFee() external payable;
+    function migrateClaimable(address from, address to) external; // مهاجرت صندلی پس از گم‌شدن کلید مالک: آنچه به مالک قدیم بدهکار است را می‌برد
 }
 
 interface IValidatorsBoardSync {
@@ -14,6 +15,7 @@ interface IValidatorsBoardSync {
 interface IValidatorSeatNFT {
     function mintSeat(address to) external returns (uint256);
     function burnSeat(address owner) external;
+    function reassignSeat(address from, address to) external returns (uint256 seatId); // مهاجرت صندلی: توکن را می‌برد، بدون hook
     function ownerOf(uint256 tokenId) external view returns (address); // برای توکن ناموجود revert می‌کند
 }
 
@@ -23,6 +25,7 @@ interface IBoardAuthority {
 
 interface IIdentityFullyVerified {
     function isFullyVerified(address who) external view returns (bool);
+    function migratedTo(address who) external view returns (address); // غیرصفر: هویت به آن آدرس مهاجرت کرده (آدرس قدیم سوخته)
 }
 
 /// @title ValidatorsRegistry
@@ -59,8 +62,9 @@ interface IIdentityFullyVerified {
 ///         حکمرانی دو مسیر دارد:
 ///           - پارامترهای اقتصادی ورود (entryCollateral، membershipFeeBps) فقط با رأی
 ///             داخلی ValidatorsBoard تغییر می‌کنند.
-///           - بقیهٔ موارد (نرخ ورود، طول probation، دورهٔ بازیابی، slashBps، دورهٔ خروج) اکثریتِ ولیدیتورهایی را می‌خواهند
-///             که هنگام ساخت پیشنهاد Active بوده‌اند (proposeParameterChange / voteParameterChange).
+///           - بقیهٔ پارامترها (طول پنجرهٔ ورود، دورهٔ بازیابی، دورهٔ خروج) اکثریتِ ولیدیتورهایی را می‌خواهند
+///             که هنگام ساخت پیشنهاد Active بوده‌اند (proposeParameterChange / voteParameterChange). حداکثر یک ورود پولی در هر پنجره،
+///             probation یک‌هفته‌ای و جریمهٔ ۱٪ ثابت (constant) هستند (تصمیم مالک) و هیچ رأیی نمی‌تواند عوضشان کند.
 ///
 ///         پرداخت عضویت: ولیدیتور تازه با requestMembership دو مبلغ را به ارز بومی (سورن) می‌پردازد:
 ///           - وثیقه (= currentEntryThreshold()): اینجا قفل می‌ماند، هنگام خروج برگشت‌پذیر و قابل جریمه است.
@@ -194,17 +198,24 @@ contract ValidatorsRegistry {
     uint256 public membershipFeeBps = 400;
 
 
-    /// @notice حداکثر تعداد درخواست عضویت جدید در بازهٔ entryWindowSeconds.
-    uint256 public maxEntriesPerWindow = 1;
+    /// @notice ثابت (تصمیم مالک؛ دیگر پارامتر نیست و هیچ رأیی عوضش نمی‌کند): حداکثر «یک» عضویت پولی تازه در هر پنجرهٔ ورود. هنگام
+    ///         «فعال‌سازی» ورودی پولی توسط Verifier (recordActivation) شمرده می‌شود، نه هنگام درخواست عضویت. با همان نام getter
+    ///         قبلی constant مانده تا getter در ABI و چک‌های genesis-builder معتبر بمانند.
+    uint256 public constant maxEntriesPerWindow = 1;
+    /// @notice پنجرهٔ ورود: در هر پنجره حداکثر یک فعال‌سازی پولی. تنها پارامتر ورودی که ولیدیتورها هنوز می‌توانند عوض کنند
+    ///         (۱ تا ۳۰ روز، هر تغییر ±۱ روز، ۶ ماه بین تغییرها، هیچ تغییری در ۶ ماه نخست).
     uint256 public entryWindowSeconds = 7 days; // v2.5: حداکثر یک ولیدیتور پرداخت‌کنندهٔ جدید در هفته
 
-    uint256 public probationPeriod = 604800;  // ۱ هفته
+    /// @notice ثابت (تصمیم مالک): حداقل probation ورودی پولی پیش از فعال‌سازی، ۱ هفته. constant با نام getter قبلی.
+    uint256 public constant probationPeriod = 7 days;
 
     /// @notice حداقل فاصلهٔ زمانی بین تعلیق و ثبت بازگشت (در ابتدا ۴۸ ساعت).
     uint256 public recoveryPeriod = 172800;  // ۴۸ ساعت
-    uint256 public slashBps = 100;  // ۱٪ — عمداً سبک: آستانهٔ ورود پایین نگه داشته شده تا دامنهٔ کسانی که
-    // می‌توانند ولیدیتور شوند، پس جریمهٔ سنگین روی آن وثیقهٔ کوچک‌تر یک اشتباه زیرساختی صادقانه را بیش از حد سخت مجازات می‌کند.
-    // ۱٪ یک پیامد واقعی است بی‌آنکه برای هیچ اندازه وثیقه‌ای فاجعه‌بار باشد.
+    /// @notice ثابت (تصمیم مالک؛ هیچ رأیی عوضش نمی‌کند): جریمه ۱٪ (۱۰۰ bps) وثیقهٔ قفل‌شده است. عمداً سبک: آستانهٔ ورود پایین نگه
+    ///         داشته شده تا دامنهٔ کسانی که می‌توانند ولیدیتور شوند بازتر باشد؛ پس جریمهٔ سنگین روی آن وثیقهٔ کوچک‌تر یک اشتباه
+    ///         زیرساختی صادقانه را بیش از حد سخت مجازات می‌کند. ۱٪ یک پیامد واقعی است بی‌آنکه برای هیچ اندازه وثیقه‌ای فاجعه‌بار باشد.
+    ///         constant با نام getter قبلی.
+    uint256 public constant slashBps = 100;
     uint256 public exitCooldown = 604800;        // ۱ هفته
 
     /// @notice یک پنجرهٔ زمانی ثابت (MASS_DEMOTION_WINDOW) که تعلیق‌ها در آن دسته می‌شوند. جریمهٔ یک تعلیق
@@ -231,9 +242,8 @@ contract ValidatorsRegistry {
 
     /// @dev ابزار genesis آن را برابر زمان واقعی genesis می‌نویسد (نه block.timestamp ماشینی که شبیه‌سازی seed را اجرا می‌کند)؛
     ///      sur-contracts-deploy-notes.md را ببینید.
-    // وضعیت پنجرهٔ نرخ ورود
-    uint256 public windowStart = 0;
-    uint256 public entriesInWindow;
+    // وضعیت پنجرهٔ ورود: زمان آخرین فعال‌سازیِ «پولی» (۰ = هنوز هیچ). برندگان قرعه‌کشی و مؤسسین معافند و هرگز آن را تنظیم نمی‌کنند.
+    uint256 public lastPaidActivationAt;
 
     // ------------------------------------------------------------------
     // راستی‌آزمایی آف‌چین. verifier زنده‌بودن هر نود را آف‌چین (ساعتی) بررسی می‌کند و روی زنجیره فقط تغییر وضعیت‌ها را
@@ -379,6 +389,8 @@ contract ValidatorsRegistry {
     // (آن‌ها تحت حکمرانی ValidatorsBoard هستند؛ به ValidatorsBoard.sol مراجعه کن).
     // ------------------------------------------------------------------
 
+    /// @dev «ترتیب» بخشی از ABI است و عوض نمی‌شود. MaxEntriesPerWindow (۰)، ProbationPeriod (۲) و SlashBps (۴) با تصمیم مالک ثابت‌اند و فقط
+    ///      برای حفظ شماره‌ی بقیهٔ کلیدها مانده‌اند: هم هنگام پیشنهاد و هم هنگام اعمال رد می‌شوند.
     enum ParamKey {
         MaxEntriesPerWindow,
         EntryWindowSeconds,
@@ -543,13 +555,22 @@ contract ValidatorsRegistry {
         require(proposed * 10 >= current * 9 && proposed * 10 <= current * 11, "ValidatorsRegistry: change exceeds +-10%");
     }
 
-    function _enforceRateLimit() private {
-        if (block.timestamp >= windowStart + entryWindowSeconds) {
-            windowStart = block.timestamp;
-            entriesInWindow = 0;
-        }
-        require(entriesInWindow < maxEntriesPerWindow, "ValidatorsRegistry: entry rate limit reached");
-        entriesInWindow++;
+    /// @dev قاعدهٔ پنجرهٔ ورود (تصمیم مالک): حداکثر «یک» عضویت پولی تازه در هر پنجرهٔ ورود، که هنگام «فعال‌سازی» شمرده می‌شود. ورودیِ
+    ///      پولی هر زمان می‌تواند درخواست عضویت بدهد و در Probation منتظر می‌ماند؛ recordActivation ی Verifier تا وقتی پنجره پر است
+    ///      رد می‌شود (آخرین فعال‌سازی پولی کمتر از entryWindowSeconds پیش بوده). با سقف ثابتِ یک، «در هر پنجره» دقیقاً یعنی «دست‌کم
+    ///      entryWindowSeconds پس از فعال‌سازی پولی قبلی». نخستین فعال‌سازی پولی هرگز به تأخیر نمی‌افتد.
+    function _enforceEntryWindow() private {
+        require(
+            lastPaidActivationAt == 0 || block.timestamp >= lastPaidActivationAt + entryWindowSeconds,
+            "ValidatorsRegistry: entry window used - only one new paid validator per window"
+        );
+        lastPaidActivationAt = block.timestamp;
+    }
+
+    /// @notice زودترین زمانی که Verifier می‌تواند ورودی پولی بعدی را فعال کند (۰ = هنوز فعال‌سازی پولی نبوده؛ پس هر زمان پس از
+    ///         probation). وعده نیست: probation خودِ داوطلب همچنان برقرار است.
+    function nextPaidActivationAllowedAt() external view returns (uint256) {
+        return lastPaidActivationAt == 0 ? 0 : lastPaidActivationAt + entryWindowSeconds;
     }
 
     // ------------------------------------------------------------------
@@ -569,8 +590,6 @@ contract ValidatorsRegistry {
         uint256 collateral = entryCollateral;
         uint256 fee = currentMembershipFee();
         require(msg.value == collateral + fee, "ValidatorsRegistry: incorrect payment amount");
-
-        _enforceRateLimit();
 
         if (fee > 0) {
             DISTRIBUTOR.receiveMembershipFee{value: fee}();
@@ -603,7 +622,7 @@ contract ValidatorsRegistry {
     mapping(address => address) public ownerOfOperator;
     /// @notice اپراتور «فعلی» (کلید گره) یک مالک (تا تعیین نشده صفر).
     mapping(address => address) public operatorOf;
-    /// @notice مؤسسین genesis: بدون وثیقه، خارج از محدودیت نرخ ورود، بدون انتظار probation پیش از فعال‌سازی.
+    /// @notice مؤسسین genesis: بدون وثیقه، خارج از پنجرهٔ ورود، بدون انتظار probation پیش از فعال‌سازی.
     mapping(address => bool) public isFounder;
     /// @notice زمان‌مهر genesis (توسط seed helper تنظیم می‌شود).
     uint256 public genesisTime;
@@ -730,6 +749,9 @@ contract ValidatorsRegistry {
         require(v.status == Status.Probation, "ValidatorsRegistry: not in probation");
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
+        // پنجرهٔ ورود همین‌جا، هنگام فعال‌سازی، شمرده می‌شود. فقط ورودیِ «پولی» (isPaidEntrant، پس از فروش صندلی هم) یک جای پنجره را
+        // مصرف می‌کند: مؤسسین و برندگان قرعه‌کشی با تصمیم معافند (رکوردشان isPaidEntrant == false دارد).
+        if (v.isPaidEntrant) _enforceEntryWindow();
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
         _notifyBoard(candidate);
@@ -1244,6 +1266,10 @@ contract ValidatorsRegistry {
         // با DemotionEpoch آن می‌شناسد، که فقط وقتی بی‌ابهام است که یک ولیدیتور هرگز نتواند در یک epoch دو بار تعلیق شود
         // (تعلیق، بازگشت، تعلیق). هم هنگام پیشنهاد اعتبارسنجی می‌شود (تا پیشنهاد نامعتبر نه ساخته شود و نه رأی آخر خودش را
         // قفل کند) و هم دوباره در _applyParam().
+        require(
+            key != ParamKey.MaxEntriesPerWindow && key != ParamKey.ProbationPeriod && key != ParamKey.SlashBps,
+            "ValidatorsRegistry: this parameter is fixed and cannot be changed"
+        );
         if (key == ParamKey.RecoveryPeriod) {
             require(newValue > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
         } else if (key == ParamKey.ExitCooldown) {
@@ -1292,9 +1318,7 @@ contract ValidatorsRegistry {
     }
 
     function _applyParam(ParamKey key, uint256 value) private {
-        if (key == ParamKey.MaxEntriesPerWindow) {
-            maxEntriesPerWindow = value;
-        } else if (key == ParamKey.EntryWindowSeconds) {
+        if (key == ParamKey.EntryWindowSeconds) {
             // v2.5: ۱ تا ۳۰ روز، هر تغییر حداکثر ±۱ روز، دست‌کم ۶ ماه بین تغییرها، و هیچ تغییری در ۶ ماه نخست
             require(value >= 1 days && value <= 30 days, "ValidatorsRegistry: entryWindowSeconds outside 1-30 days");
             require(
@@ -1305,17 +1329,14 @@ contract ValidatorsRegistry {
             require(block.timestamp >= lastEntryWindowChange + 180 days, "ValidatorsRegistry: at least 6 months between changes");
             lastEntryWindowChange = block.timestamp;
             entryWindowSeconds = value;
-        } else if (key == ParamKey.ProbationPeriod) {
-            probationPeriod = value;
         } else if (key == ParamKey.RecoveryPeriod) {
             require(value > MASS_DEMOTION_WINDOW, "ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW");
             recoveryPeriod = value;
-        } else if (key == ParamKey.SlashBps) {
-            require(value <= BPS_DENOMINATOR, "ValidatorsRegistry: slashBps too high");
-            slashBps = value;
         } else if (key == ParamKey.ExitCooldown) {
             require(value > PRE_EXIT_CLAIM_WINDOW, "ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW");
             exitCooldown = value;
+        } else {
+            revert("ValidatorsRegistry: this parameter is fixed and cannot be changed"); // MaxEntriesPerWindow، ProbationPeriod، SlashBps
         }
         emit ParameterChangeApplied(key, value);
     }
@@ -1395,7 +1416,7 @@ contract ValidatorsRegistry {
 
     event LotteryWinnerEntered(address indexed winner);
 
-    /// @notice برنده‌ی قرعه‌کشی «بدون» وثیقه و «بدون» حق عضویت، خارج از محدودیت نرخ ورود، و بدون شمرده‌شدن به‌عنوان ورودی
+    /// @notice برنده‌ی قرعه‌کشی «بدون» وثیقه و «بدون» حق عضویت، خارج از پنجرهٔ ورود (فعال‌سازی‌اش نه منتظرش می‌ماند نه جایی از آن را مصرف می‌کند)، و بدون شمرده‌شدن به‌عنوان ورودی
     ///         پولی جایگاه می‌گیرد. جایگاه مثل هر ورودی در Probation شروع می‌شود: گره هنوز باید راستی‌آزمایی شود
     ///         (و توافق‌نامه امضا شود) تا Verifier آن را فعال کند، پس رأی پیش از آن زنده نیست. آدرسی که
     ///         قبلاً ثبت شده یا هرگز خارج شده باشد نمی‌تواند جایگاه بگیرد (یک جایگاه برای هر نفر، ممنوعیت دائمی).
@@ -1620,31 +1641,46 @@ contract ValidatorsRegistry {
     // v2.5: NFT جایگاه. مالک توکن ValidatorSeatNFT = مالک جایگاه (سند مرجع §9).
     // ------------------------------------------------------------------
     // پذیرش توافق‌نامهٔ ولیدیتورها توسط خریدار «شرط» است (تصمیم مالک): جایگاه به آدرسی منتقل نمی‌شود که پیش از انتقال، پذیرش خود را
-    // «برای همان جایگاه» ثبت نکرده باشد؛ پس هیچ‌کس بدون پذیرش مالک جایگاه نمی‌شود. خود امضا آف‌چین می‌ماند (سندی که خریدار با
-    // کلید خودش امضا می‌کند)؛ زنجیره فقط ثبت می‌کند که «کلید خودِ خریدار» توافق‌نامه را برای این شناسهٔ جایگاه پذیرفته است. پذیرش
-    // «پیش از انتقال» انجام می‌شود (acceptSeatAgreement)، به یک شناسهٔ جایگاه بسته است و با انتقالی که از آن استفاده می‌کند
-    // «مصرف» می‌شود (انتقال بعدیِ همان جایگاه به همان آدرس پذیرش تازه می‌خواهد). جایگاه‌هایی که در ورود، توسط قرعه‌کشی یا در
-    // genesis mint می‌شوند از hook انتقال نمی‌گذرند؛ پس این شرط به آن مسیرها کاری ندارد و آن‌ها هرگز از پذیرش پس از انتقالِ
-    // قدیمی هم استفاده نمی‌کردند.
+    // «برای همان جایگاه» ثبت نکرده باشد؛ پس هیچ‌کس بدون پذیرش مالک جایگاه نمی‌شود.
+    //
+    // روند حقوقی (تصمیم مالک): خریدار توافق‌نامه را «پیش از» انتقال با بنیاد امضا می‌کند و از لحظهٔ انتقال مؤثر است؛ بنیاد «پس از» انتقال
+    // ممهور می‌کند و موظف به امضاست، پس روی زنجیره «هیچ چیز» منتظر بنیاد نمی‌ماند. خود امضا آف‌چین می‌ماند؛ زنجیره فقط ثبت می‌کند که
+    // «کلید خودِ خریدار» سندی با hash داده‌شده را برای این شناسهٔ جایگاه پذیرفته است (acceptSeatAgreement). پذیرش «پیش از انتقال» انجام می‌شود،
+    // به یک شناسهٔ جایگاه و یک hash توافق‌نامه بسته است و با انتقالی که از آن استفاده می‌کند «مصرف» می‌شود (انتقال بعدیِ همان جایگاه به
+    // همان آدرس پذیرش تازه می‌خواهد). hash وارد انتقال می‌شود: به‌عنوان hash توافق‌نامهٔ آن جایگاه ذخیره و emit می‌شود (SeatAgreementBound)
+    // تا سندی که مالک فعلی را متعهد می‌کند همیشه پیدا شود.
+    // جایگاه‌هایی که در ورود، توسط قرعه‌کشی یا در genesis mint می‌شوند از hook انتقال نمی‌گذرند؛ پس این شرط به آن مسیرها کاری ندارد و
+    // آن‌ها هرگز از پذیرش پس از انتقالِ قدیمی هم استفاده نمی‌کردند.
 
     /// @notice شناسهٔ جایگاهی که `buyer` پذیرش توافق‌نامهٔ ولیدیتورها را برای آن ثبت کرده است (۰ = هیچ). هر آدرس هر زمان فقط یک
     ///         پذیرش دارد: پذیرفتن جایگاه دیگر آن را جایگزین می‌کند. شناسه‌ها از ۱ شروع می‌شوند و هرگز دوباره استفاده نمی‌شوند؛ پس
     ///         پذیرش هرگز روی جایگاهی غیر از آنچه نام برده نمی‌نشیند. فقط با کلید خود خریدار ثبت می‌شود (acceptSeatAgreement)، با
     ///         revokeSeatAcceptance پاک می‌شود یا با انتقال مصرف می‌شود.
     mapping(address => uint256) public seatAcceptedFor;
+    /// @notice hash سند امضاشدهٔ توافق‌نامه که همراه همان پذیرش ثبت شده (تا وقتی پذیرشی باز است غیرصفر است).
+    mapping(address => bytes32) public seatAcceptedAgreementHash;
+    /// @notice hash توافق‌نامه‌ای که «مالک فعلی» یک جایگاه را متعهد کرد، وقتی جایگاه با انتقال به او رسید (۰ = جایگاه با انتقال نیامده:
+    ///         ورود، قرعه‌کشی یا genesis، یا هرگز روی زنجیره پذیرفته نشده). با انتقال بعدی بازنویسی می‌شود؛ تاریخچهٔ کامل در رویدادهای
+    ///         SeatAgreementBound است. جایگاهِ مهاجرت‌کرده پس از گم‌شدن کلید مالک hash خود را نگه می‌دارد: همان شخص، همان توافق‌نامه.
+    mapping(uint256 => bytes32) public seatAgreementHash;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
-    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId);
+    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
+    /// @notice با انتقالی emit می‌شود که یک پذیرش را مصرف کرد: `owner` اکنون `seatId` را زیر توافق‌نامه‌ای با این hash دارد.
+    event SeatAgreementBound(uint256 indexed seatId, address indexed owner, bytes32 agreementHash);
 
     /// @notice خریدارِ آینده، با کلید خودش و «پیش از» انتقال جایگاه به او، ثبت می‌کند که توافق‌نامهٔ ولیدیتورها را برای جایگاه
-    ///         `seatId` می‌پذیرد (خود امضا آف‌چین است). هیچ‌کس نمی‌تواند آن را برای آدرس دیگری ثبت کند. جایگاه باید وجود داشته
-    ///         باشد و از قبل مال فراخواننده نباشد. این ثبت فقط انتقال «همین» جایگاه را به فراخواننده مجاز می‌کند؛ بقیهٔ قواعد
-    ///         انتقال هنگام جابه‌جایی جایگاه همچنان بررسی می‌شوند. هر پذیرش قبلی فراخواننده را جایگزین می‌کند.
-    function acceptSeatAgreement(uint256 seatId) external {
+    ///         `seatId` می‌پذیرد؛ `agreementHash` hash سند امضاشدهٔ توافق‌نامه است (غیرصفر؛ خود امضا آف‌چین است). هیچ‌کس نمی‌تواند
+    ///         آن را برای آدرس دیگری ثبت کند. جایگاه باید وجود داشته باشد و از قبل مال فراخواننده نباشد. این ثبت فقط انتقال «همین»
+    ///         جایگاه را به فراخواننده مجاز می‌کند؛ بقیهٔ قواعد انتقال هنگام جابه‌جایی جایگاه همچنان بررسی می‌شوند. هر پذیرش قبلی
+    ///         فراخواننده را جایگزین می‌کند.
+    function acceptSeatAgreement(uint256 seatId, bytes32 agreementHash) external {
+        require(agreementHash != bytes32(0), "ValidatorsRegistry: empty agreement hash");
         require(IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).ownerOf(seatId) != msg.sender, "ValidatorsRegistry: caller already owns this seat");
         seatAcceptedFor[msg.sender] = seatId;
-        emit SeatAgreementAccepted(msg.sender, seatId);
+        seatAcceptedAgreementHash[msg.sender] = agreementHash;
+        emit SeatAgreementAccepted(msg.sender, seatId, agreementHash);
     }
 
     /// @notice خریدار پذیرش ثبت‌شدهٔ خود را پس می‌گیرد (مثلاً معامله به هم خورد)؛ پس جایگاه دیگر تا پذیرش دوباره به او منتقل
@@ -1653,13 +1689,14 @@ contract ValidatorsRegistry {
         uint256 seatId = seatAcceptedFor[msg.sender];
         require(seatId != 0, "ValidatorsRegistry: no acceptance recorded");
         delete seatAcceptedFor[msg.sender];
+        delete seatAcceptedAgreementHash[msg.sender];
         emit SeatAcceptanceRevoked(msg.sender, seatId);
     }
 
     /// @notice ValidatorSeatNFT پس از جابه‌جایی توکن آن را صدا می‌زند؛ اگر انتقال مجاز نباشد revert می‌کند (پس انتقال توکن هم
     ///         revert می‌شود). کل رکورد ولیدیتور را از `from` به `to` منتقل می‌کند. افزون بر قواعد وضعیت جایگاه و پروندهٔ جریمه،
     ///         خریدار باید تازه‌وارد، کاملاً احراز هویت شده و غیر از کلید اپراتور باشد و پذیرش توافق‌نامه را «دقیقاً برای همین
-    ///         جایگاه» ثبت کرده باشد (acceptSeatAgreement)؛ آن پذیرش همین‌جا مصرف می‌شود.
+    ///         جایگاه» ثبت کرده باشد (acceptSeatAgreement)؛ آن پذیرش همین‌جا مصرف می‌شود و hash توافق‌نامه‌اش به جایگاه بسته می‌شود.
     function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
         require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
         ValidatorInfo storage v = validators[from];
@@ -1676,11 +1713,25 @@ contract ValidatorsRegistry {
         require(to != from, "ValidatorsRegistry: same owner");
         // خریدار باید پیش از انتقال توافق‌نامهٔ ولیدیتورها را «برای همین جایگاه» پذیرفته باشد؛ پذیرش همین‌جا مصرف می‌شود
         require(seatAcceptedFor[to] == seatId, "ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat");
+        bytes32 agreementHash = seatAcceptedAgreementHash[to];
         delete seatAcceptedFor[to];
+        delete seatAcceptedAgreementHash[to];
 
-        // جایگاه Active، Active «می‌ماند» (تصمیم ۱۹ نوامبر ۲۰۲۶): خریدار جای مالک را در مجموعهٔ فعال با همان جایگاه ترتیبی و
-        // همان کلید اپراتور می‌گیرد، پس گره بدون وقفه به اعتبارسنجی ادامه می‌دهد. رأی فروشنده پایان می‌یابد و خریدار از همین
-        // لحظه رأی‌دهندهٔ جدید است (checkpointهای تازه)، پس نمی‌تواند در پیشنهادهای پیش از انتقال رأی دهد.
+        _moveSeatRecord(from, to, st, false);
+
+        seatAgreementHash[seatId] = agreementHash;
+        emit SeatAgreementBound(seatId, to, agreementHash);
+        emit SeatTransferred(seatId, from, to, st);
+    }
+
+    /// @dev کل رکورد ولیدیتور یک جایگاه را از `from` به `to` می‌برد (مشترک بین فروش و مهاجرت پس از گم‌شدن کلید مالک؛ فراخواننده‌ها همهٔ
+    ///      قواعد را از قبل سنجیده‌اند). جایگاه Active، Active «می‌ماند» (تصمیم ۱۹ نوامبر ۲۰۲۶): مالک تازه جای مالک را در مجموعهٔ فعال با همان
+    ///      جایگاه ترتیبی و همان کلید اپراتور می‌گیرد، پس گره بدون وقفه به اعتبارسنجی ادامه می‌دهد. رأی مالک قدیم پایان می‌یابد و مالک تازه از
+    ///      همین لحظه رأی‌دهندهٔ جدید است (checkpointهای تازه)، پس نمی‌تواند در پیشنهادهای پیش از آن رأی دهد. آدرس قدیم permanentlyExited
+    ///      می‌شود (دیگر هرگز ولیدیتور نمی‌شود) و اختیار هیأتش پایان می‌یابد. `keepResumeRequest`: مهاجرت درخواست ازسرگیریِ باز را نگه
+    ///      می‌دارد (همان شخص)، فروش نه.
+    function _moveSeatRecord(address from, address to, Status st, bool keepResumeRequest) private {
+        ValidatorInfo storage v = validators[from];
         if (st == Status.Active) {
             uint256 idx = activeIndex[from];
             activeValidators[idx - 1] = to;
@@ -1705,11 +1756,11 @@ contract ValidatorsRegistry {
         }
         everActivated[to] = everActivated[from];
         activationSeq[to] = activationSeq[from];
-        resumeRequested[to] = false;
+        resumeRequested[to] = keepResumeRequest && resumeRequested[from];
         resumeRequested[from] = false;
         {
-            // باقیماندهٔ فروشنده نباید از انتقال جان به در ببرد: پیشنهاد باز کلید نود (و رزرو آن کلید) و هر پذیرشی که فروشنده
-            // به‌عنوان خریدار احتمالی ثبت کرده بود؛ خریدار تمیز شروع می‌کند و اگر کلید نود دیگری بخواهد باید پیشنهاد خودش را بدهد
+            // باقیماندهٔ مالک قدیم نباید جان به در ببرد: پیشنهاد باز کلید نود (و رزرو آن کلید) و هر پذیرشی که به‌عنوان خریدار
+            // احتمالی ثبت کرده بود؛ مالک تازه تمیز شروع می‌کند و اگر کلید نود دیگری بخواهد باید پیشنهاد خودش را بدهد
             address proposed = pendingOperator[from];
             if (proposed != address(0)) {
                 delete operatorReservedBy[proposed];
@@ -1717,14 +1768,57 @@ contract ValidatorsRegistry {
                 delete pendingOperatorExpiresAt[from];
             }
             delete seatAcceptedFor[from];
+            delete seatAcceptedAgreementHash[from];
         }
 
-        // فروشنده خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود
+        // مالک قدیم خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود
         permanentlyExited[from] = true;
         membershipEpoch[from]++;
 
-        emit SeatTransferred(seatId, from, to, st);
         _notifyBoard(from);
         _notifyBoard(to);
+    }
+
+    // ------------------------------------------------------------------
+    // گم‌شدن کلید مالک: کل صندلی پس از مهاجرت مجاز هویت به آدرس تازهٔ همان شخص می‌رود (ایراد حسابرسی A4)
+    // ------------------------------------------------------------------
+    /// @notice یک صندلی پس از گم‌شدن کلید مالک به آدرس تازهٔ «همان شخص» رفت.
+    event SeatMigrated(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+
+    /// @notice گم‌شدن کلید مالک (توافق‌نامهٔ ولیدیتور ۵-۵، طرح ۳۲ پاسخ ۶): «کل» صندلی را از `oldOwner` به `newOwner` می‌برد (رکورد ولیدیتور
+    ///         با وثیقه و وضعیتش، پیوند کلید اپراتور (کلید نود)، پرچم مؤسس، تاریخچهٔ فعال‌سازی، جایگاه در مجموعهٔ فعال و رأی به‌عنوان
+    ///         رأی‌دهندهٔ جدید از همین لحظه، NFT صندلی، و آنچه BlockRewardDistributor به مالک قدیم بدهکار است). تنها استثنای ممنوعیت
+    ///         دائم است: شخص همان است، پس آدرس تازه «خروج‌کرده» شمرده نمی‌شود، ولی آدرس قدیم دائماً خروج‌کرده می‌شود و اختیار هیأتش پایان می‌یابد.
+    ///
+    ///         مجوز (دو کلید مستقل، سخت‌ترین خوانش اسناد): (۱) اوراکل هویت باید پیش‌تر پس از بررسی آف‌چین هویت
+    ///         IdentityRegistry.migrateIdentity(oldOwner, newOwner) را اجرا کرده باشد (این قرارداد migratedTo(oldOwner) == newOwner را
+    ///         می‌خواند)، و (۲) این فراخوان را Verifier می‌زند. هیچ‌کدام از دو کلید به‌تنهایی صندلی را نمی‌برد: اوراکل هویت به Registry
+    ///         دسترسی ندارد و Verifier نمی‌تواند آدرسی را نام ببرد که اوراکل به آن مهاجرت نداده است. مالک قدیم نمی‌تواند صدایش بزند (کلیدش
+    ///         گم شده). آدرس تازه باید کاملاً احراز هویت شده باشد (مهاجرت پرچم‌ها را کپی می‌کند)، کیف‌پول معمولی (EOA)، هرگز ولیدیتور
+    ///         یا کلید اپراتور نبوده باشد و صندلی نداشته باشد. صندلی قدیم باید Probation، Active، Demoted یا SelfSuspended و بدون پروندهٔ
+    ///         جریمهٔ باز باشد؛ صندلی Exiting یا RemovedInRecovery مهاجرت نمی‌کند.
+    function migrateSeat(address oldOwner, address newOwner) external onlyVerifier nonReentrant {
+        require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsRegistry: bad new owner");
+        ValidatorInfo storage v = validators[oldOwner];
+        Status st = v.status;
+        require(
+            st == Status.Probation || st == Status.Active || st == Status.Demoted || st == Status.SelfSuspended,
+            "ValidatorsRegistry: seat cannot be migrated in this status"
+        );
+        require(v.pendingSlashEpoch == 0 && pendingSlashDecisionId[oldOwner] == 0, "ValidatorsRegistry: open penalty case - migration blocked");
+        require(
+            IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).migratedTo(oldOwner) == newOwner,
+            "ValidatorsRegistry: the identity of the old owner was not migrated to this address"
+        );
+        require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(newOwner), "ValidatorsRegistry: new owner identity not fully verified");
+        require(newOwner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
+        require(validators[newOwner].status == Status.None && !permanentlyExited[newOwner] && !everActivated[newOwner], "ValidatorsRegistry: new owner was a validator before");
+        require(ownerOfOperator[newOwner] == address(0) && operatorOf[newOwner] == address(0), "ValidatorsRegistry: new owner is an operator key");
+
+        uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).reassignSeat(oldOwner, newOwner);
+        _moveSeatRecord(oldOwner, newOwner, st, true);
+        DISTRIBUTOR.migrateClaimable(oldOwner, newOwner);
+
+        emit SeatMigrated(seatId, oldOwner, newOwner, st);
     }
 }
