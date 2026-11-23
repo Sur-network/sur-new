@@ -26,6 +26,7 @@
 - **پس از کرش سخت:** مثل Router، قفل (lease) تا ≈۵ دقیقه نمونهٔ تازه را بالا نمی‌آورد؛ صبر کنید.
 - **هشدارهای انتظار:** `VALIDATOR_IDLE_SERIOUS` پس از آستانه (در آزمون ۱۴ دقیقه) می‌آید و ممکن است تا یک چرخهٔ بررسی دیرتر ببینید؛ `MONITOR_UNHEALTHY` یعنی ارتباط با نود مانیتور قطع است و Verifier به‌عمد هیچ تصمیم تنبیهی نمی‌گیرد.
 - **پس از تعلیق:** مالک `Demoted` می‌ماند و بازیابی دست‌کم `recoveryPeriod` (≥ ۲ روز) زمان می‌خواهد.
+- **پس از `migrateSeat` (گم‌شدن کلید مالک؛ ✅ قرارداد ۲۰۲۶-۱۱-۲۳؛ فقط Hardhat، روی Besu آزموده نشده):** بلافاصله `ValidatorsBoard.moveReceivedVotes(old, ~۱۰۰)` را تا رویداد `ReceivedVotesMoveCompleted` تکرار کنید؛ بی‌اجازه است و کلید ویژه نمی‌خواهد (حدود ۸۷ هزار گس برای هر ورودی؛ سقف ۱۶٫۷ میلیون گس). تا آن زمان `refreshBoard` و `fillVacancies` با «move pending» ریورت می‌کنند (`syncBoard` مرحلهٔ پر کردن را رد می‌کند)، پس نظارت: هشدار اگر `pendingVoteMoves != 0` بیش از چند ساعت بماند. اگر فهرست رأی‌ها بلند است، پیش‌تر `clearDeadVotes(voters[])` (بی‌اجازه) رأی‌دهندگان مرده را پاک می‌کند. رویدادها: `BoardSeatMigrated`، `ReceivedVotesMoved`، `ReceivedVotesMoveCompleted`.
 
 ## ۴. SurKMS
 - پس از هر بوت یک نگه‌دارنده باید عبارت رمز را در صفحهٔ unlock بزند؛ تا آن زمان Router/Verifier `SIGNER_FAILED` می‌گیرند و چیزی نمی‌فرستند (آزموده).

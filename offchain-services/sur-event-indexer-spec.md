@@ -17,6 +17,7 @@
 ## رویدادهای مورد نیاز (فهرست مجاز)
 - پاداش: `ValidatorRewarded`، `ValidatorRewardDeferred`، `ClaimableWithdrawn`، `DistributionOpened`، `DistributionPage`، `RewardsDistributed`. (از ۲۰۲۶-۱۱-۲۳ قرارداد `ClaimableMigrated(from, to, amount)` هم دارد که هنگام مهاجرت صندلی پس از گم‌شدن کلید مالک طلب معوق آدرس قدیم را به آدرس جدید می‌برد؛ 🔶 افزودنش به فهرست مجاز، برای اینکه `/rewards/:address` موجودی معوق منتقل‌شده را نشان دهد، تصمیم نشده است.)
 - حکمرانی (برای `board(user)` و `recovery`): `ActionVoted` و رویدادهای پیشنهاد/اجرا در `FoundationDAO`، `ValidatorsBoard` و `StandbyValidators`.
+- 🔶 نامزد افزودن (۲۰۲۶-۱۱-۲۳؛ تصمیم نشده): رویدادهای مهاجرت کرسی هیأت در `ValidatorsBoard` — `BoardSeatMigrated(old, new, heldSeat, votesGivenMoved, votesReceivedPending)`، `ReceivedVotesMoved(old, new, moved, dropped, merged, remaining)`، `ReceivedVotesMoveCompleted(old, new)` و `StaleVotesCleared` (از `clearDeadVotes` هم می‌آید) — تا داشبورد بتواند جابه‌جایی نیمه‌کارهٔ رأی‌ها (`pendingVoteMoves`) را نشان دهد.
 - فهرست دقیق از ABI نسخهٔ جاری ساخته می‌شود؛ رویداد تازه بدون تغییر کد با افزودن به پیکربندی اضافه می‌شود.
 
 ## API (JSON، فقط GET)

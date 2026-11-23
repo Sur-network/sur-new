@@ -211,7 +211,7 @@
 | ثبت هویت | `IdentityRegistry` | قرارداد وضعیت احراز (فقط بولی‌ها و هش) |
 | احراز هویت | eKYC / KYC | تطبیق چهره و کارت ملی؛ فقط شخص حقیقی ایرانی؛ هزینه با متقاضی |
 | یکتایی شخص | `personKey` | HMAC کد ملی که فقط آف‌چین در Verifier می‌ماند (یک شخص یک صندلی) |
-| مهاجرت هویت | `migrateIdentity` | انتقال هویت پس از گم‌شدن کلید مالک؛ انتقال صندلی با `migrateSeat(old, new)` (فقط Verifier) انجام می‌شود و به `migratedTo(old) == new` نیاز دارد |
+| مهاجرت هویت | `migrateIdentity` | انتقال هویت پس از گم‌شدن کلید مالک؛ انتقال صندلی با `migrateSeat(old, new)` (فقط Verifier) انجام می‌شود و به `migratedTo(old) == new` نیاز دارد؛ کرسی معتبر هیأت و رأی‌های انتخابات هم دنبال آن می‌روند (`onSeatMigrated`؛ رأی‌های دریافتی با `moveReceivedVotes`، بی‌اجازه) |
 | هش شواهد | `evidenceHash` | اثر انگشت بستهٔ شواهد یک تصمیم؛ خود بسته عمومی نیست |
 | سرور مدیریت کلید / SurKMS | `SurKMS` (A4) | تنها جایی که سه کلید امضای سرویس‌ها (`verifier`، `distributionOracle`، `identityOracle`) نگه‌داری می‌شود؛ ← `offchain-services/sur-kms-spec.md` |
 | سرویس دسترسی کلید | Key Access Service | متد `kms_hmac` در SurKMS: کلید HMAC `personKey` داخل SurKMS است (تصمیم مالک ۲۰۲۶-۱۱-۲۱؛ بدون Vault) و Verifier آن را صدا می‌زند (تغییر کوچک در Verifier لازم است؛ هنوز انجام نشده)؛ ⚠️ چرخش‌ناپذیر مگر با باطل‌شدن همهٔ personKeyها؛ پشتیبان رمزشدهٔ آفلاین تصمیم‌شده (فایل نزد مدیرعامل؛ نگه‌دارندهٔ عبارت باز) |
