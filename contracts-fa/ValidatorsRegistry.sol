@@ -14,6 +14,7 @@ interface IValidatorsBoardSync {
 interface IValidatorSeatNFT {
     function mintSeat(address to) external returns (uint256);
     function burnSeat(address owner) external;
+    function ownerOf(uint256 tokenId) external view returns (address); // برای توکن ناموجود revert می‌کند
 }
 
 interface IBoardAuthority {
@@ -1618,20 +1619,47 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // v2.5: NFT جایگاه. مالک توکن ValidatorSeatNFT = مالک جایگاه (سند مرجع §9).
     // ------------------------------------------------------------------
-    /// @notice از لحظهٔ انتقال جایگاه تا وقتی خریدار پذیرش توافق‌نامهٔ ولیدیتورها را ثبت کند (acceptSeatTransfer) true است.
-    ///         این یک «ثبت» است، نه «شرط»: جایگاه چه پذیرفته شود چه نشود وضعیت خود را حفظ می‌کند (جایگاه Active، Active می‌ماند).
-    mapping(address => bool) public seatTransferPending;
-    /// @notice اطلاعاتی: تا چه زمانی انتظار می‌رود خریدار امضا کند (۳ روز پس از انتقال). با گذشتن مهلت هیچ اتفاقی برای جایگاه
-    ///         نمی‌افتد. 🔶 پیامد امضا نکردن موضوعی آف‌چین/حقوقی است.
-    mapping(address => uint256) public seatAcceptDeadline;
+    // پذیرش توافق‌نامهٔ ولیدیتورها توسط خریدار «شرط» است (تصمیم مالک): جایگاه به آدرسی منتقل نمی‌شود که پیش از انتقال، پذیرش خود را
+    // «برای همان جایگاه» ثبت نکرده باشد؛ پس هیچ‌کس بدون پذیرش مالک جایگاه نمی‌شود. خود امضا آف‌چین می‌ماند (سندی که خریدار با
+    // کلید خودش امضا می‌کند)؛ زنجیره فقط ثبت می‌کند که «کلید خودِ خریدار» توافق‌نامه را برای این شناسهٔ جایگاه پذیرفته است. پذیرش
+    // «پیش از انتقال» انجام می‌شود (acceptSeatAgreement)، به یک شناسهٔ جایگاه بسته است و با انتقالی که از آن استفاده می‌کند
+    // «مصرف» می‌شود (انتقال بعدیِ همان جایگاه به همان آدرس پذیرش تازه می‌خواهد). جایگاه‌هایی که در ورود، توسط قرعه‌کشی یا در
+    // genesis mint می‌شوند از hook انتقال نمی‌گذرند؛ پس این شرط به آن مسیرها کاری ندارد و آن‌ها هرگز از پذیرش پس از انتقالِ
+    // قدیمی هم استفاده نمی‌کردند.
 
-    uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
+    /// @notice شناسهٔ جایگاهی که `buyer` پذیرش توافق‌نامهٔ ولیدیتورها را برای آن ثبت کرده است (۰ = هیچ). هر آدرس هر زمان فقط یک
+    ///         پذیرش دارد: پذیرفتن جایگاه دیگر آن را جایگزین می‌کند. شناسه‌ها از ۱ شروع می‌شوند و هرگز دوباره استفاده نمی‌شوند؛ پس
+    ///         پذیرش هرگز روی جایگاهی غیر از آنچه نام برده نمی‌نشیند. فقط با کلید خود خریدار ثبت می‌شود (acceptSeatAgreement)، با
+    ///         revokeSeatAcceptance پاک می‌شود یا با انتقال مصرف می‌شود.
+    mapping(address => uint256) public seatAcceptedFor;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
-    event SeatTransferAccepted(address indexed owner);
+    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId);
+    event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
+
+    /// @notice خریدارِ آینده، با کلید خودش و «پیش از» انتقال جایگاه به او، ثبت می‌کند که توافق‌نامهٔ ولیدیتورها را برای جایگاه
+    ///         `seatId` می‌پذیرد (خود امضا آف‌چین است). هیچ‌کس نمی‌تواند آن را برای آدرس دیگری ثبت کند. جایگاه باید وجود داشته
+    ///         باشد و از قبل مال فراخواننده نباشد. این ثبت فقط انتقال «همین» جایگاه را به فراخواننده مجاز می‌کند؛ بقیهٔ قواعد
+    ///         انتقال هنگام جابه‌جایی جایگاه همچنان بررسی می‌شوند. هر پذیرش قبلی فراخواننده را جایگزین می‌کند.
+    function acceptSeatAgreement(uint256 seatId) external {
+        require(IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).ownerOf(seatId) != msg.sender, "ValidatorsRegistry: caller already owns this seat");
+        seatAcceptedFor[msg.sender] = seatId;
+        emit SeatAgreementAccepted(msg.sender, seatId);
+    }
+
+    /// @notice خریدار پذیرش ثبت‌شدهٔ خود را پس می‌گیرد (مثلاً معامله به هم خورد)؛ پس جایگاه دیگر تا پذیرش دوباره به او منتقل
+    ///         نمی‌شود.
+    function revokeSeatAcceptance() external {
+        uint256 seatId = seatAcceptedFor[msg.sender];
+        require(seatId != 0, "ValidatorsRegistry: no acceptance recorded");
+        delete seatAcceptedFor[msg.sender];
+        emit SeatAcceptanceRevoked(msg.sender, seatId);
+    }
 
     /// @notice ValidatorSeatNFT پس از جابه‌جایی توکن آن را صدا می‌زند؛ اگر انتقال مجاز نباشد revert می‌کند (پس انتقال توکن هم
-    ///         revert می‌شود). کل رکورد ولیدیتور را از `from` به `to` منتقل می‌کند.
+    ///         revert می‌شود). کل رکورد ولیدیتور را از `from` به `to` منتقل می‌کند. افزون بر قواعد وضعیت جایگاه و پروندهٔ جریمه،
+    ///         خریدار باید تازه‌وارد، کاملاً احراز هویت شده و غیر از کلید اپراتور باشد و پذیرش توافق‌نامه را «دقیقاً برای همین
+    ///         جایگاه» ثبت کرده باشد (acceptSeatAgreement)؛ آن پذیرش همین‌جا مصرف می‌شود.
     function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
         require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
         ValidatorInfo storage v = validators[from];
@@ -1646,6 +1674,9 @@ contract ValidatorsRegistry {
         require(ownerOfOperator[to] == address(0) && operatorOf[to] == address(0), "ValidatorsRegistry: buyer is an operator key");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
         require(to != from, "ValidatorsRegistry: same owner");
+        // خریدار باید پیش از انتقال توافق‌نامهٔ ولیدیتورها را «برای همین جایگاه» پذیرفته باشد؛ پذیرش همین‌جا مصرف می‌شود
+        require(seatAcceptedFor[to] == seatId, "ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat");
+        delete seatAcceptedFor[to];
 
         // جایگاه Active، Active «می‌ماند» (تصمیم ۱۹ نوامبر ۲۰۲۶): خریدار جای مالک را در مجموعهٔ فعال با همان جایگاه ترتیبی و
         // همان کلید اپراتور می‌گیرد، پس گره بدون وقفه به اعتبارسنجی ادامه می‌دهد. رأی فروشنده پایان می‌یابد و خریدار از همین
@@ -1677,34 +1708,23 @@ contract ValidatorsRegistry {
         resumeRequested[to] = false;
         resumeRequested[from] = false;
         {
-            // باقیماندهٔ فروشنده نباید از انتقال جان به در ببرد: پیشنهاد باز کلید نود (و رزرو آن کلید) و پرچم پذیرش در انتظار؛
-            // خریدار تمیز شروع می‌کند و اگر کلید نود دیگری بخواهد باید پیشنهاد خودش را بدهد
+            // باقیماندهٔ فروشنده نباید از انتقال جان به در ببرد: پیشنهاد باز کلید نود (و رزرو آن کلید) و هر پذیرشی که فروشنده
+            // به‌عنوان خریدار احتمالی ثبت کرده بود؛ خریدار تمیز شروع می‌کند و اگر کلید نود دیگری بخواهد باید پیشنهاد خودش را بدهد
             address proposed = pendingOperator[from];
             if (proposed != address(0)) {
                 delete operatorReservedBy[proposed];
                 delete pendingOperator[from];
                 delete pendingOperatorExpiresAt[from];
             }
-            delete seatTransferPending[from];
-            delete seatAcceptDeadline[from];
+            delete seatAcceptedFor[from];
         }
 
         // فروشنده خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود
         permanentlyExited[from] = true;
         membershipEpoch[from]++;
 
-        seatTransferPending[to] = true;
-        seatAcceptDeadline[to] = block.timestamp + SEAT_ACCEPT_WINDOW;
-
         emit SeatTransferred(seatId, from, to, st);
         _notifyBoard(from);
         _notifyBoard(to);
-    }
-
-    /// @notice خریدار توافق‌نامهٔ ولیدیتورها را می‌پذیرد (خود امضا آف‌چین است؛ این تابع پذیرش را ثبت می‌کند).
-    function acceptSeatTransfer() external {
-        require(seatTransferPending[msg.sender], "ValidatorsRegistry: no pending seat transfer");
-        seatTransferPending[msg.sender] = false;
-        emit SeatTransferAccepted(msg.sender);
     }
 }

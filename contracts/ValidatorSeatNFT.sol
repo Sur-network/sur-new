@@ -19,10 +19,13 @@ interface ISeatRegistryHook {
 ///           - not in Exiting / RemovedInRecovery, no open penalty case;
 ///           - the buyer must be fully verified (IdentityRegistry.isFullyVerified), must never have been a validator, must not
 ///             hold a seat already and must not be somebody's operator key;
+///           - the buyer must have ACCEPTED THE VALIDATORS' AGREEMENT FOR THIS SEAT BEFOREHAND: the buyer's own key calls
+///             `acceptSeatAgreement(seatId)` on the Registry before the transfer (the signature itself is off-chain; the chain
+///             records the acceptance), and the transfer reverts without it. The acceptance is bound to that one seat id and is
+///             consumed by the transfer, so nobody becomes the owner of a seat without having accepted;
 ///           - the seller is treated as exited and can never become a validator again (agreement 15-6);
 ///           - an Active seat STAYS Active: the buyer takes over the seat, the operator key and the position in the active set
-///             at once; the buyer records the acceptance of the validators' agreement with `acceptSeatTransfer` on the
-///             Registry (a record, not a gate), and the buyer's vote counts from the transfer (a new voter).
+///             at once, and the buyer's vote counts from the transfer (a new voter).
 ///         Only ValidatorsRegistry mints (entry, lottery win, genesis founders) and burns (when the owner exits).
 ///         `tokenURI(id)` = baseURI + id; the base URI (initially https://validator-nft.surnet.org/) can be changed only by
 ///         FoundationDAO (an Execute proposal calling `setBaseURI`).
@@ -128,7 +131,8 @@ contract ValidatorSeatNFT {
         delete seatOf[from];
         seatOf[to] = tokenId;
         emit Transfer(from, to, tokenId);
-        // the Registry moves the validator record, or reverts the whole transfer
+        // the Registry moves the validator record, or reverts the whole transfer (a rule is broken, or the buyer has not recorded the
+        // acceptance of the validators' agreement for this seat)
         ISeatRegistryHook(REGISTRY).onSeatTransferred(tokenId, from, to);
     }
 

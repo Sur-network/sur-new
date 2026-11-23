@@ -82,6 +82,7 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
     await expect(nft.connect(seller).transferFrom(seller.address, await c.getAddress(), id)).to.be.revertedWith(EOA_NFT);
     await expect(nft.connect(seller)["safeTransferFrom(address,address,uint256)"](seller.address, await c.getAddress(), id)).to.be.revertedWith(EOA_NFT);
     expect(await nft.ownerOf(id)).to.equal(seller.address);
+    await reg.connect(buyer).acceptSeatAgreement(id); // the buyer must accept the validators' agreement for this seat first
     await nft.connect(seller).transferFrom(seller.address, buyer.address, id);
     expect(await nft.ownerOf(id)).to.equal(buyer.address);
     expect((await reg.validators(buyer.address)).status).to.equal(2); // an Active seat stays Active

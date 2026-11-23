@@ -102,3 +102,28 @@ contract MockSeatOwner {
         }
     }
 }
+
+/// @dev Test-only stand-in for ValidatorsBoard in the reward-rate tests: board authority and the composition version are set by hand
+///      (the real board rotates every month, which is irrelevant to the rate rules and would need a vote round per month in a 6-month test).
+contract MockBoard {
+    uint256 public boardVersion; // (starts at 0: no storage initialisers run when only the runtime code is installed)
+    mapping(address => bool) public auth;
+    function setAuth(address a, bool v) external { auth[a] = v; }
+    function bumpVersion() external { boardVersion++; }
+    function hasBoardAuthority(address a) external view returns (bool) { return auth[a]; }
+    function isBoardMember(address a) external view returns (bool) { return auth[a]; }
+    function syncVoter(address) external {}
+}
+
+/// @dev Test-only Registry for the genesis-freeze tests of BlockRewardDistributor: everybody is an active validator, and the genesis
+///      time (normally seeded by the Registry genesis helper) is set by hand, including 0 (= never seeded).
+contract MockRateRegistry {
+    uint256 public genesisTime; // (no storage initialisers: the tests install the runtime code only)
+    function setGenesisTime(uint256 g) external { genesisTime = g; }
+    function statusNonce() external pure returns (uint256) { return 1; }
+    function isValidator(address) external pure returns (bool) { return true; }
+    function wasActiveAt(address, uint256) external pure returns (bool) { return true; }
+    function everActivated(address) external pure returns (bool) { return true; }
+    function getActiveValidatorCount() external pure returns (uint256) { return 1; }
+    function membershipEpoch(address) external pure returns (uint256) { return 0; }
+}

@@ -14,6 +14,7 @@ interface IValidatorsBoardSync {
 interface IValidatorSeatNFT {
     function mintSeat(address to) external returns (uint256);
     function burnSeat(address owner) external;
+    function ownerOf(uint256 tokenId) external view returns (address); // reverts for a token that does not exist
 }
 
 interface IBoardAuthority {
@@ -1640,20 +1641,47 @@ contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // v2.5: seat NFT. The owner of ValidatorSeatNFT token = the owner of the seat (reference doc §9).
     // ------------------------------------------------------------------
-    /// @notice True from a seat transfer until the buyer records the acceptance of the validators' agreement (acceptSeatTransfer).
-    ///         It is a record, NOT a gate: the seat keeps its status (an Active seat stays Active) whether or not it is accepted.
-    mapping(address => bool) public seatTransferPending;
-    /// @notice Informational: until when the buyer is expected to sign (3 days after the transfer). Nothing happens to the seat
-    ///         when the deadline passes. 🔶 consequence of not signing is an off-chain/legal matter.
-    mapping(address => uint256) public seatAcceptDeadline;
+    // The buyer's acceptance of the validators' agreement is a GATE (owner decision): a seat cannot be transferred to an address that
+    // has not recorded its acceptance FOR THAT SEAT beforehand, so nobody becomes the owner of a seat without having accepted. The
+    // signature itself stays off-chain (a document the buyer signs with its own key); the chain records only that the buyer's OWN key
+    // accepted the agreement for this seat id. The acceptance is made BEFORE the transfer (acceptSeatAgreement), is bound to one
+    // seat id, and is CONSUMED by the transfer that uses it (a later transfer of the same seat to the same address needs a fresh one).
+    // Seats minted at entry, by the lottery or at genesis never pass through the transfer hook, so this gate does not touch those
+    // paths; they never used the old post-transfer acceptance either.
 
-    uint256 public constant SEAT_ACCEPT_WINDOW = 3 days;
+    /// @notice The seat id for which `buyer` has recorded the acceptance of the validators' agreement (0 = none). One acceptance at a
+    ///         time per address: accepting another seat replaces it. Seat ids start at 1 and are never reused, so an acceptance can
+    ///         never be applied to a different seat than the one it names. Set by the buyer's own key only
+    ///         (acceptSeatAgreement), cleared by revokeSeatAcceptance or consumed by the transfer.
+    mapping(address => uint256) public seatAcceptedFor;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
-    event SeatTransferAccepted(address indexed owner);
+    event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId);
+    event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
+
+    /// @notice The future buyer records, with its own key and BEFORE the seat is transferred to it, that it accepts the validators'
+    ///         agreement for seat `seatId` (the signature itself is off-chain). Nobody can record it for another address. The seat
+    ///         must exist and must not already be owned by the caller. The record only authorises the transfer of THIS seat to the
+    ///         caller; every other transfer rule is still checked when the seat moves. Replaces any earlier acceptance of the caller.
+    function acceptSeatAgreement(uint256 seatId) external {
+        require(IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).ownerOf(seatId) != msg.sender, "ValidatorsRegistry: caller already owns this seat");
+        seatAcceptedFor[msg.sender] = seatId;
+        emit SeatAgreementAccepted(msg.sender, seatId);
+    }
+
+    /// @notice The buyer withdraws its recorded acceptance (for example the sale fell through), so the seat can no longer be
+    ///         transferred to it until it accepts again.
+    function revokeSeatAcceptance() external {
+        uint256 seatId = seatAcceptedFor[msg.sender];
+        require(seatId != 0, "ValidatorsRegistry: no acceptance recorded");
+        delete seatAcceptedFor[msg.sender];
+        emit SeatAcceptanceRevoked(msg.sender, seatId);
+    }
 
     /// @notice Called by ValidatorSeatNFT after the token moved; reverts (so the token transfer reverts) unless the transfer is
-    ///         allowed. Moves the whole validator record from `from` to `to`.
+    ///         allowed. Moves the whole validator record from `from` to `to`. Besides the seat-status and penalty rules, the buyer
+    ///         must be new, fully verified and not an operator key, and must have recorded the acceptance of the agreement for
+    ///         exactly this seat (acceptSeatAgreement); that acceptance is consumed here.
     function onSeatTransferred(uint256 seatId, address from, address to) external nonReentrant {
         require(msg.sender == SurAddresses.VALIDATOR_SEAT_NFT, "ValidatorsRegistry: caller is not the seat NFT");
         ValidatorInfo storage v = validators[from];
@@ -1668,6 +1696,9 @@ contract ValidatorsRegistry {
         require(ownerOfOperator[to] == address(0) && operatorOf[to] == address(0), "ValidatorsRegistry: buyer is an operator key");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(to), "ValidatorsRegistry: buyer identity not fully verified");
         require(to != from, "ValidatorsRegistry: same owner");
+        // the buyer must have accepted the validators' agreement for THIS seat before the transfer; the acceptance is used up now
+        require(seatAcceptedFor[to] == seatId, "ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat");
+        delete seatAcceptedFor[to];
 
         // An Active seat STAYS Active (decision 2026-11-19): the buyer takes the owner place in the active set at the same
         // position, with the same operator key, so the node keeps validating without interruption. The seller's vote ends and the
@@ -1699,34 +1730,24 @@ contract ValidatorsRegistry {
         resumeRequested[to] = false;
         resumeRequested[from] = false;
         {
-            // the seller's leftovers must not survive the transfer: an open node-key proposal (and its key reservation) and a
-            // pending acceptance flag; the buyer starts clean and must make its own proposal if it wants another node key
+            // the seller's leftovers must not survive the transfer: an open node-key proposal (and its key reservation) and any
+            // acceptance the seller had recorded as a possible buyer; the buyer starts clean and must make its own proposal if it
+            // wants another node key
             address proposed = pendingOperator[from];
             if (proposed != address(0)) {
                 delete operatorReservedBy[proposed];
                 delete pendingOperator[from];
                 delete pendingOperatorExpiresAt[from];
             }
-            delete seatTransferPending[from];
-            delete seatAcceptDeadline[from];
+            delete seatAcceptedFor[from];
         }
 
         // the seller is treated as exited: permanent ban, board authority over
         permanentlyExited[from] = true;
         membershipEpoch[from]++;
 
-        seatTransferPending[to] = true;
-        seatAcceptDeadline[to] = block.timestamp + SEAT_ACCEPT_WINDOW;
-
         emit SeatTransferred(seatId, from, to, st);
         _notifyBoard(from);
         _notifyBoard(to);
-    }
-
-    /// @notice The buyer accepts the validators' agreement (the signature itself is off-chain; this records the acceptance).
-    function acceptSeatTransfer() external {
-        require(seatTransferPending[msg.sender], "ValidatorsRegistry: no pending seat transfer");
-        seatTransferPending[msg.sender] = false;
-        emit SeatTransferAccepted(msg.sender);
     }
 }

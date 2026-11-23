@@ -9,6 +9,7 @@ interface IValidatorsRegistry {
     function wasActiveAt(address who, uint256 nonce) external view returns (bool);
     function everActivated(address who) external view returns (bool); // پرچم دائمی: درست است اگر آدرس هرگز به‌طور مشروع فعال شده باشد
     function getActiveValidatorCount() external view returns (uint256); // برای آستانه‌ی دوسوم مجمع در رأی‌گیری تغییر سهم
+    function genesisTime() external view returns (uint256); // زمان genesis.json که seed helper ی Registry می‌نویسد؛ مرجع انجماد ۶ ماههٔ نرخ پاداش
 }
 
 /// @notice اینترفیس حداقلی روی ValidatorsBoard برای چک اختیار هیأت‌مدیره در رأی‌گیری‌های دومجلسی پایین
@@ -290,6 +291,14 @@ contract BlockRewardDistributor {
     // پیشنهاد نیاز دارد. انقضای ۳۰روزه فقط برای مرحله‌ی رأی‌گیری است؛ پس از تکمیل هر دو مجلس تأخیر ۷روزه شروع می‌شود و اجرا
     // همه‌چیز را دوباره بررسی می‌کند (executeRateChange را ببینید). اوراکل توزیع نمی‌تواند نرخی اضافه، عوض یا حذف کند؛ فقط می‌تواند
     // ارتفاع شروع یک ورودی مصوب را در پنجره‌ی تحمل گواهی کند.
+    // حدود هر تصمیم (تصمیم مالک؛ سند اقتصاد بخش ۲، ردیف ۱۸ جدول)، هم هنگام پیشنهاد و هم دوباره هنگام اجرا بررسی می‌شود:
+    //   - نرخ جدید با «نرخ مصوبِ جاری» (نرخ آخرین ورودی تاریخچه - ورودیِ مصوب‌شده‌ای که هنوز فعال نشده هم حساب می‌شود - یا
+    //     INITIAL_REWARD_PER_BLOCK تا وقتی تاریخچه خالی است) حداکثر RATE_CHANGE_MAX_BPS (۱۰٪) «نسبی» فرق کند، بالا یا پایین،
+    //     متقارن، بدون کف و سقف مطلق؛
+    //   - دست‌کم RATE_CHANGE_MIN_INTERVAL (۱۸۰ روز) بین دو تصمیم «موفق»، که بین بلاک‌های «اجرا»ی آن‌ها سنجیده می‌شود (بلاکی که
+    //     executeRateChange ورودی را افزوده و در `lastRateChangeTime` نگه می‌دارد)، همان نقطهٔ سنجش SHARE_CHANGE_MIN_INTERVAL؛
+    //   - در RATE_CHANGE_GENESIS_FREEZE (۱۸۰ روز) اول پس از genesis هیچ تغییری نیست، از ValidatorsRegistry.genesisTime() سنجیده می‌شود.
+    // اثر تغییر یک هفته پس از تصمیم است (RATE_CHANGE_DELAY و MIN_RATE_CHANGE_LEAD_SECONDS در پایین).
     uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
     struct RewardRateChange {
         uint128 startBlock; // تا پیش از گواهی: ارتفاع برآوردی اولین بلاک نرخ جدید؛ پس از آن: ارتفاع واقعی
@@ -314,6 +323,17 @@ contract BlockRewardDistributor {
     /// @notice نیم‌پهنای پنجره، به بلاک، دور ارتفاع برآوردی شروع که تا گواهی‌شدن ارتفاع شروع، «بزرگ‌تر» از دو نرخ در آن مجاز است؛
     ///         و بیشترین فاصله‌ی ارتفاع گواهی‌شده از برآورد.
     uint256 public constant RATE_START_TOLERANCE_BLOCKS = 10_000;
+    /// @notice بیشترین تغییری که یک تصمیم می‌تواند در پاداش هر بلاک بدهد، به بیسیس‌پوینتِ «نرخ مصوبِ جاری» (۱۰۰۰ = ۱۰٪). متقارن:
+    ///         نرخ جدید باید در بازهٔ [جاری × ۹۰٪، جاری × ۱۱۰٪] باشد و هر دو سر مجاز است. مقایسه حساب صحیحِ دقیق است (نرخ جدید × ۱۰۰۰۰
+    ///         در برابر جاری × ۹۰۰۰ و جاری × ۱۱۰۰۰)؛ پس +۱۰٪ پذیرفته می‌شود و +۱۰٪ به‌اضافهٔ یک wei پذیرفته نمی‌شود.
+    uint256 public constant RATE_CHANGE_MAX_BPS = 1000;
+    /// @notice کمترین فاصلهٔ دو تصمیم موفق تغییر نرخ، که بین بلاک‌های «اجرا»ی آن‌ها سنجیده می‌شود (lastRateChangeTime را ببینید).
+    uint256 public constant RATE_CHANGE_MIN_INTERVAL = 180 days;
+    /// @notice پیش از ValidatorsRegistry.genesisTime() + این مقدار هیچ تغییر نرخی نه پیشنهاد می‌شود نه اجرا.
+    uint256 public constant RATE_CHANGE_GENESIS_FREEZE = 180 days;
+    /// @notice زمان بلاکی که آخرین تغییر نرخ در آن اجرا شد (۰ = هنوز هیچ). نقطهٔ سنجش فاصلهٔ ۱۸۰روزه است: تصمیم از لحظهٔ «اجرا»
+    ///         شمرده می‌شود، نه پیشنهاد، تصویب یا فعال‌شدن. از ۰ شروع می‌شود و به seed در genesis نیاز ندارد.
+    uint256 public lastRateChangeTime;
 
     struct RateProposal {
         uint128 startBlock; // ارتفاع برآوردی اولین بلاک نرخ جدید
@@ -727,15 +747,17 @@ contract BlockRewardDistributor {
 
     /// @notice پیشنهاد تغییر نرخ مصوب که در `activationTime` (ثانیه‌ی یونیکس، زمان transition ی Besu) اثر می‌کند، همراه با برآورد
     ///         پیشنهاددهنده از اولین بلاکِ برابر یا بعد از آن زمان. فقط ولیدیتور فعال می‌تواند پیشنهاد دهد. این فقط ردِ زودهنگام است:
-    ///         همه‌ی شرط‌ها هنگام اجرا دوباره بررسی می‌شوند. پیشنهادها مستقل‌اند؛ چند پیشنهاد می‌توانند هم‌زمان باز باشند و هرکدام
-    ///         زودتر اجرا شود ممکن است دیگری را غیرقابل‌اجرا کند (آن‌گاه همان‌طور که هست می‌ماند).
+    ///         همه‌ی شرط‌ها هنگام اجرا دوباره بررسی می‌شوند. حدود نرخ، همه هنگام اجرای همین تابع سنجیده می‌شوند: نرخ جدید در ±۱۰٪ نرخ
+    ///         مصوبِ جاری (RATE_CHANGE_MAX_BPS)، دست‌کم RATE_CHANGE_MIN_INTERVAL از آخرین تغییر اجراشده، و نه در RATE_CHANGE_GENESIS_FREEZE.
+    ///         پیشنهادها مستقل‌اند؛ چند پیشنهاد می‌توانند هم‌زمان باز باشند و هرکدام زودتر اجرا شود ممکن است دیگری را غیرقابل‌اجرا کند
+    ///         (دومی آن‌گاه در فاصلهٔ ۱۸۰روزه یا آزمون ±۱۰٪ نسبت به نرخ جاریِ تازه رد می‌شود و همان‌طور که هست می‌ماند).
     function proposeRateChange(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) external returns (uint256 id) {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
         require(
             activationTime <= type(uint64).max && estimatedStartBlock <= type(uint128).max && ratePerBlock <= type(uint128).max,
             "BlockRewardDistributor: value does not fit its type"
         );
-        _requireRateStartOk(activationTime, estimatedStartBlock);
+        _requireRateOk(activationTime, estimatedStartBlock, ratePerBlock);
         id = ++rateProposalCount;
         RateProposal storage p = rateProposals[id];
         p.startBlock = uint128(estimatedStartBlock);
@@ -782,8 +804,10 @@ contract BlockRewardDistributor {
 
     /// @notice هرکس می‌تواند اجرا کند، پس از تکمیل هر دو مجلس و گذشتن RATE_CHANGE_DELAY از آن لحظه. دوباره بررسی می‌شود: ترکیب
     ///         هیأت، دست‌کم MIN_RATE_CHANGE_LEAD_SECONDS فاصله‌ی زمان اثر، آینده‌بودن ارتفاع برآوردی شروع، و تاریخچه‌ی اکیداً
-    ///         صعودی با پنجره‌های تحمل بدون هم‌پوشانی. اگر هر بررسی شکست بخورد پیشنهاد دقیقاً همان‌طور که هست می‌ماند: هیچ زمان یا
-    ///         ارتفاعی خودکار جابه‌جا نمی‌شود. ورودی تازه تا certifyRateStart موقت است.
+    ///         صعودی با پنجره‌های تحمل بدون هم‌پوشانی، و حدود نرخ نسبت به وضعیتِ «همین حالا»: بیرون از انجماد genesis، دست‌کم
+    ///         RATE_CHANGE_MIN_INTERVAL از `lastRateChangeTime`، و نرخ در ±۱۰٪ نرخ مصوبِ جاری (که ممکن است پیشنهاد دیگری از زمان ساخت
+    ///         این پیشنهاد عوضش کرده باشد). اگر هر بررسی شکست بخورد پیشنهاد دقیقاً همان‌طور که هست می‌ماند: هیچ زمان، ارتفاع یا نرخی
+    ///         خودکار جابه‌جا نمی‌شود. در صورت موفقیت `lastRateChangeTime` برابر زمان همین بلاک می‌شود. ورودی تازه تا certifyRateStart موقت است.
     function executeRateChange(uint256 id) external {
         RateProposal storage p = rateProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
@@ -794,8 +818,9 @@ contract BlockRewardDistributor {
             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
-        _requireRateStartOk(p.activationTime, p.startBlock);
+        _requireRateOk(p.activationTime, p.startBlock, p.ratePerBlock);
         p.executed = true;
+        lastRateChangeTime = block.timestamp;
         rewardRateChanges.push(
             RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock, activationTime: p.activationTime, certified: false})
         );
@@ -825,13 +850,18 @@ contract BlockRewardDistributor {
     ///         ۷ هنوز تصویب‌نشده و غیرقابل‌ادامه (رأی‌گیری دیگر به تغییر قابل‌اجرا نمی‌رسد).
     ///         problem (برای status ۶ یا ۷): ۱ ترکیب هیأت تغییر کرده، ۲ زمان اثر در آینده نیست، ۳ زمان اثر نزدیک‌تر از
     ///         MIN_RATE_CHANGE_LEAD_SECONDS، ۴ پس از آخرین تغییر مصوب نیست (زمان، یا پنجره‌های تحمل هم‌پوشانی پیدا می‌کنند)، ۵ ارتفاع
-    ///         برآوردی شروع در آینده نیست. هر مشکل دائمی است (زمان و شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت
-    ///         برای یک پیشنهاد برگشت‌پذیر نیست)؛ پس status ۷ هرگز به ۱ برنمی‌گردد. اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
+    ///         برآوردی شروع در آینده نیست، ۶ هنوز در RATE_CHANGE_GENESIS_FREEZE است (یا genesisTime ی Registry seed نشده)، ۷ کمتر از
+    ///         RATE_CHANGE_MIN_INTERVAL از آخرین تغییر اجراشده گذشته، ۸ نرخ بیش از RATE_CHANGE_MAX_BPS با نرخ مصوبِ جاری فاصله دارد.
+    ///         مشکل‌های ۱ تا ۵ دائمی‌اند (زمان و شماره‌ی بلاک فقط بالا می‌رود، تاریخچه فقط بزرگ می‌شود، و تغییر هیأت برای یک پیشنهاد
+    ///         برگشت‌پذیر نیست). مشکل‌های ۶ و ۷ با گذشت زمان برطرف می‌شوند و ۸ فقط اگر تاریخچه با تغییر دیگری بزرگ شود؛ پس پیشنهاد
+    ///         «تصویب‌شده» (status ۶) می‌تواند دوباره قابل‌اجرا شود؛ ولی پیشنهادی که هنوز در مرحلهٔ رأی‌گیری است هرگز از ۷ به ۱
+    ///         برنمی‌گردد، چون مهلت ۳۰روزهٔ رأی‌گیری‌اش خیلی پیش از برطرف‌شدن هر کدام تمام می‌شود (و درون انجماد genesis اصلاً
+    ///         پیشنهادی ساخته نمی‌شود). اجرا در بلاکی بعدی رخ می‌دهد؛ پس این فقط راهنماست.
     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
         RateProposal storage p = rateProposals[id];
         if (p.createdAt == 0) return (0, 0);
         if (p.executed) return (3, 0);
-        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.activationTime, p.startBlock);
+        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateProblem(p.activationTime, p.startBlock, p.ratePerBlock);
         if (p.approvedAt == 0) {
             if (block.timestamp > p.votingExpiresAt) return (2, 0);
             if (problem != 0) return (7, problem);
@@ -861,6 +891,47 @@ contract BlockRewardDistributor {
         }
     }
 
+    /// @dev پاداش هر بلاک پس از آن‌که همهٔ ورودی‌های موجود تاریخچه اثر کنند: نرخ آخرین ورودی (مصوب، حتی اگر موقت یا هنوز فعال‌نشده
+    ///      باشد)، یا INITIAL_REWARD_PER_BLOCK تا وقتی تاریخچه خالی است. مبنای قاعدهٔ ±۱۰٪ است.
+    function _currentApprovedRate() private view returns (uint256) {
+        uint256 n = rewardRateChanges.length;
+        return n == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[n - 1].ratePerBlock;
+    }
+
+    /// @notice نرخی که قاعدهٔ ±۱۰٪ با آن سنجیده می‌شود: نرخ آخرین ورودی مصوب تاریخچه (حتی اگر هنوز فعال نشده)، یا
+    ///         INITIAL_REWARD_PER_BLOCK تا وقتی ورودی‌ای نیست.
+    function currentApprovedRatePerBlock() external view returns (uint256) {
+        return _currentApprovedRate();
+    }
+
+    /// @notice زودترین زمانی که از آن می‌توان تغییر نرخ جدید پیشنهاد داد و اجرا کرد: بزرگ‌تر از
+    ///         genesisTime() + RATE_CHANGE_GENESIS_FREEZE و lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL. تا وقتی genesisTime ی
+    ///         Registry seed نشده type(uint256).max برمی‌گرداند.
+    function earliestRateChangeTime() external view returns (uint256) {
+        uint256 g = REGISTRY.genesisTime();
+        if (g == 0) return type(uint256).max;
+        uint256 a = g + RATE_CHANGE_GENESIS_FREEZE;
+        uint256 b = lastRateChangeTime == 0 ? 0 : lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL;
+        return a > b ? a : b;
+    }
+
+    /// @dev کد مشکلِ یک تغییر نرخ در همین لحظه (۰ = بدون مشکل): تنها جایی که پیشنهاد و اجرا قواعدشان را مشترک دارند. کدهای ۲ تا ۵ از
+    ///      _rateStartProblem می‌آیند (۱ را فراخواننده‌ها بررسی می‌کنند)؛ ۶ انجماد genesis، ۷ فاصله، ۸ نرخ بیرون از حد. مشکل‌های زمان
+    ///      و ارتفاع اول می‌آیند تا پیام خطاهای قبلی عوض نشود.
+    function _rateProblem(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) private view returns (uint8) {
+        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+        if (r != 0) return r;
+        uint256 g = REGISTRY.genesisTime();
+        if (g == 0 || block.timestamp < g + RATE_CHANGE_GENESIS_FREEZE) return 6; // اگر genesisTime هرگز seed نشده باشد بسته می‌ماند
+        if (lastRateChangeTime != 0 && block.timestamp < lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL) return 7;
+        uint256 cur = _currentApprovedRate();
+        if (
+            ratePerBlock * BPS_DENOMINATOR > cur * (BPS_DENOMINATOR + RATE_CHANGE_MAX_BPS) ||
+            ratePerBlock * BPS_DENOMINATOR < cur * (BPS_DENOMINATOR - RATE_CHANGE_MAX_BPS)
+        ) return 8;
+        return 0;
+    }
+
     function _rateStartProblem(uint256 activationTime, uint256 estimatedStartBlock) private view returns (uint8) {
         if (activationTime <= block.timestamp) return 2;
         if (activationTime < block.timestamp + MIN_RATE_CHANGE_LEAD_SECONDS) return 3;
@@ -875,12 +946,15 @@ contract BlockRewardDistributor {
         return 0;
     }
 
-    function _requireRateStartOk(uint256 activationTime, uint256 estimatedStartBlock) private view {
-        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+    function _requireRateOk(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) private view {
+        uint8 r = _rateProblem(activationTime, estimatedStartBlock, ratePerBlock);
         require(r != 2, "BlockRewardDistributor: activation time is not in the future");
         require(r != 3, "BlockRewardDistributor: activation time is closer than MIN_RATE_CHANGE_LEAD_SECONDS");
         require(r != 5, "BlockRewardDistributor: estimated start block is not in the future");
         require(r != 4, "BlockRewardDistributor: activation time and start block must be after the last approved rate change");
+        require(r != 6, "BlockRewardDistributor: no rate change in the first 6 months after genesis");
+        require(r != 7, "BlockRewardDistributor: at least 180 days are required between two rate changes");
+        require(r != 8, "BlockRewardDistributor: the new rate may differ from the current approved rate by at most 10%");
     }
 
     /// @dev جست‌وجوی دودویی: تعداد ورودی‌های تاریخچه که اثرشان تا `blockNumber` تمام شده است. اثر یک ورودی در ارتفاع گواهی‌شده‌ی

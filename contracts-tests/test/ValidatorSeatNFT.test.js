@@ -10,6 +10,7 @@ const HASH = ethers.id("evidence");
 const START = Math.floor(Date.UTC(2027, 2, 2) / 1000);
 const ST = { None: 0, Probation: 1, Active: 2, Demoted: 3, Exiting: 4, SelfSuspended: 6 };
 const rnd = () => ethers.Wallet.createRandom().address;
+const NOT_ACCEPTED = "ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat";
 
 async function fixture() {
   const S = await ethers.getSigners();
@@ -88,6 +89,9 @@ describe("ValidatorSeatNFT - tokens", () => {
     await expect(nft.connect(other).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith("ValidatorSeatNFT: not owner nor approved");
     await nft.connect(seller).approve(other.address, 6);
     expect(await nft.getApproved(6)).to.equal(other.address);
+    // an approved operator moves the token, but the BUYER must still have accepted the agreement for this seat
+    await expect(nft.connect(other).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    await reg.connect(buyer).acceptSeatAgreement(6);
     await nft.connect(other).transferFrom(seller.address, buyer.address, 6);
     expect(await nft.ownerOf(6)).to.equal(buyer.address);
     expect(await nft.getApproved(6)).to.equal(ZERO);
@@ -96,7 +100,7 @@ describe("ValidatorSeatNFT - tokens", () => {
 });
 
 describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
-  it("an Active seat STAYS Active: collateral, operator and place in the set move to the buyer at once; the buyer is a new voter; acceptance is only a record", async () => {
+  it("an Active seat STAYS Active: collateral, operator and place in the set move to the buyer at once; the buyer is a new voter; the acceptance made beforehand is consumed", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, seller, buyer } = f;
     const op = await enterAndActivate(f, seller);
@@ -104,7 +108,9 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     const seq = await reg.activationSeq(seller.address);
     const nonceBefore = await reg.statusNonce();
     const ownersBefore = await reg.getActiveOwners();
-    await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
+    await reg.connect(buyer).acceptSeatAgreement(6);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(6);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.emit(reg, "SeatTransferred").withArgs(6, seller.address, buyer.address, ST.Active);
 
     const v = await reg.validators(buyer.address);
     expect(v.status).to.equal(ST.Active);
@@ -129,25 +135,26 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     expect(await reg.wasActiveAt(buyer.address, await reg.statusNonce())).to.equal(true);
     expect(await reg.wasActiveAt(seller.address, await reg.statusNonce())).to.equal(false);
 
-    // acceptance of the agreement is a record, not a gate
-    expect(await reg.seatTransferPending(buyer.address)).to.equal(true);
-    await reg.connect(buyer).acceptSeatTransfer();
-    await expect(reg.connect(buyer).acceptSeatTransfer()).to.be.revertedWith("ValidatorsRegistry: no pending seat transfer");
-    expect(await reg.seatTransferPending(buyer.address)).to.equal(false);
+    // the acceptance was consumed by the transfer; there is no post-transfer pending record any more
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    await expect(reg.connect(buyer).revokeSeatAcceptance()).to.be.revertedWith("ValidatorsRegistry: no acceptance recorded");
   });
 
   it("the seller can never return; the buyer starts with no history of its own", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, seller, buyer, price } = f;
     await enterAndActivate(f, seller);
+    await reg.connect(buyer).acceptSeatAgreement(6);
     await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
     await expect(reg.connect(seller).requestMembership(rnd(), { value: price })).to.be.revertedWith("ValidatorsRegistry: this address has exited before and may not rejoin");
   });
 
-  it("a Probation seat can be sold too; the buyer is activated by the Verifier after the probation wait, acceptance or not", async () => {
+  it("a Probation seat can be sold too (with the buyer's prior acceptance); the buyer is activated by the Verifier after the probation wait", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, verifier, seller, buyer, price } = f;
     await reg.connect(seller).requestMembership(rnd(), { value: price });
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    await reg.connect(buyer).acceptSeatAgreement(6);
     await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
     expect((await reg.validators(buyer.address)).status).to.equal(ST.Probation);
     await increaseTime(8 * DAY);
@@ -160,6 +167,8 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     const { reg, nft, idr, seller, other, S, founders } = f;
     await enterAndActivate(f, seller);
     const stranger = S[15];
+    // every buyer below HAS accepted (so each failure is about its own rule); the identity/operator rules come before the acceptance check
+    await reg.connect(stranger).acceptSeatAgreement(6);
     await expect(nft.connect(seller).transferFrom(seller.address, stranger.address, 6)).to.be.revertedWith("ValidatorsRegistry: buyer identity not fully verified");
     await expect(nft.connect(seller).transferFrom(seller.address, founders[1].address, 6)).to.be.revertedWith("ValidatorSeatNFT: recipient already holds a seat");
     await expect(nft.connect(seller).transferFrom(seller.address, ZERO, 6)).to.be.revertedWith("ValidatorSeatNFT: transfer to the zero address");
@@ -172,6 +181,7 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     // an address that was a validator before (entered and exited) cannot come back by buying
     await reg.connect(other).requestMembership(rnd(), { value: f.price });
     await reg.connect(other).requestExit();
+    await reg.connect(other).acceptSeatAgreement(6);
     await expect(nft.connect(seller).transferFrom(seller.address, other.address, 6)).to.be.revertedWith("ValidatorsRegistry: buyer was a validator before");
   });
 
@@ -180,6 +190,7 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     const { reg, nft, verifier, seller, buyer } = f;
     await enterAndActivate(f, seller);
     await reg.connect(verifier).recordSuspension(seller.address, HASH); // Demoted with a pending slash decision
+    await reg.connect(buyer).acceptSeatAgreement(6);
     await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith("ValidatorsRegistry: open penalty case - transfer blocked");
   });
 
@@ -201,14 +212,19 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
 });
 
 describe("ValidatorSeatNFT - the seller leaves nothing behind", () => {
-  it("an open node-key proposal of the seller is cleared and its key freed; the seller's acceptance flag is cleared after a resale", async () => {
+  it("an open node-key proposal of the seller is cleared and its key freed; an acceptance the seller once recorded as a buyer is cleared; the buyer's acceptance is consumed at every resale", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, seller, buyer, other } = f;
+    await reg.connect(seller).acceptSeatAgreement(1); // the seller once accepted seat 1 as a would-be buyer, then entered another way
     await enterAndActivate(f, seller);
+    expect(await reg.seatAcceptedFor(seller.address)).to.equal(1);
     const newKey = rnd();
     await reg.connect(seller).proposeOperator(newKey);
     expect(await reg.operatorReservedBy(newKey)).to.equal(seller.address);
+    await reg.connect(buyer).acceptSeatAgreement(6);
     await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
+    expect(await reg.seatAcceptedFor(seller.address)).to.equal(0);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
     // the proposal and its reservation are gone; the buyer starts with no proposal
     expect(await reg.pendingOperator(seller.address)).to.equal(ZERO);
     expect(await reg.pendingOperator(buyer.address)).to.equal(ZERO);
@@ -216,13 +232,141 @@ describe("ValidatorSeatNFT - the seller leaves nothing behind", () => {
     await expect(f.reg.connect(f.verifier).confirmOperatorReady(seller.address, newKey, HASH)).to.be.revertedWith("ValidatorsRegistry: no open proposal");
     // the freed key can be claimed by the buyer in a fresh proposal
     await reg.connect(buyer).proposeOperator(newKey);
-    // resale: the first buyer's pending acceptance flag does not survive on the seller side
-    expect(await reg.seatTransferPending(buyer.address)).to.equal(true);
+    // resale: the second buyer needs its own acceptance; nothing is left on the first buyer's side
+    await expect(nft.connect(buyer).transferFrom(buyer.address, other.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    await reg.connect(other).acceptSeatAgreement(6);
     await nft.connect(buyer).transferFrom(buyer.address, other.address, 6);
-    expect(await reg.seatTransferPending(buyer.address)).to.equal(false);
-    expect(await reg.seatAcceptDeadline(buyer.address)).to.equal(0);
-    expect(await reg.seatTransferPending(other.address)).to.equal(true);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    expect(await reg.seatAcceptedFor(other.address)).to.equal(0);
     expect(await reg.pendingOperator(buyer.address)).to.equal(ZERO);
-    await expect(reg.connect(buyer).acceptSeatTransfer()).to.be.revertedWith("ValidatorsRegistry: no pending seat transfer");
+    expect(await nft.ownerOf(6)).to.equal(other.address);
+  });
+});
+
+describe("ValidatorSeatNFT - the buyer must accept the validators' agreement BEFORE the transfer (a gate)", () => {
+  it("without a recorded acceptance the transfer reverts and nothing moves (transferFrom and safeTransferFrom)", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer } = f;
+    const op = await enterAndActivate(f, seller);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    await expect(nft.connect(seller)["safeTransferFrom(address,address,uint256)"](seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    // the seat is still the seller's, still Active with its collateral and node key; the buyer is nobody
+    expect(await nft.ownerOf(6)).to.equal(seller.address);
+    expect(await nft.balanceOf(buyer.address)).to.equal(0);
+    expect((await reg.validators(seller.address)).status).to.equal(ST.Active);
+    expect((await reg.validators(seller.address)).lockedStake).to.equal(E("500000"));
+    expect((await reg.validators(buyer.address)).status).to.equal(ST.None);
+    expect(await reg.operatorOf(seller.address)).to.equal(op);
+    expect(await reg.permanentlyExited(seller.address)).to.equal(false);
+  });
+
+  it("the happy path: accept (own key, before) -> transfer -> the buyer owns an Active seat and the acceptance is spent; both events are emitted", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer } = f;
+    await enterAndActivate(f, seller);
+    await expect(reg.connect(buyer).acceptSeatAgreement(6)).to.emit(reg, "SeatAgreementAccepted").withArgs(buyer.address, 6);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(6);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.emit(nft, "Transfer").withArgs(seller.address, buyer.address, 6);
+    expect(await nft.ownerOf(6)).to.equal(buyer.address);
+    expect((await reg.validators(buyer.address)).status).to.equal(ST.Active);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    // the removed post-transfer pending mechanism no longer exists
+    for (const gone of ["seatTransferPending", "seatAcceptDeadline", "SEAT_ACCEPT_WINDOW", "acceptSeatTransfer"]) {
+      expect(reg.interface.getFunction(gone)).to.equal(null);
+    }
+    expect(reg.interface.getEvent("SeatTransferAccepted")).to.equal(null);
+  });
+
+  it("an acceptance for a DIFFERENT seat does not work (the buyer accepted seat 6; seat 7 and seat 1 cannot be moved to it), and accepting another seat replaces the earlier acceptance", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer, other, founders } = f;
+    await enterAndActivate(f, seller); // seat 6
+    await enterAndActivate(f, other); // seat 7
+    await reg.connect(buyer).acceptSeatAgreement(6);
+    await expect(nft.connect(other).transferFrom(other.address, buyer.address, 7)).to.be.revertedWith(NOT_ACCEPTED);
+    // a founder's seat (1) is gated in the same way
+    await expect(nft.connect(founders[1]).transferFrom(founders[1].address, buyer.address, 2)).to.be.revertedWith(NOT_ACCEPTED);
+    // replacing: the buyer now accepts seat 7 instead of 6
+    await reg.connect(buyer).acceptSeatAgreement(7);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(7);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    await nft.connect(other).transferFrom(other.address, buyer.address, 7);
+    expect(await nft.ownerOf(7)).to.equal(buyer.address);
+    expect(await nft.ownerOf(6)).to.equal(seller.address); // seat 6 stayed with its seller
+  });
+
+  it("an acceptance by a DIFFERENT address does not work: the seller, a third party or another would-be buyer cannot accept on the buyer's behalf", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer, other } = f;
+    await enterAndActivate(f, seller);
+    await reg.connect(other).acceptSeatAgreement(6); // somebody else's acceptance of the same seat
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+    // the acceptance is personal: it lets the seat go to `other` only
+    await nft.connect(seller).transferFrom(seller.address, other.address, 6);
+    expect(await nft.ownerOf(6)).to.equal(other.address);
+  });
+
+  it("the acceptance is CONSUMED only by a successful transfer: a transfer that fails another rule leaves it recorded, a successful one clears it", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, idr, seller, buyer } = f;
+    await enterAndActivate(f, seller);
+    await idr.setVerified(buyer.address, false);
+    await reg.connect(buyer).acceptSeatAgreement(6);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith("ValidatorsRegistry: buyer identity not fully verified");
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(6); // the revert rolled the consumption back
+    await idr.setVerified(buyer.address, true);
+    await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    // spent: nothing is left that could carry another seat to the same address
+    await expect(reg.connect(buyer).revokeSeatAcceptance()).to.be.revertedWith("ValidatorsRegistry: no acceptance recorded");
+  });
+
+  it("the buyer can withdraw its acceptance; after that the seat cannot be sent to it", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer } = f;
+    await enterAndActivate(f, seller);
+    await reg.connect(buyer).acceptSeatAgreement(6);
+    await expect(reg.connect(buyer).revokeSeatAcceptance()).to.emit(reg, "SeatAcceptanceRevoked").withArgs(buyer.address, 6);
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+    await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
+  });
+
+  it("acceptSeatAgreement: only for a seat that exists and is not already the caller's; id 0 and a burned seat are refused", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, seller, buyer, founders } = f;
+    await expect(reg.connect(buyer).acceptSeatAgreement(0)).to.be.revertedWith("ValidatorSeatNFT: nonexistent token");
+    await expect(reg.connect(buyer).acceptSeatAgreement(99)).to.be.revertedWith("ValidatorSeatNFT: nonexistent token");
+    await expect(reg.connect(founders[0]).acceptSeatAgreement(1)).to.be.revertedWith("ValidatorsRegistry: caller already owns this seat");
+    await enterAndActivate(f, seller);
+    await reg.connect(seller).requestExit(); // the seat is burned
+    await expect(reg.connect(buyer).acceptSeatAgreement(6)).to.be.revertedWith("ValidatorSeatNFT: nonexistent token");
+    expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
+  });
+
+  it("a genesis founder's seat is gated like any other (isFounder moves with it); the lottery winner's seat is minted WITHOUT any acceptance, but its resale needs one", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, buyer, other, founders } = f;
+    // founders hold seats from genesis with no acceptance on record
+    for (const x of founders) expect(await reg.seatAcceptedFor(x.address)).to.equal(0);
+    await expect(nft.connect(founders[1]).transferFrom(founders[1].address, buyer.address, 2)).to.be.revertedWith(NOT_ACCEPTED);
+    await reg.connect(buyer).acceptSeatAgreement(2);
+    await nft.connect(founders[1]).transferFrom(founders[1].address, buyer.address, 2);
+    expect(await reg.isFounder(buyer.address)).to.equal(true);
+    expect(await reg.isFounder(founders[1].address)).to.equal(false);
+    // lottery path: enterAsLotteryWinner mints the seat; no acceptance is required or recorded
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    await reg.connect(lottery).enterAsLotteryWinner(other.address);
+    const id = await nft.seatOf(other.address);
+    expect(id).to.equal(6);
+    expect(await reg.seatAcceptedFor(other.address)).to.equal(0);
+    expect((await reg.validators(other.address)).status).to.equal(ST.Probation);
+    const next = f.S[13];
+    await f.idr.setVerified(next.address, true);
+    await expect(nft.connect(other).transferFrom(other.address, next.address, id)).to.be.revertedWith(NOT_ACCEPTED);
+    await reg.connect(next).acceptSeatAgreement(id);
+    await nft.connect(other).transferFrom(other.address, next.address, id);
+    expect(await nft.ownerOf(id)).to.equal(next.address);
   });
 });

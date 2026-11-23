@@ -9,6 +9,7 @@ interface IValidatorsRegistry {
     function wasActiveAt(address who, uint256 nonce) external view returns (bool);
     function everActivated(address who) external view returns (bool); // permanent flag: true once the address was ever legitimately activated
     function getActiveValidatorCount() external view returns (uint256); // used for the two-thirds-of-assembly threshold of the share-change vote
+    function genesisTime() external view returns (uint256); // genesis.json timestamp seeded by the Registry genesis helper; reference of the 6-month reward-rate freeze
 }
 
 /// @notice Minimal interface onto ValidatorsBoard, used to check board authority for the bicameral votes below
@@ -298,6 +299,16 @@ contract BlockRewardDistributor {
     // eligible when the proposal was created. The 30-day voting expiry applies to the voting phase only; once both chambers have
     // completed, a 7-day delay starts, and execution re-checks everything (see executeRateChange). The distribution oracle cannot add,
     // change or remove a rate; it can only certify the start block of an approved entry within the tolerance window.
+    // Limits on every decision (owner decision; tokenomics section 2, table row 18), checked when a change is proposed AND again when it
+    // is executed:
+    //   - the new rate differs from the CURRENT APPROVED RATE (the rate of the latest history entry - an entry that is approved but not
+    //     yet active already counts - or INITIAL_REWARD_PER_BLOCK while the history is empty) by at most RATE_CHANGE_MAX_BPS (10%)
+    //     RELATIVE, up or down, symmetric, with no absolute floor or ceiling;
+    //   - at least RATE_CHANGE_MIN_INTERVAL (180 days) between two SUCCESSFUL decisions, measured between their EXECUTION blocks (the
+    //     block in which executeRateChange appended the entry, kept in `lastRateChangeTime`), the same measuring point as
+    //     SHARE_CHANGE_MIN_INTERVAL;
+    //   - no change at all in the first RATE_CHANGE_GENESIS_FREEZE (180 days) after genesis, measured from ValidatorsRegistry.genesisTime().
+    // The change takes effect one week after the decision (RATE_CHANGE_DELAY and MIN_RATE_CHANGE_LEAD_SECONDS below).
     uint256 public constant INITIAL_REWARD_PER_BLOCK = 2 ether;
     struct RewardRateChange {
         uint128 startBlock; // estimated first block of the new rate until certified; the actual first block afterwards
@@ -322,6 +333,19 @@ contract BlockRewardDistributor {
     /// @notice Half-width, in blocks, of the window around the estimated start block in which the larger of the two rates is
     ///         allowed until the start block is certified, and the largest distance between a certified start block and its estimate.
     uint256 public constant RATE_START_TOLERANCE_BLOCKS = 10_000;
+    /// @notice Largest change of the reward per block that one decision may make, in basis points of the CURRENT APPROVED rate
+    ///         (1000 = 10%). Symmetric: the new rate must lie in [current x 90%, current x 110%], both ends allowed. The comparison is
+    ///         exact integer arithmetic (new x 10000 against current x 9000 and current x 11000), so +10% is accepted and +10% plus
+    ///         one wei is not.
+    uint256 public constant RATE_CHANGE_MAX_BPS = 1000;
+    /// @notice Minimum time between two successful rate decisions, measured between their EXECUTION blocks (see lastRateChangeTime).
+    uint256 public constant RATE_CHANGE_MIN_INTERVAL = 180 days;
+    /// @notice No rate change can be proposed or executed before ValidatorsRegistry.genesisTime() + this.
+    uint256 public constant RATE_CHANGE_GENESIS_FREEZE = 180 days;
+    /// @notice Timestamp of the block in which the latest rate change was executed (0 = none yet). It is the measuring point of the
+    ///         180-day spacing: a decision counts as made when it is executed, not when it was proposed, approved or activated.
+    ///         Starts at 0, so it needs no genesis seeding.
+    uint256 public lastRateChangeTime;
 
     struct RateProposal {
         uint128 startBlock; // estimated first block of the new rate
@@ -738,15 +762,18 @@ contract BlockRewardDistributor {
 
     /// @notice Propose an approved-rate change taking effect at `activationTime` (unix seconds, the Besu transition time), with the
     ///         proposer's estimate of the first block at or after that time. Only an active validator may propose.
-    ///         Early rejection only: every condition is checked again at execution. Proposals are independent; several
-    ///         may be open at once, and whichever is executed first can make another one unexecutable (it is then left as it is).
+    ///         Early rejection only: every condition is checked again at execution. Rate limits, all measured when this function
+    ///         runs: the new rate within +-10% of the current approved rate (RATE_CHANGE_MAX_BPS), at least RATE_CHANGE_MIN_INTERVAL
+    ///         since the last executed rate change, and not inside the RATE_CHANGE_GENESIS_FREEZE. Proposals are independent;
+    ///         several may be open at once, and whichever is executed first can make another one unexecutable (the later one then
+    ///         fails the 180-day spacing or the +-10% test against the new current rate, and is left as it is).
     function proposeRateChange(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) external returns (uint256 id) {
         require(REGISTRY.isValidator(msg.sender), "BlockRewardDistributor: only an active validator may propose a rate change");
         require(
             activationTime <= type(uint64).max && estimatedStartBlock <= type(uint128).max && ratePerBlock <= type(uint128).max,
             "BlockRewardDistributor: value does not fit its type"
         );
-        _requireRateStartOk(activationTime, estimatedStartBlock);
+        _requireRateOk(activationTime, estimatedStartBlock, ratePerBlock);
         id = ++rateProposalCount;
         RateProposal storage p = rateProposals[id];
         p.startBlock = uint128(estimatedStartBlock);
@@ -793,9 +820,11 @@ contract BlockRewardDistributor {
 
     /// @notice Anyone may execute once both chambers have completed and RATE_CHANGE_DELAY has passed since that moment.
     ///         Re-checks: board composition, activation time still at least MIN_RATE_CHANGE_LEAD_SECONDS away, the estimated start block
-    ///         still in the future, and strictly ascending history with non-overlapping tolerance windows. If any check fails the
-    ///         proposal stays exactly as it is: no time or height is ever moved automatically. The new entry is provisional until
-    ///         certifyRateStart.
+    ///         still in the future, strictly ascending history with non-overlapping tolerance windows, and the rate limits against the
+    ///         state NOW: outside the genesis freeze, at least RATE_CHANGE_MIN_INTERVAL since `lastRateChangeTime`, and the rate within
+    ///         +-10% of the current approved rate (which another proposal may have changed since this one was created). If any check
+    ///         fails the proposal stays exactly as it is: no time, height or rate is ever moved automatically. On success
+    ///         `lastRateChangeTime` becomes this block's timestamp. The new entry is provisional until certifyRateStart.
     function executeRateChange(uint256 id) external {
         RateProposal storage p = rateProposals[id];
         require(p.createdAt != 0, "BlockRewardDistributor: rate proposal not found");
@@ -806,8 +835,9 @@ contract BlockRewardDistributor {
             p.boardVersionAtCreation == BOARD_CONTRACT.boardVersion(),
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
-        _requireRateStartOk(p.activationTime, p.startBlock);
+        _requireRateOk(p.activationTime, p.startBlock, p.ratePerBlock);
         p.executed = true;
+        lastRateChangeTime = block.timestamp;
         rewardRateChanges.push(
             RewardRateChange({startBlock: p.startBlock, ratePerBlock: p.ratePerBlock, activationTime: p.activationTime, certified: false})
         );
@@ -837,14 +867,19 @@ contract BlockRewardDistributor {
     ///         7 not yet approved and unable to continue (voting can no longer lead to an executable change).
     ///         problem (status 6 or 7): 1 board composition changed, 2 activation time not in the future, 3 activation time closer than
     ///         MIN_RATE_CHANGE_LEAD_SECONDS, 4 not after the last approved change (time, or tolerance windows would overlap), 5 estimated
-    ///         start block not in the future. Every problem is permanent (time and block numbers only grow, the history only grows, a
-    ///         board change cannot be undone for a proposal), so status 7 never goes back to 1.
+    ///         start block not in the future, 6 still inside the RATE_CHANGE_GENESIS_FREEZE (or the Registry's genesis time is not
+    ///         seeded), 7 less than RATE_CHANGE_MIN_INTERVAL since the last executed rate change, 8 the rate is more than
+    ///         RATE_CHANGE_MAX_BPS away from the current approved rate. Problems 1-5 are permanent (time and block numbers only grow,
+    ///         the history only grows, a board change cannot be undone for a proposal). Problems 6 and 7 clear with time, and 8 only if
+    ///         the history grows by another change, so an APPROVED proposal (status 6) can become executable again; a proposal still
+    ///         in the voting phase never goes back from 7 to 1, because its 30-day voting period ends long before any of them could
+    ///         clear (and a proposal cannot even be created inside the genesis freeze).
     ///         Execution happens in a later block, so this is advisory.
     function rateChangeStatus(uint256 id) external view returns (uint8 status, uint8 problem) {
         RateProposal storage p = rateProposals[id];
         if (p.createdAt == 0) return (0, 0);
         if (p.executed) return (3, 0);
-        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateStartProblem(p.activationTime, p.startBlock);
+        problem = BOARD_CONTRACT.boardVersion() != p.boardVersionAtCreation ? 1 : _rateProblem(p.activationTime, p.startBlock, p.ratePerBlock);
         if (p.approvedAt == 0) {
             if (block.timestamp > p.votingExpiresAt) return (2, 0);
             if (problem != 0) return (7, problem);
@@ -874,6 +909,48 @@ contract BlockRewardDistributor {
         }
     }
 
+    /// @dev The reward per block that applies once every entry already in the history has taken effect: the rate of the latest entry
+    ///      (approved, even if provisional or not yet active), or INITIAL_REWARD_PER_BLOCK while the history is empty. It is the base
+    ///      of the +-10% rule.
+    function _currentApprovedRate() private view returns (uint256) {
+        uint256 n = rewardRateChanges.length;
+        return n == 0 ? INITIAL_REWARD_PER_BLOCK : rewardRateChanges[n - 1].ratePerBlock;
+    }
+
+    /// @notice The rate the +-10% rule is measured against: the rate of the latest approved history entry (even if it is not active
+    ///         yet), or INITIAL_REWARD_PER_BLOCK while there is none.
+    function currentApprovedRatePerBlock() external view returns (uint256) {
+        return _currentApprovedRate();
+    }
+
+    /// @notice The earliest timestamp from which a new rate change can be proposed and executed: the later of
+    ///         genesisTime() + RATE_CHANGE_GENESIS_FREEZE and lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL. Returns
+    ///         type(uint256).max while the Registry's genesis time is not seeded.
+    function earliestRateChangeTime() external view returns (uint256) {
+        uint256 g = REGISTRY.genesisTime();
+        if (g == 0) return type(uint256).max;
+        uint256 a = g + RATE_CHANGE_GENESIS_FREEZE;
+        uint256 b = lastRateChangeTime == 0 ? 0 : lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL;
+        return a > b ? a : b;
+    }
+
+    /// @dev Problem code of a rate change as of now (0 = none): the single place where proposal and execution share their rules.
+    ///      Codes 2-5 come from _rateStartProblem (1 is checked by the callers); 6 genesis freeze, 7 spacing, 8 rate out of bounds.
+    ///      The time and height problems come first, so their error messages are unchanged.
+    function _rateProblem(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) private view returns (uint8) {
+        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+        if (r != 0) return r;
+        uint256 g = REGISTRY.genesisTime();
+        if (g == 0 || block.timestamp < g + RATE_CHANGE_GENESIS_FREEZE) return 6; // fails closed if the genesis time was never seeded
+        if (lastRateChangeTime != 0 && block.timestamp < lastRateChangeTime + RATE_CHANGE_MIN_INTERVAL) return 7;
+        uint256 cur = _currentApprovedRate();
+        if (
+            ratePerBlock * BPS_DENOMINATOR > cur * (BPS_DENOMINATOR + RATE_CHANGE_MAX_BPS) ||
+            ratePerBlock * BPS_DENOMINATOR < cur * (BPS_DENOMINATOR - RATE_CHANGE_MAX_BPS)
+        ) return 8;
+        return 0;
+    }
+
     function _rateStartProblem(uint256 activationTime, uint256 estimatedStartBlock) private view returns (uint8) {
         if (activationTime <= block.timestamp) return 2;
         if (activationTime < block.timestamp + MIN_RATE_CHANGE_LEAD_SECONDS) return 3;
@@ -888,12 +965,15 @@ contract BlockRewardDistributor {
         return 0;
     }
 
-    function _requireRateStartOk(uint256 activationTime, uint256 estimatedStartBlock) private view {
-        uint8 r = _rateStartProblem(activationTime, estimatedStartBlock);
+    function _requireRateOk(uint256 activationTime, uint256 estimatedStartBlock, uint256 ratePerBlock) private view {
+        uint8 r = _rateProblem(activationTime, estimatedStartBlock, ratePerBlock);
         require(r != 2, "BlockRewardDistributor: activation time is not in the future");
         require(r != 3, "BlockRewardDistributor: activation time is closer than MIN_RATE_CHANGE_LEAD_SECONDS");
         require(r != 5, "BlockRewardDistributor: estimated start block is not in the future");
         require(r != 4, "BlockRewardDistributor: activation time and start block must be after the last approved rate change");
+        require(r != 6, "BlockRewardDistributor: no rate change in the first 6 months after genesis");
+        require(r != 7, "BlockRewardDistributor: at least 180 days are required between two rate changes");
+        require(r != 8, "BlockRewardDistributor: the new rate may differ from the current approved rate by at most 10%");
     }
 
     /// @dev Binary search: number of history entries whose effect has ended by `blockNumber`. An entry's effect ends at its certified
