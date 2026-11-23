@@ -1,5 +1,7 @@
 # مشخصات فنی کامل — ابزار ساخت genesis.json
 
+> **هم‌ترازی با قراردادها (۲۰۲۶-۱۱-۲۳):** این مشخصات پس از کامیت‌های `11ff741` و `187c7dd` با `contracts/` هم‌تراز شد (۱۸۶ آزمون Hardhat در ۲۱ فایل). تغییرهای مؤثر بر ابزار: `maxEntriesPerWindow` (۱)، `probationPeriod` (۶۰۴۸۰۰) و `slashBps` (۱۰۰) ثابت قراردادی‌اند و در storage نیستند؛ پیکربندی باید دقیقاً ۱ / ۶۰۴۸۰۰ / ۱۰۰ باشد و فقط assert می‌شود؛ `windowStart`/`entriesInWindow` حذف و `lastPaidActivationAt` (۰ در genesis) جایگزین شد؛ `genesisTime` اکنون مبدأ ممنوعیت ۱۸۰روزهٔ تغییر نرخ پاداش هم هست؛ `StandbyValidators` با یک عضو (اپراتور اولین ولیدیتور) seed می‌شود. **کار کدی باقی‌مانده در GenesisBuilder:** بررسی‌های `windowStart` ← `lastPaidActivationAt`، فهرست ثابت‌ها در پیکربندی، و `contracts:sync` با `SOURCES.json` برای سورس‌های تازه. بند «هنوز نوشته نشده: ابزار genesis…» در بند بعدی (۲۰۲۶-۱۱-۱۹) تاریخی است و **منسوخ شده (۲۰۲۶-۱۱-۲۳)**: GenesisBuilder ساخته و روی Besu آزموده شده است.
+>
 > **وضعیت پیاده‌سازی (۲۰۲۶-۱۱-۱۹):** از طرح ۲٫۵ این بخش‌ها اکنون در `contracts/` نوشته و با ۹۷ آزمون Hardhat در ۱۰ فایل (روی EVM درون‌فرایندی Hardhat، نه Besu/QBFT) آزموده شده‌اند: `FoundationDAO` (با نوع آزاد `Execute` و `EndSale`)، `FoundationMembers`، `SurenSale` (مدل صرافی، بدون اوراکل پرداخت)، `ValidatorLottery`، `GenesisClaimsVault` (صندوق طلب‌ها؛ ۲۴ قسط ماهانه)، حذف ولیدیتور در بازیابی شبکه (`RemovedInRecovery`)، تغییرات `IdentityRegistry` (بله/ایمیل، `isFullyVerified`)، `ValidatorSeatNFT` (صندلی ERC-721 با انتقال و قواعد خریدار)، هستهٔ بازطراحی `ValidatorsRegistry`/`ValidatorsBoard` (وثیقهٔ ثابت، کلید مالک/اپراتور، جریان مؤسسان، `SelfSuspended`، سوزاندن ۱۰۰٪ جریمه، قواعد فاصلهٔ ورود) و سوزاندن مازاد پاداش در `BlockRewardDistributor`. هنوز نوشته نشده‌اند: `RewardRouter` (سرویس آف‌چین، نه قرارداد)، سرویس‌های Verifier و Identity، ابزار genesis، بررسی‌های آف‌چین Verifier برای تعلیق داوطلبانه و ازسرگیری، و حدود تغییر ریوارد (±۱۰٪ و ۶ ماه فاصله؛ در `proposeRateChange` هنوز نیست). پوشه‌های `contracts/` و `contracts-fa/` فقط نسخهٔ جاری را نگه می‌دارند؛ نسخه‌های قدیمی در git هستند (برچسب `v2.2.0`). خودِ ابزار genesis هنوز نوشته نشده است؛ ✅ دور اول آزمون زندهٔ Besu برای قراردادهای ۲٫۵ انجام شد (۲۰۲۶-۱۱-۱۹؛ Besu 26.9.0 در Docker، QBFT، فورک London، یک میزبان، اجراهای کوتاه؛ ۲۲ فایل نتیجه؛ دو اجرای اول به‌علت اشکال اسکریپت ناموفق ثبت و نگه داشته شده‌اند، بقیه گذشتند): `testing-evidence/besu-live-test-v25-2026-11-19/REPORT.md`. 🔶 هنوز روی Besu اجرا نشده: هر تایمر ۷۲ ساعت و بیشتر (قفل ۹۰ روزه، انقضا و ارجاع ۷روزه، دورهٔ آزمایشی و مهلت ورود با مقدار واقعی)، آزادسازی ماهانهٔ صندوق طلب‌ها، `recordSuspension`/رخداد جمعی/جریمه/اعتراض/`recordRecovery`، لاتاری دوم، تازه‌سازی ماهانهٔ هیأت، حکمرانی نرخ ریوارد، گذار Shanghai/Cancun، `SurenSale`، `ServiceStaking` و خرج خزانه؛ یافته‌های باز F-1 تا F-7 در `sur-master-open-items.md` بخش ۵. حسابرسی امنیتی هم انجام نشده است؛ این نتیجه آمادگی تولید نیست.
 
 > این سند به‌تنهایی برای پیاده‌سازی کافی است. هر ورودی، الگوریتم، و تصمیم فنی‌ای که لازم است، همین‌جا مشخص شده. ✅ نام تابع‌ها، متغیرها و فایل‌های کمکی قراردادهای ساختاری (`FoundationDAO`، `FoundationMembers`، `ValidatorLottery`، `GenesisClaimsVault`، `ValidatorSeatNFT`، `ValidatorsRegistry`/`ValidatorsBoard`) همان نام کد است و کمکی‌های seed شش قرارداد نوشته شده‌اند؛ خودِ ابزار genesis هنوز نوشته نشده است.
@@ -44,11 +46,11 @@
     "seatBaseURI": "https://validator-nft.surnet.org/",              // فقط برای assert: مقدار اولیهٔ `baseURI` در سورس `ValidatorSeatNFT` است (کمکی آرگومانی برایش ندارد)؛ مالک داده؛ 🔶 مسئول نگه‌داری مشخص نیست. صندلی‌های ۱ تا ۷ به ترتیب [firstValidator.owner، ...otherFounders] ساخته می‌شود
     "entryCollateral": "500000000000000000000000",                  // ۵۰۰٬۰۰۰ سورن؛ وثیقهٔ ثابت ورود (حدود مطلق ۱۰۰٬۰۰۰ تا ۲٬۰۰۰٬۰۰۰ سورن)
     "membershipFeeBps": 400,                                        // ۴٪ وثیقه = ۲۰٬۰۰۰ سورن (بازهٔ ۱٪ تا ۱۰٪)
-    "maxEntriesPerWindow": 1,
+    "maxEntriesPerWindow": 1,                                      // ✅ ۲۰۲۶-۱۱-۲۳: ثابت قراردادی (۱)؛ فقط برای assert؛ ابزار آن را در storage نمی‌نویسد و باید دقیقاً ۱ باشد
     "entryWindowSeconds": 604800,                                   // فاصلهٔ ورود: ۷ روز (بازه ۱ تا ۳۰ روز)
-    "probationPeriod": 604800,
+    "probationPeriod": 604800,                                    // ✅ ۲۰۲۶-۱۱-۲۳: ثابت قراردادی (۷ روز)؛ فقط برای assert؛ باید دقیقاً ۶۰۴۸۰۰ باشد
     "recoveryPeriod": 172800,
-    "slashBps": 100,
+    "slashBps": 100,                                               // ✅ ۲۰۲۶-۱۱-۲۳: ثابت قراردادی (۱٪)؛ فقط برای assert؛ باید دقیقاً ۱۰۰ باشد
     "exitCooldown": 604800
   },
   "validatorsBoard": {
@@ -113,7 +115,7 @@
 
 - `FoundationDAO_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] principalsAndAlternates, address inspector_, address chair_, address treasurer_, address ceo_, uint256 termEnd)`؛ ۵ تا ۷ آدرس (۵ اصلی، سپس حداکثر ۲ علی‌البدل)؛ نسخهٔ هیأت seed‌شده ۰ است.
 - `FoundationMembers_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] accounts, string[] names, PersonType[] types, address[] representatives, uint256[] shares)` (پنج آرایهٔ هم‌طول).
-- `ValidatorsRegistry_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address firstOwner, address firstOperator, address[] otherFounders, uint256 genesisTimestamp)`؛ `genesisTime` را می‌نویسد؛ **ولیدیتور اول** را `Active` با اپراتور `firstOperator` می‌گذارد (`everActivated`، `activationSeq = 1`، checkpoint `{0, true}`، در `getValidators()` و `getActiveOwners()`)؛ **مؤسسان دیگر** را با آدرس مالک، وضعیت `Probation`، `isFounder = true`، وثیقهٔ صفر و بدون اپراتور ثبت می‌کند (نه `Active`؛ `everActivated` و `activationSeq` تا `recordActivation` صفرند). `windowStart` را نمی‌نویسد.
+- `ValidatorsRegistry_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address firstOwner, address firstOperator, address[] otherFounders, uint256 genesisTimestamp)`؛ `genesisTime` را می‌نویسد؛ **ولیدیتور اول** را `Active` با اپراتور `firstOperator` می‌گذارد (`everActivated`، `activationSeq = 1`، checkpoint `{0, true}`، در `getValidators()` و `getActiveOwners()`)؛ **مؤسسان دیگر** را با آدرس مالک، وضعیت `Probation`، `isFounder = true`، وثیقهٔ صفر و بدون اپراتور ثبت می‌کند (نه `Active`؛ `everActivated` و `activationSeq` تا `recordActivation` صفرند). `lastPaidActivationAt` (پیش‌تر `windowStart`/`entriesInWindow`؛ ۲۰۲۶-۱۱-۲۳) را نمی‌نویسد و ۰ می‌ماند.
 - `ValidatorsBoard_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] members, uint256 genesisTimestamp)`؛ دقیقاً ۵ عضو؛ `boardMonthId` را برابر ماهِ `genesisTimestamp` و `boardVersion` را ۱ می‌گذارد.
 - `GenesisClaimsVault_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] claimants, uint256[] claims, uint256 genesisTimestamp)`؛ هر `claims[i]` طلب **کامل** آدرس است و شامل همان ۱۰۰ سورنی است که مستقیم به کیف‌پول می‌رود (صندوق `claim − ۱۰۰` را نگه می‌دارد)؛ هر طلب باید بیش از ۱۰۰ سورن باشد، آدرس صفر یا تکراری ممنوع است؛ `genesisTimestamp` باید برابر `timestamp` فایل `genesis.json` باشد. **قاعدهٔ موجودی:** موجودی `alloc` آدرس صندوق باید دقیقاً برابر `totalHeld()` (مجموع `claim − ۱۰۰`) باشد.
 - `ValidatorSeatNFT_GenesisSeed.sol` ✅ نوشته‌شده — `constructor(address[] founderOwners)`؛ صندلی‌های ۱ تا n را به مالکان داده‌شده می‌دهد؛ **ترتیب آرایه باید همان ترتیب مؤسسان در Registry باشد** (`[firstOwner, ...otherFounders]`). `baseURI` اولیه (`https://validator-nft.surnet.org/`) initializer خود قرارداد است و در dump می‌آید.
@@ -147,13 +149,13 @@
      - `verifier` (از `genesis-config.json`، آدرس کلید عملیاتی وریفای)
      - `entryCollateral` (۵۰۰٬۰۰۰ سورن؛ وثیقهٔ ثابت برای همهٔ ورودی‌های پرداخت‌کننده)
      - `membershipFeeBps` (۴۰۰)
-     - `maxEntriesPerWindow` (۱)
+     - ~~`maxEntriesPerWindow` (۱)~~ ✅ (۲۰۲۶-۱۱-۲۳) ثابت قراردادی است (در بایت‌کد، نه storage): overlay نمی‌شود؛ فقط assert `== 1`
      - `entryWindowSeconds` (۶۰۴۸۰۰ — ۷ روز)
-     - `probationPeriod` (۶۰۴۸۰۰ — ۱ هفته)
+     - ~~`probationPeriod` (۶۰۴۸۰۰ — ۱ هفته)~~ ✅ (۲۰۲۶-۱۱-۲۳) ثابت قراردادی (۷ روز) است: overlay نمی‌شود؛ فقط assert `== 604800`
      - `recoveryPeriod` (۱۷۲۸۰۰ — ۴۸ ساعت)
-     - `slashBps` (۱۰۰ — ۱٪)
+     - ~~`slashBps` (۱۰۰ — ۱٪)~~ ✅ (۲۰۲۶-۱۱-۲۳) ثابت قراردادی (۱٪) است: overlay نمی‌شود؛ فقط assert `== 100`
      - `exitCooldown` (۶۰۴۸۰۰ — ۱ هفته)
-     - ✅ `genesisTime` (مبدأ ممنوعیت تغییر `entryWindowSeconds` در ۶ ماه اول): کمکی از آرگومان `genesisTimestamp` می‌نویسد؛ باید دقیقاً برابر `network.genesisTimestamp` باشد. `windowStart` ۰ می‌ماند (اولین `requestMembership` پنجره را شروع می‌کند).
+     - ✅ `genesisTime` (مبدأ ممنوعیت تغییر `entryWindowSeconds` در ۶ ماه اول و مبدأ ممنوعیت ۱۸۰روزهٔ تغییر نرخ پاداش بلاک در `BlockRewardDistributor`؛ اگر کاشته نشود هر تغییر نرخ برای همیشه بسته می‌ماند): کمکی از آرگومان `genesisTimestamp` می‌نویسد؛ باید دقیقاً برابر `network.genesisTimestamp` باشد. `lastPaidActivationAt` ۰ می‌ماند (اولین فعال‌سازی پرداخت‌کننده هرگز به تأخیر نمی‌افتد؛ پنجرهٔ ورود از آن لحظه شمرده می‌شود). (پیش‌تر `windowStart` بود و `requestMembership` پنجره را شروع می‌کرد؛ منسوخ ۲۰۲۶-۱۱-۲۳.)
      - مقادیر مرجع این فهرست: `sur-tokenomics.md` بخش ۶.
 2. ✅ **Post-build assertions — این‌ها از خودِ روش ساخت مهم‌ترند:** بعد از تولید genesis نهایی، ابزار باید (روی یک Anvil موقت دیگر، با genesis تولیدشده بالا آمده) این چک‌ها را خودکار اجرا و **در صورت شکست، کل فرآیند build را متوقف کند** (✅ نام getterها همان نام کد است؛ آزمون Besu در دور اول ۲۰۲۶-۱۱-۱۹ با یک ابزار ساخت آزمایشی انجام شد، نه با ابزار production):
    ```
@@ -162,11 +164,11 @@
    ValidatorsRegistry.verifier() == (آدرس verifier در config)
    ValidatorsRegistry.entryCollateral() == 500000 ether
    ValidatorsRegistry.membershipFeeBps() == 400
-   ValidatorsRegistry.maxEntriesPerWindow() == 1
+   ValidatorsRegistry.maxEntriesPerWindow() == 1             # ثابت قراردادی (۲۰۲۶-۱۱-۲۳)؛ config باید ۱ باشد
    ValidatorsRegistry.entryWindowSeconds() == 604800
-   ValidatorsRegistry.probationPeriod() == (مقدار config)
+   ValidatorsRegistry.probationPeriod() == 604800              # ثابت قراردادی (۷ روز)؛ config باید ۶۰۴۸۰۰ باشد
    ValidatorsRegistry.recoveryPeriod() == (مقدار config)
-   ValidatorsRegistry.slashBps() == (مقدار config)
+   ValidatorsRegistry.slashBps() == 100                         # ثابت قراردادی (۱٪)؛ config باید ۱۰۰ باشد
    ValidatorsRegistry.exitCooldown() == (مقدار config)
    ValidatorsRegistry.isValidator(firstValidator.owner) == true      # مالک، نه اپراتور
    ValidatorsRegistry.operatorOf(firstValidator.owner) == firstValidator.operator
@@ -206,7 +208,7 @@
    BlockRewardDistributor.rateProposalCount() == 0                     # بدون پیشنهاد نرخ
    BlockRewardDistributor.maxRewardsForRange(1, 1000) == 2000000000000000000000   # مقدار مصوب ۲٬۰۰۰ سورن برای ۱۰۰۰ بلاک
    BlockRewardDistributor.totalExcessBurned() == 0 و RewardExcessBurned: هیچ رویدادی در genesis وجود ندارد
-   (ممنوعیت ۶ ماه اول تغییر نرخ هنوز در کد نیست؛ 🔶 اگر پیاده شود مبدأ زمان باید با genesis assert شود)
+   (✅ ۲۰۲۶-۱۱-۲۳: ممنوعیت ۱۸۰ روز اول تغییر نرخ اکنون در کد است و مبدأش `ValidatorsRegistry.genesisTime()` است؛ پس همان assert `genesisTime() == network.genesisTimestamp` بخش ۴ لازم است؛ اگر genesisTime کاشته نشود هر تغییر نرخ برای همیشه بسته می‌ماند. جملهٔ پیشین «هنوز در کد نیست» منسوخ شد.)
 
    # FoundationMembers / FoundationDAO
    FoundationMembers.getMemberCount() == 15 و حساب و shareWeight هر عضو مطابق config
@@ -319,7 +321,7 @@
 - هر آدرس تکراری در `initialBoardMembers` یا `foundationMembers`.
 - `genesisClaimsVault`: آدرس تکراری در `claims`؛ طلبی که از `gasReserveWei` (۱۰۰ سورن) بیشتر نباشد؛ جمع طلب‌های ردیف ۲ برابر ۱۱٬۹۸۴٬۰۰۰ یا جمع ردیف ۳ برابر ۲۱٬۳۲۷٬۰۰۰ سورن نباشد؛ `installments` برابر ۲۴ نباشد؛ طلب مؤسسان ولیدیتور مشروط یا جریمه‌پذیر تعریف شده باشد.
 - `entryCollateral` خارج از بازهٔ ۱۰۰٬۰۰۰ تا ۲٬۰۰۰٬۰۰۰ سورن، `membershipFeeBps` خارج از ۱۰۰ تا ۱۰۰۰، یا `entryWindowSeconds` خارج از ۱ تا ۳۰ روز.
-- `slashBps` بزرگ‌تر از ۱۰۰۰۰.
+- `maxEntriesPerWindow` غیر از ۱، `probationPeriod` غیر از ۶۰۴۸۰۰ یا `slashBps` غیر از ۱۰۰ (از ۲۰۲۶-۱۱-۲۳ این سه ثابت قراردادی‌اند؛ مقدار دیگر در config یعنی config با قرارداد نمی‌خواند؛ پیش‌تر: `slashBps` بزرگ‌تر از ۱۰۰۰۰).
 - `genesisTimestamp` در گذشته یا بیش از حد در آینده (پیشنهاد: باید بین «الان» و «الان + ۷۲ ساعت» باشد).
 - جمع موجودی‌های تخصیص‌یافته (بخش ۴.۳) برابر ۵۳٬۳۱۱٬۰۰۰ سورن نباشد.
 

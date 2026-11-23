@@ -1,6 +1,7 @@
 # مشخصات سرور مدیریت کلید Sur (`SurKMS`، A4)
 
 > **وضعیت:** ✅ ساخته و آزموده روی شبکهٔ آزمایشی (anvil با قراردادهای واقعی، ۲۳۳ آزمون، دو دور بازبینی مستقل با رفع یافته‌ها (دور دوم: HMAC، پشتیبان، اعلام پاکت، قفل بازکردن، قراردادهای نهایی؛ `kms-review-record.md`): `kms-review-record.md`؛ کد: `Deployments/SurKMS`)؛ ⚠️ **هنوز نه روی Besu زنده، نه حسابرسی `max` و انسانی بیرونی، نه با کلید زنده**؛ انحراف‌ها و پرسش‌های ساخت: بخش ۱۸ · **تاریخ:** ۲۰۲۶-۱۱-۲۱
+> **هم‌ترازی با قراردادها (۲۰۲۶-۱۱-۲۳):** پس از کامیت‌های `11ff741` و `187c7dd` (۱۸۶ آزمون Hardhat در ۲۱ فایل) فقط یک تغییر به این سند مربوط شد: تابع تازهٔ `ValidatorsRegistry.migrateSeat` (`onlyVerifier`) که باید به فهرست مجاز slot `verifier` اضافه شود (بخش ۸.۱). `slashBps`، `probationPeriod`، `maxEntriesPerWindow` و پذیرش توافق‌نامهٔ صندلی روی سیاست امضا اثر ندارند (`acceptSeatAgreement` را خریدار با کلید خودش می‌زند، نه KMS).
 > **نام:** `SurKMS` (پیش‌تر در کاتالوگ `SurSigner`، سرویس A4؛ شناسهٔ A4 ثابت ماند).
 > **مبنا:** تصمیم‌های `SG-1..SG-6` در `sur-offchain-decisions.md` (بخش «بازطراحی SG-1 تا SG-3»)، تصمیم `RD-21` (سیاست سمت امضاکننده)، `RD-23` (گواهی نرخ)، `RD-8` (هشدار) و قراردادهای `ValidatorsBoard`، `ValidatorsRegistry`، `BlockRewardDistributor`، `IdentityRegistry`، `FoundationDAO`.
 > **نکته:** مواردی که با «(پیشنهاد)» علامت خورده‌اند هنوز تأیید صریح مالک را نگرفته‌اند؛ بقیه تصمیم‌شده‌اند.
@@ -138,6 +139,7 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
 |---|---|---|---|
 | `verifier` | `ValidatorsRegistry` | `recordActivation`، `recordRecovery`، `recordResume`، `recordSuspension`، `recordPreExitViolation` | تصمیم‌های اصلی با شواهد؛ سرویس خودش هم آن‌ها را با فلگ `ENABLE_*` کنترل می‌کند |
 | `verifier` | `ValidatorsRegistry` | `confirmOperatorReady` (امضای سه‌آرگومانی VD-13: `(owner, newOperator, evidenceHash)`)، `recordRecoveryRemoval` | فقط وقتی فلگ‌های `OPCHANGE` و `REMOVAL` روشن شوند؛ پیش‌فرض در KMS: غیرمجاز تا رأی |
+| `verifier` | `ValidatorsRegistry` | `migrateSeat(oldOwner, newOwner)` (✅ تابع `onlyVerifier` تازهٔ قرارداد، ۲۰۲۶-۱۱-۲۳؛ مهاجرت صندلی پس از گم‌شدن کلید مالک) | تابع تازه است و در فهرست فعلی KMS نیست؛ تا وقتی مدیر سرور با لاگ و هشدار آن را به فهرست مجاز اضافه نکند KMS آن را امضا نمی‌کند (بخش ۱۰). 🔶 فلگ سرویس و شرط پیش‌فرض (مثل `OPCHANGE`) تصمیم نشده؛ گام Verifier هنوز پیاده نشده |
 | `verifier` | `ValidatorsRegistry` | `resolveMassFailureCheck`، `assertDeliveryDisputed`، `executeUncontestedSlash`، `resolveAppealIfExpired`، `resolveDeliveryDisputeIfExpired`، `expireRecoveryRemoval` | کارهای «بدون مجوز» (هر کسی می‌تواند بزند)؛ بخش ۸.۲ |
 | `verifier` | `ValidatorsBoard` | `refreshBoard`، `syncBoard`، `fillVacancies`، `clearStaleVotes`، `referRecoveryRemovalToAssembly` | همان، بدون مجوز |
 | `distributionOracle` | `BlockRewardDistributor` | `openDistribution`، `payPage`، `closeDistribution`، `abortDistribution`، `certifyRateStart` | **دقیقاً** تنها توابع `onlyDistributionOracle` قرارداد نهایی (همگام‌سازی ۲۰۲۶-۱۱-۲۱، کامیت Plan `9a94fa5`)؛ `distributeRewards` دیگر نیست و آزمون انحراف در صورت بازگشتش شکست می‌خورد |

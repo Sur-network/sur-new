@@ -93,7 +93,7 @@
 ۱. کد فعلی `contracts/` (یا `contracts-fa/`) را کامپایل کن؛ فقط ۶ قرارداد genesis می‌شوند: `ValidatorsRegistry`, `ValidatorsBoard`, `ValidatorsTreasury`, `BlockRewardDistributor`, `FoundationDAO`, `IdentityRegistry`.
 ۲. **حداقل ۳ آدرسِ مؤسس واقعی** (نه هر ۷ تا لزوماً؛ کافی است چند مؤسس برای آزمون فاز ۱.۱ داشته باشی) را در `ValidatorsRegistry_GenesisSeed.sol` جایگزین `address(0)` کن — هرکدام باید یک نود Besu واقعی با همان کلید داشته باشد.
 ۳. **این helper را دقیقاً همان‌طور که هست دیپلوی و استخراج کن** — دیگر نیازی به overlay دستیِ `everActivated` نیست؛ خودِ constructor آن را برای هر مؤسس می‌نویسد. فقط از بلاک صفر **assert کن** که واقعاً `true` شده (بخش ۳ پایین) — این دقیقاً همان چیزی است که این آزمون ثابت می‌کند.
-۴. `genesisTimestamp` را در همان helper با timestamp واقعیِ genesis پر کن (برای `windowStart`، `lastBoardRefreshAt` اگر هیأت را هم seed می‌کنی).
+۴. `genesisTimestamp` را در همان helper با timestamp واقعیِ genesis پر کن (برای `windowStart`، `lastBoardRefreshAt` اگر هیأت را هم seed می‌کنی). [منسوخ‌شده ۲۰۲۶-۱۱-۲۳: `windowStart` و `entriesInWindow` از کد جاری حذف شدند؛ پنجرهٔ ورود اکنون با `lastPaidActivationAt` در فعال‌سازی شمرده می‌شود؛ این گام برای دور سوم (۲۰۲۶-۰۹-۳۰) بود.]
 ۵. `perPaymentCap`/`periodCap` را در `ValidatorsTreasury` overlay کن (این‌ها initializer دارند که genesis اجرا نمی‌کند).
 ۶. `verifier` و `distributionOracle` را به آدرس‌هایی overlay کن که کلیدشان را در دست داری.
 

@@ -15,7 +15,7 @@
 - **دو نکتهٔ امنیتی:** API فقط روی `127.0.0.1` گوش می‌دهد مگر پیکربندی صریح؛ فقط رویدادهای فهرست‌مجاز (از ABIهای تولیدشده) ذخیره می‌شوند و ورودی کاربر هرگز مستقیم وارد SQL نمی‌شود.
 
 ## رویدادهای مورد نیاز (فهرست مجاز)
-- پاداش: `ValidatorRewarded`، `ValidatorRewardDeferred`، `ClaimableWithdrawn`، `DistributionOpened`، `DistributionPage`، `RewardsDistributed`.
+- پاداش: `ValidatorRewarded`، `ValidatorRewardDeferred`، `ClaimableWithdrawn`، `DistributionOpened`، `DistributionPage`، `RewardsDistributed`. (از ۲۰۲۶-۱۱-۲۳ قرارداد `ClaimableMigrated(from, to, amount)` هم دارد که هنگام مهاجرت صندلی پس از گم‌شدن کلید مالک طلب معوق آدرس قدیم را به آدرس جدید می‌برد؛ 🔶 افزودنش به فهرست مجاز، برای اینکه `/rewards/:address` موجودی معوق منتقل‌شده را نشان دهد، تصمیم نشده است.)
 - حکمرانی (برای `board(user)` و `recovery`): `ActionVoted` و رویدادهای پیشنهاد/اجرا در `FoundationDAO`، `ValidatorsBoard` و `StandbyValidators`.
 - فهرست دقیق از ABI نسخهٔ جاری ساخته می‌شود؛ رویداد تازه بدون تغییر کد با افزودن به پیکربندی اضافه می‌شود.
 
