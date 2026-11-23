@@ -56,8 +56,20 @@ try {
 
   # title block (upper area)
   [void](Txt 'سپیدنامه  ·  نسخهٔ ۲٫۵' 40 94 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
-  [void](Txt 'بلاک‌چین' 40 110 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
-  $t2 = Txt 'سور' 40 170 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
+  $t1 = (Txt 'بلاک‌چین' 40 110 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
+  $t2 = Txt 'سور' 40 156 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
+  # stretch «سور» with kashida (ـ) until it is as wide as «بلاک‌چین», then close the last gap with letter spacing
+  # one smooth kashida between «س» and «و» (the only joint in the word; «و» never joins «ر»),
+  # then the font size is tuned so «سور» is exactly as wide as «بلاک‌چین»
+  $target = $t1.TextFrame2.TextRange.BoundWidth
+  $r2 = $t2.TextFrame2.TextRange
+  $r2.Text = ('س' + [string][char]0x0640 + 'ور')
+  for($k = 0; $k -lt 4; $k++){
+    $w = $r2.BoundWidth
+    if([Math]::Abs($w - $target) -lt 0.5){ break }
+    $r2.Font.Size = [single]($r2.Font.Size * $target / $w)
+  }
+  "title width target=$('{0:N1}' -f $target) sur=$('{0:N1}' -f $r2.BoundWidth) size=$('{0:N1}' -f $r2.Font.Size)"
   $t2.TextFrame2.TextRange.Font.Fill.TwoColorGradient(1, 1)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(1).Color.RGB = (RGBc 255 214 140)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(2).Color.RGB = (RGBc 120 220 255)
