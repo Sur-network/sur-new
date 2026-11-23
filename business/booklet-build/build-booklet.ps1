@@ -5,7 +5,8 @@
   [string]$Pdf = '',     # optional PDF export for checking
   [string]$HeaderText = 'سپیدنامهٔ بلاک‌چین سور',
   [string]$DocTitle = 'سپیدنامهٔ بلاک‌چین سور (غیر قابل انتشار)',
-  [switch]$NoChapterBreaks   # short documents: chapters do not start on a new page
+  [switch]$NoChapterBreaks,  # short documents: chapters do not start on a new page
+  [switch]$Compact           # A4, no cover, no contents page, tighter type and spacing (fewest pages)
 )
 $ErrorActionPreference = 'Stop'
 function RGBc($r,$g,$b){ return [int]($r + $g*256 + $b*65536) }
@@ -20,6 +21,8 @@ $BODY  = 'B Nazanin'            # reading text
 $HEAD  = 'IRANSansWeb(FaNum)'   # table headers, running header/footer, watermark
 $TITLE = 'Adobe Arabic'         # chapter and section titles, contents
 $SZ    = 12                     # body size (pt)
+$TSZ = 10.5; $THSZ = 8.5; $QSZ = 11   # table text, table header, callout
+if($Compact){ $SZ = 11; $TSZ = 9.5; $THSZ = 8; $QSZ = 10 }
 $TOC_TAB_ALIGN = 2
 
 $app = New-Object -ComObject Word.Application
@@ -34,6 +37,11 @@ $ps = $doc.PageSetup
 $ps.PageWidth = [single]419.53; $ps.PageHeight = [single]595.28
 $ps.TopMargin = 54; $ps.BottomMargin = 56; $ps.LeftMargin = 42; $ps.RightMargin = 42
 $ps.HeaderDistance = 26; $ps.FooterDistance = 26
+if($Compact){
+  $ps.PageWidth = [single]595.28; $ps.PageHeight = [single]841.89   # A4
+  $ps.TopMargin = 54; $ps.BottomMargin = 54; $ps.LeftMargin = 54; $ps.RightMargin = 54
+  $ps.HeaderDistance = 24; $ps.FooterDistance = 24
+}
 $ps.SectionDirection = 0
 
 function SetFont($f,$size,$bold,$color,$font){
@@ -54,6 +62,7 @@ RtlJ $n.ParagraphFormat
 $n.ParagraphFormat.SpaceAfter = 6; $n.ParagraphFormat.SpaceBefore = 0
 $n.ParagraphFormat.LineSpacingRule = 5; $n.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.3)
 $n.LanguageID = 1065
+if($Compact){ $n.ParagraphFormat.SpaceAfter = 3; $n.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.08) }
 
 $h1 = $doc.Styles.Item('Heading 1')
 SetFont $h1.Font 26 -1 $cBrand $TITLE
@@ -63,6 +72,11 @@ $h1.ParagraphFormat.SpaceBefore = 0; $h1.ParagraphFormat.SpaceAfter = 14
 $h1.ParagraphFormat.LineSpacingRule = 0
 $bb = $h1.ParagraphFormat.Borders.Item(-3); $bb.LineStyle = 1; $bb.LineWidth = 12; $bb.Color = $cAcc
 $h1.ParagraphFormat.Borders.DistanceFromBottom = 6
+if($Compact){
+  $h1.Font.Size = [single]17; $h1.Font.SizeBi = [single]17
+  $h1.ParagraphFormat.PageBreakBefore = 0; $h1.ParagraphFormat.SpaceBefore = 10; $h1.ParagraphFormat.SpaceAfter = 5
+  $h1.ParagraphFormat.Borders.Item(-3).LineWidth = 6; $h1.ParagraphFormat.Borders.DistanceFromBottom = 2
+}
 
 $h2 = $doc.Styles.Item('Heading 2')
 SetFont $h2.Font 17 -1 $cDark $TITLE
@@ -70,11 +84,16 @@ Rtl $h2.ParagraphFormat
 $h2.ParagraphFormat.KeepWithNext = -1; $h2.ParagraphFormat.PageBreakBefore = 0
 $h2.ParagraphFormat.SpaceBefore = 14; $h2.ParagraphFormat.SpaceAfter = 5
 $h2.ParagraphFormat.LineSpacingRule = 0
+if($Compact){ $h2.Font.Size = [single]13.5; $h2.Font.SizeBi = [single]13.5; $h2.ParagraphFormat.SpaceBefore = 7; $h2.ParagraphFormat.SpaceAfter = 2 }
 
 $lb = $doc.Styles.Item('List Bullet')
 SetFont $lb.Font $SZ 0 $cText $BODY
 RtlJ $lb.ParagraphFormat
-$lb.ParagraphFormat.SpaceAfter = 4
+$lb.ParagraphFormat.SpaceAfter = $(if($Compact){1}else{4})
+$lb2 = $doc.Styles.Item('List Bullet 2')
+SetFont $lb2.Font $SZ 0 $cText $BODY
+RtlJ $lb2.ParagraphFormat
+$lb2.ParagraphFormat.SpaceAfter = $(if($Compact){1}else{4})
 
 $co = $doc.Styles.Add('SurCallout', 1); $co.BaseStyle = 'Normal'
 SetFont $co.Font 11 0 $cText $BODY
@@ -84,6 +103,7 @@ $cb = $co.ParagraphFormat.Borders.Item(-4); $cb.LineStyle = 1; $cb.LineWidth = 2
 $co.ParagraphFormat.Borders.DistanceFromRight = 8
 $co.ParagraphFormat.LeftIndent = 8; $co.ParagraphFormat.RightIndent = 8
 $co.ParagraphFormat.SpaceBefore = 6; $co.ParagraphFormat.SpaceAfter = 10
+if($Compact){ $co.Font.Size = [single]$QSZ; $co.Font.SizeBi = [single]$QSZ; $co.ParagraphFormat.SpaceBefore = 0; $co.ParagraphFormat.SpaceAfter = 6 }
 
 $ol = $doc.Styles.Add('SurNumbered', 1); $ol.BaseStyle = 'Normal'
 RtlJ $ol.ParagraphFormat
@@ -94,6 +114,7 @@ $tt = $doc.Styles.Add('SurTocTitle', 1); $tt.BaseStyle = 'Normal'
 SetFont $tt.Font 30 -1 $cBrand $TITLE
 Rtl $tt.ParagraphFormat
 $tt.ParagraphFormat.SpaceAfter = 8; $tt.ParagraphFormat.LineSpacingRule = 0
+if($Compact){ $tt.Font.Size = [single]24; $tt.Font.SizeBi = [single]24; $tt.ParagraphFormat.SpaceAfter = 4 }
 
 $tc = $doc.Styles.Add('SurToc', 1); $tc.BaseStyle = 'Normal'
 SetFont $tc.Font 15 0 $cText $TITLE
@@ -134,7 +155,7 @@ function AddPara($segs,$style,$baseSize){
   $p.Range.Style = $style
   $p.Range.ParagraphFormat.Reset()
   $p.Range.Font.Reset()
-  if($script:afterTable){ $p.SpaceBefore = 10; $script:afterTable = $false }
+  if($script:afterTable){ $p.SpaceBefore = $(if($Compact){6}else{10}); $script:afterTable = $false }
   [void](WriteSegs $p.Range.Start $segs $baseSize)
   # justified lines would be stretched before a manual line break, so such paragraphs are right-aligned
   if((@($segs | % { [string]$_.s }) -join '').Contains([string][char]11)){ $doc.Paragraphs.Last.Alignment = 2 }
@@ -151,11 +172,12 @@ function AddTable($rows){
   $t.Range.ParagraphFormat.SpaceAfter = 0
   $t.Range.ParagraphFormat.LineSpacingRule = 5; $t.Range.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.15)
   $t.TopPadding = 3; $t.BottomPadding = 3; $t.LeftPadding = 5; $t.RightPadding = 5
+  if($Compact){ $t.TopPadding = 1.5; $t.BottomPadding = 1.5; $t.Range.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.05) }
   for($i=0;$i -lt $nr;$i++){
     $row = $rows[$i]
     for($j=0;$j -lt $nc;$j++){
       $cell = $t.Cell($i+1,$j+1)
-      if($j -lt $row.Count){ [void](WriteSegs $cell.Range.Start $row[$j] 10.5) }
+      if($j -lt $row.Count){ [void](WriteSegs $cell.Range.Start $row[$j] $TSZ) }
     }
   }
   $t.Borders.InsideLineStyle = 1; $t.Borders.OutsideLineStyle = 1
@@ -163,11 +185,17 @@ function AddTable($rows){
   $t.Borders.InsideLineWidth = 4; $t.Borders.OutsideLineWidth = 4
   $hr = $t.Rows.Item(1)
   $hr.Shading.BackgroundPatternColor = $cBrand
-  SetFont $hr.Range.Font 8.5 -1 (RGBc 255 255 255) $HEAD
+  SetFont $hr.Range.Font $THSZ -1 (RGBc 255 255 255) $HEAD
   $hr.HeadingFormat = -1
   for($i=2;$i -le $nr;$i++){ if($i % 2 -eq 1){ $t.Rows.Item($i).Shading.BackgroundPatternColor = (RGBc 247 248 255) } }
   $t.Rows.AllowBreakAcrossPages = 0
-  $t.AutoFitBehavior(1); $t.AutoFitBehavior(2)   # size columns to content, then fit the page width
+  # column widths in proportion to the longest text of each column (at least 14%), so short label columns stay narrow
+  $t.AllowAutoFit = $false
+  $lens = @(); for($j=0;$j -lt $nc;$j++){ $mx = 4; foreach($row in $rows){ if($j -lt $row.Count){ $l = ((@($row[$j] | % { [string]$_.s }) -join '').Length); if($l -gt $mx){ $mx = $l } } }; $lens += [Math]::Sqrt($mx) }
+  $sum = ($lens | Measure-Object -Sum).Sum
+  $pcts = @($lens | % { [Math]::Max(14, 100 * $_ / $sum) }); $ps2 = ($pcts | Measure-Object -Sum).Sum
+  for($j=0;$j -lt $nc;$j++){ $col = $t.Columns.Item($j+1); $col.PreferredWidthType = 2; $col.PreferredWidth = [single](100 * $pcts[$j] / $ps2) }
+  $t.PreferredWidthType = 2; $t.PreferredWidth = [single]100
   $script:afterTable = $true
 }
 
@@ -175,6 +203,7 @@ function AddTable($rows){
 # SECTION 1: COVER (one full-page image)
 # =====================================================================
 $doc.Paragraphs.Item(1).Range.Text = ''
+if(-not $Compact){
 $anchor = $doc.Paragraphs.Item(1).Range
 $cv = $doc.Shapes.AddPicture($Cover, $false, $true, [single]0, [single]0, [single]419.53, [single]595.28, $anchor)
 $cv.RelativeHorizontalPosition = 1; $cv.RelativeVerticalPosition = 1
@@ -185,19 +214,21 @@ $cv.AlternativeText = 'جلد سپیدنامهٔ بلاک‌چین سور، غی
 $cv.Name = 'Cover'
 $doc.Content.InsertParagraphAfter()
 $doc.Paragraphs.Last.Range.InsertBreak(2)
+}
 
 # =====================================================================
 # SECTION 2: CONTENTS + BODY
 # =====================================================================
-$sec2 = $doc.Sections.Item(2)
+$sec2 = $doc.Sections.Item($(if($Compact){1}else{2}))
 $sec2.PageSetup.SectionDirection = 0
+$blocks = Get-Content -Raw -Encoding UTF8 $BlocksPath | ConvertFrom-Json
+$chapters = @($blocks | ? { $_.t -eq 'h' -and $_.l -eq 2 })
+$nCh = $(if($Compact){0}else{$chapters.Count})
+if(-not $Compact){
 $p = $doc.Paragraphs.Last
 $p.Range.Style = 'SurTocTitle'
 $p.Range.InsertAfter('فهرست مطالب')
 $doc.Content.InsertParagraphAfter()
-$blocks = Get-Content -Raw -Encoding UTF8 $BlocksPath | ConvertFrom-Json
-$chapters = @($blocks | ? { $_.t -eq 'h' -and $_.l -eq 2 })
-$nCh = $chapters.Count
 for($k = 0; $k -lt $nCh; $k++){
   $q = $doc.Paragraphs.Last; $q.Range.Style = 'SurToc'; $q.Range.ParagraphFormat.Reset()
   $doc.Content.InsertParagraphAfter()
@@ -206,11 +237,15 @@ $tocFirstIdx = $doc.Paragraphs.Count - $nCh
 
 # front matter (reader's note + legend) starts on its own page after the contents
 $doc.Paragraphs.Last.Range.InsertBreak(7)
+}
 
 foreach($b in $blocks){
   switch($b.t){
     'h' {
-      if($b.l -eq 1){ continue }   # document title lives on the cover
+      if($b.l -eq 1){
+        if($Compact){ $p = $doc.Paragraphs.Last; $p.Range.Style = 'SurTocTitle'; $p.Range.ParagraphFormat.Reset(); $p.Range.InsertAfter($b.text); $doc.Content.InsertParagraphAfter() }
+        continue   # in booklet mode the title lives on the cover
+      }
       $p = $doc.Paragraphs.Last
       $style = $(if($b.l -eq 2){'Heading 1'}else{'Heading 2'})
       $p.Range.Style = $style; $p.Range.ParagraphFormat.Reset()
@@ -221,6 +256,7 @@ foreach($b in $blocks){
     'hr' { }
     'p'  { AddPara $b.segs 'Normal' $SZ }
     'li' { AddPara $b.segs 'List Bullet' $SZ }
+    'li2' { AddPara $b.segs 'List Bullet 2' $SZ }
     'ol' {
       $segs = @(@{ s = ($b.n + '.' + "`t"); b = $true; c = $false }) + @($b.segs)
       AddPara $segs 'SurNumbered' $SZ
@@ -264,8 +300,10 @@ $fr = $ff.Range; $fr.Text = ''
 $fr.ParagraphFormat.ReadingOrder = 0; $fr.ParagraphFormat.Alignment = 1
 [void]$fr.Fields.Add($fr, 33)
 $fr = $ff.Range; SetFont $fr.Font 8.5 0 $cGrey $HEAD; $fr.ParagraphFormat.Alignment = 1; $fr.ParagraphFormat.SpaceAfter = 0
-$doc.Sections.Item(1).Headers.Item(1).Range.Text = ''
-$doc.Sections.Item(1).Footers.Item(1).Range.Text = ''
+if(-not $Compact){
+  $doc.Sections.Item(1).Headers.Item(1).Range.Text = ''
+  $doc.Sections.Item(1).Footers.Item(1).Range.Text = ''
+}
 
 $wm = $hf.Shapes.AddTextEffect(0, 'غیر قابل انتشار', $HEAD, 1, 0, 0, 0, 0, $hf.Range)
 $wm.Name = 'PowerPlusWaterMarkObject1'

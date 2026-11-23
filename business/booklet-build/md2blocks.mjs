@@ -78,6 +78,7 @@ while (i < lines.length) {
     blocks.push({ t: 'quote', segs: inline(parts.join(' ')) }); continue;
   }
   if ((m = /^- (.*)$/.exec(L))) { blocks.push({ t: 'li', segs: inline(m[1]) }); i++; continue; }
+  if ((m = /^\s{2,}- (.*)$/.exec(L))) { blocks.push({ t: 'li2', segs: inline(m[1]) }); i++; continue; }
   if ((m = /^(\d+)\. (.*)$/.exec(L))) { blocks.push({ t: 'ol', n: m[1], segs: inline(m[2]) }); i++; continue; }
   blocks.push({ t: 'p', segs: inline(L.trim()) }); i++;
 }
