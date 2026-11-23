@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const HASH = ethers.id("qbft_getSignerMetrics evidence");
@@ -37,7 +37,7 @@ async function fixture() {
   await idr.setVerified(paid.address, true);
   await hre.network.provider.send("hardhat_setBalance", [paid.address, "0x" + E("1000000").toString(16)]);
   const price = (await reg.currentEntryThreshold()) + (await reg.currentMembershipFee());
-  await reg.connect(paid).requestMembership(op(), { value: price });
+  await reg.connect(paid).requestMembership(op(), agr(), { value: price });
   await increaseTime(8 * DAY);
   await reg.connect(verifier).recordActivation(paid.address, HASH);
   return { S, reg, board, verifier, paid, founders };
@@ -85,7 +85,7 @@ describe("Recovery removal - recording", () => {
     expect(r.exitAllowedAt).to.equal(r.recoveryTimestamp + BigInt(90 * DAY));
     expect(r.objectionDeadline).to.equal(r.recordedAt + BigInt(72 * 3600));
     await expect(remove(f, paid)).to.be.revertedWith("ValidatorsRegistry: validator is not active");
-    await expect(reg.connect(paid).requestMembership(ethers.Wallet.createRandom().address, { value: 1 })).to.be.reverted; // the ban
+    await expect(reg.connect(paid).requestMembership(ethers.Wallet.createRandom().address, agr(), { value: 1 })).to.be.reverted; // the ban
   });
 });
 

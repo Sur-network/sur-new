@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -43,9 +43,9 @@ async function fixture() {
   return { S, reg, nft, dao, daoBoard, idr, verifier, founders, seller, buyer, other, price };
 }
 
-async function enterAndActivate(f, owner) {
+async function enterAndActivate(f, owner, entryHash = agr()) {
   const op = rnd();
-  await f.reg.connect(owner).requestMembership(op, { value: f.price });
+  await f.reg.connect(owner).requestMembership(op, entryHash, { value: f.price });
   await increaseTime(8 * DAY);
   await f.reg.connect(f.verifier).recordActivation(owner.address, HASH);
   return op;
@@ -147,13 +147,13 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     await enterAndActivate(f, seller);
     await reg.connect(buyer).acceptSeatAgreement(6, AGR);
     await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
-    await expect(reg.connect(seller).requestMembership(rnd(), { value: price })).to.be.revertedWith("ValidatorsRegistry: this address has exited before and may not rejoin");
+    await expect(reg.connect(seller).requestMembership(rnd(), agr(), { value: price })).to.be.revertedWith("ValidatorsRegistry: this address has exited before and may not rejoin");
   });
 
   it("a Probation seat can be sold too (with the buyer's prior acceptance); the buyer is activated by the Verifier after the probation wait", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, verifier, seller, buyer, price } = f;
-    await reg.connect(seller).requestMembership(rnd(), { value: price });
+    await reg.connect(seller).requestMembership(rnd(), agr(), { value: price });
     await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.be.revertedWith(NOT_ACCEPTED);
     await reg.connect(buyer).acceptSeatAgreement(6, AGR);
     await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
@@ -180,7 +180,7 @@ describe("ValidatorSeatNFT - selling a seat moves the validator record", () => {
     await expect(nft.connect(seller).transferFrom(seller.address, op0, 6)).to.be.revertedWith("ValidatorsRegistry: buyer is an operator key");
 
     // an address that was a validator before (entered and exited) cannot come back by buying
-    await reg.connect(other).requestMembership(rnd(), { value: f.price });
+    await reg.connect(other).requestMembership(rnd(), agr(), { value: f.price });
     await reg.connect(other).requestExit();
     await reg.connect(other).acceptSeatAgreement(6, AGR);
     await expect(nft.connect(seller).transferFrom(seller.address, other.address, 6)).to.be.revertedWith("ValidatorsRegistry: buyer was a validator before");
@@ -374,6 +374,7 @@ describe("ValidatorSeatNFT - the buyer must accept the validators' agreement BEF
 
 describe("ValidatorSeatNFT - the agreement hash travels with the acceptance into the transfer", () => {
   const AGR2 = ethers.id("signed validators agreement v2");
+  const ENTRY = ethers.id("signed validators agreement - direct entry");
 
   it("the hash must be non-zero; it is stored with the acceptance, emitted, and revoke or replace handle it with the seat id", async () => {
     const f = await loadFixture(fixture);
@@ -392,8 +393,8 @@ describe("ValidatorSeatNFT - the agreement hash travels with the acceptance into
   it("the transfer binds the buyer's hash to the seat (readable record + SeatAgreementBound event) and consumes the acceptance; the next sale overwrites it, the events keep the history", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, seller, buyer, other } = f;
-    await enterAndActivate(f, seller);
-    expect(await reg.seatAgreementHash(6)).to.equal(ethers.ZeroHash); // came by entry: nothing recorded on-chain
+    await enterAndActivate(f, seller, ENTRY);
+    expect(await reg.seatAgreementHash(6)).to.equal(ENTRY); // came by direct entry: the entrant's own hash is the record until a sale replaces it
     await reg.connect(buyer).acceptSeatAgreement(6, AGR);
     await expect(nft.connect(seller).transferFrom(seller.address, buyer.address, 6)).to.emit(reg, "SeatAgreementBound").withArgs(6, buyer.address, AGR);
     expect(await reg.seatAgreementHash(6)).to.equal(AGR);
@@ -416,5 +417,70 @@ describe("ValidatorSeatNFT - the agreement hash travels with the acceptance into
     await expect(nft.connect(buyer).transferFrom(buyer.address, other.address, 6)).to.be.revertedWith("ValidatorsRegistry: buyer identity not fully verified");
     expect(await reg.seatAgreementHash(6)).to.equal(AGR);
     expect(await reg.seatAcceptedAgreementHash(other.address)).to.equal(AGR2);
+  });
+});
+
+describe("ValidatorsRegistry.requestMembership - the entrant's signed agreement hash (owner decision 2026-11-23)", () => {
+  const ENTRY = ethers.id("signed validators agreement - direct entry");
+  const AGR2 = ethers.id("signed validators agreement v2");
+
+  it("a zero hash is refused and nothing is registered; the other entry rules still apply", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller } = f;
+    await expect(reg.connect(seller).requestMembership(rnd(), ethers.ZeroHash, { value: f.price })).to.be.revertedWith("ValidatorsRegistry: empty agreement hash");
+    expect((await reg.validators(seller.address)).status).to.equal(ST.None);
+    expect(await nft.seatOf(seller.address)).to.equal(0);
+    // the existing rules are unchanged: wrong payment, unverified identity, zero operator
+    await expect(reg.connect(seller).requestMembership(rnd(), ENTRY, { value: f.price - 1n })).to.be.revertedWith("ValidatorsRegistry: incorrect payment amount");
+    await expect(reg.connect(seller).requestMembership(ZERO, ENTRY, { value: f.price })).to.be.revertedWith("ValidatorsRegistry: zero operator");
+    await f.idr.setVerified(seller.address, false);
+    await expect(reg.connect(seller).requestMembership(rnd(), ENTRY, { value: f.price })).to.be.revertedWith("ValidatorsRegistry: identity not fully verified");
+  });
+
+  it("the hash is stored on the new seat, readable at once and emitted with owner and seat id (EntryAgreementRecorded)", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, other } = f;
+    await expect(reg.connect(seller).requestMembership(rnd(), ENTRY, { value: f.price }))
+      .to.emit(reg, "EntryAgreementRecorded").withArgs(seller.address, 6, ENTRY);
+    expect(await nft.seatOf(seller.address)).to.equal(6);
+    expect(await reg.seatAgreementHash(6)).to.equal(ENTRY); // while still in Probation: no activation needed
+    expect((await reg.validators(seller.address)).status).to.equal(ST.Probation);
+    // a second entrant gets its own seat and its own hash; the first is untouched
+    await reg.connect(other).requestMembership(rnd(), AGR2, { value: f.price });
+    expect(await reg.seatAgreementHash(7)).to.equal(AGR2);
+    expect(await reg.seatAgreementHash(6)).to.equal(ENTRY);
+    const ev = await reg.queryFilter(reg.filters.EntryAgreementRecorded());
+    expect(ev.map((e) => [e.args.owner, e.args.seatId, e.args.agreementHash])).to.deep.equal([[seller.address, 6n, ENTRY], [other.address, 7n, AGR2]]);
+  });
+
+  it("after a sale the buyer's accepted hash replaces the entrant's; EntryAgreementRecorded and SeatAgreementBound keep the history", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, seller, buyer } = f;
+    await enterAndActivate(f, seller, ENTRY);
+    expect(await reg.seatAgreementHash(6)).to.equal(ENTRY);
+    await reg.connect(buyer).acceptSeatAgreement(6, AGR2);
+    await nft.connect(seller).transferFrom(seller.address, buyer.address, 6);
+    expect(await reg.seatAgreementHash(6)).to.equal(AGR2);
+    const entered = await reg.queryFilter(reg.filters.EntryAgreementRecorded(null, 6));
+    expect(entered.map((e) => e.args.agreementHash)).to.deep.equal([ENTRY]);
+    const bound = await reg.queryFilter(reg.filters.SeatAgreementBound(6));
+    expect(bound.map((e) => e.args.agreementHash)).to.deep.equal([AGR2]);
+  });
+
+  it("a lottery winner and a genesis founder record no hash at entry (their signature is checked off-chain); their signatures are unchanged", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, other, founders } = f;
+    for (let id = 1; id <= founders.length; id++) expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    await expect(reg.connect(lottery).enterAsLotteryWinner(other.address)).to.emit(reg, "LotteryWinnerEntered").withArgs(other.address)
+      .and.not.to.emit(reg, "EntryAgreementRecorded");
+    const id = await nft.seatOf(other.address);
+    expect(id).to.equal(6);
+    expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);
+    // a direct entrant after the lottery winner still gets its own record
+    await reg.connect(f.seller).requestMembership(rnd(), ENTRY, { value: f.price });
+    expect(await reg.seatAgreementHash(7)).to.equal(ENTRY);
+    expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);
   });
 });

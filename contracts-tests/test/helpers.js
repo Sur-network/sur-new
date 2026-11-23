@@ -67,7 +67,10 @@ async function now() {
 
 const DAY = 86400;
 
-module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, setTime, now, DAY };
+/// A fresh non-zero agreement hash for requestMembership (the hash of the signed validators' agreement; tests only need a distinct non-zero value).
+const agr = () => ethers.hexlify(ethers.randomBytes(32));
+
+module.exports = { ADDR, deployAtFixed, setCodeOf, increaseTime, mine, setTime, now, DAY, agr };
 
 /// RD-18: one paginated distribution = open + pages + close (the RewardRouter does the same). Returns the sent transactions.
 async function distribute(dist, oracle, range, addrs, blocks, rewards, fees, pageSize = 1000, overrides = {}) {

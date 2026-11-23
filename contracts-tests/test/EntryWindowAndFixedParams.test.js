@@ -4,7 +4,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const HASH = ethers.id("evidence");
@@ -78,7 +78,7 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
   it("any number of paying entrants may REQUEST at once; the Verifier activates one per window and is refused for the others until the window has passed", async () => {
     const f = await loadFixture(fixture);
     const { reg, verifier, buyers, price } = f;
-    for (const b of buyers.slice(0, 3)) await reg.connect(b).requestMembership(rnd(), { value: price }); // no "entry rate limit" any more
+    for (const b of buyers.slice(0, 3)) await reg.connect(b).requestMembership(rnd(), agr(), { value: price }); // no "entry rate limit" any more
     expect(await reg.paidValidatorCount()).to.equal(3);
     for (const b of buyers.slice(0, 3)) expect((await reg.validators(b.address)).status).to.equal(ST.Probation);
     const startedAt = (await reg.validators(buyers[1].address)).periodStartedAt;
@@ -114,8 +114,8 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
     await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
     const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
     const winner = buyers[4];
-    await reg.connect(buyers[0]).requestMembership(rnd(), { value: price });
-    await reg.connect(buyers[1]).requestMembership(rnd(), { value: price });
+    await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: price });
+    await reg.connect(buyers[1]).requestMembership(rnd(), agr(), { value: price });
     await reg.connect(lottery).enterAsLotteryWinner(winner.address);
     await reg.connect(winner).setOperator(rnd());
     await increaseTime(7 * DAY + 10);
@@ -137,8 +137,8 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
   it("a Probation seat that is SOLD stays a paying entrant: its new owner's activation uses the window", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, verifier, buyers, price } = f;
-    await reg.connect(buyers[0]).requestMembership(rnd(), { value: price }); // seat 6
-    await reg.connect(buyers[1]).requestMembership(rnd(), { value: price }); // seat 7
+    await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: price }); // seat 6
+    await reg.connect(buyers[1]).requestMembership(rnd(), agr(), { value: price }); // seat 7
     await reg.connect(buyers[3]).acceptSeatAgreement(7, AGR);
     await nft.connect(buyers[1]).transferFrom(buyers[1].address, buyers[3].address, 7); // sold while in Probation
     expect((await reg.validators(buyers[3].address)).isPaidEntrant).to.equal(true);
@@ -157,8 +157,8 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
     await reg.connect(founders[0]).proposeParameterChange(KEY.EntryWindowSeconds, 8 * DAY);
     for (const x of founders.slice(1, 3)) await reg.connect(x).voteParameterChange(1);
     expect(await reg.entryWindowSeconds()).to.equal(8 * DAY);
-    await reg.connect(buyers[0]).requestMembership(rnd(), { value: price });
-    await reg.connect(buyers[1]).requestMembership(rnd(), { value: price });
+    await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: price });
+    await reg.connect(buyers[1]).requestMembership(rnd(), agr(), { value: price });
     await increaseTime(7 * DAY + 10);
     await reg.connect(verifier).recordActivation(buyers[0].address, HASH);
     await increaseTime(7 * DAY + 10); // 7 days later: enough for the old window, not for 8 days

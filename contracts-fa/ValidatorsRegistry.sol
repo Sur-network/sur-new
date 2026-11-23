@@ -66,7 +66,8 @@ interface IIdentityFullyVerified {
 ///             که هنگام ساخت پیشنهاد Active بوده‌اند (proposeParameterChange / voteParameterChange). حداکثر یک ورود پولی در هر پنجره،
 ///             probation یک‌هفته‌ای و جریمهٔ ۱٪ ثابت (constant) هستند (تصمیم مالک) و هیچ رأیی نمی‌تواند عوضشان کند.
 ///
-///         پرداخت عضویت: ولیدیتور تازه با requestMembership دو مبلغ را به ارز بومی (سورن) می‌پردازد:
+///         پرداخت عضویت: ولیدیتور تازه با requestMembership(operator, agreementHash) دو مبلغ را به ارز بومی (سورن) می‌پردازد
+///         (agreementHash = hash توافق‌نامه‌ای که پیشاپیش امضا کرده؛ یادداشت بالای requestMembership را ببینید):
 ///           - وثیقه (= currentEntryThreshold()): اینجا قفل می‌ماند، هنگام خروج برگشت‌پذیر و قابل جریمه است.
 ///           - کارمزد عضویت (= currentMembershipFee()، درصدی حکمرانی‌شده از وثیقه): به BlockRewardDistributor
 ///             فرستاده می‌شود و به نسبت تعداد بلاک بین ولیدیتورهای فعال دورهٔ بعد تقسیم می‌شود و از سوزاندن
@@ -579,9 +580,20 @@ contract ValidatorsRegistry {
     // payable: فرستنده سورن بومی را در msg.value می‌فرستد که باید دقیقاً مجموع دو مبلغ باشد:
     //   ۱. `threshold` (currentEntryThreshold()): اینجا به‌عنوان وثیقهٔ قابل‌استرداد و قابل‌جریمه می‌ماند.
     //   ۲. `fee` (currentMembershipFee()): به BlockRewardDistributor فرستاده می‌شود.
+    //
+    // توافق‌نامهٔ ولیدیتورها (تصمیم مالک ۲۰۲۶-۱۱-۲۳): متقاضی آن را «پیش از» درخواست عضویت به‌صورت الکترونیکی با بنیاد امضا می‌کند (بنیاد
+    // بعداً ممهور می‌کند؛ متن امضاشده و امضای هر دو طرف در یک بایگانی آف‌چین می‌ماند). درخواست، hash متن امضاشده را می‌آورد که به‌عنوان
+    // hash توافق‌نامهٔ جایگاه ذخیره می‌شود (seatAgreementHash) و emit می‌شود (EntryAgreementRecorded). زنجیره نمی‌تواند بررسی کند که
+    // سندِ پشت hash وجود دارد یا امضا شده است: Verifier پیش از فعال‌سازی ورودی، بایگانی آف‌چین را با این hash تطبیق می‌دهد.
     // ------------------------------------------------------------------
-    function requestMembership(address operator) external payable nonReentrant {
+    /// @notice ورود مستقیم: فرستنده (کیف‌پول معمولی) وثیقه + کارمزد را می‌پردازد، `operator` را کلید گرهٔ خود می‌کند و با یک NFT
+    ///         جایگاه تازه وارد Probation می‌شود. `agreementHash` hash متن توافق‌نامه‌ای است که فرستنده پیش از درخواست با بنیاد امضا
+    ///         کرده (غیرصفر، وگرنه revert می‌شود)؛ به‌عنوان hash توافق‌نامهٔ جایگاه ثبت می‌شود (`seatAgreementHash(seatId)`) و در
+    ///         EntryAgreementRecorded emit می‌شود. برندگان قرعه‌کشی (enterAsLotteryWinner) و مؤسسین genesis در اینجا hash نمی‌دهند:
+    ///         توافق‌نامه‌شان را Verifier در بایگانی آف‌چین پیش از فعال‌سازی بررسی می‌کند و هنگام ورود روی زنجیره ثبت نمی‌شود.
+    function requestMembership(address operator, bytes32 agreementHash) external payable nonReentrant {
         require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12: مالک صندلی فقط کیف‌پول معمولی
+        require(agreementHash != bytes32(0), "ValidatorsRegistry: empty agreement hash");
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
@@ -605,9 +617,11 @@ contract ValidatorsRegistry {
             isPaidEntrant: true
         });
         paidValidatorCount++;
-        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
+        uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
+        seatAgreementHash[seatId] = agreementHash;
 
         emit MembershipRequested(msg.sender, collateral, fee);
+        emit EntryAgreementRecorded(msg.sender, seatId, agreementHash);
     }
 
     // ------------------------------------------------------------------
@@ -1137,6 +1151,8 @@ contract ValidatorsRegistry {
         _seedFounderEntry(owner_, genesisTimestamp, Status.Probation);
     }
 
+    /// @dev hash توافق‌نامهٔ مؤسس روی زنجیره ثبت نمی‌شود (اینجا NFT جایگاه mint نمی‌شود و hashی هم داده نمی‌شود): Verifier بایگانی آف‌چین را پیش از
+    ///      فعال‌سازی مؤسس بررسی می‌کند.
     function _seedFounderEntry(address owner_, uint256 genesisTimestamp, Status status) private {
         require(owner_ != address(0), "seed: zero address");
         require(validators[owner_].status == Status.None, "seed: duplicate founder");
@@ -1420,6 +1436,7 @@ contract ValidatorsRegistry {
     ///         پولی جایگاه می‌گیرد. جایگاه مثل هر ورودی در Probation شروع می‌شود: گره هنوز باید راستی‌آزمایی شود
     ///         (و توافق‌نامه امضا شود) تا Verifier آن را فعال کند، پس رأی پیش از آن زنده نیست. آدرسی که
     ///         قبلاً ثبت شده یا هرگز خارج شده باشد نمی‌تواند جایگاه بگیرد (یک جایگاه برای هر نفر، ممنوعیت دائمی).
+    ///         هنگام این ورود هیچ hash توافق‌نامه‌ای روی زنجیره ثبت نمی‌شود (امضا آف‌چین است؛ Verifier بایگانی را پیش از فعال‌سازی بررسی می‌کند).
     function enterAsLotteryWinner(address winner) external {
         require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
@@ -1650,7 +1667,8 @@ contract ValidatorsRegistry {
     // همان آدرس پذیرش تازه می‌خواهد). hash وارد انتقال می‌شود: به‌عنوان hash توافق‌نامهٔ آن جایگاه ذخیره و emit می‌شود (SeatAgreementBound)
     // تا سندی که مالک فعلی را متعهد می‌کند همیشه پیدا شود.
     // جایگاه‌هایی که در ورود، توسط قرعه‌کشی یا در genesis mint می‌شوند از hook انتقال نمی‌گذرند؛ پس این شرط به آن مسیرها کاری ندارد و
-    // آن‌ها هرگز از پذیرش پس از انتقالِ قدیمی هم استفاده نمی‌کردند.
+    // آن‌ها هرگز از پذیرش پس از انتقالِ قدیمی هم استفاده نمی‌کردند. متقاضیِ ورود مستقیم همین توافق‌نامه را «پیش از» درخواست عضویت امضا می‌کند
+    // و hash آن همراه requestMembership می‌آید (EntryAgreementRecorded)؛ برندگان قرعه‌کشی و مؤسسین genesis هنگام ورود hashی ثبت‌شده ندارند.
 
     /// @notice شناسهٔ جایگاهی که `buyer` پذیرش توافق‌نامهٔ ولیدیتورها را برای آن ثبت کرده است (۰ = هیچ). هر آدرس هر زمان فقط یک
     ///         پذیرش دارد: پذیرفتن جایگاه دیگر آن را جایگزین می‌کند. شناسه‌ها از ۱ شروع می‌شوند و هرگز دوباره استفاده نمی‌شوند؛ پس
@@ -1659,12 +1677,16 @@ contract ValidatorsRegistry {
     mapping(address => uint256) public seatAcceptedFor;
     /// @notice hash سند امضاشدهٔ توافق‌نامه که همراه همان پذیرش ثبت شده (تا وقتی پذیرشی باز است غیرصفر است).
     mapping(address => bytes32) public seatAcceptedAgreementHash;
-    /// @notice hash توافق‌نامه‌ای که «مالک فعلی» یک جایگاه را متعهد کرد، وقتی جایگاه با انتقال به او رسید (۰ = جایگاه با انتقال نیامده:
-    ///         ورود، قرعه‌کشی یا genesis، یا هرگز روی زنجیره پذیرفته نشده). با انتقال بعدی بازنویسی می‌شود؛ تاریخچهٔ کامل در رویدادهای
-    ///         SeatAgreementBound است. جایگاهِ مهاجرت‌کرده پس از گم‌شدن کلید مالک hash خود را نگه می‌دارد: همان شخص، همان توافق‌نامه.
+    /// @notice hash توافق‌نامهٔ امضاشده‌ای که «مالک فعلی» یک جایگاه را متعهد می‌کند، با هر مسیری: در ورود مستقیم ثبت می‌شود
+    ///         (requestMembership)، با هر انتقال بازنویسی می‌شود (hash پذیرفته‌شدهٔ خریدار)، و مهاجرت پس از گم‌شدن کلید مالک آن را نگه
+    ///         می‌دارد (همان شخص، همان توافق‌نامه). ۰ = hashی روی زنجیره نیست: جایگاهی که با قرعه‌کشی یا در genesis آمده هنگام ورود hash
+    ///         نمی‌دهد (Verifier بایگانی آف‌چین را پیش از فعال‌سازی بررسی می‌کند) و تا وقتی انتقالی hash ببندد ندارد. تاریخچهٔ کامل در
+    ///         رویدادهای EntryAgreementRecorded و SeatAgreementBound است.
     mapping(uint256 => bytes32) public seatAgreementHash;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+    /// @notice با requestMembership emit می‌شود: `owner` مستقیم و با جایگاه `seatId` زیر توافق‌نامه‌ای با این hash وارد شد.
+    event EntryAgreementRecorded(address indexed owner, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
     /// @notice با انتقالی emit می‌شود که یک پذیرش را مصرف کرد: `owner` اکنون `seatId` را زیر توافق‌نامه‌ای با این hash دارد.

@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -73,9 +73,9 @@ describe("Registry v2.5 - paying entry", () => {
     const p = await price(reg);
     expect(p).to.equal(E("520000"));
     await hre.network.provider.send("hardhat_setBalance", [S[15].address, "0x" + E("2000000").toString(16)]);
-    await expect(reg.connect(S[15]).requestMembership(rnd(), { value: p })).to.be.revertedWith("ValidatorsRegistry: identity not fully verified");
-    await expect(reg.connect(buyers[0]).requestMembership(rnd(), { value: p - 1n })).to.be.revertedWith("ValidatorsRegistry: incorrect payment amount");
-    await reg.connect(buyers[0]).requestMembership(rnd(), { value: p });
+    await expect(reg.connect(S[15]).requestMembership(rnd(), agr(), { value: p })).to.be.revertedWith("ValidatorsRegistry: identity not fully verified");
+    await expect(reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: p - 1n })).to.be.revertedWith("ValidatorsRegistry: incorrect payment amount");
+    await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: p });
     const v = await reg.validators(buyers[0].address);
     expect(v.status).to.equal(ST.Probation);
     expect(v.lockedStake).to.equal(E("500000"));
@@ -87,25 +87,25 @@ describe("Registry v2.5 - paying entry", () => {
   it("the collateral does not grow with the number of validators (no growth curve); requests are not rate-limited (the entry window is counted at activation, see EntryWindowAndFixedParams.test.js)", async () => {
     const { reg, buyers } = await loadFixture(fixture);
     const p = await price(reg);
-    await reg.connect(buyers[0]).requestMembership(rnd(), { value: p });
-    await reg.connect(buyers[1]).requestMembership(rnd(), { value: p }); // allowed at once: Probation until the Verifier activates it
+    await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: p });
+    await reg.connect(buyers[1]).requestMembership(rnd(), agr(), { value: p }); // allowed at once: Probation until the Verifier activates it
     expect(await reg.paidValidatorCount()).to.equal(2);
     await increaseTime(7 * DAY + 10);
     expect(await price(reg)).to.equal(p); // unchanged after one more paid entrant
-    await reg.connect(buyers[2]).requestMembership(rnd(), { value: p });
+    await reg.connect(buyers[2]).requestMembership(rnd(), agr(), { value: p });
     expect(await reg.paidValidatorCount()).to.equal(3);
   });
 
   it("operator keys are unique: zero, another owner's operator and another owner's address are refused", async () => {
     const { reg, buyers, founders, op0 } = await loadFixture(fixture);
     const p = await price(reg);
-    await expect(reg.connect(buyers[0]).requestMembership(ZERO, { value: p })).to.be.revertedWith("ValidatorsRegistry: zero operator");
-    await expect(reg.connect(buyers[0]).requestMembership(op0, { value: p })).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
-    await expect(reg.connect(buyers[0]).requestMembership(founders[1].address, { value: p })).to.be.revertedWith("ValidatorsRegistry: operator is another owner");
+    await expect(reg.connect(buyers[0]).requestMembership(ZERO, agr(), { value: p })).to.be.revertedWith("ValidatorsRegistry: zero operator");
+    await expect(reg.connect(buyers[0]).requestMembership(op0, agr(), { value: p })).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
+    await expect(reg.connect(buyers[0]).requestMembership(founders[1].address, agr(), { value: p })).to.be.revertedWith("ValidatorsRegistry: operator is another owner");
     const op = rnd();
-    await reg.connect(buyers[0]).requestMembership(op, { value: p });
+    await reg.connect(buyers[0]).requestMembership(op, agr(), { value: p });
     await increaseTime(7 * DAY + 10);
-    await expect(reg.connect(buyers[1]).requestMembership(op, { value: p })).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
+    await expect(reg.connect(buyers[1]).requestMembership(op, agr(), { value: p })).to.be.revertedWith("ValidatorsRegistry: operator belongs to another owner");
   });
 });
 
@@ -300,7 +300,7 @@ describe("Registry v2.5 - slashing burns", () => {
       await reg.connect(verifier).recordActivation(x.address, HASH);
     }
     const owner = buyers[0];
-    await reg.connect(owner).requestMembership(rnd(), { value: await price(reg) });
+    await reg.connect(owner).requestMembership(rnd(), agr(), { value: await price(reg) });
     await increaseTime(8 * DAY);
     await reg.connect(verifier).recordActivation(owner.address, HASH);
     await reg.connect(verifier).recordSuspension(owner.address, HASH);
@@ -328,7 +328,7 @@ describe("Registry v2.5 - voluntary suspension (SelfSuspended)", () => {
       await f.reg.connect(f.verifier).recordActivation(x.address, HASH);
     }
     const owner = f.buyers[0];
-    await f.reg.connect(owner).requestMembership(rnd(), { value: await price(f.reg) });
+    await f.reg.connect(owner).requestMembership(rnd(), agr(), { value: await price(f.reg) });
     await increaseTime(8 * DAY);
     await f.reg.connect(f.verifier).recordActivation(owner.address, HASH);
     return owner;
@@ -409,7 +409,7 @@ describe("clearStaleVotes also covers a long voluntary suspension", () => {
       await reg.connect(verifier).recordActivation(x.address, HASH);
     }
     const owner = buyers[0];
-    await reg.connect(owner).requestMembership(rnd(), { value: await price(reg) });
+    await reg.connect(owner).requestMembership(rnd(), agr(), { value: await price(reg) });
     await increaseTime(8 * DAY);
     await reg.connect(verifier).recordActivation(owner.address, HASH);
     await reg.connect(owner).selfSuspend();

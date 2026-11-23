@@ -6,7 +6,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -61,7 +61,7 @@ async function verifyAll(f, who) {
 async function enterActive(f, who) {
   await verifyAll(f, who);
   const op = rnd();
-  await f.reg.connect(who).requestMembership(op, { value: f.price });
+  await f.reg.connect(who).requestMembership(op, agr(), { value: f.price });
   await increaseTime(8 * DAY);
   await f.reg.connect(f.verifier).recordActivation(who.address, HASH);
   return op;
@@ -124,7 +124,7 @@ describe("Lost owner key - migrateSeat moves the whole seat to the new address o
     expect(await dist.lastMigrateFrom()).to.equal(owner.address);
     expect(await dist.lastMigrateTo()).to.equal(fresh.address);
     // the old address can never become a validator again (its identity is burned too)
-    await expect(reg.connect(owner).requestMembership(rnd(), { value: f.price })).to.be.revertedWith("ValidatorsRegistry: this address has exited before and may not rejoin");
+    await expect(reg.connect(owner).requestMembership(rnd(), agr(), { value: f.price })).to.be.revertedWith("ValidatorsRegistry: this address has exited before and may not rejoin");
     // and the new owner holds the exit right and the collateral
     const before = await ethers.provider.getBalance(fresh.address);
     await reg.connect(fresh).requestExit();
@@ -220,7 +220,7 @@ describe("Lost owner key - migrateSeat moves the whole seat to the new address o
     const { reg, nft, owner, fresh, other, third, founders, verifier, price } = f;
     // Probation (never activated)
     await verifyAll(f, owner);
-    await reg.connect(owner).requestMembership(rnd(), { value: price });
+    await reg.connect(owner).requestMembership(rnd(), agr(), { value: price });
     await migrateId(f, owner, fresh);
     await migrateSeat(f, owner, fresh);
     expect((await reg.validators(fresh.address)).status).to.equal(ST.Probation);
@@ -270,5 +270,42 @@ describe("ValidatorSeatNFT.reassignSeat and the Distributor hook are Registry-on
   it("nobody but the Registry can reassign a seat", async () => {
     const { nft, founders, fresh } = await loadFixture(fixture);
     await expect(nft.connect(founders[0]).reassignSeat(founders[0].address, fresh.address)).to.be.revertedWith("ValidatorSeatNFT: only ValidatorsRegistry");
+  });
+});
+
+describe("Lost owner key - the seat's agreement hash is kept by migrateSeat (same person, same agreement)", () => {
+  const ENTRY = ethers.id("signed validators agreement - direct entry");
+  const ACCEPTED = ethers.id("signed validators agreement - buyer");
+
+  it("a direct entrant's hash (set by requestMembership) is still the seat's record after the migration; no new agreement event is emitted", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, owner, fresh } = f;
+    await verifyAll(f, owner);
+    await reg.connect(owner).requestMembership(rnd(), ENTRY, { value: f.price });
+    const seatId = await nft.seatOf(owner.address);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(ENTRY);
+    await increaseTime(8 * DAY);
+    await reg.connect(f.verifier).recordActivation(owner.address, HASH);
+    await migrateId(f, owner, fresh);
+    const tx = migrateSeat(f, owner, fresh);
+    await expect(tx).to.emit(reg, "SeatMigrated").and.not.to.emit(reg, "EntryAgreementRecorded").and.not.to.emit(reg, "SeatAgreementBound");
+    expect(await nft.ownerOf(seatId)).to.equal(fresh.address);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(ENTRY);
+  });
+
+  it("a hash bound by a sale survives a later migration of that seat too", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, owner, fresh, other } = f;
+    await verifyAll(f, owner);
+    await reg.connect(owner).requestMembership(rnd(), ENTRY, { value: f.price });
+    const seatId = await nft.seatOf(owner.address);
+    await verifyAll(f, other);
+    await reg.connect(other).acceptSeatAgreement(seatId, ACCEPTED);
+    await nft.connect(owner).transferFrom(owner.address, other.address, seatId);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(ACCEPTED);
+    await migrateId(f, other, fresh);
+    await migrateSeat(f, other, fresh);
+    expect(await nft.ownerOf(seatId)).to.equal(fresh.address);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(ACCEPTED);
   });
 });

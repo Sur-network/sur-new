@@ -4,7 +4,7 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY } = require("./helpers");
+const { ADDR, deployAtFixed, setCodeOf, increaseTime, setTime, now, DAY, agr } = require("./helpers");
 
 const E = ethers.parseEther;
 const ZERO = ethers.ZeroAddress;
@@ -49,7 +49,7 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
     await idr.setVerified(await c.getAddress(), true);
     await expect(c.enter(ADDR.VALIDATORS_REGISTRY, rnd(), { value: price })).to.be.revertedWith(EOA_REG);
     expect((await reg.validators(await c.getAddress())).status).to.equal(0);
-    await reg.connect(seller).requestMembership(rnd(), { value: price });
+    await reg.connect(seller).requestMembership(rnd(), agr(), { value: price });
     expect((await reg.validators(seller.address)).status).to.equal(1); // Probation
   });
 
@@ -74,7 +74,7 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
   it("seat transfer: transferFrom and safeTransferFrom to a contract revert and leave the seat with the seller; to an EOA it works", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, idr, verifier, seller, buyer, price, factory } = f;
-    await reg.connect(seller).requestMembership(rnd(), { value: price });
+    await reg.connect(seller).requestMembership(rnd(), agr(), { value: price });
     await increaseTime(8 * DAY);
     await reg.connect(verifier).recordActivation(seller.address, HASH);
     const id = await nft.seatOf(seller.address);

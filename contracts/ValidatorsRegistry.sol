@@ -67,7 +67,8 @@ interface IIdentityFullyVerified {
 ///             (proposeParameterChange / voteParameterChange). The maximum of one paid entry per window, the 1-week probation and the
 ///             1% slash are FIXED constants (owner decision) and cannot be changed by any vote.
 ///
-///         MEMBERSHIP PAYMENT: a new validator pays two amounts in native currency (Suren) with requestMembership:
+///         MEMBERSHIP PAYMENT: a new validator pays two amounts in native currency (Suren) with requestMembership(operator, agreementHash)
+///         (agreementHash = the hash of the validators' agreement it signed beforehand; see the note above requestMembership):
 ///           - COLLATERAL (= currentEntryThreshold()): locked here, refundable on exit, slashable.
 ///           - MEMBERSHIP FEE (= currentMembershipFee(), a governed percentage of the collateral): forwarded to
 ///             BlockRewardDistributor and paid pro rata by blocks to the validators active in the next epoch, exempt
@@ -593,9 +594,21 @@ contract ValidatorsRegistry {
     // Payable: the caller sends native Suren in msg.value, which must equal the sum of two amounts:
     //   1. `threshold` (currentEntryThreshold()): kept here as refundable, slashable collateral.
     //   2. `fee` (currentMembershipFee()): forwarded to BlockRewardDistributor.
+    //
+    // The validators' agreement (owner decision 2026-11-23): the applicant signs it electronically with the Foundation BEFORE requesting
+    // membership (the Foundation countersigns afterwards; the signed text and both signatures live in an off-chain archive). The request
+    // carries the hash of the signed agreement text, which is stored as the seat's agreement hash (seatAgreementHash) and emitted
+    // (EntryAgreementRecorded). The chain cannot check that the document behind the hash exists or is signed: the Verifier checks the
+    // off-chain archive against this hash before it activates the entrant.
     // ------------------------------------------------------------------
-    function requestMembership(address operator) external payable nonReentrant {
+    /// @notice Direct entry: the caller (a plain wallet) pays collateral + fee, claims `operator` as its node key and enters Probation
+    ///         with a new seat NFT. `agreementHash` is the hash of the agreement text the caller signed with the Foundation before
+    ///         requesting (non-zero, or the call reverts); it is recorded as the seat's agreement hash (`seatAgreementHash(seatId)`) and
+    ///         emitted in EntryAgreementRecorded. Lottery winners (enterAsLotteryWinner) and genesis founders take no agreement hash here:
+    ///         their agreement is checked by the Verifier in the off-chain archive before activation and is not recorded on-chain at entry.
+    function requestMembership(address operator, bytes32 agreementHash) external payable nonReentrant {
         require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12
+        require(agreementHash != bytes32(0), "ValidatorsRegistry: empty agreement hash");
         require(validators[msg.sender].status == Status.None, "ValidatorsRegistry: already registered");
         require(!permanentlyExited[msg.sender], "ValidatorsRegistry: this address has exited before and may not rejoin");
         require(IIdentityFullyVerified(SurAddresses.IDENTITY_REGISTRY).isFullyVerified(msg.sender), "ValidatorsRegistry: identity not fully verified");
@@ -619,9 +632,11 @@ contract ValidatorsRegistry {
             isPaidEntrant: true
         });
         paidValidatorCount++;
-        IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
+        uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).mintSeat(msg.sender);
+        seatAgreementHash[seatId] = agreementHash;
 
         emit MembershipRequested(msg.sender, collateral, fee);
+        emit EntryAgreementRecorded(msg.sender, seatId, agreementHash);
     }
 
     // ------------------------------------------------------------------
@@ -1155,6 +1170,8 @@ contract ValidatorsRegistry {
         _seedFounderEntry(owner_, genesisTimestamp, Status.Probation);
     }
 
+    /// @dev A founder's agreement hash is not recorded on-chain (no seat NFT is minted here and no hash is passed in): the Verifier checks the
+    ///      off-chain archive before activating a founder.
     function _seedFounderEntry(address owner_, uint256 genesisTimestamp, Status status) private {
         require(owner_ != address(0), "seed: zero address");
         require(validators[owner_].status == Status.None, "seed: duplicate founder");
@@ -1441,6 +1458,7 @@ contract ValidatorsRegistry {
     ///         neither waits for nor uses a window slot) and not counted as a paid entrant. The seat starts in Probation like any entry: the node still has to be verified
     ///         (and the agreement signed) before the Verifier activates it, so the vote is not live before that. An address
     ///         that is already registered or has ever exited cannot take a seat (one seat per person, permanent ban).
+    ///         No agreement hash is recorded on-chain at this entry (the signature is off-chain; the Verifier checks the archive before activation).
     function enterAsLotteryWinner(address winner) external {
         require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
@@ -1673,7 +1691,9 @@ contract ValidatorsRegistry {
     // into the transfer: it is stored as the seat's agreement hash and emitted (SeatAgreementBound) so the document that binds the
     // current owner can always be found.
     // Seats minted at entry, by the lottery or at genesis never pass through the transfer hook, so this gate does not touch those
-    // paths; they never used the old post-transfer acceptance either.
+    // paths; they never used the old post-transfer acceptance either. A direct entrant signs the same agreement BEFORE requesting
+    // membership and its hash comes in with requestMembership (EntryAgreementRecorded); lottery winners and genesis founders have no
+    // hash recorded at entry.
 
     /// @notice The seat id for which `buyer` has recorded the acceptance of the validators' agreement (0 = none). One acceptance at a
     ///         time per address: accepting another seat replaces it. Seat ids start at 1 and are never reused, so an acceptance can
@@ -1682,12 +1702,16 @@ contract ValidatorsRegistry {
     mapping(address => uint256) public seatAcceptedFor;
     /// @notice The hash of the signed agreement document recorded together with that acceptance (non-zero while an acceptance is open).
     mapping(address => bytes32) public seatAcceptedAgreementHash;
-    /// @notice The agreement hash that bound the CURRENT owner of a seat when the seat reached it by a transfer (0 = the seat did not come
-    ///         by transfer: entry, lottery or genesis, or it was never accepted on-chain). Overwritten by the next transfer; the full
-    ///         history is in the SeatAgreementBound events. A seat migrated after a lost owner key keeps its hash: same person, same agreement.
+    /// @notice The hash of the signed validators' agreement that governs the CURRENT owner of a seat, whatever the path: set at direct entry
+    ///         (requestMembership), overwritten by every transfer (the buyer's accepted hash), kept by a migration after a lost owner key
+    ///         (same person, same agreement). 0 = no hash on-chain: a seat that came by the lottery or at genesis takes no hash at entry (the
+    ///         Verifier checks the off-chain archive before activation) and has none until a transfer binds one. The full history is in
+    ///         the EntryAgreementRecorded and SeatAgreementBound events.
     mapping(uint256 => bytes32) public seatAgreementHash;
 
     event SeatTransferred(uint256 indexed seatId, address indexed from, address indexed to, Status statusAfter);
+    /// @notice Emitted by requestMembership: `owner` entered directly with seat `seatId` under the signed agreement with this hash.
+    event EntryAgreementRecorded(address indexed owner, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAgreementAccepted(address indexed buyer, uint256 indexed seatId, bytes32 agreementHash);
     event SeatAcceptanceRevoked(address indexed buyer, uint256 indexed seatId);
     /// @notice Emitted by the transfer that consumed an acceptance: `owner` now holds `seatId` under the agreement with this hash.
