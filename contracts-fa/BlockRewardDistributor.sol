@@ -23,6 +23,10 @@ interface IValidatorsBoard {
     /// @dev ValidatorsBoard این عدد را فقط با تغییر واقعی ترکیب (refresh/sync/جانشینی) بالا می‌برد، نه با refreshی
     ///      که ترکیب را تغییر نمی‌دهد.
     function boardVersion() external view returns (uint256);
+    /// @dev کلیدی که رأی یک عضو هیأت با آن ثبت می‌شود: خودِ آدرس، یا پس از مهاجرت صندلی به‌دلیل گم‌شدن کلید مالک،
+    ///      **نخستین** آدرس زنجیرهٔ آن شخص. اتاق‌های هیأتیِ پایین رأی‌هایشان را با همین کلید ثبت می‌کنند، پس یک شخص در مهاجرت دوبار
+    ///      رأی نمی‌دهد (آدرس تازه نمی‌تواند به پیشنهادی که آدرس قدیم به آن رأی داده دوباره رأی بدهد).
+    function boardVoterKey(address who) external view returns (address);
 }
 
 /// @title BlockRewardDistributor
@@ -501,9 +505,10 @@ contract BlockRewardDistributor {
         );
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
-        require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
+        address voterKey = BOARD_CONTRACT.boardVoterKey(msg.sender); // یک شخص، یک رأی در مهاجرت صندلی
+        require(!shareBoardVoted[id][voterKey], "BlockRewardDistributor: board member already voted");
 
-        shareBoardVoted[id][msg.sender] = true;
+        shareBoardVoted[id][voterKey] = true;
         p.boardApprovals++;
         uint256 required = (BOARD_SIZE / 2) + 1; // ۳ از ۵ — BOARD_SIZE یه ثابته، پس برخلاف
         // آستانه‌ی سمت ولیدیتور، نیازی به snapshot نداره: هرگز جابه‌جا نمی‌شه.
@@ -781,8 +786,9 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
         _requireRateVotable(p);
-        require(!rateBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
-        rateBoardVoted[id][msg.sender] = true;
+        address voterKey = BOARD_CONTRACT.boardVoterKey(msg.sender); // یک شخص، یک رأی در مهاجرت صندلی
+        require(!rateBoardVoted[id][voterKey], "BlockRewardDistributor: board member already voted");
+        rateBoardVoted[id][voterKey] = true;
         p.boardApprovals++;
         emit RateChangeBoardVoted(id, msg.sender, p.boardApprovals, RATE_CHANGE_BOARD_APPROVALS);
         _markRateApprovedIfComplete(id, p);

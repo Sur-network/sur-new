@@ -75,6 +75,23 @@ interface IValidatorsTreasury {
 ///           - اگر ولیدیتوری بیش از `recoveryPeriod()` Registry به‌علاوهٔ STALE_VOTE_CLEAR_DELAY (۳۰ روز) Demoted بماند،
 ///             هر کسی می‌تواند `clearStaleVotes` را صدا بزند تا همهٔ رأی‌هایی که آن ولیدیتور داده و گرفته پاک شود.
 ///
+///         مهاجرت صندلی (گم‌شدن کلید مالک): وقتی Registry کل یک صندلی را به آدرس تازهٔ **همان شخص** می‌برد
+///         (`ValidatorsRegistry.migrateSeat`)، `onSeatMigrated(old, new)` را صدا می‌زند. این فراخوان **الزامی** است: اگر
+///         revert کند مهاجرت هم revert می‌شود. فقط Registry می‌تواند آن را صدا بزند.
+///           - اگر آدرس قدیمی کرسی هیأت داشته باشد، آدرس تازه آن را **در همان جا** تا پایان ماهِ هیأت می‌گیرد: همان جایگاه در
+///             فهرست اعضا، بدون جای خالی، بدون تغییر `boardVersion` (مجموعهٔ **اشخاص** عوض نشده، پس اقدام‌های باز هیأت معتبر
+///             می‌مانند) و کرسی برای epoch عضویت خودِ آدرس تازه معتبر است. آدرس قدیمی کرسی را از دست می‌دهد. اگر ماه به
+///             پایان رسیده باشد جایگزینی باز هم انجام می‌شود: چیزی نمی‌دهد (تا `refreshBoard` اختیاری نیست) و فهرست ذخیره‌شده را
+///             به آدرس زندهٔ شخص نگه می‌دارد تا refresh بعدی شخص را ادامه‌دهنده ببیند.
+///           - رأی‌های انتخاباتی که آدرس قدیمی داده و گرفته به آدرس تازه می‌روند (برای هر ولیدیتور مهاجرت‌کننده، عضو هیأت باشد
+///             یا نه)، پس نه رأی‌های خودِ شخص گم می‌شود و نه رأی‌هایی که به او داده شده.
+///           - شمارش دوباره نیست: رأی یک شخص به اقدام هیأت، به پروندهٔ حذف در همین قرارداد و به اتاق‌های هیأت در
+///             BlockRewardDistributor (تغییر سهم و نرخ) با `boardVoterKey(address)` ثبت می‌شود، یعنی **نخستین** آدرس زنجیرهٔ
+///             مهاجرت شخص. پس آدرس تازه نمی‌تواند به پیشنهادی که آدرس قدیمی به آن رأی داده دوباره رأی بدهد، و به پیشنهادی که
+///             آدرس قدیمی رأی نداده هنوز می‌تواند (یک شخص یک رأی؛ شخص رأیش را روی پیشنهادهای باز از دست نمی‌دهد).
+///           - **فروش** صندلی (انتقال NFT) مهاجرت نیست: خریدار شخص دیگری است. اختیار هیأتیِ فروشنده مثل قبل پایان می‌یابد و
+///             خریدار کرسی هیأت نمی‌گیرد.
+///
 ///         اختیارات هیأت (محدود و صریح):
 ///           ۱. چرخاندن کلید `distributionOracle` در BlockRewardDistributor.
 ///           ۲. چرخاندن کلید `verifier` در ValidatorsRegistry.
@@ -265,14 +282,19 @@ contract ValidatorsBoard {
 
         _syncVoter(msg.sender);  // فراخواننده فعال است، پس رأی‌های موجودش از اینجا به بعد شمرده می‌شوند
 
-        hasVotedFor[msg.sender][candidate] = true;
-        voterCandidates[msg.sender].push(candidate);
+        _addVote(msg.sender, candidate);
+    }
 
-        candidateVoters[candidate].push(msg.sender);
-        voterIndexInCandidateVoters[candidate][msg.sender] = candidateVoters[candidate].length;
+    /// @dev رأی را ثبت می‌کند و اگر رأی‌های رأی‌دهنده اکنون شمرده می‌شود آن را می‌شمارد. مشترک بین `voteFor` و hook مهاجرت (این‌جا شرط صلاحیتی نیست).
+    function _addVote(address voter, address candidate) private {
+        hasVotedFor[voter][candidate] = true;
+        voterCandidates[voter].push(candidate);
 
-        _increase(candidate);
-        emit VoteCast(msg.sender, candidate);
+        candidateVoters[candidate].push(voter);
+        voterIndexInCandidateVoters[candidate][voter] = candidateVoters[candidate].length;
+
+        if (votesCounted[voter]) _increase(candidate);
+        emit VoteCast(voter, candidate);
     }
 
     /// @notice پس‌گرفتن رأی. هر زمان قابل‌فراخوانی است.
@@ -486,6 +508,12 @@ contract ValidatorsBoard {
         return _boardIsCurrent() && _canAct(who);
     }
 
+    /// @notice کلیدی که `who` با آن به‌عنوان رأی‌دهندهٔ یک اقدام هیأت، یک پروندهٔ حذف یا یک رأی هیأتیِ BlockRewardDistributor ثبت می‌شود: خودِ `who`، یا برای آدرس تازهٔ یک کرسی مهاجرت‌کرده، **نخستین** آدرس زنجیرهٔ مهاجرت آن شخص. یک شخص در مهاجرت دوبار رأی نمی‌دهد.
+    function boardVoterKey(address who) public view returns (address) {
+        address root = voterRoot[who];
+        return root == address(0) ? who : root;
+    }
+
     function _syncNeeded() private view returns (bool) {
         for (uint256 i = 0; i < boardMembers.length; i++) {
             if (!_hasAuthority(boardMembers[i])) return true;
@@ -579,6 +607,59 @@ contract ValidatorsBoard {
     }
 
     // ------------------------------------------------------------------
+    // مهاجرت صندلی پس از گم‌شدن کلید مالک
+    // ------------------------------------------------------------------
+
+    /// @notice وضعیت هیأتیِ یک صندلی به آدرس تازهٔ همان شخص رفت (`heldSeat`: آدرس قدیمی کرسی هیأت داشت).
+    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved);
+
+    /// @notice فقط ValidatorsRegistry.migrateSeat صدایش می‌زند، پس از آن‌که رکورد صندلی از `oldOwner` به `newOwner` (آدرس تازهٔ **همان شخص**) رفته. فراخوان الزامی: اگر revert کند کل مهاجرت revert می‌شود. (۱) اگر `oldOwner` کرسی هیأت دارد، `newOwner` آن را در همان جا تا پایان ماه می‌گیرد (سرآغاز قرارداد را ببینید)، چه ماه هنوز جاری باشد چه نه. (۲) رأی‌های انتخاباتی که `oldOwner` داده و گرفته به `newOwner` می‌روند. برای فروش صندلی هرگز صدا زده نمی‌شود. Registry فقط به آدرسی مهاجرت می‌دهد که هرگز ولیدیتور نبوده، پس `newOwner` کرسی و رأی خودی ندارد.
+    function onSeatMigrated(address oldOwner, address newOwner) external {
+        require(msg.sender == address(REGISTRY), "ValidatorsBoard: caller is not the validators registry");
+        require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsBoard: bad migration addresses");
+
+        bool held = isBoardMember[oldOwner];
+        if (held) {
+            require(!isBoardMember[newOwner], "ValidatorsBoard: new owner already holds a seat");
+            for (uint256 i = 0; i < boardMembers.length; i++) {
+                if (boardMembers[i] == oldOwner) {
+                    boardMembers[i] = newOwner; // در همان جا: همان جایگاه، بدون جای خالی، بدون تغییر boardVersion
+                    break;
+                }
+            }
+            isBoardMember[oldOwner] = false;
+            isBoardMember[newOwner] = true;
+            delete seatMembershipEpoch[oldOwner];
+            seatMembershipEpoch[newOwner] = REGISTRY.membershipEpoch(newOwner);
+            voterRoot[newOwner] = boardVoterKey(oldOwner); // رأی‌های بعدی `newOwner` به همان کلیدِ `oldOwner` می‌رسد
+        }
+
+        (uint256 given, uint256 received) = _moveVotes(oldOwner, newOwner);
+        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received);
+    }
+
+    /// @dev رأی‌های انتخاباتی `oldOwner` را به `newOwner` می‌برد: اول رأی‌هایی که داده (رأی به خود، رأی به خودِ آدرس تازه می‌شود)، بعد رأی‌هایی که گرفته. شمارنده‌ها از طریق `_removeVote`/`_addVote` دنبال می‌شوند. اندازهٔ حلقه: حداکثر MAX_VOTES_PER_VOTER به‌علاوهٔ تعداد رأی‌دهندگانی که اکنون برای `oldOwner` ثبت‌اند.
+    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received) {
+        _syncVoter(oldOwner); // اول شمارنده‌ها را سازگار می‌کند: اعلان best-effort خودِ Registry ممکن است شکست خورده باشد
+        _syncVoter(newOwner);
+
+        address[] memory cast = voterCandidates[oldOwner];
+        given = cast.length;
+        for (uint256 i = 0; i < given; i++) {
+            address cand = cast[i];
+            _removeVote(oldOwner, cand);
+            _addVote(newOwner, cand == oldOwner ? newOwner : cand); // رأی به خود، رأی به خود می‌ماند
+        }
+
+        address[] memory voters = candidateVoters[oldOwner];
+        received = voters.length;
+        for (uint256 i = 0; i < received; i++) {
+            _removeVote(voters[i], oldOwner);
+            _addVote(voters[i], newOwner);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // اقدام‌های هیأت
     // ------------------------------------------------------------------
 
@@ -661,9 +742,10 @@ contract ValidatorsBoard {
         require(!a.executed, "ValidatorsBoard: already executed");
         require(block.timestamp <= a.expiresAt, "ValidatorsBoard: action has expired");
         require(a.boardVersionAtCreation == boardVersion, "ValidatorsBoard: board membership changed since this action was proposed - propose again");
-        require(!actionHasVoted[id][voter], "ValidatorsBoard: already voted");
+        address key = boardVoterKey(voter); // یک شخص، یک رأی در مهاجرت
+        require(!actionHasVoted[id][key], "ValidatorsBoard: already voted");
 
-        actionHasVoted[id][voter] = true;
+        actionHasVoted[id][key] = true;
         a.votes++;
 
         emit ActionVoted(id, voter, a.votes, a.requiredVotes);
@@ -739,6 +821,9 @@ contract ValidatorsBoard {
     mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryVoted;
     mapping(address => mapping(uint256 => mapping(address => bool))) private recoveryAssemblyVoted;
 
+    /// @dev آدرس تازهٔ یک کرسی هیأت مهاجرت‌کرده => نخستین آدرس زنجیرهٔ آن شخص. برای هر آدرس دیگر صفر. ته ذخیره‌سازی اضافه شد تا چینش seed ژنزیس بالا عوض نشود.
+    mapping(address => address) private voterRoot;
+
     event RecoveryRemovalVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
     event RecoveryAssemblyVote(address indexed validator, address indexed voter, bool uphold, uint256 upholdVotes, uint256 cancelVotes);
     event RecoveryCaseDecided(address indexed validator, bool upheld, bool byAssembly);
@@ -748,8 +833,9 @@ contract ValidatorsBoard {
         require(state == 2, "ValidatorsBoard: no open board case");
         require(block.timestamp <= deadline, "ValidatorsBoard: decision window over");
         require(msg.sender != validator, "ValidatorsBoard: the subject of a case cannot vote");
-        require(!recoveryVoted[validator][recordedAt][msg.sender], "ValidatorsBoard: already voted");
-        recoveryVoted[validator][recordedAt][msg.sender] = true;
+        address key = boardVoterKey(msg.sender); // یک شخص، یک رأی در مهاجرت
+        require(!recoveryVoted[validator][recordedAt][key], "ValidatorsBoard: already voted");
+        recoveryVoted[validator][recordedAt][key] = true;
         RecoveryTally storage t = boardRecoveryTallies[validator][recordedAt];
         if (uphold) t.uphold++; else t.cancel++;
         emit RecoveryRemovalVote(validator, msg.sender, uphold, t.uphold, t.cancel);

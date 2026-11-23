@@ -117,6 +117,7 @@ contract MockBoard {
     function bumpVersion() external { boardVersion++; }
     function hasBoardAuthority(address a) external view returns (bool) { return auth[a]; }
     function isBoardMember(address a) external view returns (bool) { return auth[a]; }
+    function boardVoterKey(address a) external pure returns (address) { return a; } // no migrations in the rate tests: the key is the address
     function syncVoter(address) external {}
 }
 

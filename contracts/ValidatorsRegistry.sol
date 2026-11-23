@@ -10,6 +10,7 @@ interface IBlockRewardDistributor {
 
 interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
+    function onSeatMigrated(address oldOwner, address newOwner) external; // seat migration: REQUIRED call (a failure reverts the migration); the board seat and election votes follow the person to the new address
 }
 
 interface IValidatorSeatNFT {
@@ -77,6 +78,9 @@ interface IIdentityFullyVerified {
 ///         BOARD SYNCHRONISATION: whenever a validator's active status changes, this contract calls
 ///         `ValidatorsBoard.syncVoter(validator)` so the board's vote counters follow the active set. The call is
 ///         best-effort and cannot block a status change.
+///
+///         One call to the board is NOT best-effort: `migrateSeat` calls `ValidatorsBoard.onSeatMigrated(old, new)` and reverts if that
+///         call fails, because a lost board seat or lost election votes would otherwise go unnoticed. A seat SALE never calls it.
 contract ValidatorsRegistry {
     // ------------------------------------------------------------------
     // Fixed cross-contract addresses (see SurAddresses.sol)
@@ -1775,7 +1779,9 @@ contract ValidatorsRegistry {
     ///      callers have already checked every rule). An Active seat STAYS Active (decision 2026-11-19): the new owner takes the owner place in
     ///      the active set at the same position, with the same operator key, so the node keeps validating without interruption. The old
     ///      owner's vote ends and the new owner is a new voter from now (fresh checkpoints), so it cannot vote on proposals created before.
-    ///      The old address is marked permanentlyExited (it can never be a validator again) and its board authority ends.
+    ///      The old address is marked permanentlyExited (it can never be a validator again) and its board authority ends. On a SALE that is
+    ///      the whole story (the buyer is a different person and takes no board seat). On a MIGRATION the person is the same, so migrateSeat
+    ///      then hands the board seat and the election votes of the old address to the new one (ValidatorsBoard.onSeatMigrated).
     ///      `keepResumeRequest`: a migration keeps an open resume request (same person), a sale does not.
     function _moveSeatRecord(address from, address to, Status st, bool keepResumeRequest) private {
         ValidatorInfo storage v = validators[from];
@@ -1828,7 +1834,7 @@ contract ValidatorsRegistry {
             }
         }
 
-        // the old owner is treated as exited: permanent ban, board authority over
+        // the old owner is treated as exited: permanent ban, board authority over (a migration then gives the board seat to the new address)
         permanentlyExited[from] = true;
         membershipEpoch[from]++;
 
@@ -1846,7 +1852,14 @@ contract ValidatorsRegistry {
     ///         (the validator record with its collateral and status, the operator (node-key) link, the founder flag, the activation history,
     ///         the place in the active set and the vote as a new voter from now, the seat NFT, and what BlockRewardDistributor owes to the old
     ///         owner). It is the single exception to the permanent ban: the person is the same, so the new address is NOT treated as exited,
-    ///         while the old address becomes permanently exited and its board authority ends.
+    ///         while the old address becomes permanently exited.
+    ///
+    ///         BOARD SEAT FOLLOWS THE PERSON (ValidatorsBoard.onSeatMigrated, a REQUIRED call: if it reverts, the migration reverts): if the
+    ///         old address holds a seat on the validators' board, the new address takes that seat IN PLACE for the rest of the board's month
+    ///         (same position, no vacancy, no board-version change), and the election votes the old address cast and received move with it.
+    ///         A person never counts twice: its vote on a board action or a board chamber of the Distributor is recorded once across the old
+    ///         and the new address, while its validator vote starts anew from the migration (a new voter from now). A seat SALE does none of
+    ///         this: the buyer is a different person, the seller's board authority ends and no board seat is handed over.
     ///
     ///         AUTHORISATION (two independent keys, the strictest reading of the documents): (1) the identity oracle must already have run
     ///         IdentityRegistry.migrateIdentity(oldOwner, newOwner) after the off-chain identity check (this contract reads
@@ -1875,6 +1888,7 @@ contract ValidatorsRegistry {
 
         uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).reassignSeat(oldOwner, newOwner);
         _moveSeatRecord(oldOwner, newOwner, st, true);
+        IValidatorsBoardSync(BOARD).onSeatMigrated(oldOwner, newOwner); // REQUIRED (unlike the best-effort _notifyBoard): the board seat and election votes of the old address go to the new one, or nothing moves
         DISTRIBUTOR.migrateClaimable(oldOwner, newOwner);
 
         emit SeatMigrated(seatId, oldOwner, newOwner, st);

@@ -23,6 +23,10 @@ interface IValidatorsBoard {
     /// @dev Incremented by ValidatorsBoard ONLY on a real composition change (refresh/sync/succession), never by a
     ///      refresh that leaves the composition unchanged.
     function boardVersion() external view returns (uint256);
+    /// @dev The key under which a board member's vote is recorded: the address itself, or, after a seat migration after a lost owner key,
+    ///      the FIRST address of that person's chain. The board chambers below record their votes under it, so one person never votes
+    ///      twice across a migration (the new address cannot vote on a proposal the old address already voted on).
+    function boardVoterKey(address who) external view returns (address);
 }
 
 /// @title BlockRewardDistributor
@@ -515,9 +519,10 @@ contract BlockRewardDistributor {
         );
         require(!p.executed, "BlockRewardDistributor: already executed");
         require(block.timestamp <= p.expiresAt, "BlockRewardDistributor: proposal has expired");
-        require(!shareBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
+        address voterKey = BOARD_CONTRACT.boardVoterKey(msg.sender); // one person, one vote across a seat migration
+        require(!shareBoardVoted[id][voterKey], "BlockRewardDistributor: board member already voted");
 
-        shareBoardVoted[id][msg.sender] = true;
+        shareBoardVoted[id][voterKey] = true;
         p.boardApprovals++;
         uint256 required = (BOARD_SIZE / 2) + 1; // 3 of 5 — BOARD_SIZE is a fixed constant, so
         // unlike the validator-side threshold, this needs no snapshotting: it can never drift.
@@ -797,8 +802,9 @@ contract BlockRewardDistributor {
             "BlockRewardDistributor: board membership changed since this proposal was created - propose again"
         );
         _requireRateVotable(p);
-        require(!rateBoardVoted[id][msg.sender], "BlockRewardDistributor: board member already voted");
-        rateBoardVoted[id][msg.sender] = true;
+        address voterKey = BOARD_CONTRACT.boardVoterKey(msg.sender); // one person, one vote across a seat migration
+        require(!rateBoardVoted[id][voterKey], "BlockRewardDistributor: board member already voted");
+        rateBoardVoted[id][voterKey] = true;
         p.boardApprovals++;
         emit RateChangeBoardVoted(id, msg.sender, p.boardApprovals, RATE_CHANGE_BOARD_APPROVALS);
         _markRateApprovedIfComplete(id, p);

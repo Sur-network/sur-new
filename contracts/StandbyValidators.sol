@@ -32,9 +32,12 @@ interface IStandbyRegistry {
 ///         None, Exiting, RemovedInRecovery). The Registry deliberately never frees an operator key, so the key-to-owner mappings
 ///         survive an exit, a withdrawal and a recovery removal; this contract therefore checks the owner's status itself.
 ///
-///         Maintenance: operator keys change (setOperator, seat transfer). `staleMembers()` and `isReady()` tell dashboards and the
-///         recovery tool whether the list is still valid; the foundation should refresh it in the same governance step as any
-///         change that touches a member.
+///         Maintenance: the operator key stays with the SEAT. A seat sale (NFT transfer) or a seat migration after a lost owner key moves
+///         the key link to the new owner (ownerOfOperator now names the new owner, same status), so such a member stays valid and the list
+///         needs no refresh. A member goes stale only when its owner replaces the key (setOperator; for an Active seat proposeOperator
+///         confirmed by the Verifier) or the owner leaves (exit, withdrawal or removal in a recovery). `staleMembers()` and `isReady()`
+///         tell dashboards and the recovery tool whether the list is still valid; the foundation should refresh it in the same
+///         governance step as any change that touches a member.
 ///
 ///         QBFT arithmetic: n members need at least ceil(2n/3) of them online to produce blocks; a list of 1 tolerates no
 ///         node down, 4 tolerate one. The recovery plan should list members that are well run and reachable.
