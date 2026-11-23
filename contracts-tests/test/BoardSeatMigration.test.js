@@ -82,7 +82,7 @@ describe("ValidatorsBoard - a board member migrates its seat (lost owner key)", 
     expect(await board.hasBoardAuthority(old.address)).to.equal(true);
     expect(await board.hasBoardAuthority(heir.address)).to.equal(false);
 
-    await expect(migrate(f, old, heir)).to.emit(board, "BoardSeatMigrated").withArgs(old.address, heir.address, true, 0, 0);
+    await expect(migrate(f, old, heir)).to.emit(board, "BoardSeatMigrated").withArgs(old.address, heir.address, true, 0, 0, 0);
 
     expect(await board.hasBoardAuthority(heir.address)).to.equal(true);
     expect(await board.hasBoardAuthority(old.address)).to.equal(false);
@@ -148,13 +148,13 @@ describe("ValidatorsBoard - a non-member migrates, a seat is SOLD", () => {
     await enterActive(f, payer);
     const before = await members(f);
     const version = await board.boardVersion();
-    await expect(migrate(f, payer, stranger)).to.emit(board, "BoardSeatMigrated").withArgs(payer.address, stranger.address, false, 0, 0);
+    await expect(migrate(f, payer, stranger)).to.emit(board, "BoardSeatMigrated").withArgs(payer.address, stranger.address, false, 0, 0, 0);
     expect(await members(f)).to.deep.equal(before);
     expect(await board.boardVersion()).to.equal(version);
     expect(await board.pendingVacancies()).to.equal(0);
     expect(await board.isBoardMember(stranger.address)).to.equal(false);
     expect(await board.hasBoardAuthority(stranger.address)).to.equal(false);
-    expect(await board.boardVoterKey(stranger.address)).to.equal(stranger.address); // no chain is recorded for a non-member
+    expect(await board.boardVoterKey(stranger.address)).to.equal(payer.address); // the chain is recorded on EVERY migration, seat or not
   });
 
   it("REGRESSION - a seat SALE of a board member still ends its authority: the buyer takes no board seat, a vacancy opens", async () => {
@@ -186,14 +186,14 @@ describe("ValidatorsBoard - the hook is Registry-only and REQUIRED", () => {
     const f = await loadFixture(fixture);
     const { board, founders, heir, stranger, verifier } = f;
     const msg = "ValidatorsBoard: caller is not the validators registry";
-    await expect(board.connect(stranger).onSeatMigrated(founders[0].address, heir.address)).to.be.revertedWith(msg);
-    await expect(board.connect(founders[0]).onSeatMigrated(founders[0].address, heir.address)).to.be.revertedWith(msg); // a board member
-    await expect(board.connect(verifier).onSeatMigrated(founders[0].address, heir.address)).to.be.revertedWith(msg);
+    await expect(board.connect(stranger).onSeatMigrated(founders[0].address, heir.address, true)).to.be.revertedWith(msg);
+    await expect(board.connect(founders[0]).onSeatMigrated(founders[0].address, heir.address, true)).to.be.revertedWith(msg); // a board member
+    await expect(board.connect(verifier).onSeatMigrated(founders[0].address, heir.address, true)).to.be.revertedWith(msg);
     await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATORS_REGISTRY, "0x56BC75E2D63100000"]);
     const asReg = await ethers.getImpersonatedSigner(ADDR.VALIDATORS_REGISTRY);
-    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, ZERO)).to.be.revertedWith("ValidatorsBoard: bad migration addresses");
-    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, founders[0].address)).to.be.revertedWith("ValidatorsBoard: bad migration addresses");
-    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, founders[1].address)).to.be.revertedWith("ValidatorsBoard: new owner already holds a seat");
+    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, ZERO, true)).to.be.revertedWith("ValidatorsBoard: bad migration addresses");
+    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, founders[0].address, true)).to.be.revertedWith("ValidatorsBoard: bad migration addresses");
+    await expect(board.connect(asReg).onSeatMigrated(founders[0].address, founders[1].address, true)).to.be.revertedWith("ValidatorsBoard: new owner already holds a seat");
     expect(await board.getBoardSize()).to.equal(5);
   });
 
@@ -334,7 +334,7 @@ describe("ValidatorsBoard - election votes follow the person", () => {
     expect(await board.voteCount(payer.address)).to.equal(3);
     expect(await board.voteCount(s0.address)).to.equal(1);
 
-    await expect(migrate(f, payer, stranger)).to.emit(board, "BoardSeatMigrated").withArgs(payer.address, stranger.address, false, 2, 2);
+    await expect(migrate(f, payer, stranger)).to.emit(board, "BoardSeatMigrated").withArgs(payer.address, stranger.address, false, 2, 2, 0);
 
     expect(await board.voteCount(stranger.address)).to.equal(3);
     expect(await board.voteCount(payer.address)).to.equal(0);
@@ -394,5 +394,180 @@ describe("ValidatorsBoard - election votes follow the person", () => {
     expect(await board.hasBoardAuthority(heir.address)).to.equal(true);
     expect(await board.hasBoardAuthority(old.address)).to.equal(false);
     expect(await board.seatMembershipEpoch(heir.address)).to.equal(0);
+  });
+});
+
+// ------------------------------------------------------------------------------------------------------------------------------
+// Review fixes: (1) an ended seat is not revived, (2) the vote key is recorded on EVERY migration (recovery-case votes),
+// (3) the work of a migration is bounded: dead voters' entries are dropped, and anyone can purge them beforehand.
+// ------------------------------------------------------------------------------------------------------------------------------
+const removeInRecovery = async (f, who) => f.reg.connect(f.verifier).recordRecoveryRemoval(who.address, await now(), HASH);
+
+describe("ValidatorsBoard - a seat that had already ended is NOT revived by a migration", () => {
+  it("recovery removal cancelled (seat void, not yet cleared): the new address gets no seat, syncBoard clears the old one", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, board, founders, heir } = f;
+    const A = founders[2];
+    await removeInRecovery(f, A); // membershipEpoch++ : the seat is void
+    await reg.connect(A).objectRecoveryRemoval();
+    await increaseTime(8 * DAY); // no decision in 7 days
+    await reg.expireRecoveryRemoval(A.address); // cancelled: back to SelfSuspended, the epoch is NOT restored
+    expect((await reg.validators(A.address)).status).to.equal(ST.SelfSuspended);
+    expect(await board.isBoardMember(A.address)).to.equal(true); // the raw flag is still there
+    expect(await board.hasBoardAuthority(A.address)).to.equal(false);
+    expect(await board.hasValidSeat(A.address)).to.equal(false);
+    expect(await board.hasValidSeat(founders[1].address)).to.equal(true);
+    expect(await board.hasValidSeat(f.stranger.address)).to.equal(false);
+
+    await expect(migrate(f, A, heir)).to.emit(board, "BoardSeatMigrated").withArgs(A.address, heir.address, false, 0, 0, 0);
+
+    expect(await board.isBoardMember(heir.address)).to.equal(false);
+    expect(await board.hasBoardAuthority(heir.address)).to.equal(false);
+    expect(await board.isBoardMember(A.address)).to.equal(true); // left for syncBoard
+    await reg.connect(f.verifier).recordResume(heir.address, HASH); // heir is Active again, still no seat
+    expect(await board.hasBoardAuthority(heir.address)).to.equal(false);
+    const version = await board.boardVersion();
+    await board.syncBoard();
+    expect(await board.isBoardMember(A.address)).to.equal(false);
+    expect(await board.getBoardSize()).to.equal(4);
+    expect(await board.pendingVacancies()).to.equal(1);
+    expect(await board.boardVersion()).to.equal(version + 1n);
+    expect(await board.seatMembershipEpoch(heir.address)).to.equal(0);
+  });
+});
+
+describe("ValidatorsBoard - the vote key is recorded on EVERY migration (recovery-case votes)", () => {
+  it("A votes on a removal case, loses its seat, is migrated WITHOUT a seat to B, B is seated again later and cannot vote on the case a second time", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, board, verifier, founders, heir, payer } = f;
+    const [s0, s1, , s3] = founders;
+    const A = founders[2];
+    await enterActive(f, payer);
+    await verifyAll(f, s0);
+    await board.connect(s0).voteFor(A.address); // a vote for A: it will follow the person and seat it again
+
+    // case X: the paying validator is removed in a recovery and objects; A (a board member) votes on it
+    await removeInRecovery(f, payer);
+    await reg.connect(payer).objectRecoveryRemoval();
+    await board.connect(A).voteRecoveryRemoval(payer.address, false);
+    const recordedAt = (await reg.recoveryCaseInfo(payer.address)).recordedAt;
+    expect((await board.boardRecoveryTallies(payer.address, recordedAt)).cancel).to.equal(1);
+
+    // A itself is removed (its seat is void), the board clears the seat, then the board cancels A's removal
+    await removeInRecovery(f, A);
+    await board.syncBoard();
+    expect(await board.isBoardMember(A.address)).to.equal(false);
+    expect(await board.getBoardSize()).to.equal(4);
+    await reg.connect(A).objectRecoveryRemoval();
+    for (const x of [s0, s1, s3]) await board.connect(x).voteRecoveryRemoval(A.address, false);
+    expect((await reg.validators(A.address)).status).to.equal(ST.SelfSuspended);
+
+    // A's key is lost: migrated to B (heir) with NO seat; the key is recorded anyway
+    await expect(migrate(f, A, heir)).to.emit(board, "BoardSeatMigrated").withArgs(A.address, heir.address, false, 0, 1, 0);
+    expect(await board.boardVoterKey(heir.address)).to.equal(A.address);
+    await reg.connect(verifier).recordResume(heir.address, HASH);
+    expect(await board.voteCount(heir.address)).to.equal(1); // s0's vote moved to B
+    await board.fillVacancies(); // B is seated again, by votes
+    expect(await board.isBoardMember(heir.address)).to.equal(true);
+    expect(await board.hasBoardAuthority(heir.address)).to.equal(true);
+    // the person already voted on case X as A: B cannot vote again
+    await expect(board.connect(heir).voteRecoveryRemoval(payer.address, false)).to.be.revertedWith("ValidatorsBoard: already voted");
+    expect((await board.boardRecoveryTallies(payer.address, recordedAt)).cancel).to.equal(1);
+  });
+
+  it("a seated member migrated twice (a -> b -> c) stays blocked on a case the first address voted on", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, board, founders, heir, heir2, payer } = f;
+    const A = founders[2];
+    await enterActive(f, payer);
+    await removeInRecovery(f, payer);
+    await reg.connect(payer).objectRecoveryRemoval();
+    await board.connect(A).voteRecoveryRemoval(payer.address, false);
+    await migrate(f, A, heir);
+    await expect(board.connect(heir).voteRecoveryRemoval(payer.address, false)).to.be.revertedWith("ValidatorsBoard: already voted");
+    await migrate(f, heir, heir2);
+    expect(await board.boardVoterKey(heir2.address)).to.equal(A.address);
+    await expect(board.connect(heir2).voteRecoveryRemoval(payer.address, false)).to.be.revertedWith("ValidatorsBoard: already voted");
+  });
+});
+
+describe("ValidatorsBoard - the work of a migration is bounded: dead voters are dropped, anyone can purge them", () => {
+  const sell = async (f, seller, buyer) => {
+    const seatId = await f.nft.seatOf(seller.address);
+    await verifyAll(f, buyer);
+    await f.reg.connect(buyer).acceptSeatAgreement(seatId, AGR);
+    await f.nft.connect(seller).transferFrom(seller.address, buyer.address, seatId);
+  };
+  /// The candidate is founders[2]. `liveIdx` founders keep their seat and vote for it; `deadIdx` founders vote for it and then SELL their seat
+  /// (their address is permanently exited from then on, its entry stays in the candidate's voter list).
+  async function setup(f, liveIdx, deadIdx) {
+    const { board, founders, S } = f;
+    for (const i of [...liveIdx, ...deadIdx]) {
+      await verifyAll(f, founders[i]);
+      await board.connect(founders[i]).voteFor(founders[2].address);
+    }
+    let b = 15;
+    for (const i of deadIdx) await sell(f, founders[i], S[b++]);
+  }
+
+  it("a migration DROPS the entries of dead voters instead of moving them; live ones move; counters stay right", async () => {
+    const f = await loadFixture(fixture);
+    const { board, founders, heir } = f;
+    await setup(f, [4], [0, 1, 3]);
+    expect((await board.getVotersFor(founders[2].address)).length).to.equal(4);
+    expect(await board.voteCount(founders[2].address)).to.equal(1); // only the live voter counts
+    await expect(migrate(f, founders[2], heir)).to.emit(board, "BoardSeatMigrated").withArgs(founders[2].address, heir.address, true, 0, 1, 3);
+    expect((await board.getVotersFor(heir.address)).length).to.equal(1);
+    expect(await board.voteCount(heir.address)).to.equal(1);
+    expect((await board.getVotersFor(founders[2].address)).length).to.equal(0);
+    expect(await board.hasVotedFor(founders[4].address, heir.address)).to.equal(true);
+    expect(await board.hasVotedFor(founders[0].address, founders[2].address)).to.equal(false);
+    expect(await board.hasVotedFor(founders[0].address, heir.address)).to.equal(false);
+  });
+
+  it("clearDeadVotes: anyone can purge the votes of permanently exited voters beforehand; live voters and voters removed in a recovery are skipped", async () => {
+    const f = await loadFixture(fixture);
+    const { board, founders, stranger } = f;
+    await setup(f, [4], [0, 1, 3]);
+    const A = founders[2].address;
+    // S4 is removed in a recovery: not dead (that case can be cancelled), so it is skipped like a live voter
+    await removeInRecovery(f, founders[4]);
+    expect(await board.votesCounted(founders[4].address)).to.equal(false);
+    const dead = [founders[0].address, founders[1].address, founders[3].address];
+    const r = await (await board.connect(stranger).clearDeadVotes([...dead, founders[4].address, founders[2].address, stranger.address])).wait();
+    console.log("      clearDeadVotes gas for 3 dead voters (1 vote each) + 3 skipped:", r.gasUsed.toString());
+    for (const d of dead) {
+      expect((await board.getVotesOf(d)).length).to.equal(0);
+      expect(await board.hasVotedFor(d, A)).to.equal(false);
+    }
+    expect(await board.getVotersFor(A)).to.deep.equal([founders[4].address]);
+    expect(await board.hasVotedFor(founders[4].address, A)).to.equal(true);
+    // idempotent
+    await board.connect(stranger).clearDeadVotes(dead);
+    expect((await board.getVotersFor(A)).length).to.equal(1);
+  });
+
+  it("gas per live entry moved, per dead entry dropped, per dead entry purged; the largest voter list that still fits in a 45,000,000 block", async () => {
+    // slope between otherwise identical migrations: 1 live voter vs 4 live voters, and 1 live + 3 dead
+    const gas = async (liveIdx, deadIdx) => {
+      const f = await loadFixture(fixture);
+      await setup(f, liveIdx, deadIdx);
+      return (await (await migrate(f, f.founders[2], f.heir)).wait()).gasUsed;
+    };
+    const g1 = await gas([4], []);
+    const g4 = await gas([4, 0, 1, 3], []);
+    const gd = await gas([4], [0, 1, 3]);
+    const perLive = (g4 - g1) / 3n;
+    const perDead = (gd - g1) / 3n;
+    const base = g1 - perLive;
+    console.log("      migrateSeat: base " + base + ", per live entry moved " + perLive + ", per dead entry dropped " + perDead);
+    console.log("      largest list that fits in 45,000,000 gas: ~" + (45_000_000n - base) / perLive + " live entries, ~" + (45_000_000n - base) / perDead + " dead entries");
+    const f = await loadFixture(fixture);
+    await setup(f, [4], [0, 1, 3]);
+    const dead = [0, 1, 3].map((i) => f.founders[i].address);
+    const r1 = await (await f.board.clearDeadVotes([dead[0]])).wait();
+    const r3 = await (await f.board.clearDeadVotes([dead[1], dead[2]])).wait();
+    console.log("      clearDeadVotes: one voter " + r1.gasUsed + ", two voters " + r3.gasUsed + " (per purged entry ~" + (r3.gasUsed - r1.gasUsed) + ")");
+    expect(perDead).to.be.lt(perLive);
   });
 });

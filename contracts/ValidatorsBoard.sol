@@ -10,6 +10,7 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
+    function permanentlyExited(address who) external view returns (bool); // true after an exit, a sale or a migration of the address's seat, and while it is RemovedInRecovery (that case can be cancelled)
 
     // v2.5: removal in network recovery
     function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline);
@@ -86,19 +87,24 @@ interface IValidatorsTreasury {
 ///         SEAT MIGRATION (lost owner key): when the Registry moves a whole seat to a new address of the SAME person
 ///         (`ValidatorsRegistry.migrateSeat`), it calls `onSeatMigrated(old, new)`. The call is REQUIRED: if it reverts, the
 ///         migration reverts. Only the Registry may call it.
-///           - If the old address holds a board seat, the new address takes it IN PLACE for the rest of the board's month: same
+///           - If the old address holds a VALID board seat (one that was still valid just before the migration), the new address takes it IN PLACE for the rest of the board's month: same
 ///             position in the member list, no vacancy, no `boardVersion` change (the set of PEOPLE did not change, so open
 ///             board actions stay valid), and the seat is valid for the new address's own membership epoch. The old address loses
 ///             the seat. If the month has already ended the replacement is still made: it grants nothing (no authority until
 ///             `refreshBoard`), and it keeps the stored list pointing at the person's live address so that the next refresh
-///             sees the person as continuing.
+///             sees the person as continuing. A seat that had ALREADY ended before the migration (for example after a recovery removal
+///             that was later cancelled: the seat stays void until `syncBoard`) is NOT revived: the new address gets no seat, and
+///             `syncBoard` clears the old one as usual.
 ///           - The election votes the old address cast and received move to the new address (for every migrating validator, board
-///             member or not), so neither the person's approvals nor the approvals given to the person vanish.
+///             member or not), so neither the person's approvals nor the approvals given to the person vanish. Votes recorded for
+///             the old address by voters that can never count again (permanently exited, sold, or withdrawn: see `clearDeadVotes`) are
+///             dropped instead of moved, which bounds the work.
 ///           - No double counting: a person's vote on a board action, on a removal case here, and on the board chambers of
 ///             BlockRewardDistributor (share and rate changes) is recorded under `boardVoterKey(address)`, the FIRST address of
 ///             the person's migration chain. The new address therefore cannot vote on a proposal the old address already voted
 ///             on, and it may still vote on one the old address had not voted on (one person, one vote, and the person does not
-///             lose its vote on open proposals).
+///             lose its vote on open proposals). The key is recorded on EVERY migration, with or without a seat, so the rule also holds
+///             for a person that is seated again later at the new address (for example by `fillVacancies`).
 ///           - A seat SALE (NFT transfer) is NOT a migration: the buyer is a different person. The seller's board authority ends
 ///             as before and the buyer takes no board seat.
 ///
@@ -530,10 +536,15 @@ contract ValidatorsBoard {
         return _boardIsCurrent() && _canAct(who);
     }
 
-    /// @notice The key under which `who` is recorded as having voted on a board action, a removal case or a BlockRewardDistributor board vote: `who` itself, or, for the new address of a migrated board seat, the FIRST address of that person's migration chain. A person never votes twice across a migration.
+    /// @notice The key under which `who` is recorded as having voted on a board action, a removal case or a BlockRewardDistributor board vote: `who` itself, or, for the new address of a migrated seat, the FIRST address of that person's migration chain. A person never votes twice across a migration.
     function boardVoterKey(address who) public view returns (address) {
         address root = voterRoot[who];
         return root == address(0) ? who : root;
+    }
+
+    /// @notice True while `who`'s board seat is still valid (it holds a seat, has not exited, and its status is not None, Exiting or RemovedInRecovery), whatever the month. The Registry reads it just before it moves a seat, so a seat that had already ended is not handed to the new address.
+    function hasValidSeat(address who) external view returns (bool) {
+        return _hasAuthority(who);
     }
 
     function _syncNeeded() private view returns (bool) {
@@ -632,15 +643,15 @@ contract ValidatorsBoard {
     // Seat migration after a lost owner key
     // ------------------------------------------------------------------
 
-    /// @notice A seat's board state moved to a new address of the same person (`heldSeat`: the old address held a board seat).
-    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved);
+    /// @notice A seat's board state moved to a new address of the same person (`heldSeat`: the old address held a still-valid board seat). `votesReceivedDropped` counts received votes of voters that can never count again, which are dropped instead of moved.
+    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved, uint256 votesReceivedDropped);
 
-    /// @notice Called by ValidatorsRegistry.migrateSeat, and only by it, after the seat record moved from `oldOwner` to `newOwner`, a new address of the SAME person. REQUIRED call: if it reverts the whole migration reverts. (1) If `oldOwner` holds a board seat, `newOwner` takes it in place for the rest of the month (see the contract header), whether or not the month is still current. (2) The election votes `oldOwner` cast and received move to `newOwner`. Never called for a seat sale. The Registry only migrates to an address that never was a validator, so `newOwner` holds no seat and no votes of its own.
-    function onSeatMigrated(address oldOwner, address newOwner) external {
+    /// @notice Called by ValidatorsRegistry.migrateSeat, and only by it, after the seat record moved from `oldOwner` to `newOwner`, a new address of the SAME person. REQUIRED call: if it reverts the whole migration reverts. `seatWasValid` is `hasValidSeat(oldOwner)` read by the Registry BEFORE it moved the record (the move bumps the old address's membership epoch). (1) If `seatWasValid`, `newOwner` takes the seat in place for the rest of the month (see the contract header), whether or not the month is still current; a seat that had already ended is left for `syncBoard` to clear. (2) The election votes `oldOwner` cast and received move to `newOwner` (received votes of dead voters are dropped). (3) `newOwner` inherits `oldOwner`'s vote key. Never called for a seat sale. The Registry only migrates to an address that never was a validator, so `newOwner` holds no seat and no votes of its own.
+    function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external {
         require(msg.sender == address(REGISTRY), "ValidatorsBoard: caller is not the validators registry");
         require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsBoard: bad migration addresses");
 
-        bool held = isBoardMember[oldOwner];
+        bool held = seatWasValid && isBoardMember[oldOwner];
         if (held) {
             require(!isBoardMember[newOwner], "ValidatorsBoard: new owner already holds a seat");
             for (uint256 i = 0; i < boardMembers.length; i++) {
@@ -653,15 +664,15 @@ contract ValidatorsBoard {
             isBoardMember[newOwner] = true;
             delete seatMembershipEpoch[oldOwner];
             seatMembershipEpoch[newOwner] = REGISTRY.membershipEpoch(newOwner);
-            voterRoot[newOwner] = boardVoterKey(oldOwner); // later votes of `newOwner` map to the same key as `oldOwner`'s
         }
+        voterRoot[newOwner] = boardVoterKey(oldOwner); // on EVERY migration: later votes of `newOwner` map to the same key as `oldOwner`'s
 
-        (uint256 given, uint256 received) = _moveVotes(oldOwner, newOwner);
-        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received);
+        (uint256 given, uint256 received, uint256 dropped) = _moveVotes(oldOwner, newOwner);
+        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received, dropped);
     }
 
-    /// @dev Moves the election votes of `oldOwner` to `newOwner`: first the votes it cast (a self-vote becomes a self-vote of the new address), then the votes it received. Counters follow through `_removeVote`/`_addVote`. Loop size: at most MAX_VOTES_PER_VOTER plus the number of voters currently recorded for `oldOwner`.
-    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received) {
+    /// @dev Moves the election votes of `oldOwner` to `newOwner`: first the votes it cast (a self-vote becomes a self-vote of the new address), then the votes it received; a received vote of a voter that can never count again (`_isDeadVoter`) is removed and not re-added. Counters follow through `_removeVote`/`_addVote`. Loop size: at most MAX_VOTES_PER_VOTER plus the number of voters recorded for `oldOwner`; `clearDeadVotes` lets anyone shrink that list beforehand.
+    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received, uint256 dropped) {
         _syncVoter(oldOwner); // make the counters consistent first: the Registry's own best-effort notification may have failed
         _syncVoter(newOwner);
 
@@ -674,10 +685,34 @@ contract ValidatorsBoard {
         }
 
         address[] memory voters = candidateVoters[oldOwner];
-        received = voters.length;
-        for (uint256 i = 0; i < received; i++) {
+        for (uint256 i = 0; i < voters.length; i++) {
             _removeVote(voters[i], oldOwner);
-            _addVote(voters[i], newOwner);
+            if (_isDeadVoter(voters[i])) {
+                dropped++; // a dead voter's entry is dropped, not moved
+            } else {
+                _addVote(voters[i], newOwner);
+                received++;
+            }
+        }
+    }
+
+    /// @dev A voter that can never count again: it left for good (permanentlyExited: exit, sale, migration) and is not merely RemovedInRecovery, a case that can still be cancelled. Its votes are never counted again, so keeping them only lengthens lists.
+    function _isDeadVoter(address voter) private view returns (bool) {
+        if (!REGISTRY.permanentlyExited(voter)) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(voter);
+        return status != 5; // 5 = RemovedInRecovery
+    }
+
+    /// @notice Permissionless clean-up: removes every vote cast by each listed voter that can never count again (permanently exited, sold, withdrawn or migrated away). Live voters, and voters removed in a recovery (a case that can still be cancelled), are skipped. Keeps the vote lists of a candidate short, so a later seat migration of that candidate stays cheap.
+    function clearDeadVotes(address[] calldata voters) external {
+        for (uint256 i = 0; i < voters.length; i++) {
+            address v = voters[i];
+            if (!_isDeadVoter(v)) continue; // skipped: it can still count
+            address[] memory given = voterCandidates[v];
+            for (uint256 j = 0; j < given.length; j++) {
+                _removeVote(v, given[j]);
+            }
+            if (given.length > 0) emit StaleVotesCleared(v, given.length, 0);
         }
     }
 

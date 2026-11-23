@@ -10,7 +10,8 @@ interface IBlockRewardDistributor {
 
 interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
-    function onSeatMigrated(address oldOwner, address newOwner) external; // مهاجرت صندلی: فراخوان الزامی (شکستش مهاجرت را revert می‌کند)؛ کرسی هیأت و رأی‌های انتخاباتی همراه شخص به آدرس تازه می‌روند
+    function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external; // مهاجرت صندلی: فراخوان الزامی (شکستش مهاجرت را revert می‌کند)؛ کرسی هیأت و رأی‌های انتخاباتی همراه شخص به آدرس تازه می‌روند
+    function hasValidSeat(address who) external view returns (bool); // درست پیش از جابه‌جایی رکورد خوانده می‌شود (جابه‌جایی epoch عضویت آدرس قدیمی را بالا می‌برد): کرسیِ از قبل پایان‌یافته منتقل نمی‌شود
 }
 
 interface IValidatorSeatNFT {
@@ -1828,7 +1829,7 @@ contract ValidatorsRegistry {
     ///         دائم است: شخص همان است، پس آدرس تازه «خروج‌کرده» شمرده نمی‌شود، ولی آدرس قدیم دائماً خروج‌کرده می‌شود.
     ///
     ///         کرسی هیأت همراه شخص می‌رود (ValidatorsBoard.onSeatMigrated، فراخوان **الزامی**: اگر revert کند مهاجرت revert می‌شود): اگر آدرس
-    ///         قدیم در هیأت ولیدیتورها کرسی دارد، آدرس تازه همان کرسی را «در همان جا» تا پایان ماهِ هیأت می‌گیرد (همان جایگاه، بدون جای
+    ///         قدیم در هیأت ولیدیتورها کرسیِ «معتبر» دارد (کرسی‌ای که پیش‌تر پایان نیافته، مثلاً با خروج یا حذف در بازیابی)، آدرس تازه همان کرسی را «در همان جا» تا پایان ماهِ هیأت می‌گیرد (همان جایگاه، بدون جای
     ///         خالی، بدون تغییر نسخهٔ هیأت) و رأی‌های انتخاباتی که آدرس قدیم داده و گرفته با آن می‌روند. یک شخص دوبار شمرده نمی‌شود: رأی او
     ///         به یک اقدام هیأت یا یک اتاق هیأتیِ Distributor روی مجموع آدرس قدیم و تازه فقط یک بار ثبت می‌شود، ولی رأی ولیدیتوریِ او از
     ///         لحظهٔ مهاجرت از نو شروع می‌شود (رأی‌دهندهٔ جدید از همین لحظه). **فروش** صندلی هیچ‌کدام از این‌ها را انجام نمی‌دهد: خریدار
@@ -1859,9 +1860,10 @@ contract ValidatorsRegistry {
         require(validators[newOwner].status == Status.None && !permanentlyExited[newOwner] && !everActivated[newOwner], "ValidatorsRegistry: new owner was a validator before");
         require(ownerOfOperator[newOwner] == address(0) && operatorOf[newOwner] == address(0), "ValidatorsRegistry: new owner is an operator key");
 
+        bool seatWasValid = IValidatorsBoardSync(BOARD).hasValidSeat(oldOwner); // پیش از جابه‌جایی: جابه‌جایی epoch قدیم را بالا می‌برد و هر کرسی را باطل نشان می‌دهد
         uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).reassignSeat(oldOwner, newOwner);
         _moveSeatRecord(oldOwner, newOwner, st, true);
-        IValidatorsBoardSync(BOARD).onSeatMigrated(oldOwner, newOwner); // الزامی (بر خلاف _notifyBoard بهترین‌تلاش): کرسی هیأت و رأی‌های انتخاباتی آدرس قدیم به آدرس تازه می‌رود، وگرنه هیچ‌چیز جابه‌جا نمی‌شود
+        IValidatorsBoardSync(BOARD).onSeatMigrated(oldOwner, newOwner, seatWasValid); // الزامی (بر خلاف _notifyBoard بهترین‌تلاش): کرسی هیأت و رأی‌های انتخاباتی آدرس قدیم به آدرس تازه می‌رود، وگرنه هیچ‌چیز جابه‌جا نمی‌شود
         DISTRIBUTOR.migrateClaimable(oldOwner, newOwner);
 
         emit SeatMigrated(seatId, oldOwner, newOwner, st);

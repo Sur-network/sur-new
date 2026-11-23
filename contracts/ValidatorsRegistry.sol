@@ -10,7 +10,8 @@ interface IBlockRewardDistributor {
 
 interface IValidatorsBoardSync {
     function syncVoter(address voter) external;
-    function onSeatMigrated(address oldOwner, address newOwner) external; // seat migration: REQUIRED call (a failure reverts the migration); the board seat and election votes follow the person to the new address
+    function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external; // seat migration: REQUIRED call (a failure reverts the migration); the board seat and election votes follow the person to the new address
+    function hasValidSeat(address who) external view returns (bool); // read just BEFORE the record moves (the move bumps the old address's membership epoch): a seat that had already ended is not handed on
 }
 
 interface IValidatorSeatNFT {
@@ -1855,7 +1856,7 @@ contract ValidatorsRegistry {
     ///         while the old address becomes permanently exited.
     ///
     ///         BOARD SEAT FOLLOWS THE PERSON (ValidatorsBoard.onSeatMigrated, a REQUIRED call: if it reverts, the migration reverts): if the
-    ///         old address holds a seat on the validators' board, the new address takes that seat IN PLACE for the rest of the board's month
+    ///         old address holds a VALID seat (one that has not already ended, e.g. through an exit or a recovery removal) on the validators' board, the new address takes that seat IN PLACE for the rest of the board's month
     ///         (same position, no vacancy, no board-version change), and the election votes the old address cast and received move with it.
     ///         A person never counts twice: its vote on a board action or a board chamber of the Distributor is recorded once across the old
     ///         and the new address, while its validator vote starts anew from the migration (a new voter from now). A seat SALE does none of
@@ -1886,9 +1887,10 @@ contract ValidatorsRegistry {
         require(validators[newOwner].status == Status.None && !permanentlyExited[newOwner] && !everActivated[newOwner], "ValidatorsRegistry: new owner was a validator before");
         require(ownerOfOperator[newOwner] == address(0) && operatorOf[newOwner] == address(0), "ValidatorsRegistry: new owner is an operator key");
 
+        bool seatWasValid = IValidatorsBoardSync(BOARD).hasValidSeat(oldOwner); // BEFORE the move: it bumps the old epoch, which would make every seat look void
         uint256 seatId = IValidatorSeatNFT(SurAddresses.VALIDATOR_SEAT_NFT).reassignSeat(oldOwner, newOwner);
         _moveSeatRecord(oldOwner, newOwner, st, true);
-        IValidatorsBoardSync(BOARD).onSeatMigrated(oldOwner, newOwner); // REQUIRED (unlike the best-effort _notifyBoard): the board seat and election votes of the old address go to the new one, or nothing moves
+        IValidatorsBoardSync(BOARD).onSeatMigrated(oldOwner, newOwner, seatWasValid); // REQUIRED (unlike the best-effort _notifyBoard): the board seat and election votes of the old address go to the new one, or nothing moves
         DISTRIBUTOR.migrateClaimable(oldOwner, newOwner);
 
         emit SeatMigrated(seatId, oldOwner, newOwner, st);

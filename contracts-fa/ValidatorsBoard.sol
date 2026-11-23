@@ -10,6 +10,7 @@ interface IValidatorsRegistry {
     function setMembershipFeeBps(uint256 newValue) external;
     function setVerifier(address newVerifier) external;
     function recoveryPeriod() external view returns (uint256);
+    function permanentlyExited(address who) external view returns (bool); // پس از خروج، فروش یا مهاجرتِ صندلیِ آدرس درست است، و تا وقتی RemovedInRecovery است (آن پرونده قابل لغو است)
 
     // v2.5: حذف در جریان بازیابی شبکه
     function recoveryCaseInfo(address validator) external view returns (uint8 state, uint256 recordedAt, uint256 resolutionDeadline);
@@ -78,17 +79,23 @@ interface IValidatorsTreasury {
 ///         مهاجرت صندلی (گم‌شدن کلید مالک): وقتی Registry کل یک صندلی را به آدرس تازهٔ **همان شخص** می‌برد
 ///         (`ValidatorsRegistry.migrateSeat`)، `onSeatMigrated(old, new)` را صدا می‌زند. این فراخوان **الزامی** است: اگر
 ///         revert کند مهاجرت هم revert می‌شود. فقط Registry می‌تواند آن را صدا بزند.
-///           - اگر آدرس قدیمی کرسی هیأت داشته باشد، آدرس تازه آن را **در همان جا** تا پایان ماهِ هیأت می‌گیرد: همان جایگاه در
+///           - اگر آدرس قدیمی کرسیِ **معتبر** هیأت داشته باشد (کرسی‌ای که درست پیش از مهاجرت هنوز معتبر بود)، آدرس تازه آن را **در همان جا** تا پایان ماهِ هیأت می‌گیرد: همان جایگاه در
 ///             فهرست اعضا، بدون جای خالی، بدون تغییر `boardVersion` (مجموعهٔ **اشخاص** عوض نشده، پس اقدام‌های باز هیأت معتبر
 ///             می‌مانند) و کرسی برای epoch عضویت خودِ آدرس تازه معتبر است. آدرس قدیمی کرسی را از دست می‌دهد. اگر ماه به
 ///             پایان رسیده باشد جایگزینی باز هم انجام می‌شود: چیزی نمی‌دهد (تا `refreshBoard` اختیاری نیست) و فهرست ذخیره‌شده را
-///             به آدرس زندهٔ شخص نگه می‌دارد تا refresh بعدی شخص را ادامه‌دهنده ببیند.
+///             به آدرس زندهٔ شخص نگه می‌دارد تا refresh بعدی شخص را ادامه‌دهنده ببیند. کرسی‌ای که پیش از مهاجرت **پایان یافته بود** (مثلاً
+///             پس از حذفِ بازیابیِ لغوشده: کرسی تا `syncBoard` باطل می‌ماند) زنده **نمی‌شود**: آدرس تازه کرسی نمی‌گیرد و
+///             `syncBoard` مثل همیشه کرسی قدیمی را پاک می‌کند.
 ///           - رأی‌های انتخاباتی که آدرس قدیمی داده و گرفته به آدرس تازه می‌روند (برای هر ولیدیتور مهاجرت‌کننده، عضو هیأت باشد
-///             یا نه)، پس نه رأی‌های خودِ شخص گم می‌شود و نه رأی‌هایی که به او داده شده.
+///             یا نه)، پس نه رأی‌های خودِ شخص گم می‌شود و نه رأی‌هایی که به او داده شده. رأی‌هایی که برای آدرس قدیمی ثبت شده ولی
+///             رأی‌دهنده‌اش دیگر هرگز شمرده نمی‌شود (برای همیشه رفته: خروج، فروش یا برداشت؛ `clearDeadVotes` را ببینید) منتقل
+///             نمی‌شود و حذف می‌شود، که حجم کار را کراندار می‌کند.
 ///           - شمارش دوباره نیست: رأی یک شخص به اقدام هیأت، به پروندهٔ حذف در همین قرارداد و به اتاق‌های هیأت در
 ///             BlockRewardDistributor (تغییر سهم و نرخ) با `boardVoterKey(address)` ثبت می‌شود، یعنی **نخستین** آدرس زنجیرهٔ
 ///             مهاجرت شخص. پس آدرس تازه نمی‌تواند به پیشنهادی که آدرس قدیمی به آن رأی داده دوباره رأی بدهد، و به پیشنهادی که
-///             آدرس قدیمی رأی نداده هنوز می‌تواند (یک شخص یک رأی؛ شخص رأیش را روی پیشنهادهای باز از دست نمی‌دهد).
+///             آدرس قدیمی رأی نداده هنوز می‌تواند (یک شخص یک رأی؛ شخص رأیش را روی پیشنهادهای باز از دست نمی‌دهد). کلید در **هر**
+///             مهاجرت ثبت می‌شود، با کرسی یا بی‌کرسی، پس قاعده برای شخصی که بعداً دوباره روی آدرس تازه کرسی می‌گیرد (مثلاً با
+///             `fillVacancies`) هم برقرار است.
 ///           - **فروش** صندلی (انتقال NFT) مهاجرت نیست: خریدار شخص دیگری است. اختیار هیأتیِ فروشنده مثل قبل پایان می‌یابد و
 ///             خریدار کرسی هیأت نمی‌گیرد.
 ///
@@ -508,10 +515,15 @@ contract ValidatorsBoard {
         return _boardIsCurrent() && _canAct(who);
     }
 
-    /// @notice کلیدی که `who` با آن به‌عنوان رأی‌دهندهٔ یک اقدام هیأت، یک پروندهٔ حذف یا یک رأی هیأتیِ BlockRewardDistributor ثبت می‌شود: خودِ `who`، یا برای آدرس تازهٔ یک کرسی مهاجرت‌کرده، **نخستین** آدرس زنجیرهٔ مهاجرت آن شخص. یک شخص در مهاجرت دوبار رأی نمی‌دهد.
+    /// @notice کلیدی که `who` با آن به‌عنوان رأی‌دهندهٔ یک اقدام هیأت، یک پروندهٔ حذف یا یک رأی هیأتیِ BlockRewardDistributor ثبت می‌شود: خودِ `who`، یا برای آدرس تازهٔ یک صندلی مهاجرت‌کرده، **نخستین** آدرس زنجیرهٔ مهاجرت آن شخص. یک شخص در مهاجرت دوبار رأی نمی‌دهد.
     function boardVoterKey(address who) public view returns (address) {
         address root = voterRoot[who];
         return root == address(0) ? who : root;
+    }
+
+    /// @notice تا وقتی کرسی هیأتِ `who` هنوز معتبر است درست است (کرسی دارد، خروج نکرده، و وضعیتش None، Exiting یا RemovedInRecovery نیست)، در هر ماهی. Registry آن را درست پیش از جابه‌جاکردن صندلی می‌خواند، تا کرسیِ از قبل پایان‌یافته به آدرس تازه داده نشود.
+    function hasValidSeat(address who) external view returns (bool) {
+        return _hasAuthority(who);
     }
 
     function _syncNeeded() private view returns (bool) {
@@ -610,15 +622,15 @@ contract ValidatorsBoard {
     // مهاجرت صندلی پس از گم‌شدن کلید مالک
     // ------------------------------------------------------------------
 
-    /// @notice وضعیت هیأتیِ یک صندلی به آدرس تازهٔ همان شخص رفت (`heldSeat`: آدرس قدیمی کرسی هیأت داشت).
-    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved);
+    /// @notice وضعیت هیأتیِ یک صندلی به آدرس تازهٔ همان شخص رفت (`heldSeat`: آدرس قدیمی کرسیِ هنوز معتبر داشت). `votesReceivedDropped` تعداد رأی‌های گرفته‌شده از رأی‌دهندگانی است که دیگر هرگز شمرده نمی‌شوند و به‌جای انتقال حذف می‌شوند.
+    event BoardSeatMigrated(address indexed oldOwner, address indexed newOwner, bool heldSeat, uint256 votesGivenMoved, uint256 votesReceivedMoved, uint256 votesReceivedDropped);
 
-    /// @notice فقط ValidatorsRegistry.migrateSeat صدایش می‌زند، پس از آن‌که رکورد صندلی از `oldOwner` به `newOwner` (آدرس تازهٔ **همان شخص**) رفته. فراخوان الزامی: اگر revert کند کل مهاجرت revert می‌شود. (۱) اگر `oldOwner` کرسی هیأت دارد، `newOwner` آن را در همان جا تا پایان ماه می‌گیرد (سرآغاز قرارداد را ببینید)، چه ماه هنوز جاری باشد چه نه. (۲) رأی‌های انتخاباتی که `oldOwner` داده و گرفته به `newOwner` می‌روند. برای فروش صندلی هرگز صدا زده نمی‌شود. Registry فقط به آدرسی مهاجرت می‌دهد که هرگز ولیدیتور نبوده، پس `newOwner` کرسی و رأی خودی ندارد.
-    function onSeatMigrated(address oldOwner, address newOwner) external {
+    /// @notice فقط ValidatorsRegistry.migrateSeat صدایش می‌زند، پس از آن‌که رکورد صندلی از `oldOwner` به `newOwner` (آدرس تازهٔ **همان شخص**) رفته. فراخوان الزامی: اگر revert کند کل مهاجرت revert می‌شود. `seatWasValid` همان `hasValidSeat(oldOwner)` است که Registry **پیش از** جابه‌جاکردن رکورد می‌خواند (جابه‌جایی epoch عضویت آدرس قدیمی را بالا می‌برد). (۱) اگر `seatWasValid` درست باشد، `newOwner` کرسی را در همان جا تا پایان ماه می‌گیرد (سرآغاز قرارداد را ببینید)، چه ماه هنوز جاری باشد چه نه؛ کرسیِ از قبل پایان‌یافته را `syncBoard` پاک می‌کند. (۲) رأی‌های انتخاباتی که `oldOwner` داده و گرفته به `newOwner` می‌روند (رأی‌های گرفته‌شده از رأی‌دهندگانِ مرده حذف می‌شود). (۳) `newOwner` کلید رأیِ `oldOwner` را به ارث می‌برد. برای فروش صندلی هرگز صدا زده نمی‌شود. Registry فقط به آدرسی مهاجرت می‌دهد که هرگز ولیدیتور نبوده، پس `newOwner` کرسی و رأی خودی ندارد.
+    function onSeatMigrated(address oldOwner, address newOwner, bool seatWasValid) external {
         require(msg.sender == address(REGISTRY), "ValidatorsBoard: caller is not the validators registry");
         require(newOwner != address(0) && newOwner != oldOwner, "ValidatorsBoard: bad migration addresses");
 
-        bool held = isBoardMember[oldOwner];
+        bool held = seatWasValid && isBoardMember[oldOwner];
         if (held) {
             require(!isBoardMember[newOwner], "ValidatorsBoard: new owner already holds a seat");
             for (uint256 i = 0; i < boardMembers.length; i++) {
@@ -631,15 +643,15 @@ contract ValidatorsBoard {
             isBoardMember[newOwner] = true;
             delete seatMembershipEpoch[oldOwner];
             seatMembershipEpoch[newOwner] = REGISTRY.membershipEpoch(newOwner);
-            voterRoot[newOwner] = boardVoterKey(oldOwner); // رأی‌های بعدی `newOwner` به همان کلیدِ `oldOwner` می‌رسد
         }
+        voterRoot[newOwner] = boardVoterKey(oldOwner); // در **هر** مهاجرت: رأی‌های بعدی `newOwner` به همان کلیدِ `oldOwner` می‌رسد
 
-        (uint256 given, uint256 received) = _moveVotes(oldOwner, newOwner);
-        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received);
+        (uint256 given, uint256 received, uint256 dropped) = _moveVotes(oldOwner, newOwner);
+        emit BoardSeatMigrated(oldOwner, newOwner, held, given, received, dropped);
     }
 
-    /// @dev رأی‌های انتخاباتی `oldOwner` را به `newOwner` می‌برد: اول رأی‌هایی که داده (رأی به خود، رأی به خودِ آدرس تازه می‌شود)، بعد رأی‌هایی که گرفته. شمارنده‌ها از طریق `_removeVote`/`_addVote` دنبال می‌شوند. اندازهٔ حلقه: حداکثر MAX_VOTES_PER_VOTER به‌علاوهٔ تعداد رأی‌دهندگانی که اکنون برای `oldOwner` ثبت‌اند.
-    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received) {
+    /// @dev رأی‌های انتخاباتی `oldOwner` را به `newOwner` می‌برد: اول رأی‌هایی که داده (رأی به خود، رأی به خودِ آدرس تازه می‌شود)، بعد رأی‌هایی که گرفته؛ رأیِ گرفته‌شده از رأی‌دهنده‌ای که دیگر هرگز شمرده نمی‌شود (`_isDeadVoter`) حذف می‌شود و دوباره اضافه نمی‌شود. شمارنده‌ها از طریق `_removeVote`/`_addVote` دنبال می‌شوند. اندازهٔ حلقه: حداکثر MAX_VOTES_PER_VOTER به‌علاوهٔ تعداد رأی‌دهندگان ثبت‌شده برای `oldOwner`؛ `clearDeadVotes` به هر کس اجازه می‌دهد آن فهرست را از قبل کوتاه کند.
+    function _moveVotes(address oldOwner, address newOwner) private returns (uint256 given, uint256 received, uint256 dropped) {
         _syncVoter(oldOwner); // اول شمارنده‌ها را سازگار می‌کند: اعلان best-effort خودِ Registry ممکن است شکست خورده باشد
         _syncVoter(newOwner);
 
@@ -652,10 +664,34 @@ contract ValidatorsBoard {
         }
 
         address[] memory voters = candidateVoters[oldOwner];
-        received = voters.length;
-        for (uint256 i = 0; i < received; i++) {
+        for (uint256 i = 0; i < voters.length; i++) {
             _removeVote(voters[i], oldOwner);
-            _addVote(voters[i], newOwner);
+            if (_isDeadVoter(voters[i])) {
+                dropped++; // ورودیِ رأی‌دهندهٔ مرده منتقل نمی‌شود، حذف می‌شود
+            } else {
+                _addVote(voters[i], newOwner);
+                received++;
+            }
+        }
+    }
+
+    /// @dev رأی‌دهنده‌ای که دیگر هرگز شمرده نمی‌شود: برای همیشه رفته (permanentlyExited: خروج، فروش، مهاجرت) و صرفاً RemovedInRecovery نیست، که آن پرونده هنوز قابل لغو است. رأی‌هایش هرگز دوباره شمرده نمی‌شود، پس نگه‌داشتنشان فقط فهرست‌ها را بلند می‌کند.
+    function _isDeadVoter(address voter) private view returns (bool) {
+        if (!REGISTRY.permanentlyExited(voter)) return false;
+        (uint8 status, , , , , ) = REGISTRY.getValidatorInfo(voter);
+        return status != 5; // 5 = RemovedInRecovery
+    }
+
+    /// @notice پاک‌سازی بدون مجوز: همهٔ رأی‌هایی را که هر رأی‌دهندهٔ فهرست‌شده داده، اگر دیگر هرگز شمرده نمی‌شود (برای همیشه رفته: خروج، فروش، برداشت یا مهاجرت)، حذف می‌کند. رأی‌دهندگان زنده و کسانی که در بازیابی حذف شده‌اند (پروندهٔ قابل لغو) رد می‌شوند. فهرست رأی‌دهندگانِ یک نامزد را کوتاه نگه می‌دارد تا مهاجرت صندلی بعدیِ آن نامزد ارزان بماند.
+    function clearDeadVotes(address[] calldata voters) external {
+        for (uint256 i = 0; i < voters.length; i++) {
+            address v = voters[i];
+            if (!_isDeadVoter(v)) continue; // رد می‌شود: هنوز می‌تواند شمرده شود
+            address[] memory given = voterCandidates[v];
+            for (uint256 j = 0; j < given.length; j++) {
+                _removeVote(v, given[j]);
+            }
+            if (given.length > 0) emit StaleVotesCleared(v, given.length, 0);
         }
     }
 
