@@ -3,9 +3,12 @@
   [string]$Logo,          # white logo png (transparent background)
   [string]$Out,           # cover png
   [string]$TitleFont = 'Adobe Arabic',
+  [string]$MainTitleFont = 'B Titr', # font of the big title on the cover
+  [single]$MainScale = 0.78,        # size factor for the big title (B Titr is optically larger)
   [int]$PxW = 1748, [int]$PxH = 2480   # A5 at 300 dpi
 )
 $ErrorActionPreference = 'Stop'
+if(-not $MainTitleFont){ $MainTitleFont = $TitleFont }
 Add-Type -AssemblyName System.Drawing
 function RGBc($r,$g,$b){ return [int]($r + $g*256 + $b*65536) }
 $W = [single]419.53; $H = [single]595.28
@@ -53,8 +56,8 @@ try {
 
   # title block (upper area)
   [void](Txt 'سپیدنامه  ·  نسخهٔ ۲٫۵' 40 120 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
-  [void](Txt 'بلاک‌چین' 40 136 ($R-40) 86 $TitleFont 68 -1 (RGBc 255 255 255) 3 $true 0)
-  $t2 = Txt 'سور' 40 196 ($R-40) 104 $TitleFont 92 -1 (RGBc 255 255 255) 3 $true 0
+  [void](Txt 'بلاک‌چین' 40 136 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
+  $t2 = Txt 'سور' 40 196 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
   $t2.TextFrame2.TextRange.Font.Fill.TwoColorGradient(1, 1)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(1).Color.RGB = (RGBc 255 214 140)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(2).Color.RGB = (RGBc 120 220 255)

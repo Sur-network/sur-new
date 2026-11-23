@@ -1,6 +1,6 @@
 # ساخت کتابچهٔ سپیدنامه (Word)
 
-بازسازی فایل `../sur-whitepaper-booklet-NOT-FOR-PUBLICATION.docx` از متن `../sur-whitepaper.md`. نیازها: Node، و Microsoft Word و PowerPoint روی ویندوز. قلم‌های B Nazanin (متن)، Adobe Arabic (تیترها، فهرست و جلد) و IRANSansWeb(FaNum) (سرصفحه، سرستون جدول‌ها و واترمارک) باید نصب باشند.
+بازسازی فایل `../sur-whitepaper-booklet-NOT-FOR-PUBLICATION.docx` از متن `../sur-whitepaper.md`. نیازها: Node، و Microsoft Word و PowerPoint روی ویندوز. قلم‌های B Nazanin (متن)، Adobe Arabic (تیترها، فهرست و نوشته‌های کوچک جلد)، B Titr (عنوان بزرگ جلد) و IRANSansWeb(FaNum) (سرصفحه، سرستون جدول‌ها و واترمارک) باید نصب باشند.
 
 ```powershell
 node md2blocks.mjs ../sur-whitepaper.md .blocks.json
