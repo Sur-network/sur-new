@@ -33,7 +33,7 @@ try {
     if($darkAtTop){ $g.Item(1).Transparency = [single]0.15; $g.Item(2).Transparency = [single]1 }
     else          { $g.Item(1).Transparency = [single]1;    $g.Item(2).Transparency = [single]0.2 }
   }
-  Shade 0 300 $true          # keeps the title area calm and legible
+  Shade 0 340 $true          # keeps the title area calm and legible
   Shade 470 125.28 $false     # footer band
 
   function Txt($text,$l,$t,$w,$h,$font,$size,$bold,$col,$align,$rtl,$spacing){
@@ -55,15 +55,16 @@ try {
   [void](Txt 'BLOCKCHAIN' ($R-60-110) 64 110 12 'Segoe UI' 6.5 0 (RGBc 170 200 255) 3 $false 3)
 
   # title block (upper area)
-  [void](Txt 'سپیدنامه  ·  نسخهٔ ۲٫۵' 40 120 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
-  [void](Txt 'بلاک‌چین' 40 136 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
-  $t2 = Txt 'سور' 40 196 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
+  [void](Txt 'سپیدنامه  ·  نسخهٔ ۲٫۵' 40 94 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
+  [void](Txt 'بلاک‌چین' 40 110 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
+  $t2 = Txt 'سور' 40 170 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
   $t2.TextFrame2.TextRange.Font.Fill.TwoColorGradient(1, 1)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(1).Color.RGB = (RGBc 255 214 140)
   $t2.TextFrame2.TextRange.Font.Fill.GradientStops.Item(2).Color.RGB = (RGBc 120 220 255)
-  $acc = $sh.AddShape(1, [single]($R-56), [single]298, [single]56, [single]2.5); $acc.Line.Visible = 0
+  $acc = $sh.AddShape(1, [single]($R-56), [single]270, [single]56, [single]2.5); $acc.Line.Visible = 0
   $acc.Fill.ForeColor.RGB = (RGBc 255 200 110)
-  [void](Txt 'شبکهٔ بلاک‌چین عمومی برای توسعه‌دهندگان و کاربران ایرانی' 40 306 ($R-40) 40 $TitleFont 16.5 0 (RGBc 220 228 255) 3 $true 0)
+  $sub = (Txt 'شبکهٔ بلاک‌چین عمومی برای توسعه‌دهندگان و کاربران ایرانی' 40 278 ($R-40) 40 $TitleFont 16.5 0 (RGBc 220 228 255) 3 $true 0)
+  $sf = $sub.TextFrame2.TextRange.Font; $sf.Shadow.Visible = -1; $sf.Shadow.Blur = [single]8; $sf.Shadow.OffsetX = [single]0; $sf.Shadow.OffsetY = [single]0; $sf.Shadow.ForeColor.RGB = (RGBc 2 4 20); $sf.Shadow.Transparency = [single]0.15; $sf.Shadow.Size = [single]100
 
   # footer: not-for-publication pill + foundation line
   $pill = $sh.AddShape(5, [single]40, [single]550, [single]112, [single]22)
