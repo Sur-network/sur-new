@@ -1,0 +1,4 @@
+PASS 6b.1 after the restart the watcher picked up what happened while it was down: invoice A (paid before the stop, then partially refunded while down) is partially_refunded; B and C (paid while down) are paid {"R7-WBc":"paid","R7-WCc":"paid","R7-WAc":"partially_refunded"}
+PASS 6b.2 rows equal chain events (payments, refunds, fee ledger), no duplicate (txHash, logIndex) after two restarts; the refund that was built by hand (no refund request) is stored with no reason payments 36/36, refunds 10/10, fee ledger 36
+PASS 6b.3 service health: cursor at the chain head (lag 0), no error {"ok":true,"time":1795462347,"chainHead":1136,"cursor":1136,"lag":0,"lastSyncAt":1795462347,"lastError":null}
+== 3 PASS, 0 FAIL, 0 OBS ==> runs/r7-6b.json

@@ -1,0 +1,71 @@
+{
+  "name": "r7-5-refusals",
+  "startedAt": "2026-11-23T19:23:53.976Z",
+  "rows": [
+    {
+      "id": "5.1",
+      "name": "an EXPIRED invoice (60 s life) is refused on chain: InvoiceExpired (eth_call reason + a real mined revert); nothing moved; the service marks it expired",
+      "result": "FAIL",
+      "detail": "The contract function \"pay\" reverted.; service status undefined"
+    },
+    {
+      "id": "5.2",
+      "name": "PAYING TWICE: the second payment of the same invoice (by another wallet) is refused: AlreadyPaid (reason + mined revert); the first stays the only payment",
+      "result": "PASS",
+      "detail": "The contract function \"pay\" reverted."
+    },
+    {
+      "id": "5.3",
+      "name": "WRONG NATIVE VALUE: total-1, total+1 and 0 are all refused (WrongNativeValue); a real mined revert for total-1; the invoice is still payable afterwards",
+      "result": "PASS",
+      "detail": "status 0"
+    },
+    {
+      "id": "5.4",
+      "name": "DISALLOWED TOKEN: after the owner removes the permit token from the allow-list the (validly signed) invoice is refused: TokenNotAllowed (mined revert); re-allowed, the same invoice pays; the service itself answers -11 for the never-allowed plain token",
+      "result": "PASS",
+      "detail": "The contract function \"pay\" reverted."
+    },
+    {
+      "id": "5.5",
+      "name": "TAMPERED invoice: every changed field (amount, merchant, fee payer, invoice id, expiry; and a fee rate that is not the current one) with the original signature is refused (BadSignature / FeeChanged); a mined revert; a signature made by another key is refused (BadSignature)",
+      "result": "PASS",
+      "detail": "amount - 1: refused; amount x10: refused; merchant swapped: refused; fee payer flipped: refused; invoiceId changed: refused; expiry extended: refused; fee rate 0: refused"
+    },
+    {
+      "id": "5.6",
+      "name": "SurKMS CONTROL: a well-formed Invoice for the SurPay domain is signed; the signature recovers to the invoiceSigner key that SurPay.invoiceSigner() returns",
+      "result": "PASS",
+      "detail": "recovered 0x6E31c63EFd7F6e4D0CF12Df30267cc0227f74992"
+    },
+    {
+      "id": "5.7",
+      "name": "SurKMS REFUSES: a non-Invoice typed message, a wrong domain name / contract / chain id / extra domain member, feeBps 201, expiry beyond 6 days or in the past, a token outside its list, amount 0, fee payer 2, a zero merchant, an extra or reordered field",
+      "result": "PASS",
+      "detail": "non-Invoice typed message (primaryType Mail): signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: primary-type: only Invo || wrong domain name: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: domain: name must be Su || wrong verifying contract: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: domain: verifyingContra || wrong chain id: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: domain: chainId must be || extra domain member (salt): signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: domain: exactly name, v || feeBps 201 (cap is 200): signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: feeBps-too-high: at mos || expiry beyond 6 days (7 days): signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: expiry-too-far: at most || expiry in the past: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: expired: expiresAt is n || token outside the KMS list (plain token): signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: token-not-allowed: the  || amount 0: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: amount-zero: the amount || fee payer 2: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: feePayer: 0 (merchant)  || zero merchant: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: merchant: a non-zero ad || extra Invoice field in types: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: types: the Invoice defi || fields reordered in types: signer refused eth_signTypedData_v4: POLICY_DENIED: POLICY_DENIED: types: the Invoice defi"
+    },
+    {
+      "id": "5.8",
+      "name": "SurKMS: the invoiceSigner key signs ONLY typed data: eth_signTransaction for it is refused, and eth_signTypedData_v4 for another slot's address is refused",
+      "result": "PASS",
+      "detail": "tx: signer refused eth_signTransaction: POLICY_DENIED: POLICY_DENIED: slot-typed-data-only: the invoiceSigner signs EIP-712 invoices only, never a transaction | other slot: signer refused eth_signTypedData_v4: NOT_AUTHORIZED: NOT_AUTHORIZED: this server may not use that slot from this address"
+    },
+    {
+      "id": "5.9",
+      "name": "the SurKMS audit chain records the signed invoice and each refusal (reasons logged) and verifies as intact",
+      "result": "PASS",
+      "detail": "audit lines mentioning refused typed data: 15 (of 16 refusals); audit chain OK (69 records)"
+    }
+  ],
+  "notes": {
+    "gas": {
+      "payRefusedMined": null,
+      "approve": {
+        "min": 46390,
+        "max": 46390,
+        "n": 1
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T19:27:15.722Z"
+}

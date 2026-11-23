@@ -1,0 +1,1 @@
+{"level":30,"time":1795461342801,"pid":96348,"hostname":"Balon","name":"sur-kms","alert":"KEY_ACTIVATED","subject":"invoiceSigner","roles":["board:foundation"],"msg":"the key of invoiceSigner is now 0x6e31c63efd7f6e4d0cf12df30267cc0227f74992"}

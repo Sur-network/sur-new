@@ -1,0 +1,2 @@
+PASS 7.4 the service shows the scheduled change to the owner (GET /owner/changes after a wallet login) and keeps issuing invoices at the live fee (1-day invoice: code 100, feeBps 100); a 6-day request is refused by the service maximum (-9) pending shown: ["current","changes"]; invoice 100/100; 6 days -> -9
+== 1 PASS, 0 FAIL, 0 OBS ==> runs/r7-7b.json

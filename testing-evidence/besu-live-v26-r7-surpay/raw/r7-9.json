@@ -1,0 +1,92 @@
+{
+  "name": "r7-9-reports",
+  "startedAt": "2026-11-23T19:33:17.357Z",
+  "rows": [
+    {
+      "id": "9.0",
+      "name": "chain reconciliation: the fee recipient holds exactly the sum of all fees of the Paid events (native and permit token); the contract holds nothing",
+      "result": "PASS",
+      "detail": "native fees 116170000000000375, permit-token fees 38800000000000000000; payments 36, refunds 10"
+    },
+    {
+      "id": "9.1m1",
+      "name": "merchant report /reports/summary?group=token (R7 Shop One): count, gross, fee, net, refunds per token equal the sums of the Paid and Refunded events of this merchant",
+      "result": "PASS",
+      "detail": "[{\"bucket\":\"0x0000000000000000000000000000000000000000\",\"token\":\"0x0000000000000000000000000000000000000000\",\"count\":19,\"gross\":\"9617000000000001194\",\"fee\":\"96170000000000006\",\"net\":\"9571830000000001191\",\"refundCount\":7,\"refunded\":\"4501000000000000000\"},{\"bucket\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"token\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"count\":6,\"gross\":"
+    },
+    {
+      "id": "9.2m1",
+      "name": "/payments (status paid + partially_refunded + refunded; invoices never paid are listed under created/expired) lists every payment of the merchant once: the count equals the Paid events of this merchant",
+      "result": "PASS",
+      "detail": "paid-type 25 / chain 25; all invoices incl. created and expired 30"
+    },
+    {
+      "id": "9.1m2",
+      "name": "merchant report /reports/summary?group=token (R7 Shop Two): count, gross, fee, net, refunds per token equal the sums of the Paid and Refunded events of this merchant",
+      "result": "PASS",
+      "detail": "[{\"bucket\":\"0x0000000000000000000000000000000000000000\",\"token\":\"0x0000000000000000000000000000000000000000\",\"count\":7,\"gross\":\"2000000000000037332\",\"fee\":\"20000000000000369\",\"net\":\"1980000000000037332\",\"refundCount\":0,\"refunded\":\"0\"},{\"bucket\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"token\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"count\":4,\"gross\":\"130000000000000000"
+    },
+    {
+      "id": "9.2m2",
+      "name": "/payments (status paid + partially_refunded + refunded; invoices never paid are listed under created/expired) lists every payment of the merchant once: the count equals the Paid events of this merchant",
+      "result": "PASS",
+      "detail": "paid-type 11 / chain 11; all invoices incl. created and expired 14"
+    },
+    {
+      "id": "9.3",
+      "name": "/payments.csv: header authority,orderId,status,token,amount,fee,net,feePayer,channel,createdAt,paidAt,verified,refId,payer,refunded,description and one line per payment",
+      "result": "PASS",
+      "detail": "30 data lines"
+    },
+    {
+      "id": "9.4",
+      "name": "the unverified-payments view (paid but verify never called) lists payments made while the merchant did not verify (R7 test payments of the retry/watcher scripts)",
+      "result": "PASS",
+      "detail": "3 unverified paid invoices"
+    },
+    {
+      "id": "9.5",
+      "name": "/reports/webhooks: queue rows with status and attempts; every `done` row has attempts >= 1",
+      "result": "PASS",
+      "detail": "35 rows; statuses done"
+    },
+    {
+      "id": "9.6",
+      "name": "customer (wallet-signature login as payer1): /me/payments equals its Paid events, /me/refunds its Refunded events; a customer with no payments sees none; the receipt page has the amounts and no full payer address",
+      "result": "PASS",
+      "detail": "payments 13/13, refunds 10/10"
+    },
+    {
+      "id": "9.7",
+      "name": "access control: /me/payments without a session is 401; an owner login by a wallet that is not the contract owner fails; a merchant dashboard login by a non-merchant fails",
+      "result": "PASS",
+      "detail": "401 401"
+    },
+    {
+      "id": "9.8",
+      "name": "owner (wallet login as the contract owner): /owner/fees?by=token equals the sums of fees of the Paid events (native and permit token); by=merchant and by=day answer",
+      "result": "PASS",
+      "detail": "by token: [{\"bucket\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"token\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"payments\":10,\"fee\":\"38800000000000000000\"},{\"bucket\":\"0x0000000000000000000000000000000000000000\",\"token\":\"0x0000000000000000000000000000000000000000\",\"payments\":26,\"fee\":\"116170000000000375\"}]"
+    },
+    {
+      "id": "9.9",
+      "name": "owner overview answers and /owner/reconcile (the fee ledger against the chain) reports no difference",
+      "result": "PASS",
+      "detail": "overview {\"volume\":[{\"token\":\"0x0000000000000000000000000000000000000000\",\"payments\":26,\"gross\":\"11617000000000038526\",\"fee\":\"116170000000000375\",\"net\":\"11551830000000038523\"},{\"token\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"payments\":10,\"gross\":\"3880000000000000; reconcile {\"fromBlock\":\"130\",\"toBlock\":\"1187\",\"ok\":true,\"lines\":[{\"token\":\"0x0000000000000000000000000000000000000000\",\"chain\":{\"payments\":26,\"gross\":\"11617000000000038526\",\"fee\":\"116170000000000375\"},\"ledger\":{\"payments\":26,\"fee\":\"116170000000000375\"},\"database\":{\"payments\":26,\"gross\":\"11617000000000038526\"}"
+    },
+    {
+      "id": "9.10",
+      "name": "database fee ledger: per-token sum equals the chain fees and one entry per Paid event",
+      "result": "PASS",
+      "detail": "[{\"token\":\"0x0000000000000000000000000000000000000000\",\"fee\":\"116170000000000375\",\"n\":26},{\"token\":\"0x3a432c1f2c4f9885499f28121c95ed7444773127\",\"fee\":\"38800000000000000000\",\"n\":10}]"
+    },
+    {
+      "id": "9.11",
+      "name": "owner anomalies list is empty (no payment on chain differs from its invoice)",
+      "result": "PASS",
+      "detail": "{\"data\":{\"log\":[],\"paymentsWithoutInvoice\":[]},\"errors\":[]}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:33:18.744Z"
+}

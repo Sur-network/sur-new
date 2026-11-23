@@ -1,0 +1,5 @@
+PASS 4.3 receiver DOWN: the `paid` webhook fails; the queue row is still pending with attempts 1, a stored error CLASS only (delivery_failed) and the next attempt about 1 minute later {"id":43,"authority":"0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61","event":"paid","status":"pending","attempts":1,"nextAttemptAt":1795462160,"lastError":"delivery_failed","createdAt":1795462098}
+19:28:20 receiver up again
+PASS 4.4 after the receiver is back the retry delivers the SAME delivery id with a valid signature; the queue row turns done with attempts 2 delivery id 43 -> received 43; sig true; waited 66 s since the payment; row {"id":43,"authority":"0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61","event":"paid","status":"done","attempts":2,"nextAttemptAt":1795462280,"lastError":null,"createdAt":1795462098}
+PASS 4.5 every attempt is logged in the database: two webhook_deliveries rows for the delivery (one failed, one http 200) [{"attempt":1,"err":"delivery_failed"},{"attempt":2}]
+== 3 PASS, 0 FAIL, 0 OBS ==> runs/r7-4.json

@@ -1,0 +1,3 @@
+PASS 5.1 an EXPIRED invoice (60 s life) is refused on chain: InvoiceExpired (reason + real mined revert; chain time is past expiresAt); nothing moved; the service lists it as expired (database row and /payments?status=expired) The contract function "pay" reverted.; db status expired; GET /payment/:authority answers "expired"
+PASS 5.1b the return redirect of the expired invoice carries status=NOK http://localhost:8801/cb/R7-EXP?authority=0x..&status=NOK
+== 2 PASS, 0 FAIL, 0 OBS ==> runs/r7-5b.json

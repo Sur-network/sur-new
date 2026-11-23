@@ -1,0 +1,7 @@
+19:33:56Z removed volume sur25w-w1-data
+19:33:56Z removed volume sur25w-w2-data
+19:33:56Z removed network sur25w-net
+19:33:56Z left: containers [] volumes [] networks []
+--- left sur25w: containers [] volumes [] networks []
+ls: cannot access '/home/zojaji/sur25w-live': No such file or directory
+total containers: 32, running: 31

@@ -1,0 +1,9 @@
+stopped 94336
+stopped 95176
+PASS 6.0 the service was stopped (health unreachable) while two payments and one refund were mined blocks 996 -> 1002
+FAIL 6.1 after the restart the watcher catches up: B and C are paid, A is partially_refunded; payments rows == Paid events on chain and refunds rows == Refunded events rows pay 36/36, refunds 10/10
+stopped 94320
+stopped 95080
+PASS 6.2 a second restart changes nothing: same row counts, no duplicate (txHash, logIndex) in payments or refunds, no duplicate webhook queue row per (invoice, event); the payment made while down produced exactly one `paid` webhook rows 36/10; duplicates 0/0/0; webhooks for B 1
+FAIL 6.3 service health after the restarts: lag 0, no error {"ok":true,"time":1795462229,"chainHead":1020,"cursor":1016,"lag":4,"lastSyncAt":1795462228,"lastError":null}
+== 2 PASS, 2 FAIL, 0 OBS ==> runs/r7-6.json

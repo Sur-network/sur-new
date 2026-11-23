@@ -1,0 +1,20 @@
+{
+  "name": "r7-1b-setup-verify",
+  "startedAt": "2026-11-23T19:16:19.525Z",
+  "rows": [
+    {
+      "id": "1b.1",
+      "name": "SurPay, the permit token and the plain token have code at the planned deterministic addresses (deployer nonce 0, 1, 2)",
+      "result": "PASS",
+      "detail": "9709 / 3866 / 1883 bytes"
+    },
+    {
+      "id": "1b.2",
+      "name": "SurKMS invoiceSigner slot: pending/chain-read failures before the contract existed, then KEY_ACTIVATED with the address SurPay.invoiceSigner() returns; no ORPHAN alert",
+      "result": "PASS",
+      "detail": "the key of invoiceSigner is now 0x6e31c63efd7f6e4d0cf12df30267cc0227f74992"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:16:19.589Z"
+}

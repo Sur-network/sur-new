@@ -1,0 +1,26 @@
+{
+  "name": "r7-4-retry",
+  "startedAt": "2026-11-23T19:28:14.554Z",
+  "rows": [
+    {
+      "id": "4.3",
+      "name": "receiver DOWN: the `paid` webhook fails; the queue row is still pending with attempts 1, a stored error CLASS only (delivery_failed) and the next attempt about 1 minute later",
+      "result": "PASS",
+      "detail": "{\"id\":43,\"authority\":\"0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61\",\"event\":\"paid\",\"status\":\"pending\",\"attempts\":1,\"nextAttemptAt\":1795462160,\"lastError\":\"delivery_failed\",\"createdAt\":1795462098}"
+    },
+    {
+      "id": "4.4",
+      "name": "after the receiver is back the retry delivers the SAME delivery id with a valid signature; the queue row turns done with attempts 2",
+      "result": "PASS",
+      "detail": "delivery id 43 -> received 43; sig true; waited 66 s since the payment; row {\"id\":43,\"authority\":\"0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61\",\"event\":\"paid\",\"status\":\"done\",\"attempts\":2,\"nextAttemptAt\":1795462280,\"lastError\":null,\"createdAt\":1795462098}"
+    },
+    {
+      "id": "4.5",
+      "name": "every attempt is logged in the database: two webhook_deliveries rows for the delivery (one failed, one http 200)",
+      "result": "PASS",
+      "detail": "[{\"attempt\":1,\"err\":\"delivery_failed\"},{\"attempt\":2}]"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:29:21.152Z"
+}

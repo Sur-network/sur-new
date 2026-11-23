@@ -1,0 +1,26 @@
+{
+  "name": "r7-6b-watcher-verify",
+  "startedAt": "2026-11-23T19:32:25.387Z",
+  "rows": [
+    {
+      "id": "6b.1",
+      "name": "after the restart the watcher picked up what happened while it was down: invoice A (paid before the stop, then partially refunded while down) is partially_refunded; B and C (paid while down) are paid",
+      "result": "PASS",
+      "detail": "{\"R7-WBc\":\"paid\",\"R7-WCc\":\"paid\",\"R7-WAc\":\"partially_refunded\"}"
+    },
+    {
+      "id": "6b.2",
+      "name": "rows equal chain events (payments, refunds, fee ledger), no duplicate (txHash, logIndex) after two restarts; the refund that was built by hand (no refund request) is stored with no reason",
+      "result": "PASS",
+      "detail": "payments 36/36, refunds 10/10, fee ledger 36"
+    },
+    {
+      "id": "6b.3",
+      "name": "service health: cursor at the chain head (lag 0), no error",
+      "result": "PASS",
+      "detail": "{\"ok\":true,\"time\":1795462347,\"chainHead\":1136,\"cursor\":1136,\"lag\":0,\"lastSyncAt\":1795462347,\"lastError\":null}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:32:27.634Z"
+}

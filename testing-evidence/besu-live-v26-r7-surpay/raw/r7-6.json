@@ -1,0 +1,32 @@
+{
+  "name": "r7-6-watcher",
+  "startedAt": "2026-11-23T19:29:59.066Z",
+  "rows": [
+    {
+      "id": "6.0",
+      "name": "the service was stopped (health unreachable) while two payments and one refund were mined",
+      "result": "PASS",
+      "detail": "blocks 996 -> 1002"
+    },
+    {
+      "id": "6.1",
+      "name": "after the restart the watcher catches up: B and C are paid, A is partially_refunded; payments rows == Paid events on chain and refunds rows == Refunded events",
+      "result": "FAIL",
+      "detail": "rows pay 36/36, refunds 10/10"
+    },
+    {
+      "id": "6.2",
+      "name": "a second restart changes nothing: same row counts, no duplicate (txHash, logIndex) in payments or refunds, no duplicate webhook queue row per (invoice, event); the payment made while down produced exactly one `paid` webhook",
+      "result": "PASS",
+      "detail": "rows 36/10; duplicates 0/0/0; webhooks for B 1"
+    },
+    {
+      "id": "6.3",
+      "name": "service health after the restarts: lag 0, no error",
+      "result": "FAIL",
+      "detail": "{\"ok\":true,\"time\":1795462229,\"chainHead\":1020,\"cursor\":1016,\"lag\":4,\"lastSyncAt\":1795462228,\"lastError\":null}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:30:29.527Z"
+}

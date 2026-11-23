@@ -1,0 +1,6 @@
+{
+  "verifier": "0x979af5ff7641bab879ff1c54267a7abcb768bf7a",
+  "distributionOracle": "0x5ce397f5c2dc13130821a7e744f0063591cf95ef",
+  "identityOracle": "0x4eda78259dd98a3de891dd3ff70fdefbbdbe89c6",
+  "invoiceSigner": "0x6e31c63efd7f6e4d0cf12df30267cc0227f74992"
+}

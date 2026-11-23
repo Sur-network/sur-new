@@ -1,0 +1,10 @@
+[
+  {
+    "fn": "pay",
+    "from": "payer1",
+    "gas": 30775,
+    "block": 879,
+    "status": "reverted",
+    "tx": "0x2fd5e2cc25411537c2216b8d079f2a7ec81508f922c3ca412559afe622160dba"
+  }
+]

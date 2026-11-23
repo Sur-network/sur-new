@@ -1,0 +1,86 @@
+[
+ {
+  "fn": "approve",
+  "n": 2,
+  "min": 46390,
+  "max": 46402
+ },
+ {
+  "fn": "approve.refund",
+  "n": 1,
+  "min": 46402,
+  "max": 46402
+ },
+ {
+  "fn": "cancelChange",
+  "n": 5,
+  "min": 28510,
+  "max": 28520
+ },
+ {
+  "fn": "pay.native",
+  "n": 11,
+  "min": 122294,
+  "max": 133943
+ },
+ {
+  "fn": "pay.token",
+  "n": 2,
+  "min": 161291,
+  "max": 161291
+ },
+ {
+  "fn": "payFlat.native",
+  "n": 1,
+  "min": 133859,
+  "max": 133859
+ },
+ {
+  "fn": "payWithPermit",
+  "n": 2,
+  "min": 178865,
+  "max": 178873
+ },
+ {
+  "fn": "refund.native",
+  "n": 3,
+  "min": 50493,
+  "max": 67593
+ },
+ {
+  "fn": "refund.token",
+  "n": 1,
+  "min": 74842,
+  "max": 74842
+ },
+ {
+  "fn": "scheduleFeeBps",
+  "n": 2,
+  "min": 70489,
+  "max": 70489
+ },
+ {
+  "fn": "scheduleFeeRecipient",
+  "n": 1,
+  "min": 70766,
+  "max": 70766
+ },
+ {
+  "fn": "scheduleInvoiceSigner",
+  "n": 1,
+  "min": 70722,
+  "max": 70722
+ },
+ {
+  "fn": "scheduleOwner",
+  "n": 1,
+  "min": 70724,
+  "max": 70724
+ },
+ {
+  "fn": "setToken",
+  "n": 2,
+  "min": 26003,
+  "max": 50570
+ }
+]

@@ -1,0 +1,14 @@
+{
+  "name": "r7-7b-ttl",
+  "startedAt": "2026-11-23T19:32:57.784Z",
+  "rows": [
+    {
+      "id": "7.4",
+      "name": "the service shows the scheduled change to the owner (GET /owner/changes after a wallet login) and keeps issuing invoices at the live fee (1-day invoice: code 100, feeBps 100); a 6-day request is refused by the service maximum (-9)",
+      "result": "PASS",
+      "detail": "pending shown: [\"current\",\"changes\"]; invoice 100/100; 6 days -> -9"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:33:00.346Z"
+}

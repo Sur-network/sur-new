@@ -1,0 +1,74 @@
+{
+  "name": "r7-7-delay",
+  "startedAt": "2026-11-23T19:32:33.404Z",
+  "rows": [
+    {
+      "id": "7.1",
+      "name": "scheduleFeeBps(150): event ChangeScheduled(FeeBps, 150, executeAfter = now + 7 days); pendingChange stored; the live fee stays 1 %",
+      "result": "PASS",
+      "detail": "executeAfter 1796067154 (now 1795462354); gas 70489"
+    },
+    {
+      "id": "7.2",
+      "name": "executing EARLY is refused for anybody: TooEarly (real mined revert); the fee is unchanged",
+      "result": "PASS",
+      "detail": "The contract function \"executeChange\" reverted."
+    },
+    {
+      "id": "7.3",
+      "name": "a second schedule while one is pending: ChangePending; above the 2 % cap: FeeAboveMax; by a non-owner: NotOwner",
+      "result": "PASS",
+      "detail": "The contract function \"scheduleFeeBps\" reverted. | The contract function \"scheduleFeeBps\" reverted. | The contract function \"scheduleFeeBps\" reverted."
+    },
+    {
+      "id": "7.4",
+      "name": "the service sees the scheduled change (GET /owner/changes, owner wallet login) and still issues invoices (6-day invoices are below the 7-day delay, feeBps in the invoice stays 100)",
+      "result": "FAIL",
+      "detail": "changes {\"data\":{\"current\":{\"owner\":\"0xf61130ddb35ce7e547aa1f33e6e70078c94703f2\",\"feeRecipient\":\"0xb32698dd46bb9f76adeddee1273ab07a79345d1d\",\"invoiceSigner\":\"0x6e31c63efd7f6e4d0cf12df30267cc0227f74992\",\"feeBps\":100,\"pendingFeeBp; invoice code undefined feeBps undefined expiresIn NaN"
+    },
+    {
+      "id": "7.5",
+      "name": "cancelChange: event ChangeCancelled, nothing pending any more; cancelling again or executing a cancelled change: NoChange; the fee stays 1 %",
+      "result": "PASS",
+      "detail": "gas 28510"
+    },
+    {
+      "id": "7.6",
+      "name": "fee recipient and invoice signer: scheduled (ChangeScheduled), zero address refused, early execution refused (TooEarly), cancelled; the live recipient and signer are unchanged and the service keeps issuing invoices (-14 never appeared)",
+      "result": "PASS",
+      "detail": "gas recipient 70766, signer 70722"
+    },
+    {
+      "id": "7.7",
+      "name": "two-step owner change: scheduleOwner(newOwner) stores it; executeChange(Owner) is refused (UseAcceptOwnership); acceptOwnership by the new owner before the 7 days is refused (TooEarly); the owner is unchanged",
+      "result": "PASS",
+      "detail": "The contract function \"executeChange\" reverted. | The contract function \"acceptOwnership\" reverted."
+    },
+    {
+      "id": "7.8",
+      "name": "NOT TESTED (chain time is not manipulated): executeChange after the 7-day delay (new fee / recipient / signer taking effect), acceptOwnership by the new owner (which also cancels the old owner's pending changes), the lapse after the 7-day execution window (ChangeLapsed), and the service's -13 (a change due but not executed) and invoice cut before a scheduled change",
+      "result": "OBSERVATION",
+      "detail": "needs >= 7 days of real chain time; each is covered by the contract's Hardhat tests and the service tests, not by this live round"
+    }
+  ],
+  "notes": {
+    "gas": {
+      "scheduleFeeBps": {
+        "min": 70489,
+        "max": 70489,
+        "n": 1
+      },
+      "scheduleOwner": {
+        "min": 70724,
+        "max": 70724,
+        "n": 1
+      },
+      "cancelChange": {
+        "min": 28510,
+        "max": 28520,
+        "n": 4
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T19:32:42.563Z"
+}

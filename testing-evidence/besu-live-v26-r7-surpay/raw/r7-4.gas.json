@@ -1,0 +1,10 @@
+[
+  {
+    "fn": "pay.native",
+    "from": "payer1",
+    "gas": 133941,
+    "block": 886,
+    "status": "success",
+    "tx": "0x358a5b2789858e5c97650c61178f0759c99ffad2dd8861543e08cfd579099beb"
+  }
+]

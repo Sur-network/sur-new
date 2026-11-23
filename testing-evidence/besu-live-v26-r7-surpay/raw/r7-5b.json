@@ -1,0 +1,20 @@
+{
+  "name": "r7-5b-expired",
+  "startedAt": "2026-11-23T19:28:07.278Z",
+  "rows": [
+    {
+      "id": "5.1",
+      "name": "an EXPIRED invoice (60 s life) is refused on chain: InvoiceExpired (reason + real mined revert; chain time is past expiresAt); nothing moved; the service lists it as expired (database row and /payments?status=expired)",
+      "result": "PASS",
+      "detail": "The contract function \"pay\" reverted.; db status expired; GET /payment/:authority answers \"expired\""
+    },
+    {
+      "id": "5.1b",
+      "name": "the return redirect of the expired invoice carries status=NOK",
+      "result": "PASS",
+      "detail": "http://localhost:8801/cb/R7-EXP?authority=0x..&status=NOK"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-23T19:28:08.684Z"
+}

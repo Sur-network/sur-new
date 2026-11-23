@@ -1,0 +1,63 @@
+{
+ "rep": {
+  "id": 43,
+  "authority": "0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+  "event": "paid",
+  "status": "pending",
+  "attempts": 1,
+  "nextAttemptAt": 1795462160,
+  "lastError": "delivery_failed",
+  "createdAt": 1795462098
+ },
+ "done": {
+  "id": 43,
+  "authority": "0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+  "event": "paid",
+  "status": "done",
+  "attempts": 2,
+  "nextAttemptAt": 1795462280,
+  "lastError": null,
+  "createdAt": 1795462098
+ },
+ "atts": [
+  {
+   "id": "48",
+   "queue_id": "43",
+   "invoice_id": "0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+   "merchant_id": "m_01d298632dd10774",
+   "event": "paid",
+   "attempt": 1,
+   "status_code": null,
+   "error": "delivery_failed",
+   "duration_ms": null,
+   "at": "1795462100"
+  },
+  {
+   "id": "50",
+   "queue_id": "43",
+   "invoice_id": "0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+   "merchant_id": "m_01d298632dd10774",
+   "event": "paid",
+   "attempt": 2,
+   "status_code": 200,
+   "error": null,
+   "duration_ms": 11,
+   "at": "1795462160"
+  }
+ ],
+ "first": [
+  {
+   "id": "43",
+   "merchant_id": "m_01d298632dd10774",
+   "invoice_id": "0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+   "event": "paid",
+   "event_key": "paid:0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61",
+   "payload": "{\"event\":\"paid\",\"authority\":\"0xcea2e84a59ad33684b1f4d69e9f1832892d37a694ca6f33056b47838686e5c61\",\"orderId\":\"R7-RETRYc\",\"status\":\"paid\",\"token\":\"0x0000000000000000000000000000000000000000\",\"amount\":\"5000000000000000\",\"fee\":\"50000000000000\",\"net\":\"4950000000000000\",\"feePayer\":\"merchant\",\"refId\":\"0x358a5b2789858e5c97650c61178f0759c99ffad2dd8861543e08cfd579099beb\",\"payer\":\"0x8d52...c72b\",\"paidAt\":1795462095,\"refunded\":\"0\",\"createdAt\":1795462098}",
+   "status": "pending",
+   "attempts": 0,
+   "next_attempt_at": "1795462098",
+   "last_error": null,
+   "created_at": "1795462098"
+  }
+ ]
+}

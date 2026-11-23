@@ -1,0 +1,722 @@
+{
+ "R7-N1": {
+  "authority": "0x0fac934f15d0fb455a545bb5a303a250d14e1431019b29d7d5cf9cec2d6360ea",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x0fac934f15d0fb455a545bb5a303a250d14e1431019b29d7d5cf9cec2d6360ea",
+   "payUrl": "http://127.0.0.1:8795/pay/0x0fac934f15d0fb455a545bb5a303a250d14e1431019b29d7d5cf9cec2d6360ea",
+   "expiresAt": 1795463357,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1485000000000000000",
+   "total": "1500000000000000000",
+   "feePayer": "merchant",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "15000000000000000",
+   "net": "1485000000000000000",
+   "total": "1500000000000000000"
+  },
+  "ev": {
+   "fee": "15000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 158941,
+  "tx": "0x03fbddedb488e1ac66c2867e1f25932ee08ca64249ac2035cfffe04eecb03414",
+  "pay": {
+   "authority": "0x0fac934f15d0fb455a545bb5a303a250d14e1431019b29d7d5cf9cec2d6360ea",
+   "orderId": "R7-N1",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1485000000000000000",
+   "feePayer": "merchant",
+   "channel": "api",
+   "description": "r7 R7-N1",
+   "createdAt": 1795461557,
+   "expiresAt": 1795463357,
+   "paidAt": 1795461558,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x03fbddedb488e1ac66c2867e1f25932ee08ca64249ac2035cfffe04eecb03414",
+   "payer": "0x8d52...c72b",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N1?authority=0x0fac934f15d0fb455a545bb5a303a250d14e1431019b29d7d5cf9cec2d6360ea&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x03fbddedb488e1ac66c2867e1f25932ee08ca64249ac2035cfffe04eecb03414",
+   "payer": "0x8d52...c72b",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N1",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1485000000000000000",
+   "feePayer": "merchant",
+   "paidAt": 1795461558,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-N2": {
+  "authority": "0xd3b6f6f764355b790bf71d1a9ddb0d69ed9badfa7052bdde1e6cf202e857a762",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0xd3b6f6f764355b790bf71d1a9ddb0d69ed9badfa7052bdde1e6cf202e857a762",
+   "payUrl": "http://127.0.0.1:8795/pay/0xd3b6f6f764355b790bf71d1a9ddb0d69ed9badfa7052bdde1e6cf202e857a762",
+   "expiresAt": 1795463362,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1500000000000000000",
+   "total": "1515000000000000000",
+   "feePayer": "buyer",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "15000000000000000",
+   "net": "1500000000000000000",
+   "total": "1515000000000000000"
+  },
+  "ev": {
+   "fee": "15000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 133943,
+  "tx": "0x76374c22275f4a87d1aa482934cddd5cfe2a71e93877f50cae6822d38fdecc5a",
+  "pay": {
+   "authority": "0xd3b6f6f764355b790bf71d1a9ddb0d69ed9badfa7052bdde1e6cf202e857a762",
+   "orderId": "R7-N2",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1500000000000000000",
+   "feePayer": "buyer",
+   "channel": "api",
+   "description": "r7 R7-N2",
+   "createdAt": 1795461562,
+   "expiresAt": 1795463362,
+   "paidAt": 1795461563,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x76374c22275f4a87d1aa482934cddd5cfe2a71e93877f50cae6822d38fdecc5a",
+   "payer": "0xa54c...2ed3",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N2?authority=0xd3b6f6f764355b790bf71d1a9ddb0d69ed9badfa7052bdde1e6cf202e857a762&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x76374c22275f4a87d1aa482934cddd5cfe2a71e93877f50cae6822d38fdecc5a",
+   "payer": "0xa54c...2ed3",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N2",
+   "amount": "1500000000000000000",
+   "fee": "15000000000000000",
+   "net": "1500000000000000000",
+   "feePayer": "buyer",
+   "paidAt": 1795461563,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-N3": {
+  "authority": "0x5208bd6e080a80a495c26ece9cad697b513c7cb701b17293a9ccfb429fbd4c20",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x5208bd6e080a80a495c26ece9cad697b513c7cb701b17293a9ccfb429fbd4c20",
+   "payUrl": "http://127.0.0.1:8795/pay/0x5208bd6e080a80a495c26ece9cad697b513c7cb701b17293a9ccfb429fbd4c20",
+   "expiresAt": 1795463366,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "199",
+   "fee": "1",
+   "net": "198",
+   "total": "199",
+   "feePayer": "merchant",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "1",
+   "net": "198",
+   "total": "199"
+  },
+  "ev": {
+   "fee": "1",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 133881,
+  "tx": "0x9cb868f8331dcf18911d5ea2c8c1fd39e5e36b7fb9f2e3f4c1d8625fcdde0c1d",
+  "pay": {
+   "authority": "0x5208bd6e080a80a495c26ece9cad697b513c7cb701b17293a9ccfb429fbd4c20",
+   "orderId": "R7-N3",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "199",
+   "fee": "1",
+   "net": "198",
+   "feePayer": "merchant",
+   "channel": "api",
+   "description": "r7 R7-N3",
+   "createdAt": 1795461566,
+   "expiresAt": 1795463366,
+   "paidAt": 1795461568,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x9cb868f8331dcf18911d5ea2c8c1fd39e5e36b7fb9f2e3f4c1d8625fcdde0c1d",
+   "payer": "0x8d52...c72b",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N3?authority=0x5208bd6e080a80a495c26ece9cad697b513c7cb701b17293a9ccfb429fbd4c20&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x9cb868f8331dcf18911d5ea2c8c1fd39e5e36b7fb9f2e3f4c1d8625fcdde0c1d",
+   "payer": "0x8d52...c72b",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N3",
+   "amount": "199",
+   "fee": "1",
+   "net": "198",
+   "feePayer": "merchant",
+   "paidAt": 1795461568,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-N4": {
+  "authority": "0x4fb370d71b2e7f7303fb0d7d5d1d78b68ffc206b2e1ddd05092b2378d9246712",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x4fb370d71b2e7f7303fb0d7d5d1d78b68ffc206b2e1ddd05092b2378d9246712",
+   "payUrl": "http://127.0.0.1:8795/pay/0x4fb370d71b2e7f7303fb0d7d5d1d78b68ffc206b2e1ddd05092b2378d9246712",
+   "expiresAt": 1795463371,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "199",
+   "fee": "1",
+   "net": "199",
+   "total": "200",
+   "feePayer": "buyer",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "1",
+   "net": "199",
+   "total": "200"
+  },
+  "ev": {
+   "fee": "1",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 133883,
+  "tx": "0xf5e2c2a56fe499299ea84cdc84c48d26cbb93deb5f2e389e8487d53bb2152096",
+  "pay": {
+   "authority": "0x4fb370d71b2e7f7303fb0d7d5d1d78b68ffc206b2e1ddd05092b2378d9246712",
+   "orderId": "R7-N4",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "199",
+   "fee": "1",
+   "net": "199",
+   "feePayer": "buyer",
+   "channel": "api",
+   "description": "r7 R7-N4",
+   "createdAt": 1795461571,
+   "expiresAt": 1795463371,
+   "paidAt": 1795461572,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0xf5e2c2a56fe499299ea84cdc84c48d26cbb93deb5f2e389e8487d53bb2152096",
+   "payer": "0xa54c...2ed3",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N4?authority=0x4fb370d71b2e7f7303fb0d7d5d1d78b68ffc206b2e1ddd05092b2378d9246712&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0xf5e2c2a56fe499299ea84cdc84c48d26cbb93deb5f2e389e8487d53bb2152096",
+   "payer": "0xa54c...2ed3",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N4",
+   "amount": "199",
+   "fee": "1",
+   "net": "199",
+   "feePayer": "buyer",
+   "paidAt": 1795461572,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-N5": {
+  "authority": "0x86ae4c12c8abd9fda483a6300f10a32f389b2920c7ce759e1bb3f471ada03fe8",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x86ae4c12c8abd9fda483a6300f10a32f389b2920c7ce759e1bb3f471ada03fe8",
+   "payUrl": "http://127.0.0.1:8795/pay/0x86ae4c12c8abd9fda483a6300f10a32f389b2920c7ce759e1bb3f471ada03fe8",
+   "expiresAt": 1795463374,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "99",
+   "fee": "0",
+   "net": "99",
+   "total": "99",
+   "feePayer": "merchant",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "0",
+   "net": "99",
+   "total": "99"
+  },
+  "ev": {
+   "fee": "0",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 122294,
+  "tx": "0x92b574390dcbe96e54d21c222d8798768ca744dad577ab708be0160c9c6c7bb4",
+  "pay": {
+   "authority": "0x86ae4c12c8abd9fda483a6300f10a32f389b2920c7ce759e1bb3f471ada03fe8",
+   "orderId": "R7-N5",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "99",
+   "fee": "0",
+   "net": "99",
+   "feePayer": "merchant",
+   "channel": "api",
+   "description": "r7 R7-N5",
+   "createdAt": 1795461574,
+   "expiresAt": 1795463374,
+   "paidAt": 1795461575,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x92b574390dcbe96e54d21c222d8798768ca744dad577ab708be0160c9c6c7bb4",
+   "payer": "0xf85e...8627",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N5?authority=0x86ae4c12c8abd9fda483a6300f10a32f389b2920c7ce759e1bb3f471ada03fe8&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x92b574390dcbe96e54d21c222d8798768ca744dad577ab708be0160c9c6c7bb4",
+   "payer": "0xf85e...8627",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N5",
+   "amount": "99",
+   "fee": "0",
+   "net": "99",
+   "feePayer": "merchant",
+   "paidAt": 1795461575,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-N6": {
+  "authority": "0x00cd43f268d63fb456cc7f28655743d45962bab416a4d90a3850a626f2e96321",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x00cd43f268d63fb456cc7f28655743d45962bab416a4d90a3850a626f2e96321",
+   "payUrl": "http://127.0.0.1:8795/pay/0x00cd43f268d63fb456cc7f28655743d45962bab416a4d90a3850a626f2e96321",
+   "expiresAt": 1795463379,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "12345",
+   "fee": "123",
+   "net": "12345",
+   "total": "12468",
+   "feePayer": "buyer",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "123",
+   "net": "12345",
+   "total": "12468"
+  },
+  "ev": {
+   "fee": "123",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 133883,
+  "tx": "0xa854089c31522d00d7278c8a645aa0572b8fbaae087ecb26b50fcfb7ce0e289d",
+  "pay": {
+   "authority": "0x00cd43f268d63fb456cc7f28655743d45962bab416a4d90a3850a626f2e96321",
+   "orderId": "R7-N6",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "12345",
+   "fee": "123",
+   "net": "12345",
+   "feePayer": "buyer",
+   "channel": "api",
+   "description": "r7 R7-N6",
+   "createdAt": 1795461579,
+   "expiresAt": 1795463379,
+   "paidAt": 1795461580,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0xa854089c31522d00d7278c8a645aa0572b8fbaae087ecb26b50fcfb7ce0e289d",
+   "payer": "0xf85e...8627",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-N6?authority=0x00cd43f268d63fb456cc7f28655743d45962bab416a4d90a3850a626f2e96321&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0xa854089c31522d00d7278c8a645aa0572b8fbaae087ecb26b50fcfb7ce0e289d",
+   "payer": "0xf85e...8627",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-N6",
+   "amount": "12345",
+   "fee": "123",
+   "net": "12345",
+   "feePayer": "buyer",
+   "paidAt": 1795461580,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-T1": {
+  "authority": "0x152f61fd9abff190267f2c405f50532124919a6b3dbeab8de51d80b26edaffe6",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x152f61fd9abff190267f2c405f50532124919a6b3dbeab8de51d80b26edaffe6",
+   "payUrl": "http://127.0.0.1:8795/pay/0x152f61fd9abff190267f2c405f50532124919a6b3dbeab8de51d80b26edaffe6",
+   "expiresAt": 1795463383,
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "1000000000000000000000",
+   "fee": "10000000000000000000",
+   "net": "990000000000000000000",
+   "total": "1000000000000000000000",
+   "feePayer": "merchant",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "10000000000000000000",
+   "net": "990000000000000000000",
+   "total": "1000000000000000000000"
+  },
+  "ev": {
+   "fee": "10000000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 178403,
+  "tx": "0x830a6de60d27601ec79d843588a7fe888a15063673357a3f5d20cda3a89a2702",
+  "pay": {
+   "authority": "0x152f61fd9abff190267f2c405f50532124919a6b3dbeab8de51d80b26edaffe6",
+   "orderId": "R7-T1",
+   "status": "paid",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "1000000000000000000000",
+   "fee": "10000000000000000000",
+   "net": "990000000000000000000",
+   "feePayer": "merchant",
+   "channel": "api",
+   "description": "r7 R7-T1",
+   "createdAt": 1795461583,
+   "expiresAt": 1795463383,
+   "paidAt": 1795461585,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x830a6de60d27601ec79d843588a7fe888a15063673357a3f5d20cda3a89a2702",
+   "payer": "0x8d52...c72b",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-T1?authority=0x152f61fd9abff190267f2c405f50532124919a6b3dbeab8de51d80b26edaffe6&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x830a6de60d27601ec79d843588a7fe888a15063673357a3f5d20cda3a89a2702",
+   "payer": "0x8d52...c72b",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "orderId": "R7-T1",
+   "amount": "1000000000000000000000",
+   "fee": "10000000000000000000",
+   "net": "990000000000000000000",
+   "feePayer": "merchant",
+   "paidAt": 1795461585,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-T2": {
+  "authority": "0x4f66b1076b7ceb23d510116a192c2d50025b4935b2696852464d7ed0566eda2c",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x4f66b1076b7ceb23d510116a192c2d50025b4935b2696852464d7ed0566eda2c",
+   "payUrl": "http://127.0.0.1:8795/pay/0x4f66b1076b7ceb23d510116a192c2d50025b4935b2696852464d7ed0566eda2c",
+   "expiresAt": 1795463387,
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "250000000000000000007",
+   "fee": "2500000000000000000",
+   "net": "250000000000000000007",
+   "total": "252500000000000000007",
+   "feePayer": "buyer",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "2500000000000000000",
+   "net": "250000000000000000007",
+   "total": "252500000000000000007"
+  },
+  "ev": {
+   "fee": "2500000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 195977,
+  "tx": "0x0f377c1246a1d68caaef7955981766fe24d01e1643c5a44b9555d91e3c17b890",
+  "pay": {
+   "authority": "0x4f66b1076b7ceb23d510116a192c2d50025b4935b2696852464d7ed0566eda2c",
+   "orderId": "R7-T2",
+   "status": "paid",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "250000000000000000007",
+   "fee": "2500000000000000000",
+   "net": "250000000000000000007",
+   "feePayer": "buyer",
+   "channel": "api",
+   "description": "r7 R7-T2",
+   "createdAt": 1795461587,
+   "expiresAt": 1795463387,
+   "paidAt": 1795461588,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x0f377c1246a1d68caaef7955981766fe24d01e1643c5a44b9555d91e3c17b890",
+   "payer": "0xa54c...2ed3",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-T2?authority=0x4f66b1076b7ceb23d510116a192c2d50025b4935b2696852464d7ed0566eda2c&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x0f377c1246a1d68caaef7955981766fe24d01e1643c5a44b9555d91e3c17b890",
+   "payer": "0xa54c...2ed3",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "orderId": "R7-T2",
+   "amount": "250000000000000000007",
+   "fee": "2500000000000000000",
+   "net": "250000000000000000007",
+   "feePayer": "buyer",
+   "paidAt": 1795461588,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-T3": {
+  "authority": "0x531dcbf1ca029a5794014b187768f756502b91e8fc1770614e199bf3a8d16de1",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x531dcbf1ca029a5794014b187768f756502b91e8fc1770614e199bf3a8d16de1",
+   "payUrl": "http://127.0.0.1:8795/pay/0x531dcbf1ca029a5794014b187768f756502b91e8fc1770614e199bf3a8d16de1",
+   "expiresAt": 1795463391,
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "40000000000000000000",
+   "fee": "400000000000000000",
+   "net": "39600000000000000000",
+   "total": "40000000000000000000",
+   "feePayer": "merchant",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "400000000000000000",
+   "net": "39600000000000000000",
+   "total": "40000000000000000000"
+  },
+  "ev": {
+   "fee": "400000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 195973,
+  "tx": "0xf991a30528aa5ecbc4534205030f3434e731d6f9cf0b0c3061d5b48d2e7f012a",
+  "pay": {
+   "authority": "0x531dcbf1ca029a5794014b187768f756502b91e8fc1770614e199bf3a8d16de1",
+   "orderId": "R7-T3",
+   "status": "paid",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "amount": "40000000000000000000",
+   "fee": "400000000000000000",
+   "net": "39600000000000000000",
+   "feePayer": "merchant",
+   "channel": "api",
+   "description": "r7 R7-T3",
+   "createdAt": 1795461591,
+   "expiresAt": 1795463391,
+   "paidAt": 1795461592,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0xf991a30528aa5ecbc4534205030f3434e731d6f9cf0b0c3061d5b48d2e7f012a",
+   "payer": "0xdc3f...28aa",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-T3?authority=0x531dcbf1ca029a5794014b187768f756502b91e8fc1770614e199bf3a8d16de1&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0xf991a30528aa5ecbc4534205030f3434e731d6f9cf0b0c3061d5b48d2e7f012a",
+   "payer": "0xdc3f...28aa",
+   "token": "0x3a432c1f2c4f9885499f28121c95ed7444773127",
+   "orderId": "R7-T3",
+   "amount": "40000000000000000000",
+   "fee": "400000000000000000",
+   "net": "39600000000000000000",
+   "feePayer": "merchant",
+   "paidAt": 1795461592,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ },
+ "R7-FLAT": {
+  "authority": "0x6c6a01b27215af717e3df36366d2f4c694146ff5aec1ee1c10fe5a8875c848d2",
+  "req": {
+   "code": 100,
+   "message": "Success",
+   "authority": "0x6c6a01b27215af717e3df36366d2f4c694146ff5aec1ee1c10fe5a8875c848d2",
+   "payUrl": "http://127.0.0.1:8795/pay/0x6c6a01b27215af717e3df36366d2f4c694146ff5aec1ee1c10fe5a8875c848d2",
+   "expiresAt": 1795463406,
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "200000000000000000",
+   "fee": "2000000000000000",
+   "net": "200000000000000000",
+   "total": "202000000000000000",
+   "feePayer": "buyer",
+   "feeBps": 100,
+   "reused": false
+  },
+  "exp": {
+   "fee": "2000000000000000",
+   "net": "200000000000000000",
+   "total": "202000000000000000"
+  },
+  "ev": {
+   "fee": "2000000000000000",
+   "toMerchant": "undefined"
+  },
+  "ok": false,
+  "gas": 133883,
+  "tx": "0x4e9125cf1aa2dad662b43eff0492d356dce2ee968191f0d9022a6137917a79f7",
+  "pay": {
+   "authority": "0x6c6a01b27215af717e3df36366d2f4c694146ff5aec1ee1c10fe5a8875c848d2",
+   "orderId": "R7-FLAT",
+   "status": "paid",
+   "token": "0x0000000000000000000000000000000000000000",
+   "amount": "200000000000000000",
+   "fee": "2000000000000000",
+   "net": "200000000000000000",
+   "feePayer": "buyer",
+   "channel": "api",
+   "description": "r7 R7-FLAT",
+   "createdAt": 1795461606,
+   "expiresAt": 1795463406,
+   "paidAt": 1795461607,
+   "verified": false,
+   "verifyCount": 0,
+   "refId": "0x4e9125cf1aa2dad662b43eff0492d356dce2ee968191f0d9022a6137917a79f7",
+   "payer": "0xdc3f...28aa",
+   "refunded": "0"
+  },
+  "ret": {
+   "status": 302,
+   "location": "http://localhost:8801/cb/R7-FLAT?authority=0x6c6a01b27215af717e3df36366d2f4c694146ff5aec1ee1c10fe5a8875c848d2&status=OK"
+  },
+  "v1": 100,
+  "v1data": {
+   "code": 100,
+   "message": "Success",
+   "refId": "0x4e9125cf1aa2dad662b43eff0492d356dce2ee968191f0d9022a6137917a79f7",
+   "payer": "0xdc3f...28aa",
+   "token": "0x0000000000000000000000000000000000000000",
+   "orderId": "R7-FLAT",
+   "amount": "200000000000000000",
+   "fee": "2000000000000000",
+   "net": "200000000000000000",
+   "feePayer": "buyer",
+   "paidAt": 1795461607,
+   "refunded": "0",
+   "status": "paid"
+  },
+  "v2": 101,
+  "contractZero": true
+ }
+}

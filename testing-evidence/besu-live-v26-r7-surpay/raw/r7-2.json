@@ -1,0 +1,266 @@
+{
+  "name": "r7-2-flow",
+  "startedAt": "2026-11-23T19:21:57.575Z",
+  "rows": [
+    {
+      "id": "2.0m1",
+      "name": "merchant R7 Shop One: wallet login (EIP-4361 + EIP-191) and settings: webhook URL, callback host, default fee payer",
+      "result": "PASS",
+      "detail": "login 200, settings 200 {\"data\":{\"id\":\"m_01d298632dd10774\",\"webhookUrl\":\"http://localhost:8801/hook1\",\"defaultFeePayer\":\"merchant\",\"callbackHosts\":[\"localhost\"]},\"errors\":[]}"
+    },
+    {
+      "id": "2.0m2",
+      "name": "merchant R7 Shop Two: wallet login (EIP-4361 + EIP-191) and settings: webhook URL, callback host, default fee payer",
+      "result": "PASS",
+      "detail": "login 200, settings 200 {\"data\":{\"id\":\"m_ae34e3e42743f272\",\"webhookUrl\":\"http://localhost:8801/hook2\",\"defaultFeePayer\":\"merchant\",\"callbackHosts\":[\"localhost\"]},\"errors\":[]}"
+    },
+    {
+      "id": "2.1",
+      "name": "request authentication: a wrong HMAC and a one-hour-old timestamp are refused (401)",
+      "result": "PASS",
+      "detail": "401 401"
+    },
+    {
+      "id": "2.N1",
+      "name": "native Suren | fee payer merchant | price 1500000000000000000: request quote = chain amounts (fee 15000000000000000, merchant 1485000000000000000, buyer pays 1500000000000000000); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 133941; request fee/net/total 15000000000000000/1485000000000000000/1500000000000000000; verify 100/101; return 302 http://localhost:8801/cb/R7-N1c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.N2",
+      "name": "native Suren | fee payer buyer | price 1500000000000000000: request quote = chain amounts (fee 15000000000000000, merchant 1500000000000000000, buyer pays 1515000000000000000); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 133943; request fee/net/total 15000000000000000/1500000000000000000/1515000000000000000; verify 100/101; return 302 http://localhost:8801/cb/R7-N2c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.N3",
+      "name": "native Suren | fee payer merchant | price 199: request quote = chain amounts (fee 1, merchant 198, buyer pays 199); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 133881; request fee/net/total 1/198/199; verify 100/101; return 302 http://localhost:8801/cb/R7-N3c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.N4",
+      "name": "native Suren | fee payer buyer | price 199: request quote = chain amounts (fee 1, merchant 199, buyer pays 200); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 133883; request fee/net/total 1/199/200; verify 100/101; return 302 http://localhost:8801/cb/R7-N4c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.N5",
+      "name": "native Suren | fee payer merchant | price 99: request quote = chain amounts (fee 0, merchant 99, buyer pays 99); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 122294; request fee/net/total 0/99/99; verify 100/101; return 302 http://localhost:8801/cb/R7-N5c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.N6",
+      "name": "native Suren | fee payer buyer | price 12345: request quote = chain amounts (fee 123, merchant 12345, buyer pays 12468); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 133895; request fee/net/total 123/12345/12468; verify 100/101; return 302 http://localhost:8801/cb/R7-N6c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.T1",
+      "name": "permit token (approve) | fee payer merchant | price 1000000000000000000000: request quote = chain amounts (fee 10000000000000000000, merchant 990000000000000000000, buyer pays 1000000000000000000000); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 161291; request fee/net/total 10000000000000000000/990000000000000000000/1000000000000000000000; verify 100/101; return 302 http://localhost:8801/cb/R7-T1c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.T2",
+      "name": "permit token (permit) | fee payer buyer | price 250000000000000000007: request quote = chain amounts (fee 2500000000000000000, merchant 250000000000000000007, buyer pays 252500000000000000007); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 178865; request fee/net/total 2500000000000000000/250000000000000000007/252500000000000000007; verify 100/101; return 302 http://localhost:8801/cb/R7-T2c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.T3",
+      "name": "permit token (permit) | fee payer merchant | price 40000000000000000000: request quote = chain amounts (fee 400000000000000000, merchant 39600000000000000000, buyer pays 40000000000000000000); balances and Paid event exact; contract holds 0; watcher marks paid; callback 302 status=OK; verify 100 then 101",
+      "result": "PASS",
+      "detail": "gas 178873; request fee/net/total 400000000000000000/39600000000000000000/40000000000000000000; verify 100/101; return 302 http://localhost:8801/cb/R7-T3c?authority=0x..&status=OK"
+    },
+    {
+      "id": "2.V",
+      "name": "verify refusals: a wrong amount -50, a wrong order id -52, another merchant's authority -53",
+      "result": "PASS",
+      "detail": "-50 -52 -53"
+    },
+    {
+      "id": "2.R",
+      "name": "rounding down: a 199-wei price has fee 1 (merchant pays: merchant gets 198; buyer pays: total 200) and a 99-wei price has fee 0; 12345 has fee 123",
+      "result": "PASS",
+      "detail": "{\"N3\":{\"fee\":\"1\",\"net\":\"198\",\"total\":\"199\"},\"N5\":{\"fee\":\"0\",\"net\":\"99\",\"total\":\"99\"}}"
+    },
+    {
+      "id": "2.U",
+      "name": "an unpaid invoice: verify -51 (not paid); the return redirect carries status=NOK",
+      "result": "PASS",
+      "detail": "-51 http://localhost:8801/cb/u?authority=0x..&status=NOK"
+    },
+    {
+      "id": "2.G",
+      "name": "merchant API result for a disallowed token at request time: -11 (token not allowed) and unknown callback host: -16 or refusal",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "3.1",
+      "name": "partial refund (0.5 of 1.5 Suren): the service prepares the transaction; merchant1 sends it; Refunded(invoice, merchant, payer, token, value) exact; the buyer got exactly the value; the fee recipient got nothing; contract holds 0",
+      "result": "PASS",
+      "detail": "gas 67593; refundable before 1500000000000000000"
+    },
+    {
+      "id": "3.2",
+      "name": "the watcher records the refund: status partially_refunded, refunded = 0.5",
+      "result": "PASS",
+      "detail": "{\"authority\":\"0x41f43972f6f4076d4ca9fc54e4ff049180b439c44ca3fbfb9ee7f9612236423d\",\"orderId\":\"R7-N1c\",\"status\":\"partially_refunded\",\"token\":\"0x0000000000000000000000000000000000000000\",\"amount\":\"150000"
+    },
+    {
+      "id": "3.3",
+      "name": "a refund over the cap: the service answers -58 with the refundable amount; the contract itself refuses (RefundTooLarge) when the merchant sends it directly",
+      "result": "PASS",
+      "detail": "service -58 refundable 1000000000000000000; chain RefundTooLarge"
+    },
+    {
+      "id": "3.4",
+      "name": "the rest (default = everything left, 1.0 Suren): refunded; status refunded; total refunded = price; a stranger cannot refund (NotMerchant); the original fee (0.015) stays with the fee recipient; verify now says -56",
+      "result": "PASS",
+      "detail": "rest value 1000000000000000000; refund gas 50493; stranger NotMerchant"
+    },
+    {
+      "id": "3.5",
+      "name": "a refund after a full refund: -57 nothing left to refund",
+      "result": "PASS",
+      "detail": "{\"code\":-57,\"message\":\"Nothing left to refund\"}"
+    },
+    {
+      "id": "3.6",
+      "name": "token refund: the service says an approval is needed (approve object), merchant1 approves and refunds 300; the payer's token balance rises by exactly 300; no fee; contract holds 0",
+      "result": "PASS",
+      "detail": "approve gas 46402, refund gas 74842"
+    },
+    {
+      "id": "3.7",
+      "name": "database rows: exactly one refunds row per on-chain Refunded event, each with its chain transaction hash (unique), the amount and the merchant reason",
+      "result": "PASS",
+      "detail": "rows 9, chain events 9, unique 9; [{\"amount\":\"500000000000000000\",\"reason\":\"r7 partial: one item returned\",\"tx\":\"0xec6cbf38\"},{\"amount\":\"1000000000000000000\",\"reason\":\"r7 rest\",\"tx\":\"0xa5b0ba94\"},{\"amount\":\"300000000000000000000\",\"reason\":\"r7 token partial\",\"tx\":\"0x73c0b1f2\"}]"
+    },
+    {
+      "id": "3.8",
+      "name": "reports/refunds (merchant API) lists the refunds of this shop with the reasons the merchant gave",
+      "result": "PASS",
+      "detail": "9 rows"
+    },
+    {
+      "id": "8.1",
+      "name": "EIP-681 URI of the pay page for native Suren: ethereum:<contract>@262025/payFlat?value=<total>&bytes32=<invoiceId>&address=<merchant>&address=<token 0>&uint256=<amount>&uint8=<feePayer>&uint16=<feeBps>&uint64=<expiresAt>&bytes=<signature>; every field equals the invoice",
+      "result": "PASS",
+      "detail": "ethereum:0xe3693007908c51dfca3ef46654d6087215bb615a@262025/payFlat?value=202000000000000000&bytes32=0xeca93973f0c32b93c6da62bf196eec04a847de8679480517808ee4b89f..."
+    },
+    {
+      "id": "8.2",
+      "name": "the same invoice was paid through payFlat (the call a wallet makes from the QR): exact amounts, watcher paid, verify 100/101",
+      "result": "PASS",
+      "detail": "payFlat gas 133859"
+    },
+    {
+      "id": "8.3",
+      "name": "a token invoice has NO QR URI (eip681 is null): the QR is for native Suren only",
+      "result": "PASS",
+      "detail": "null"
+    },
+    {
+      "id": "4.1",
+      "name": "webhooks: every payment produced a signed `paid` webhook (valid HMAC of t.rawBody with the WEBHOOK secret, headers X-SurPay-Event / X-SurPay-Delivery / User-Agent), and partially_refunded and refunded events arrived",
+      "result": "PASS",
+      "detail": "13 deliveries, events paid,partially_refunded,refunded; paid 10"
+    },
+    {
+      "id": "4.2",
+      "name": "checking a webhook with the SIGNING secret (not the webhook secret) fails: the two secrets are separate",
+      "result": "PASS",
+      "detail": "false"
+    }
+  ],
+  "notes": {
+    "results": {
+      "R7-N1": {
+        "authority": "0x41f43972f6f4076d4ca9fc54e4ff049180b439c44ca3fbfb9ee7f9612236423d",
+        "gas": 133941,
+        "tx": "0xf9c47045b1e79aa4c9b0ee81d7bac9eb084b586f7b30fe8f6b5a67eed02b2da7",
+        "fee": "15000000000000000",
+        "net": "1485000000000000000",
+        "total": "1500000000000000000"
+      },
+      "R7-N2": {
+        "authority": "0xfc9e021f23683142cf5cb4f405e2a99c795d27ccd528fdda9b2409da11b4116a",
+        "gas": 133943,
+        "tx": "0xa56e7666f51e3b9c6475a142a290dbeaa27cdf350a0941132cb74834d941dec9",
+        "fee": "15000000000000000",
+        "net": "1500000000000000000",
+        "total": "1515000000000000000"
+      },
+      "R7-N3": {
+        "authority": "0x85492879084caa7a150cf20bde8cee59686fdf7f1c8b7cbd701489409dc23c22",
+        "gas": 133881,
+        "tx": "0x95f8bd840838790cdfd2c65a60c8abc8e7990c420e9d53e32e54d555e3fd885b",
+        "fee": "1",
+        "net": "198",
+        "total": "199"
+      },
+      "R7-N4": {
+        "authority": "0xd6b0a62e939ab1d3a7dcb00d1b07a2cb5c5030b6f6c0477fbf614c49120bdff1",
+        "gas": 133883,
+        "tx": "0xdb428ffe6cb47f45c69228c477e6893a65b7b2259de4f5dc8b5c4e0684f01713",
+        "fee": "1",
+        "net": "199",
+        "total": "200"
+      },
+      "R7-N5": {
+        "authority": "0xe9b6f91dcd7bef92c7f68c4e623abbfb639e8470b020637afd8d5b0d4c32a85c",
+        "gas": 122294,
+        "tx": "0x79f88a55f7ec5bbc38d86051372788254119c05cb93c492d36ee3ff44991dc20",
+        "fee": "0",
+        "net": "99",
+        "total": "99"
+      },
+      "R7-N6": {
+        "authority": "0xee410e42ac432786b1ab68a40557512115dca1af595743f16479c8ff8ffba87d",
+        "gas": 133895,
+        "tx": "0x1a5866a5e1b9a67f93e697f8af1bccbbbe9e9334b76d1a77ad8793fc1ec350d6",
+        "fee": "123",
+        "net": "12345",
+        "total": "12468"
+      },
+      "R7-T1": {
+        "authority": "0x9337ce326f7b13dc0762a5112888aed15f674cbf9365a04327f0b621c51c38ff",
+        "gas": 161291,
+        "tx": "0x4f384246e89cbd1cb0da0d7bc01f5d1310e9598e4ddb0b9276ab199c5bf94816",
+        "fee": "10000000000000000000",
+        "net": "990000000000000000000",
+        "total": "1000000000000000000000"
+      },
+      "R7-T2": {
+        "authority": "0xa3ec4a9b0525f7792a82495bd14e8cb3f40e26b95c4d5a878694a2b53f138240",
+        "gas": 178865,
+        "tx": "0x7c439216afaa6b5ae4b157194d41f081f8f9a7661b89c2d7839eb5f684445b8c",
+        "fee": "2500000000000000000",
+        "net": "250000000000000000007",
+        "total": "252500000000000000007"
+      },
+      "R7-T3": {
+        "authority": "0xcfafc9cc5e156d2456b7b3b64c4aeec7229da5ee97d4242f63ee4b7d5722a1bf",
+        "gas": 178873,
+        "tx": "0x42cac820544b649b5ac81a2503cb05a736cb4ce8f8cfb8224c4550a567b9b909",
+        "fee": "400000000000000000",
+        "net": "39600000000000000000",
+        "total": "40000000000000000000"
+      },
+      "R7-FLAT": {
+        "authority": "0xeca93973f0c32b93c6da62bf196eec04a847de8679480517808ee4b89fa927c1",
+        "gas": 133859,
+        "tx": "0x5bb6cae78d17ed65cead0d31e45f362f5a18be000b20c574c099729506f62d88",
+        "fee": "2000000000000000",
+        "net": "200000000000000000",
+        "total": "202000000000000000"
+      }
+    },
+    "hooks": 13
+  },
+  "finishedAt": "2026-11-23T19:22:53.079Z"
+}

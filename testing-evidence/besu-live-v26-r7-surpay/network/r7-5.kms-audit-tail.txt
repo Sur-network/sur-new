@@ -1,0 +1,61 @@
+10 2026-11-23T19:14:34.000Z key_activated distributionOracle chain ok 
+11 2026-11-23T19:14:34.000Z key_activated identityOracle chain ok 
+12 2026-11-23T19:14:34.000Z service_started  system ok 
+13 2026-11-23T19:14:44.000Z unlock_attempt  127.0.0.1 ok 
+14 2026-11-23T19:15:42.000Z key_activated invoiceSigner chain ok 
+15 2026-11-23T19:19:17.000Z sign_typed_data invoiceSigner surpay-signer ok 
+16 2026-11-23T19:19:22.000Z sign_typed_data invoiceSigner surpay-signer ok 
+17 2026-11-23T19:19:27.000Z sign_typed_data invoiceSigner surpay-signer ok 
+18 2026-11-23T19:19:31.000Z sign_typed_data invoiceSigner surpay-signer ok 
+19 2026-11-23T19:19:34.000Z sign_typed_data invoiceSigner surpay-signer ok 
+20 2026-11-23T19:19:39.000Z sign_typed_data invoiceSigner surpay-signer ok 
+21 2026-11-23T19:19:43.000Z sign_typed_data invoiceSigner surpay-signer ok 
+22 2026-11-23T19:19:47.000Z sign_typed_data invoiceSigner surpay-signer ok 
+23 2026-11-23T19:19:51.000Z sign_typed_data invoiceSigner surpay-signer ok 
+24 2026-11-23T19:19:56.000Z sign_typed_data invoiceSigner surpay-signer ok 
+25 2026-11-23T19:20:06.000Z sign_typed_data invoiceSigner surpay-signer ok 
+26 2026-11-23T19:20:45.000Z sign_typed_data invoiceSigner surpay-signer ok 
+27 2026-11-23T19:20:51.000Z sign_typed_data invoiceSigner surpay-signer ok 
+28 2026-11-23T19:20:54.000Z sign_typed_data invoiceSigner surpay-signer ok 
+29 2026-11-23T19:20:59.000Z sign_typed_data invoiceSigner surpay-signer ok 
+30 2026-11-23T19:21:03.000Z sign_typed_data invoiceSigner surpay-signer ok 
+31 2026-11-23T19:21:08.000Z sign_typed_data invoiceSigner surpay-signer ok 
+32 2026-11-23T19:21:12.000Z sign_typed_data invoiceSigner surpay-signer ok 
+33 2026-11-23T19:21:16.000Z sign_typed_data invoiceSigner surpay-signer ok 
+34 2026-11-23T19:21:20.000Z sign_typed_data invoiceSigner surpay-signer ok 
+35 2026-11-23T19:21:24.000Z sign_typed_data invoiceSigner surpay-signer ok 
+36 2026-11-23T19:21:37.000Z sign_typed_data invoiceSigner surpay-signer ok 
+37 2026-11-23T19:21:58.000Z sign_typed_data invoiceSigner surpay-signer ok 
+38 2026-11-23T19:22:01.000Z sign_typed_data invoiceSigner surpay-signer ok 
+39 2026-11-23T19:22:06.000Z sign_typed_data invoiceSigner surpay-signer ok 
+40 2026-11-23T19:22:10.000Z sign_typed_data invoiceSigner surpay-signer ok 
+41 2026-11-23T19:22:15.000Z sign_typed_data invoiceSigner surpay-signer ok 
+42 2026-11-23T19:22:18.000Z sign_typed_data invoiceSigner surpay-signer ok 
+43 2026-11-23T19:22:23.000Z sign_typed_data invoiceSigner surpay-signer ok 
+44 2026-11-23T19:22:27.000Z sign_typed_data invoiceSigner surpay-signer ok 
+45 2026-11-23T19:22:32.000Z sign_typed_data invoiceSigner surpay-signer ok 
+46 2026-11-23T19:22:36.000Z sign_typed_data invoiceSigner surpay-signer ok 
+47 2026-11-23T19:22:48.000Z sign_typed_data invoiceSigner surpay-signer ok 
+48 2026-11-23T19:23:54.000Z sign_typed_data invoiceSigner surpay-signer ok 
+49 2026-11-23T19:27:00.000Z sign_typed_data invoiceSigner surpay-signer ok 
+50 2026-11-23T19:27:02.000Z sign_typed_data invoiceSigner surpay-signer ok 
+51 2026-11-23T19:27:03.000Z sign_typed_data invoiceSigner surpay-signer ok 
+52 2026-11-23T19:27:08.000Z sign_typed_data invoiceSigner surpay-signer ok 
+53 2026-11-23T19:27:09.000Z sign_typed_data invoiceSigner surpay-signer ok 
+54 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: primary-type: only Invoice is signed
+55 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: domain: name must be SurPay
+56 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: domain: verifyingContract is not the configured SurPay contract
+57 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: domain: chainId must be 262025
+58 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: domain: exactly name, version, chainId and verifyingContract
+59 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: feeBps-too-high: at most 200 (2%, the contract's hard cap)
+60 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: expiry-too-far: at most 518400 s ahead
+61 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: expired: expiresAt is not in the future
+62 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: token-not-allowed: the token is not in the configured allow-list
+63 2026-11-23T19:27:09.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: amount-zero: the amount must be greater than zero
+64 2026-11-23T19:27:10.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: feePayer: 0 (merchant) or 1 (buyer)
+65 2026-11-23T19:27:10.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: merchant: a non-zero address is required
+66 2026-11-23T19:27:10.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: types: the Invoice definition differs from SurPay.INVOICE_TYPEHASH
+67 2026-11-23T19:27:10.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: types: the Invoice definition differs from SurPay.INVOICE_TYPEHASH
+68 2026-11-23T19:27:10.000Z sign_refused distributionOracle surpay-signer denied NOT_AUTHORIZED: this server may not use that slot from this address
+69 2026-11-23T19:27:10.000Z sign_refused invoiceSigner surpay-signer denied POLICY_DENIED: slot-typed-data-only: the invoiceSigner signs EIP-712 invoices only, never a transaction
+audit chain OK (69 records)
