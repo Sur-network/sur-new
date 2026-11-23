@@ -1791,6 +1791,15 @@ contract ValidatorsRegistry {
             }
             delete seatAcceptedFor[from];
             delete seatAcceptedAgreementHash[from];
+            // پذیرشِ باز خودِ مالک تازه (شاید به‌عنوان خریدار احتمالیِ جایگاهی دیگر ثبت کرده باشد) هم نباید پس از جابه‌جایی بماند: کسی که
+            // مالک جایگاه شد دیگر خریدار نمی‌شود و پذیرش مانده فقط گمراه‌کننده است. فروش پذیرش خریدار را از قبل مصرف کرده (اینجا صفر
+            // است)؛ فقط مهاجرت ممکن است پذیرشی بیابد.
+            uint256 staleSeatId = seatAcceptedFor[to];
+            if (staleSeatId != 0) {
+                delete seatAcceptedFor[to];
+                delete seatAcceptedAgreementHash[to];
+                emit SeatAcceptanceRevoked(to, staleSeatId);
+            }
         }
 
         // مالک قدیم خروج‌کرده محسوب می‌شود: ممنوعیت دائمی، اختیار هیأت از او سلب می‌شود

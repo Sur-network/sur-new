@@ -266,6 +266,72 @@ describe("Lost owner key - migrateSeat moves the whole seat to the new address o
   });
 });
 
+describe("Lost owner key - a stale seat-purchase acceptance of the new owner does not survive the migration", () => {
+  const AGR2 = ethers.id("another signed agreement");
+  it("the new owner's acceptance for ANOTHER seat is cleared (event SeatAcceptanceRevoked); everything else is untouched", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, owner, fresh, other, third, founders } = f;
+    await enterActive(f, owner);
+    const seatId = await nft.seatOf(owner.address);
+    // the future new owner had recorded an acceptance as a prospective buyer of a founder seat (seat 1); two other people did too
+    await reg.connect(fresh).acceptSeatAgreement(1, AGR);
+    await reg.connect(other).acceptSeatAgreement(2, AGR2);
+    await reg.connect(owner).acceptSeatAgreement(3, AGR2); // the old owner's own stale one (cleared by the existing rule)
+    expect(await reg.seatAcceptedFor(fresh.address)).to.equal(1n);
+    expect(await reg.seatAcceptedAgreementHash(fresh.address)).to.equal(AGR);
+    const hashBefore = await reg.seatAgreementHash(seatId);
+
+    await migrateId(f, owner, fresh);
+    await expect(migrateSeat(f, owner, fresh))
+      .to.emit(reg, "SeatAcceptanceRevoked").withArgs(fresh.address, 1n)
+      .and.to.emit(reg, "SeatMigrated").withArgs(seatId, owner.address, fresh.address, ST.Active);
+
+    // the new owner's acceptance is gone, and so is the old owner's
+    expect(await reg.seatAcceptedFor(fresh.address)).to.equal(0n);
+    expect(await reg.seatAcceptedAgreementHash(fresh.address)).to.equal(ethers.ZeroHash);
+    expect(await reg.seatAcceptedFor(owner.address)).to.equal(0n);
+    expect(await reg.seatAcceptedAgreementHash(owner.address)).to.equal(ethers.ZeroHash);
+    // nothing else changed: another person's acceptance stays, the seat keeps its agreement hash, the seat moved
+    expect(await reg.seatAcceptedFor(other.address)).to.equal(2n);
+    expect(await reg.seatAcceptedAgreementHash(other.address)).to.equal(AGR2);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(hashBefore);
+    expect(await nft.ownerOf(seatId)).to.equal(fresh.address);
+    expect(await nft.ownerOf(1)).to.equal(founders[0].address);
+    expect(await reg.seatAcceptedFor(third.address)).to.equal(0n);
+    // the cleared acceptance can no longer be consumed: seat 1 cannot reach the new owner by a transfer
+    await expect(nft.connect(founders[0]).transferFrom(founders[0].address, fresh.address, 1)).to.be.reverted;
+  });
+
+  it("a migration of a new owner with NO acceptance emits no SeatAcceptanceRevoked", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, owner, fresh } = f;
+    await enterActive(f, owner);
+    await migrateId(f, owner, fresh);
+    await expect(migrateSeat(f, owner, fresh)).to.not.emit(reg, "SeatAcceptanceRevoked");
+    expect(await reg.seatAcceptedFor(fresh.address)).to.equal(0n);
+  });
+
+  it("a SALE leaves nothing stale: the buyer's acceptance is consumed by the transfer (no revoke event), the old owner's is cleared", async () => {
+    const f = await loadFixture(fixture);
+    const { reg, nft, owner, other, third } = f;
+    await enterActive(f, owner);
+    await verifyAll(f, other);
+    const seatId = await nft.seatOf(owner.address);
+    await reg.connect(other).acceptSeatAgreement(seatId, AGR);
+    await reg.connect(owner).acceptSeatAgreement(2, AGR2); // the seller's own acceptance for another seat
+    await reg.connect(third).acceptSeatAgreement(2, AGR2); // an unrelated third party
+    await expect(nft.connect(owner).transferFrom(owner.address, other.address, seatId))
+      .to.emit(reg, "SeatAgreementBound").withArgs(seatId, other.address, AGR)
+      .and.to.not.emit(reg, "SeatAcceptanceRevoked");
+    expect(await reg.seatAcceptedFor(other.address)).to.equal(0n);
+    expect(await reg.seatAcceptedAgreementHash(other.address)).to.equal(ethers.ZeroHash);
+    expect(await reg.seatAcceptedFor(owner.address)).to.equal(0n);
+    expect(await reg.seatAcceptedAgreementHash(owner.address)).to.equal(ethers.ZeroHash);
+    expect(await reg.seatAcceptedFor(third.address)).to.equal(2n);
+    expect(await reg.seatAgreementHash(seatId)).to.equal(AGR);
+  });
+});
+
 describe("ValidatorSeatNFT.reassignSeat and the Distributor hook are Registry-only", () => {
   it("nobody but the Registry can reassign a seat", async () => {
     const { nft, founders, fresh } = await loadFixture(fixture);

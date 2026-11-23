@@ -1817,6 +1817,15 @@ contract ValidatorsRegistry {
             }
             delete seatAcceptedFor[from];
             delete seatAcceptedAgreementHash[from];
+            // the new owner's own pending acceptance (it may have recorded one for another seat as a prospective buyer) must not outlive
+            // the move either: once it owns a seat it can never be a buyer, so a stale acceptance would only mislead. A sale has already
+            // consumed the buyer's acceptance (it is zero here); only a migration can find one.
+            uint256 staleSeatId = seatAcceptedFor[to];
+            if (staleSeatId != 0) {
+                delete seatAcceptedFor[to];
+                delete seatAcceptedAgreementHash[to];
+                emit SeatAcceptanceRevoked(to, staleSeatId);
+            }
         }
 
         // the old owner is treated as exited: permanent ban, board authority over
