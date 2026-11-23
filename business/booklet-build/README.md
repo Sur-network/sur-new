@@ -4,7 +4,7 @@
 
 ```powershell
 node md2blocks.mjs ../sur-whitepaper.md .blocks.json
-powershell -NoProfile -ExecutionPolicy Bypass -File cover-photo.ps1 -Background <مسیر کامل artcover-art-gemini-A.jpg> -Logo <مسیر کامل logo-white.png> -Out <مسیر کامل artcover.png>
+powershell -NoProfile -ExecutionPolicy Bypass -File cover-photo.ps1 -Background <مسیر کامل art/cover-art-gemini-A.jpg> -Logo <مسیر کامل logo-white.png> -Out <مسیر کامل art/cover.png>
 powershell -NoProfile -ExecutionPolicy Bypass -File build-booklet.ps1 -BlocksPath .blocks.json -Out <مسیر خروجی.docx> -Cover <مسیر کامل cover.png> [-Pdf <خروجی.pdf>]
 ```
 
