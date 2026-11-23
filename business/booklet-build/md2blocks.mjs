@@ -1,7 +1,13 @@
 // Markdown (whitepaper) -> JSON blocks for the Word booklet builder. No dependencies.
+// Status markers (✅ 🔶 ⚠️ ⏸️) that follow other text start a new line (a manual line break, "\u000B").
 import fs from 'node:fs';
 const [,, inp, out] = process.argv;
-const lines = fs.readFileSync(inp, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/);
+const lines = fs.readFileSync(inp, 'utf8').replace(/^﻿/, '').split(/\r?\n/);
+
+const MARK = /(✅|🔶|⚠️|⚠|⏸️|⏸)/u;
+const MARK_G = /(✅|🔶|⚠️|⚠|⏸️|⏸)/gu;
+const isMarkOnly = s => s.replace(MARK_G, '').replace(/[\s️·]/g, '') === '';
+
 function inline(s) {
   const segs = []; let i = 0, b = false, c = false, buf = '';
   const flush = () => { if (buf) { segs.push({ s: buf, b, c }); buf = ''; } };
@@ -10,8 +16,45 @@ function inline(s) {
     if (s[i] === '`') { flush(); c = !c; i++; continue; }
     buf += s[i++];
   }
-  flush(); return segs;
+  flush(); return breakBeforeMarkers(segs);
 }
+
+// Insert a line break before every marker that has real text before it in the same paragraph/cell.
+// A marker directly after another marker (e.g. "⚠️ 🔶") stays on the same line.
+function breakBeforeMarkers(segs) {
+  let before = '';                       // everything emitted so far in this paragraph
+  const outSegs = [];
+  for (const sg of segs) {
+    if (sg.c) { outSegs.push(sg); before += sg.s; continue; }
+    let text = sg.s, res = '';
+    while (true) {
+      const m = MARK.exec(text);
+      if (!m) { res += text; break; }
+      const head = text.slice(0, m.index);
+      const sofar = before + res + head;
+      const tail = sofar.replace(/[\s·]+$/u, '');
+      // no break when the marker is only being referred to, e.g. "(علامت ✅: ...)"
+      const referred = /(علامت|\()\s*$/u.test(sofar);
+      const needBreak = tail.length > 0 && !referred && !isMarkOnly(sofar) && !MARK.test(tail.slice(-2));
+      if (needBreak) {
+        // trim spaces / middle dots right before the marker (possibly at the end of the previous segment)
+        let h = head.replace(/[\s·]+$/u, '');
+        if (h.length === 0 && res.length === 0 && outSegs.length) {
+          const prev = outSegs[outSegs.length - 1];
+          if (!prev.c) prev.s = prev.s.replace(/[\s·]+$/u, '');
+        }
+        res = res.replace(/[\s·]+$/u, '') + h + '\u000B' + m[0];
+      } else {
+        res += head + m[0];
+      }
+      text = text.slice(m.index + m[0].length);
+    }
+    outSegs.push({ ...sg, s: res });
+    before += res;
+  }
+  return outSegs.filter(x => x.s.length);
+}
+
 const blocks = [];
 let i = 0;
 while (i < lines.length) {
