@@ -14,7 +14,8 @@ $cText  = RGBc 28 30 40
 $cGrey  = RGBc 107 111 141
 $cLine  = RGBc 214 217 238
 $BODY  = 'B Nazanin'            # reading text
-$HEAD  = 'IRANSansWeb(FaNum)'   # headings, contents, tables headers, running header/footer
+$HEAD  = 'IRANSansWeb(FaNum)'   # table headers, running header/footer, watermark
+$TITLE = 'Adobe Arabic'         # chapter and section titles, contents
 $SZ    = 12                     # body size (pt)
 $TOC_TAB_ALIGN = 2
 
@@ -52,7 +53,7 @@ $n.ParagraphFormat.LineSpacingRule = 5; $n.ParagraphFormat.LineSpacing = $app.Li
 $n.LanguageID = 1065
 
 $h1 = $doc.Styles.Item('Heading 1')
-SetFont $h1.Font 19 -1 $cBrand $HEAD
+SetFont $h1.Font 26 -1 $cBrand $TITLE
 Rtl $h1.ParagraphFormat
 $h1.ParagraphFormat.PageBreakBefore = -1; $h1.ParagraphFormat.KeepWithNext = -1
 $h1.ParagraphFormat.SpaceBefore = 0; $h1.ParagraphFormat.SpaceAfter = 14
@@ -61,7 +62,7 @@ $bb = $h1.ParagraphFormat.Borders.Item(-3); $bb.LineStyle = 1; $bb.LineWidth = 1
 $h1.ParagraphFormat.Borders.DistanceFromBottom = 6
 
 $h2 = $doc.Styles.Item('Heading 2')
-SetFont $h2.Font 12 -1 $cDark $HEAD
+SetFont $h2.Font 17 -1 $cDark $TITLE
 Rtl $h2.ParagraphFormat
 $h2.ParagraphFormat.KeepWithNext = -1; $h2.ParagraphFormat.PageBreakBefore = 0
 $h2.ParagraphFormat.SpaceBefore = 14; $h2.ParagraphFormat.SpaceAfter = 5
@@ -87,12 +88,12 @@ $ol.ParagraphFormat.RightIndent = 18; $ol.ParagraphFormat.FirstLineIndent = -18
 $ol.ParagraphFormat.SpaceAfter = 4
 
 $tt = $doc.Styles.Add('SurTocTitle', 1); $tt.BaseStyle = 'Normal'
-SetFont $tt.Font 22 -1 $cBrand $HEAD
+SetFont $tt.Font 30 -1 $cBrand $TITLE
 Rtl $tt.ParagraphFormat
 $tt.ParagraphFormat.SpaceAfter = 8; $tt.ParagraphFormat.LineSpacingRule = 0
 
 $tc = $doc.Styles.Add('SurToc', 1); $tc.BaseStyle = 'Normal'
-SetFont $tc.Font 10.5 0 $cText $HEAD
+SetFont $tc.Font 15 0 $cText $TITLE
 Rtl $tc.ParagraphFormat
 $tc.ParagraphFormat.SpaceAfter = 9; $tc.ParagraphFormat.SpaceBefore = 0; $tc.ParagraphFormat.LineSpacingRule = 0
 $tc.ParagraphFormat.TabStops.ClearAll()
