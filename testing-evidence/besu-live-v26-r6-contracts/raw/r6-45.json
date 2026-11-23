@@ -1,0 +1,87 @@
+{
+  "name": "r6-4-5-limits",
+  "startedAt": "2026-11-23T10:30:46.952Z",
+  "rows": [
+    {
+      "id": "4.1",
+      "name": "earliestRateChangeTime() = genesisTime + 180 days; lastRateChangeTime == 0; no rate proposal exists",
+      "result": "PASS",
+      "detail": "genesisTime 1795429216, earliest 1810981216, now 1795429846"
+    },
+    {
+      "id": "4.2",
+      "name": "a valid-looking +5% rate proposal by an active validator is refused inside the first 180 days (reason + real mined revert); no proposal created",
+      "result": "PASS",
+      "detail": "The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: no rate change in the first 6 months after genesis"
+    },
+    {
+      "id": "4.3",
+      "name": "a rate +50% or -50% (beyond +-10%) is also refused with the FREEZE message: the freeze is checked before the +-10% limit, so the 10% rule cannot be reached inside the first 180 days",
+      "result": "PASS",
+      "detail": "The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: no rate change in the first 6 months after genesis | The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: no rate change in the first 6 months after genesis"
+    },
+    {
+      "id": "4.4",
+      "name": "order of the checks: activation in the past / less than 7 days away / start block not in the future are refused BEFORE the freeze check",
+      "result": "PASS",
+      "detail": "The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: activation time is closer than MIN_RATE_CHANGE_LEAD_SECONDS | The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: activation time is not in the future | The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: estimated start block is not in the future"
+    },
+    {
+      "id": "4.5",
+      "name": "a non-validator cannot propose; executeRateChange of a non-existent proposal refused",
+      "result": "PASS",
+      "detail": "The contract function \"proposeRateChange\" reverted with the following reason: BlockRewardDistributor: only an active validator may propose a rate change | The contract function \"executeRateChange\" reverted with the following reason: BlockRewardDistributor: rate proposal not found"
+    },
+    {
+      "id": "4.6",
+      "name": "UNTESTED (chain time not touched): acceptance of a rate change after 180 days, the +-10% limit itself, the 180-day spacing between two changes, certifyRateStart",
+      "result": "OBSERVATION",
+      "detail": "only the negative first-180-days cases are reachable"
+    },
+    {
+      "id": "5.1",
+      "name": "proposeParameterChange for keys 0 (MaxEntriesPerWindow), 2 (ProbationPeriod), 4 (SlashBps) is refused by an Active validator: this parameter is fixed and cannot be changed (reason + real mined revert); paramProposalCount unchanged",
+      "result": "PASS",
+      "detail": "0 MaxEntriesPerWindow: refused; 2 ProbationPeriod: refused; 4 SlashBps: refused"
+    },
+    {
+      "id": "5.2",
+      "name": "other guards: a non-validator cannot propose; recoveryPeriod <= 1 h refused; exitCooldown <= 72 h refused",
+      "result": "PASS",
+      "detail": "The contract function \"proposeParameterChange\" reverted with the following reason: ValidatorsRegistry: caller is not an active validator | The contract function \"proposeParameterChange\" reverted with the following reason: ValidatorsRegistry: recoveryPeriod must exceed MASS_DEMOTION_WINDOW | The contract function \"proposeParameterChange\" reverted with the following reason: ValidatorsRegistry: exitCooldown must exceed PRE_EXIT_CLAIM_WINDOW"
+    },
+    {
+      "id": "5.3",
+      "name": "entry-window key (1): proposing +1 day is accepted, but the vote that would execute it (3 votes) is refused inside the first 6 months after genesis: entryWindowSeconds stays 7 d, lastEntryWindowChange stays 0, proposal not executed",
+      "result": "PASS",
+      "detail": "The contract function \"voteParameterChange\" reverted with the following reason: ValidatorsRegistry: no change in the first 6 months after genesis; votes before 2"
+    },
+    {
+      "id": "5.4",
+      "name": "positive control: a legal change (recoveryPeriod 172800 -> 180000) executes with 3 validator votes (ParameterChangeApplied), proving the vote machinery works while the fixed keys stay refused",
+      "result": "PASS",
+      "detail": "recoveryPeriod 180000"
+    },
+    {
+      "id": "5.5",
+      "name": "after all attempts the fixed values are still 1 / 604800 / 100 (read from the chain)",
+      "result": "PASS",
+      "detail": "{\"a\":\"1\",\"b\":\"604800\",\"c\":\"100\"}"
+    }
+  ],
+  "notes": {
+    "gas": {
+      "proposeParameterChange": {
+        "min": 224794,
+        "max": 241897,
+        "n": 2
+      },
+      "voteParameterChange": {
+        "min": 69940,
+        "max": 100881,
+        "n": 3
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T10:30:57.479Z"
+}

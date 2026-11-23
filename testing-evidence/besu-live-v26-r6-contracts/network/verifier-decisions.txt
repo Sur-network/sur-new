@@ -1,0 +1,1 @@
+1|4|0xdefb9d38a823b141549aa5c5dfd9c0d90e0c41a9|founder_activation|confirmed|0x6e02fba40d03e32fa4a27ee11e125e7254f4fb000f74c7778aa2f111e8219114

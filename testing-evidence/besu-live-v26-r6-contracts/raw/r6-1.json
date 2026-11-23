@@ -1,0 +1,98 @@
+{
+  "name": "r6-1-genesis",
+  "startedAt": "2026-11-23T10:20:56.949Z",
+  "rows": [
+    {
+      "id": "1.1",
+      "name": "all 11 contracts of the ABI set (+ StandbyValidators = 12) have code at their genesis addresses",
+      "result": "PASS",
+      "detail": "11/11 with code: {\"FoundationDAO\":28365,\"BlockRewardDistributor\":24777,\"ValidatorsRegistry\":40574,\"ValidatorsBoard\":21160,\"ValidatorsTreasury\":5755,\"IdentityRegistry\":5966,\"FoundationMembers\":5970,\"ValidatorSeatNFT\":6422,\"GenesisClaimsVault\":2120,\"ValidatorLottery\":8327,\"KmsDirectives\":952}"
+    },
+    {
+      "id": "1.2",
+      "name": "StandbyValidators (0xcCcC...cCcC) has code",
+      "result": "PASS",
+      "detail": "2937 bytes"
+    },
+    {
+      "id": "1.3",
+      "name": "the net makes blocks (1 s period): head advances and the last 3 blocks are ~3 s apart",
+      "result": "PASS",
+      "detail": "head 10 -> 17; 3 blocks = 3 s; chainId 262025"
+    },
+    {
+      "id": "1.4",
+      "name": "the five nodes are peered (each sees >= 3 peers)",
+      "result": "PASS",
+      "detail": "{\"v1\":3,\"v2\":4,\"v3\":4,\"v4\":4,\"v5\":3}"
+    },
+    {
+      "id": "1.5",
+      "name": "QBFT validator set = exactly the first validator's operator key (op1)",
+      "result": "PASS",
+      "detail": "[\"0x46c38597e5ced9fdb8719b4ebbd46da77100109a\"]"
+    },
+    {
+      "id": "1.6",
+      "name": "maxEntriesPerWindow == 1, probationPeriod == 604800 (7 d), slashBps == 100, lastPaidActivationAt == 0, lastRateChangeTime == 0 (read from the chain)",
+      "result": "PASS",
+      "detail": "{\"maxEntriesPerWindow\":\"1\",\"probationPeriod\":\"604800\",\"slashBps\":\"100\",\"lastPaidActivationAt\":\"0\",\"lastRateChangeTime\":\"0\",\"entryWindowSeconds\":\"604800\",\"nextPaidActivationAllowedAt\":\"0\",\"entryCollateral\":\"500000000000000000000000\",\"membershipFeeBps\":\"400\",\"recoveryPeriod\":\"172800\",\"exitCooldown\":\"604800\",\"genesisTime\":\"1795429216\",\"lastEntryWindowChange\":\"0\"}"
+    },
+    {
+      "id": "1.7",
+      "name": "entry window 7 d, nextPaidActivationAllowedAt == 0 (no paid activation yet), entry collateral 500,000 Suren, fee 4 %",
+      "result": "PASS",
+      "detail": "{\"maxEntriesPerWindow\":\"1\",\"probationPeriod\":\"604800\",\"slashBps\":\"100\",\"lastPaidActivationAt\":\"0\",\"lastRateChangeTime\":\"0\",\"entryWindowSeconds\":\"604800\",\"nextPaidActivationAllowedAt\":\"0\",\"entryCollateral\":\"500000000000000000000000\",\"membershipFeeBps\":\"400\",\"recoveryPeriod\":\"172800\",\"exitCooldown\":\"604800\",\"genesisTime\":\"1795429216\",\"lastEntryWindowChange\":\"0\"}"
+    },
+    {
+      "id": "1.8",
+      "name": "genesis seats: owner1 Active (first validator), owners 2..7 Probation (founders, no collateral)",
+      "result": "PASS",
+      "detail": "{\"owner1\":\"Active\",\"owner2\":\"Probation\",\"owner3\":\"Probation\",\"owner4\":\"Probation\",\"owner5\":\"Probation\",\"owner6\":\"Probation\",\"owner7\":\"Probation\"}"
+    },
+    {
+      "id": "1.9",
+      "name": "each of the 7 founders holds one seat NFT",
+      "result": "PASS",
+      "detail": "{\"owner1\":\"1\",\"owner2\":\"1\",\"owner3\":\"1\",\"owner4\":\"1\",\"owner5\":\"1\",\"owner6\":\"1\",\"owner7\":\"1\"}"
+    },
+    {
+      "id": "1.10",
+      "name": "StandbyValidators list at genesis = exactly [op1] and isReady",
+      "result": "PASS",
+      "detail": "[\"0x46C38597E5ceD9FDB8719b4eBbD46DA77100109a\"]"
+    }
+  ],
+  "notes": {
+    "constants": {
+      "maxEntriesPerWindow": "1",
+      "probationPeriod": "604800",
+      "slashBps": "100",
+      "lastPaidActivationAt": "0",
+      "lastRateChangeTime": "0",
+      "entryWindowSeconds": "604800",
+      "nextPaidActivationAllowedAt": "0",
+      "entryCollateral": "500000000000000000000000",
+      "membershipFeeBps": "400",
+      "recoveryPeriod": "172800",
+      "exitCooldown": "604800",
+      "genesisTime": "1795429216",
+      "lastEntryWindowChange": "0"
+    },
+    "genesisHead": "10",
+    "codeSizes": {
+      "FoundationDAO": 28365,
+      "BlockRewardDistributor": 24777,
+      "ValidatorsRegistry": 40574,
+      "ValidatorsBoard": 21160,
+      "ValidatorsTreasury": 5755,
+      "IdentityRegistry": 5966,
+      "FoundationMembers": 5970,
+      "ValidatorSeatNFT": 6422,
+      "GenesisClaimsVault": 2120,
+      "ValidatorLottery": 8327,
+      "KmsDirectives": 952
+    }
+  },
+  "finishedAt": "2026-11-23T10:21:08.704Z"
+}

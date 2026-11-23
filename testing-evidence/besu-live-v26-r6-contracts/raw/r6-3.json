@@ -1,0 +1,123 @@
+{
+  "name": "r6-3-seat",
+  "startedAt": "2026-11-23T10:28:32.388Z",
+  "rows": [
+    {
+      "id": "3.0",
+      "name": "start: owner2 seat is Active with operator op2 and a seat NFT; buyers 3 and 4 are fully verified and own no seat",
+      "result": "PASS",
+      "detail": "seat2 2, seat3 3, seat6 6, seat7 7"
+    },
+    {
+      "id": "3.1",
+      "name": "transfer of an Active seat to a buyer WITHOUT acceptance is refused (reason + real mined revert); seat, status and operator unchanged",
+      "result": "PASS",
+      "detail": "The contract function \"transferFrom\" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat"
+    },
+    {
+      "id": "3.2",
+      "name": "acceptSeatAgreement: zero hash refused; accepting the seat you already own refused; a non-existent seat id refused",
+      "result": "PASS",
+      "detail": "The contract function \"acceptSeatAgreement\" reverted with the following reason: ValidatorsRegistry: empty agreement hash | The contract function \"acceptSeatAgreement\" reverted with the following reason: ValidatorsRegistry: caller already owns this seat | The contract function \"acceptSeatAgreement\" reverted with the following reason: ValidatorSeatNFT: nonexistent token"
+    },
+    {
+      "id": "3.3",
+      "name": "buyer3 accepts seat3 (owner3 seat): recorded (seatAcceptedFor == seat3, hash stored, event SeatAgreementAccepted)",
+      "result": "PASS",
+      "detail": "gas 73922"
+    },
+    {
+      "id": "3.4",
+      "name": "the acceptance for seat3 does NOT authorise the transfer of seat2 (refused, real mined revert); the acceptance is still recorded for seat3",
+      "result": "PASS",
+      "detail": "The contract function \"transferFrom\" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat"
+    },
+    {
+      "id": "3.5",
+      "name": "buyer3 signs the agreement for seat2 (kind 1) and the archive accepts it",
+      "result": "PASS",
+      "detail": "HTTP 201"
+    },
+    {
+      "id": "3.6",
+      "name": "buyer3 accepts seat2 with the signed document hash (replaces the earlier acceptance of seat3)",
+      "result": "PASS",
+      "detail": "gas 39722"
+    },
+    {
+      "id": "3.7",
+      "name": "transfer succeeds with the acceptance: events Transfer, SeatAgreementBound(seat, buyer3, hash), SeatTransferred(statusAfter Active)",
+      "result": "PASS",
+      "detail": "gas 494585"
+    },
+    {
+      "id": "3.8",
+      "name": "the Active seat STAYS Active under the buyer; the operator key op2 now belongs to buyer3; the old owner is cleared; seatAgreementHash(seat2) == the accepted hash; the acceptance is consumed",
+      "result": "PASS",
+      "detail": "buyer3 Active, owner2 None"
+    },
+    {
+      "id": "3.9",
+      "name": "old owner marked permanentlyExited (may never rejoin); active owners list holds buyer3, not owner2",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "3.10",
+      "name": "node v2 (op2) keeps producing blocks after the sale (no interruption); the QBFT set is unchanged",
+      "result": "PASS",
+      "detail": "miners 0x69ef1f,0x6e91a5,0x46c385,0x483ced"
+    },
+    {
+      "id": "3.11",
+      "name": "the archive matched the kind-1 record with the on-chain SeatAgreementAccepted / SeatAgreementBound events",
+      "result": "PASS",
+      "detail": "{\"status\":\"recorded\",\"block\":481,\"txHash\":\"0xb58f5f93f82a5de9165a487a8f038f5c7f028cddcc11e8b464b2526d7c6db553\",\"event\":\"SeatAgreementAccepted\",\"seatId\":\"2\"}"
+    },
+    {
+      "id": "3.12",
+      "name": "revokeSeatAcceptance clears the acceptance (event SeatAcceptanceRevoked, seatAcceptedFor 0, hash 0)",
+      "result": "PASS",
+      "detail": "gas 26508"
+    },
+    {
+      "id": "3.13",
+      "name": "a second revoke is refused (no acceptance recorded); after the revoke the seat cannot be transferred to buyer4",
+      "result": "PASS",
+      "detail": "The contract function \"revokeSeatAcceptance\" reverted with the following reason: ValidatorsRegistry: no acceptance recorded | The contract function \"transferFrom\" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat"
+    },
+    {
+      "id": "3.14",
+      "name": "a buyer that already holds a seat can record an acceptance but the transfer of a second seat to it is refused (recipient already holds a seat)",
+      "result": "PASS",
+      "detail": "did NOT revert | The contract function \"transferFrom\" reverted with the following reason: ValidatorSeatNFT: recipient already holds a seat"
+    }
+  ],
+  "notes": {
+    "seats": {
+      "seat2": "2",
+      "seat3": "3",
+      "seat6": "6",
+      "seat7": "7"
+    },
+    "agreementHash": "0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db",
+    "gas": {
+      "accept": {
+        "min": 39722,
+        "max": 73922,
+        "n": 4
+      },
+      "transfer": {
+        "min": 494585,
+        "max": 494585,
+        "n": 1
+      },
+      "revoke": {
+        "min": 26508,
+        "max": 26508,
+        "n": 2
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T10:28:59.121Z"
+}

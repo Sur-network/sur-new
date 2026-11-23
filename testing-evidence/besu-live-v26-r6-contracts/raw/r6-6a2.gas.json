@@ -1,0 +1,18 @@
+[
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "heir1",
+    "gas": 224794,
+    "block": 869,
+    "status": "success",
+    "tx": "0x6e876e5a386f6ca1712a2db7f750f536c62abc9afbb462d421078aa1dfc25de0"
+  },
+  {
+    "fn": "ValidatorsRegistry.voteParameterChange",
+    "from": "owner1",
+    "gas": 69940,
+    "block": 870,
+    "status": "success",
+    "tx": "0xd826b02c5e3c994c669d3ddd2627d54ef424e8aa21c6bce109d817d4a9dd2007"
+  }
+]

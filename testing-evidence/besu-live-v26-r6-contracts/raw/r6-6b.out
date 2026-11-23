@@ -1,0 +1,6 @@
+PASS 6b.0 start: the contract owner (owner4) is Active and has a deferred claimable reward from the real distribution claimable 9032122898849721706864, totalClaimable 9032122898849721706864
+PASS 6b.1 migrateSeat(contract owner4 -> EOA heir2): SeatMigrated and ClaimableMigrated(owner4, heir2, amount) emitted; claimable moved in full; totalClaimable unchanged gas 502507, moved 9032122898849721706864
+PASS 6b.2 the seat NFT, the Active record and the node key (op4) moved to heir2; the contract owner is cleared and permanentlyExited 
+PASS 6b.3 heir2 claims the moved reward: exactly the credited amount is paid (balance + amount - fee), ClaimableWithdrawn emitted, claimable 0, totalClaimable reduced by the amount received 9027133398849721706864, fee 4989500000000000000, credit 9032122898849721706864
+PASS 6b.4 the old contract owner has nothing left to claim (a claim reverts: nothing to claim) The contract function "doClaim" reverted with the following reason: BlockRewardDistributor: nothing to claim
+== 5 PASS, 0 FAIL, 0 OBS ==> runs/r6-6b.json

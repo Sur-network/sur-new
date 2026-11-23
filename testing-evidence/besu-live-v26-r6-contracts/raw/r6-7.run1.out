@@ -1,0 +1,10 @@
+FAIL 7.0 start: the genesis list is exactly [op1] and isReady members 0x46C38597E5ceD9FDB8719b4eBbD46DA77100109a
+PASS 7.1 setStandby called directly (not by FoundationDAO) is refused The contract function "setStandby" reverted with the following reason: StandbyValidators: only FoundationDAO
+FAIL 7.2 DAO Execute (3 of 5) replaces the list with the 5 operator keys, INCLUDING op2 (seat sold) and op3/op4 (seats migrated): accepted, version 1, StandbyUpdated, isReady gas of executing vote 339548; members 5
+OBS  7.3 OBSERVATION: after a seat SALE (op2 -> buyer3) and two MIGRATIONS (op3 -> heir1, op4 -> heir2) staleMembers() is empty: the operator key stays with the seat, so those members are not stale staleMembers []; ownerOfOperator(op2)=0x0F711565559d2563BdA0F356cA768e2F08d06053 (buyer3 0x0F711565559d2563BdA0F356cA768e2F08d06053), ownerOfOperator(op3)=0xEb81cED2C2b58820364989630fE8DAAa08C606be (heir1 0xEb81cED2C2b58820364989630fE8DAAa08C606be)
+PASS 7.4 the list rules, simulated from the FoundationDAO address: unsorted, duplicate, a non-operator address and an empty list are all refused with the contract reason unsorted: refused; duplicate: refused; not an operator key (heir3 is a plain wallet): refused; empty: refused
+PASS 7.5 owner5 requests exit (Exiting, seat burned): op5 is reported STALE by staleMembers() and isReady() turns false status Exiting, stale ["0x729faf093dd265db04fe5807f6ff48f4d4e6d3de"], exit gas 160623
+FAIL 7.6 a DAO proposal that still lists the exited op5 is REFUSED at execution (the third vote reverts: not the current operator key of a registered seat); the proposal stays Pending and the list is unchanged Execution reverted with reason: Execution reverted (StandbyValidators: not the current operator key of a registered seat).
+FAIL 7.7 a DAO proposal with the refreshed list (4 members, without op5) executes: version 2, no stale member, isReady true members 4
+PASS 7.8 the net keeps running (QBFT set now 4 after the exit of owner5) ["0x46c385","0x483ced","0x69ef1f","0x6e91a5"]
+== 4 PASS, 4 FAIL, 1 OBS ==> runs/r6-7.json

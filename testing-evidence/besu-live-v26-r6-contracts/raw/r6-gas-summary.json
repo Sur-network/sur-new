@@ -1,0 +1,128 @@
+[
+ {
+  "fn": "BlockRewardDistributor.claim",
+  "n": 1,
+  "min": 49895,
+  "max": 49895
+ },
+ {
+  "fn": "FoundationDAO.proposeExecute",
+  "n": 3,
+  "min": 490670,
+  "max": 553731
+ },
+ {
+  "fn": "FoundationDAO.vote",
+  "n": 5,
+  "min": 73390,
+  "max": 339548
+ },
+ {
+  "fn": "IdentityRegistry.migrateIdentity",
+  "n": 1,
+  "min": 149568,
+  "max": 149568
+ },
+ {
+  "fn": "IdentityRegistry.registerIdentity",
+  "n": 4,
+  "min": 71764,
+  "max": 71764
+ },
+ {
+  "fn": "IdentityRegistry.setBaleVerified",
+  "n": 5,
+  "min": 35061,
+  "max": 35265
+ },
+ {
+  "fn": "IdentityRegistry.setEmailVerified",
+  "n": 5,
+  "min": 35083,
+  "max": 35287
+ },
+ {
+  "fn": "IdentityRegistry.setKycVerified",
+  "n": 5,
+  "min": 57943,
+  "max": 57979
+ },
+ {
+  "fn": "IdentityRegistry.setPhoneVerified",
+  "n": 5,
+  "min": 52100,
+  "max": 52304
+ },
+ {
+  "fn": "IdentityRegistry.setTelegramVerified",
+  "n": 5,
+  "min": 35082,
+  "max": 35286
+ },
+ {
+  "fn": "ValidatorSeatNFT.transferFrom",
+  "n": 1,
+  "min": 494585,
+  "max": 494585
+ },
+ {
+  "fn": "ValidatorsRegistry.acceptSeatAgreement",
+  "n": 4,
+  "min": 39722,
+  "max": 73922
+ },
+ {
+  "fn": "ValidatorsRegistry.migrateSeat",
+  "n": 1,
+  "min": 502507,
+  "max": 502507
+ },
+ {
+  "fn": "ValidatorsRegistry.proposeParameterChange",
+  "n": 3,
+  "min": 224794,
+  "max": 241897
+ },
+ {
+  "fn": "ValidatorsRegistry.recordActivation",
+  "n": 3,
+  "min": 312180,
+  "max": 346584
+ },
+ {
+  "fn": "ValidatorsRegistry.requestExit",
+  "n": 1,
+  "min": 160623,
+  "max": 160623
+ },
+ {
+  "fn": "ValidatorsRegistry.requestMembership",
+  "n": 2,
+  "min": 310928,
+  "max": 345128
+ },
+ {
+  "fn": "ValidatorsRegistry.revokeSeatAcceptance",
+  "n": 2,
+  "min": 26508,
+  "max": 26508
+ },
+ {
+  "fn": "ValidatorsRegistry.setOperator",
+  "n": 2,
+  "min": 77594,
+  "max": 77594
+ },
+ {
+  "fn": "ValidatorsRegistry.voteParameterChange",
+  "n": 4,
+  "min": 69940,
+  "max": 100881
+ },
+ {
+  "fn": "x.exec",
+  "n": 2,
+  "min": 76172,
+  "max": 81972
+ }
+]

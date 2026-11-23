@@ -1,0 +1,9 @@
+PASS 8.1 one complete distribution on Besu by the real Router with SurKMS: 1 open, N pages (page size 2), 1 close, all mined; the epoch is closed open 1 pages 4 close 1; blocks 1..1078 (1078)
+PASS 8.2 per-owner block counts paid by the contract (ValidatorRewarded + ValidatorRewardDeferred) equal the independent attribution computed from block miners and the Registry events owner1: 273/273, owner2: 112/112, owner3: 159/159, owner4: 234/234, buyer3: 124/124, owner5: 100/100, heir1: 76/76
+PASS 8.3 after the seat sale the blocks of op2 go to buyer3 and the blocks before it to owner2 (both paid); after the migration the blocks of op3 go to heir1 and the earlier ones to owner3 (both paid) owner2 112, buyer3 124, owner3 159, heir1 76; seat sale block 482, migration block 699
+PASS 8.4 sum of paid blocks == totalBlocks of the range == RewardsDistributed.totalBlocksMined == toBlock-fromBlock+1; validatorCount == number of payees sum 1078, opened 1078, closed 1078, validatorCount 7, payees 7
+FAIL 8.5 the stored epoch record matches the RewardsDistributed event (rewards, fees, treasury, blocks, validator count) rewards 2156000000000000000000, fees 40759319200000000000000, treasury 754600000000000000004
+PASS 8.6 the contract owner (owner4) was NOT paid directly: ValidatorRewardDeferred; claimable(owner4) == its deferred payout == totalClaimable claimable 9032122898849721706864
+PASS 8.7 no unattributed block and no unknown miner in the range [["owner1",273],["owner2",236],["owner3",235],["owner4",234],["owner5",100]]
+OBS  8.8 OBSERVATION: reward shares paid sum / approved reward (rate x blocks) paid reward shares 1078000000000000000000 wei; opened.approvedRewards 2156000000000000000000; rate 2000000000000000000 x 1078 = 2156000000000000000000; treasury 754600000000000000004
+== 6 PASS, 1 FAIL, 1 OBS ==> runs/r6-8.json

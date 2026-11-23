@@ -1,0 +1,5 @@
+{"level":30,"time":1795430326680,"pid":35384,"hostname":"Balon","name":"router","observeOnly":false,"enableSend":true,"sendingAllowed":true,"signer":"0x08aa64373508125f90d729e531fc4d68e9db0b36","msg":"router started"}
+{"level":30,"time":1795430363606,"pid":35384,"hostname":"Balon","name":"router","cycle":2,"ok":true,"head":1079,"replayOk":true,"collected":172,"incomplete":0,"plan":"queued","errors":0,"msg":"cycle finished"}
+{"level":30,"time":1795430387894,"pid":35384,"hostname":"Balon","name":"router","cycle":3,"ok":true,"head":1131,"replayOk":true,"collected":52,"incomplete":0,"plan":"not_due","errors":0,"msg":"cycle finished"}
+{"level":30,"time":1795430407887,"pid":35384,"hostname":"Balon","name":"router","cycle":4,"ok":true,"head":1155,"replayOk":true,"collected":24,"incomplete":0,"plan":"not_due","errors":0,"msg":"cycle finished"}
+{"level":30,"time":1795430428580,"pid":35384,"hostname":"Balon","name":"router","cycle":5,"ok":true,"head":1175,"replayOk":true,"collected":20,"incomplete":0,"plan":"not_due","errors":0,"msg":"cycle finished"}

@@ -1,0 +1,82 @@
+[
+  {
+    "fn": "FoundationDAO.proposeExecute",
+    "from": "member1",
+    "gas": 553731,
+    "block": 1235,
+    "status": "success",
+    "tx": "0xafd34af64c4c5e3e74fd7a3e8914ef1f5fbcd5581eb8af879194ba7914d481f3"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member2",
+    "gas": 73390,
+    "block": 1236,
+    "status": "success",
+    "tx": "0x0e3682c9147ccbde83813c4a4c624d5df51d3621a6d14a96bccd20d6615dcc8c"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member3",
+    "gas": 339548,
+    "block": 1237,
+    "status": "success",
+    "tx": "0x0d613f03328935a5cbb5b7cb7094db51f029859eae1335d9202dfa483d8511b0"
+  },
+  {
+    "fn": "ValidatorsRegistry.requestExit",
+    "from": "owner5",
+    "gas": 160623,
+    "block": 1239,
+    "status": "success",
+    "tx": "0x1301ee37a7bdd9a278ab59d3c40a553624c846ba35c2e311617789d01f977a2b"
+  },
+  {
+    "fn": "FoundationDAO.proposeExecute",
+    "from": "member1",
+    "gas": 513405,
+    "block": 1240,
+    "status": "success",
+    "tx": "0x391f8cd2f4d53b6af4db7abf46146fb96739440b36129a606b41c65bbe52f19b"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member2",
+    "gas": 73400,
+    "block": 1241,
+    "status": "success",
+    "tx": "0x08c1c8637d8a469f6e1b332261a8d7c71a3edccf2a24675ee69654d0d4bf67a6"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member3",
+    "gas": 247170,
+    "block": 1242,
+    "status": "reverted",
+    "tx": "0x6b8e3b042e4768ea46275069b4a4dcf1cadd92e1d5dea77189142105cf2edf48"
+  },
+  {
+    "fn": "FoundationDAO.proposeExecute",
+    "from": "member1",
+    "gas": 490670,
+    "block": 1243,
+    "status": "success",
+    "tx": "0xdb30627fc3b91cd31cf25f9bd3584fa5d804f7ee62fd65b9bbfb73114da705c6"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member2",
+    "gas": 73400,
+    "block": 1244,
+    "status": "success",
+    "tx": "0x24841f8243c35c24c10e81385822c3bb7490f7542a1dccde6a60a374a2afdfb1"
+  },
+  {
+    "fn": "FoundationDAO.vote",
+    "from": "member3",
+    "gas": 234387,
+    "block": 1245,
+    "status": "success",
+    "tx": "0xd0155cebd5464380f2f0b8221fefda4df9a6698155b0b31b27453c9886e55b41"
+  }
+]

@@ -1,0 +1,19 @@
+containers: sur25v-v5 sur25v-v4 sur25v-v3 sur25v-v2 sur25v-v1
+volumes: sur25v-v1-data sur25v-v2-data sur25v-v3-data sur25v-v4-data sur25v-v5-data
+networks: sur25v-net
+10:42:42Z removed container sur25v-v5
+10:42:43Z removed container sur25v-v4
+10:42:44Z removed container sur25v-v3
+10:42:46Z removed container sur25v-v2
+10:42:47Z removed container sur25v-v1
+10:42:47Z removed volume sur25v-v1-data
+10:42:47Z removed volume sur25v-v2-data
+10:42:47Z removed volume sur25v-v3-data
+10:42:47Z removed volume sur25v-v4-data
+10:42:47Z removed volume sur25v-v5-data
+10:42:47Z removed network sur25v-net
+10:42:47Z left: containers [] volumes [] networks []
+--- left sur25v: containers [] volumes [] networks []
+ls: cannot access '/home/zojaji/sur25v-live': No such file or directory
+total containers: 32, running: 31
+0

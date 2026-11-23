@@ -1,0 +1,74 @@
+[
+  {
+    "fn": "x.exec",
+    "from": "deployer",
+    "gas": 76172,
+    "block": 1194,
+    "status": "success",
+    "tx": "0x8aed7b43caf317bb9f7330e6019a3dc278d4fe0457401de7fcf3a27c2853a580"
+  },
+  {
+    "fn": "IdentityRegistry.setPhoneVerified",
+    "from": "identityOracle",
+    "gas": 52100,
+    "block": 1195,
+    "status": "success",
+    "tx": "0x1ccf8ab3e8786e79a7f487e4eccf14b95ae68c7bb4e08b3c1d39568347b811a8"
+  },
+  {
+    "fn": "IdentityRegistry.setTelegramVerified",
+    "from": "identityOracle",
+    "gas": 35082,
+    "block": 1196,
+    "status": "success",
+    "tx": "0x918d9fc1199b0af8afdfcaee5aefb05c86058520eed5de10030e40b1fde2a1d7"
+  },
+  {
+    "fn": "IdentityRegistry.setBaleVerified",
+    "from": "identityOracle",
+    "gas": 35061,
+    "block": 1197,
+    "status": "success",
+    "tx": "0xd6332ffd47d5a8e27ea45969b26f75a7ad4c1927b997799301814d8dd42c7457"
+  },
+  {
+    "fn": "IdentityRegistry.setEmailVerified",
+    "from": "identityOracle",
+    "gas": 35083,
+    "block": 1198,
+    "status": "success",
+    "tx": "0x5ed23f24c0629d9c8ef560f107576a8c84b5cb0db1c0516ab661c1ed2a5c0753"
+  },
+  {
+    "fn": "IdentityRegistry.setKycVerified",
+    "from": "identityOracle",
+    "gas": 57979,
+    "block": 1199,
+    "status": "success",
+    "tx": "0x78a0171d539ed04bb7ab2d9e4b3cb9bba53bc459dec193bc07bca54a5fc2d750"
+  },
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149568,
+    "block": 1200,
+    "status": "success",
+    "tx": "0x3aa9863e64d9594aab875b6db9f578924b0643c6a47f4a8e0b5b69bb9bbc70fa"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 502507,
+    "block": 1201,
+    "status": "success",
+    "tx": "0x38bbaae26368f28df2939dbf7a453a5d8035ca09c067a62837fce9ecfc3d22f0"
+  },
+  {
+    "fn": "BlockRewardDistributor.claim",
+    "from": "heir2",
+    "gas": 49895,
+    "block": 1202,
+    "status": "success",
+    "tx": "0xea6b5a62dec018a3f7661917831fe922c51ca393b7a060d5e0637d845b5f4b88"
+  }
+]

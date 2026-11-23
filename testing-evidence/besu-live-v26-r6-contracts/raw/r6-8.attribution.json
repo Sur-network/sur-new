@@ -1,0 +1,49 @@
+{
+  "range": [
+    1,
+    1078
+  ],
+  "rows": [
+    {
+      "owner": "0x413764122ac374d41248c4f9643684d09fa8d71f",
+      "expected": 273,
+      "router": 273
+    },
+    {
+      "owner": "0xd565d783c7fee91d6350d9a08eb267354928ad07",
+      "expected": 112,
+      "router": 112
+    },
+    {
+      "owner": "0xae476387e6c208722cc5bd38ea60dc82e74e5ba2",
+      "expected": 159,
+      "router": 159
+    },
+    {
+      "owner": "0xc0de000000000000000000000000000000000004",
+      "expected": 234,
+      "router": 234
+    },
+    {
+      "owner": "0x0f711565559d2563bda0f356ca768e2f08d06053",
+      "expected": 124,
+      "router": 124
+    },
+    {
+      "owner": "0xdefb9d38a823b141549aa5c5dfd9c0d90e0c41a9",
+      "expected": 100,
+      "router": 100
+    },
+    {
+      "owner": "0xeb81ced2c2b58820364989630fe8daaa08c606be",
+      "expected": 76,
+      "router": 76
+    }
+  ],
+  "seatSale": [
+    "482"
+  ],
+  "migration": [
+    "699"
+  ]
+}

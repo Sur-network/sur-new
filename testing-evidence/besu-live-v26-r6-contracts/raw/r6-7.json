@@ -1,0 +1,80 @@
+{
+  "name": "r6-7-standby",
+  "startedAt": "2026-11-23T10:41:21.714Z",
+  "rows": [
+    {
+      "id": "7.0",
+      "name": "start: the genesis list is exactly [op1] and isReady",
+      "result": "FAIL",
+      "detail": "members 0x46C38597E5ceD9FDB8719b4eBbD46DA77100109a"
+    },
+    {
+      "id": "7.1",
+      "name": "setStandby called directly (not by FoundationDAO) is refused",
+      "result": "PASS",
+      "detail": "The contract function \"setStandby\" reverted with the following reason: StandbyValidators: only FoundationDAO"
+    },
+    {
+      "id": "7.2",
+      "name": "DAO Execute (3 of 5) replaces the list with the 5 operator keys, INCLUDING op2 (seat sold) and op3/op4 (seats migrated): accepted, version 1, StandbyUpdated, isReady",
+      "result": "FAIL",
+      "detail": "gas of executing vote 339548; members 5"
+    },
+    {
+      "id": "7.3",
+      "name": "OBSERVATION: after a seat SALE (op2 -> buyer3) and two MIGRATIONS (op3 -> heir1, op4 -> heir2) staleMembers() is empty: the operator key stays with the seat, so those members are not stale",
+      "result": "OBSERVATION",
+      "detail": "staleMembers []; ownerOfOperator(op2)=0x0F711565559d2563BdA0F356cA768e2F08d06053 (buyer3 0x0F711565559d2563BdA0F356cA768e2F08d06053), ownerOfOperator(op3)=0xEb81cED2C2b58820364989630fE8DAAa08C606be (heir1 0xEb81cED2C2b58820364989630fE8DAAa08C606be)"
+    },
+    {
+      "id": "7.4",
+      "name": "the list rules, simulated from the FoundationDAO address: unsorted, duplicate, a non-operator address and an empty list are all refused with the contract reason",
+      "result": "PASS",
+      "detail": "unsorted: refused; duplicate: refused; not an operator key (heir3 is a plain wallet): refused; empty: refused"
+    },
+    {
+      "id": "7.5",
+      "name": "owner5 requests exit (Exiting, seat burned): op5 is reported STALE by staleMembers() and isReady() turns false",
+      "result": "PASS",
+      "detail": "status Exiting, stale [\"0x729faf093dd265db04fe5807f6ff48f4d4e6d3de\"], exit gas 160623"
+    },
+    {
+      "id": "7.6",
+      "name": "a DAO proposal that still lists the exited op5 is REFUSED at execution (the third vote reverts: not the current operator key of a registered seat); the proposal stays Pending and the list is unchanged",
+      "result": "FAIL",
+      "detail": "Execution reverted with reason: Execution reverted (StandbyValidators: not the current operator key of a registered seat)."
+    },
+    {
+      "id": "7.7",
+      "name": "a DAO proposal with the refreshed list (4 members, without op5) executes: version 2, no stale member, isReady true",
+      "result": "FAIL",
+      "detail": "members 4"
+    },
+    {
+      "id": "7.8",
+      "name": "the net keeps running (QBFT set now 4 after the exit of owner5)",
+      "result": "PASS",
+      "detail": "[\"0x46c385\",\"0x483ced\",\"0x69ef1f\",\"0x6e91a5\"]"
+    }
+  ],
+  "notes": {
+    "gas": {
+      "proposeExecute": {
+        "min": 490670,
+        "max": 553731,
+        "n": 3
+      },
+      "vote": {
+        "min": 73390,
+        "max": 339548,
+        "n": 5
+      },
+      "requestExit": {
+        "min": 160623,
+        "max": 160623,
+        "n": 1
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T10:41:36.328Z"
+}

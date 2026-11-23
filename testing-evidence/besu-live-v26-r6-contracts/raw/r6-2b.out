@@ -1,0 +1,17 @@
+(node:74864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS 2b.0 archive is DOWN at the start (stopped by the caller) and the Verifier API answers archive down
+PASS 2b.1 owner5 (genesis founder, Probation) sets its node key op5 and registers the node id with the Verifier API {"ok":true,"owner":"0xdefb9d38a823b141549aa5c5dfd9c0d90e0c41a9","operator":"0x729faf093dd265db04fe5807f6ff48f4d4e6d3de","kind":"current","note":"the node is checked in the next hourly cycle"}
+10:27:44 pending reason: AGREEMENT_ARCHIVE_UNREACHABLE "{\"reason\":\"the Agreement Archive could not be read (owner): fetch failed\"}"
+PASS 2b.2 archive DOWN: the Verifier reached the agreement gate and withheld the founder activation (reason mentions the archive); owner5 still Probation, nothing sent reason AGREEMENT_ARCHIVE_UNREACHABLE; status Probation; seen: AGREEMENT_ARCHIVE_UNREACHABLE
+PASS 2b.3 no activation transaction exists in the outbox while the archive is down []
+10:27:46 archive started (no record for owner5 yet)
+PASS 2b.4 archive UP but no signature of kind 3 for owner5: still withheld (NO_VALID_RECORD), still Probation, nothing in the outbox reason AGREEMENT_NO_VALID_RECORD
+PASS 2b.5 a record of the WRONG kind (2, lottery winner) is accepted by the archive but does not activate the founder (kind 3 is required) archive 201; verifier reason AGREEMENT_NO_VALID_RECORD
+PASS 2b.6 owner5 signs kind 3 (founder) and the archive accepts it {"record":{"id":5,"agreementHash":"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db","owner":"0xDEFB9d38a823B141549aa5c5dfD9C0D90E0C41A9","kind":3,"seatId":"0","applicantSignature":"0x3b682fe4a08693362799e6556ecc3513db8e59949dda9828
+10:30:06 kind-3 record posted
+PASS 2b.7 the Verifier service activated owner5 (recordActivation signed by SurKMS, sent by the service): status Active status Active
+PASS 2b.8 QBFT validator set grew to 5 (op5 included) ["0x46c38597e5ced9fdb8719b4ebbd46da77100109a","0x483ceda3fa03bb82e0f2605621787a98d3de5c10","0x69ef1fec4a6fe84dd1f9ab48c2a36d68b6be59f5","0x6e91a503602fd6d1e8bf9634bbae6f513eecb635","0x729faf093dd265db04fe5807f6ff48f4d4e6d3de"]
+PASS 2b.9 the outbox row of the activation is confirmed; the decision is recorded [{"id":1,"kind":"founder_activation","state":"confirmed","function_name":"recordActivation","tx_hash":"0x6e02fba40d03e32fa4a27ee11e125e7254f4fb000f74c7778aa2f111e8219114","receipt_status":"success","onchain_decision_id":4}]
+PASS 2b.10 the decision is indexed with an evidence package sealed at >= 2 custodians and the on-chain StatusDecisionRecorded carries the same evidence hash (the sealed content, which includes the archive record, is not decrypted here) {"dec":{"internal_id":1,"decision_id":4,"decision_type":"founder_activation","decided_at":1795429825,"evidence_hash":"0x32105077f727691c8273c25bf1a7c781f9b3e747d90ec6647a86d6ae52207583","tx_hash":"0x6e02fba40d03e32fa4a27ee11e125e7254f4fb000f74c7778aa2f111e8219114","state":"confirmed"},"evid":{"evide
+== 11 PASS, 0 FAIL, 0 OBS ==> runs/r6-2b.json

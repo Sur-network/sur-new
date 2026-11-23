@@ -1,0 +1,41 @@
+{
+  "name": "r6-6b-migrate",
+  "startedAt": "2026-11-23T10:40:40.371Z",
+  "rows": [
+    {
+      "id": "6b.0",
+      "name": "start: the contract owner (owner4) is Active and has a deferred claimable reward from the real distribution",
+      "result": "PASS",
+      "detail": "claimable 9032122898849721706864, totalClaimable 9032122898849721706864"
+    },
+    {
+      "id": "6b.1",
+      "name": "migrateSeat(contract owner4 -> EOA heir2): SeatMigrated and ClaimableMigrated(owner4, heir2, amount) emitted; claimable moved in full; totalClaimable unchanged",
+      "result": "PASS",
+      "detail": "gas 502507, moved 9032122898849721706864"
+    },
+    {
+      "id": "6b.2",
+      "name": "the seat NFT, the Active record and the node key (op4) moved to heir2; the contract owner is cleared and permanentlyExited",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "id": "6b.3",
+      "name": "heir2 claims the moved reward: exactly the credited amount is paid (balance + amount - fee), ClaimableWithdrawn emitted, claimable 0, totalClaimable reduced by the amount",
+      "result": "PASS",
+      "detail": "received 9027133398849721706864, fee 4989500000000000000, credit 9032122898849721706864"
+    },
+    {
+      "id": "6b.4",
+      "name": "the old contract owner has nothing left to claim (a claim reverts: nothing to claim)",
+      "result": "PASS",
+      "detail": "The contract function \"doClaim\" reverted with the following reason: BlockRewardDistributor: nothing to claim"
+    }
+  ],
+  "notes": {
+    "credit": "9032122898849721706864",
+    "migrateSeatGasWithClaim": 502507
+  },
+  "finishedAt": "2026-11-23T10:40:49.603Z"
+}

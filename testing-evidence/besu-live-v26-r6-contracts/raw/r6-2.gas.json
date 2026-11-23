@@ -1,0 +1,138 @@
+[
+  {
+    "fn": "IdentityRegistry.registerIdentity",
+    "from": "buyer1",
+    "gas": 71764,
+    "block": 135,
+    "status": "success",
+    "tx": "0x1091b8798bb8792227be76c4a6a5f009a8fc0c33412c32ffd7b0dfc6295cdb97"
+  },
+  {
+    "fn": "IdentityRegistry.registerIdentity",
+    "from": "buyer2",
+    "gas": 71764,
+    "block": 136,
+    "status": "success",
+    "tx": "0xa30b2901c77f744bee2d5a122b35c670085c9bef4729599a820a5e881b6d4003"
+  },
+  {
+    "fn": "IdentityRegistry.setPhoneVerified",
+    "from": "identityOracle",
+    "gas": 52304,
+    "block": 137,
+    "status": "success",
+    "tx": "0xfa68cc25367fdb85c39bbaf8bc49ca47c1e7271575dd7a667571f969d97cf1c2"
+  },
+  {
+    "fn": "IdentityRegistry.setTelegramVerified",
+    "from": "identityOracle",
+    "gas": 35286,
+    "block": 138,
+    "status": "success",
+    "tx": "0xc6aeb219cf51ba22b27b2057ebef4bd89e8ba24158a343edf9c4702a9b7153be"
+  },
+  {
+    "fn": "IdentityRegistry.setBaleVerified",
+    "from": "identityOracle",
+    "gas": 35265,
+    "block": 139,
+    "status": "success",
+    "tx": "0xa6b8077c17cc8ab0a06f93ee17259c7604c91d6ccf7fd345672688621bdd3111"
+  },
+  {
+    "fn": "IdentityRegistry.setEmailVerified",
+    "from": "identityOracle",
+    "gas": 35287,
+    "block": 140,
+    "status": "success",
+    "tx": "0x304e4d057701465e2d46d5ac90433c036f1f2f87e19e7cb259906dfabf402242"
+  },
+  {
+    "fn": "IdentityRegistry.setKycVerified",
+    "from": "identityOracle",
+    "gas": 57955,
+    "block": 141,
+    "status": "success",
+    "tx": "0x19e0857d9e414b681bb8b3c6885b58f8ded1a1ce8b8c42d66bdef402615fd8d5"
+  },
+  {
+    "fn": "IdentityRegistry.setPhoneVerified",
+    "from": "identityOracle",
+    "gas": 52292,
+    "block": 142,
+    "status": "success",
+    "tx": "0xb26660061ece9e16d1672e68aecb69a9bca7eb963b82cc41e35f624d6a56fa62"
+  },
+  {
+    "fn": "IdentityRegistry.setTelegramVerified",
+    "from": "identityOracle",
+    "gas": 35274,
+    "block": 143,
+    "status": "success",
+    "tx": "0x45832113a811e6d9aeb151ccaf8e87072003754f4ef78eedfa6fdb20a5f9764e"
+  },
+  {
+    "fn": "IdentityRegistry.setBaleVerified",
+    "from": "identityOracle",
+    "gas": 35253,
+    "block": 144,
+    "status": "success",
+    "tx": "0x270e758e7e8fbbab19d8abcfcaebffcc24e67a91ede5292d0a57c31667f2959e"
+  },
+  {
+    "fn": "IdentityRegistry.setEmailVerified",
+    "from": "identityOracle",
+    "gas": 35275,
+    "block": 145,
+    "status": "success",
+    "tx": "0xb5cdee62d49fb6390b843546ffdc3dbe210ed70f883cacfadd7d3e6ab8eb3716"
+  },
+  {
+    "fn": "IdentityRegistry.setKycVerified",
+    "from": "identityOracle",
+    "gas": 57943,
+    "block": 146,
+    "status": "success",
+    "tx": "0xea549b40a2a68459ad7bfeb6ebb38e9a885cf30be762a4ad744ea61cfdd7c2da"
+  },
+  {
+    "fn": "ValidatorsRegistry.requestMembership",
+    "from": "buyer1",
+    "gas": 44555,
+    "block": 147,
+    "status": "reverted",
+    "tx": "0xdfd53a12c7959ea14f6c774fb2e68299b6672f5452e293d961e7352c3ed35580"
+  },
+  {
+    "fn": "ValidatorsRegistry.requestMembership",
+    "from": "buyer1",
+    "gas": 345128,
+    "block": 148,
+    "status": "success",
+    "tx": "0xd5ce96d2bae68cef46b428b06a87342a90ae1148280821b5a19af271a70e9ecb"
+  },
+  {
+    "fn": "ValidatorsRegistry.requestMembership",
+    "from": "buyer2",
+    "gas": 310928,
+    "block": 149,
+    "status": "success",
+    "tx": "0xbd1f0ac317357df679c8881f4e5cef679ea05842a0d0a869fa3f56a7c1037485"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 33575,
+    "block": 151,
+    "status": "reverted",
+    "tx": "0xcbdb47fabaabe3daeaf8da71fdf834d8b992775be738a4f5925a9c0396bc9e9b"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 33539,
+    "block": 152,
+    "status": "reverted",
+    "tx": "0x4ea9764635ba5ebf712e65957fc8d0be70269309e6ceeddff16e82a51538f421"
+  }
+]

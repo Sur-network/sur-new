@@ -1,0 +1,1 @@
+SUR validators' agreement (TEST TEXT for the round-6 live test, version v1). This is not a real agreement; it only gives the archive a text whose keccak256 hash goes on chain.

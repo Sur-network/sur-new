@@ -1,0 +1,5 @@
+PASS 7b.1 StandbyUpdated was emitted exactly twice (version 2 with 5 members, version 3 with 4 members); genesis version 1 held [op1] [{"v":"2","n":5,"block":"1237"},{"v":"3","n":4,"block":"1245"}]
+PASS 7b.2 current list = op1..op4 (op5 of the exited owner5 removed), version 3, no stale member, isReady ["0x46c385","0x483ced","0x69ef1f","0x6e91a5"]
+PASS 7b.3 exactly one Execute proposal stayed Pending: the one that still listed the exited op5 (its executing vote reverted); the two valid ones are Executed proposals 3, pending ids 2
+PASS 7b.4 owner5 is Exiting with its seat burned (the stale reason) and permanentlyExited 
+== 4 PASS, 0 FAIL, 0 OBS ==> runs/r6-7b.json

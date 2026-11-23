@@ -1,0 +1,36 @@
+[
+ {
+  "fn": "BlockRewardDistributor.openDistribution",
+  "gas": 383729,
+  "block": 1109
+ },
+ {
+  "fn": "BlockRewardDistributor.payPage",
+  "gas": 329003,
+  "block": 1111,
+  "payees": "2"
+ },
+ {
+  "fn": "BlockRewardDistributor.payPage",
+  "gas": 280836,
+  "block": 1112,
+  "payees": "2"
+ },
+ {
+  "fn": "BlockRewardDistributor.payPage",
+  "gas": 243491,
+  "block": 1114,
+  "payees": "2"
+ },
+ {
+  "fn": "BlockRewardDistributor.payPage",
+  "gas": 157684,
+  "block": 1115,
+  "payees": "1"
+ },
+ {
+  "fn": "BlockRewardDistributor.closeDistribution",
+  "gas": 342253,
+  "block": 1116
+ }
+]

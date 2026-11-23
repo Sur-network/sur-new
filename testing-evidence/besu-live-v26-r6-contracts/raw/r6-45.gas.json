@@ -1,0 +1,82 @@
+[
+  {
+    "fn": "BlockRewardDistributor.proposeRateChange",
+    "from": "owner1",
+    "gas": 33389,
+    "block": 601,
+    "status": "reverted",
+    "tx": "0x85218d169cdd89777b7c0be232506d85fac1c369715a1532ea80fb2982651b92"
+  },
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "owner1",
+    "gas": 24170,
+    "block": 602,
+    "status": "reverted",
+    "tx": "0xd73981c2e732731aa86653bd7136500be5098e92b62144e110d3fc050fc2ec21"
+  },
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "owner1",
+    "gas": 24222,
+    "block": 603,
+    "status": "reverted",
+    "tx": "0x415a758ba591e01834ef30f89ab964241407055e6fed1c49f158d74bb7894382"
+  },
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "owner1",
+    "gas": 24262,
+    "block": 604,
+    "status": "reverted",
+    "tx": "0xee9804951dfe54f821486b36c39350629cc384d7bb2ffeb9b7b3a5f4dac0b461"
+  },
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "owner1",
+    "gas": 241897,
+    "block": 605,
+    "status": "success",
+    "tx": "0xa65d45f41f58b606ec3c4f9332c57be991601659f83685fe12149f4e73e74f45"
+  },
+  {
+    "fn": "ValidatorsRegistry.voteParameterChange",
+    "from": "owner3",
+    "gas": 69940,
+    "block": 606,
+    "status": "success",
+    "tx": "0x7c292b63bd367b5d7bd3d492f6b79245219e162fc0ef9bbff837cc0839a9d4f0"
+  },
+  {
+    "fn": "ValidatorsRegistry.voteParameterChange",
+    "from": "buyer3",
+    "gas": 99155,
+    "block": 607,
+    "status": "reverted",
+    "tx": "0xe7d66deb7aaf2d09f12722a7d5c0720fbabb4615f690524a405050e155983e56"
+  },
+  {
+    "fn": "ValidatorsRegistry.proposeParameterChange",
+    "from": "owner1",
+    "gas": 224794,
+    "block": 608,
+    "status": "success",
+    "tx": "0x66884b2dce1be5790f16b27d23e32a82c8c920679348ea95e09e799c8d63dcbb"
+  },
+  {
+    "fn": "ValidatorsRegistry.voteParameterChange",
+    "from": "owner3",
+    "gas": 69940,
+    "block": 609,
+    "status": "success",
+    "tx": "0xc9a7b6711ad5c92ef388d460ce00c551e94810e9652522900e830819d8288c4f"
+  },
+  {
+    "fn": "ValidatorsRegistry.voteParameterChange",
+    "from": "buyer3",
+    "gas": 100881,
+    "block": 610,
+    "status": "success",
+    "tx": "0x1d409175c31128e2d1386d7c7b73e2d84716c60fce1134254b35a9c869b2b44e"
+  }
+]

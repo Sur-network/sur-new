@@ -1,0 +1,39 @@
+{
+  "timeline": [
+    {
+      "utc": "2026-11-23T10:27:44.518Z",
+      "what": "pending reason: AGREEMENT_ARCHIVE_UNREACHABLE \"{\\\"reason\\\":\\\"the Agreement Archive could not be read (owner): fetch failed\\\"}\""
+    },
+    {
+      "utc": "2026-11-23T10:27:46.735Z",
+      "what": "archive started (no record for owner5 yet)"
+    },
+    {
+      "utc": "2026-11-23T10:30:06.880Z",
+      "what": "kind-3 record posted"
+    }
+  ],
+  "seen": [
+    "AGREEMENT_ARCHIVE_UNREACHABLE"
+  ],
+  "outbox": [
+    {
+      "id": 1,
+      "kind": "founder_activation",
+      "state": "confirmed",
+      "function_name": "recordActivation",
+      "tx_hash": "0x6e02fba40d03e32fa4a27ee11e125e7254f4fb000f74c7778aa2f111e8219114",
+      "receipt_status": "success",
+      "onchain_decision_id": 4
+    }
+  ],
+  "decision": {
+    "internal_id": 1,
+    "decision_id": 4,
+    "decision_type": "founder_activation",
+    "decided_at": 1795429825,
+    "evidence_hash": "0x32105077f727691c8273c25bf1a7c781f9b3e747d90ec6647a86d6ae52207583",
+    "tx_hash": "0x6e02fba40d03e32fa4a27ee11e125e7254f4fb000f74c7778aa2f111e8219114",
+    "state": "confirmed"
+  }
+}

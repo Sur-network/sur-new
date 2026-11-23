@@ -1,0 +1,121 @@
+{
+  "name": "r6-2-agreement",
+  "startedAt": "2026-11-23T10:23:01.819Z",
+  "rows": [
+    {
+      "id": "2.1",
+      "name": "archive holds the active agreement version; its hash is keccak256 of the exact UTF-8 text",
+      "result": "PASS",
+      "detail": "hash 0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db, bytes 176, keys hash,label,createdAt,status,retiredAt,bytes,text"
+    },
+    {
+      "id": "2.2",
+      "name": "an applicant signature from an address whose identity is not fully verified is refused by the archive (403 not_verified)",
+      "result": "PASS",
+      "detail": "{\"status\":403,\"body\":{\"error\":\"owner is not a fully verified identity (IdentityRegistry.isFullyVerified)\",\"code\":\"not_verified\"}}"
+    },
+    {
+      "id": "2.3",
+      "name": "a signature made by another key is refused (422)",
+      "result": "PASS",
+      "detail": "{\"status\":422,\"body\":{\"error\":\"the signature was not made by owner\",\"code\":\"signer_mismatch\"}}"
+    },
+    {
+      "id": "2.4",
+      "name": "both applicants EIP-712 signatures (kind 0, seatId 0) are accepted by the archive",
+      "result": "PASS",
+      "detail": "[{\"status\":201,\"body\":{\"record\":{\"id\":1,\"agreementHash\":\"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db\",\"owner\":\"0x12953cb04F262426587c7f284dd197f123f50a28\",\"kind\":0,\"seatId\":\"0\",\"applicantSignature\":\"0xf8e7421d26730c5cd5180405284705d89359a92586256cba6fd1319853e522651a9b6a3c5394ba3a27b4bf5a6c3af1c5c598060e8f624bd8a23145c8ecfe9c791b\",\"applicantSignatureHash\":\"0x2760b383bfcd711ec97d7719152c9abd182330cfa2813f042fe29e6949949ec8\",\"receivedAt\":\"2026-11-23T10:23:13.223Z\",\"onchain\":"
+    },
+    {
+      "id": "2.5",
+      "name": "the archive record is not yet matched on chain before requestMembership",
+      "result": "PASS",
+      "detail": "{\"id\":1,\"agreementHash\":\"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db\",\"owner\":\"0x12953cb04F262426587c7f284dd197f123f50a28\",\"kind\":0,\"seatId\":\"0\",\"applicantSignature\":\"0xf8e7421d26730c5cd5180405284705d89359a92586256cba6fd1319853e522651a9b6a3c5394ba3a27b4bf5a6c3af1c5c598060e8f62"
+    },
+    {
+      "id": "2.6",
+      "name": "requestMembership with the zero agreement hash is refused (eth_call reason + a real mined revert)",
+      "result": "PASS",
+      "detail": "The contract function \"requestMembership\" reverted with the following reason: ValidatorsRegistry: empty agreement hash; mined status reverted"
+    },
+    {
+      "id": "2.7",
+      "name": "wrong payment (collateral without the fee) refused",
+      "result": "PASS",
+      "detail": "The contract function \"requestMembership\" reverted with the following reason: ValidatorsRegistry: incorrect payment amount"
+    },
+    {
+      "id": "2.8",
+      "name": "requestMembership(operator, hash): Probation, locked collateral, paid entrant, seat NFT, EntryAgreementRecorded, seatAgreementHash(seat) == the signed hash",
+      "result": "PASS",
+      "detail": "seat 8, gas 345128, collateral 500000000000000000000000, fee 20000000000000000000000"
+    },
+    {
+      "id": "2.9",
+      "name": "second applicant (a different address, same text) enters the same way: own seat and own on-chain hash",
+      "result": "PASS",
+      "detail": "seat 9, gas 310928"
+    },
+    {
+      "id": "2.10",
+      "name": "membership fee forwarded to the Distributor (its balance rose by 2 fees)",
+      "result": "PASS",
+      "detail": "+40069605600000000000000 (2 x 20000000000000000000000; block rewards may add)"
+    },
+    {
+      "id": "2.11",
+      "name": "the archive matched both signatures with the on-chain EntryAgreementRecorded events",
+      "result": "PASS",
+      "detail": "{\"id\":1,\"agreementHash\":\"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db\",\"owner\":\"0x12953cb04F262426587c7f284dd197f123f50a28\",\"kind\":0,\"seatId\":\"0\",\"applicantSignature\":\"0xf8e7421d26730c5cd5180405284705d89359a92586256cba6fd1319853e522651a9b6a3c5394ba3a27b4bf5a6c3af1c5c598060e8f62"
+    },
+    {
+      "id": "2.12",
+      "name": "recordActivation for both paid applicants (SurKMS-signed, real mined transactions) is refused: probation period not elapsed (7 d); lastPaidActivationAt stays 0, no window slot used",
+      "result": "PASS",
+      "detail": "The contract function \"recordActivation\" reverted with the following reason: ValidatorsRegistry: probation period not elapsed; lastPaidActivationAt 0"
+    },
+    {
+      "id": "2.13",
+      "name": "UNTESTED: the entry window used refusal of a second paid activation, and the real activation of a paid entrant (needs >= 7 days of chain time after requestMembership; the slot is taken only by a paid activation)",
+      "result": "OBSERVATION",
+      "detail": "chain time not touched, as instructed"
+    },
+    {
+      "id": "2.14",
+      "name": "Verifier checkAgreement (the real function, live archive + chain): valid signature + same hash on chain => ok (signature recovered locally)",
+      "result": "PASS",
+      "detail": "{\"ok\":true,\"evidence\":{\"archive\":\"http://127.0.0.1:8792\",\"recordId\":\"1\",\"kind\":0,\"seatId\":\"0\",\"agreementHash\":\"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db\",\"signer\":\"0x12953cb04f262426587c7f284dd197f123f50a28\",\"chainHash\":\"0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a"
+    },
+    {
+      "id": "2.15",
+      "name": "hash on chain differs from the archive record => HASH_MISMATCH; no record of that kind => NO_VALID_RECORD; zero hash on chain => NO_ONCHAIN_HASH",
+      "result": "PASS",
+      "detail": "HASH_MISMATCH / NO_VALID_RECORD / NO_ONCHAIN_HASH"
+    },
+    {
+      "id": "2.16",
+      "name": "archive unreachable => ARCHIVE_UNREACHABLE; no archive configured => ARCHIVE_NOT_CONFIGURED (fail closed: no activation)",
+      "result": "PASS",
+      "detail": "ARCHIVE_UNREACHABLE / ARCHIVE_NOT_CONFIGURED"
+    },
+    {
+      "id": "2.17",
+      "name": "an address with no archive record (the operator key) => not ok",
+      "result": "PASS",
+      "detail": "{\"ok\":false,\"code\":\"NO_VALID_RECORD\",\"reason\":\"no valid applicant signature of kind 0 for 0xffDF867591ed785357Fe0d3B28c1dEA8FEaD09c9 in the archive (0 record(s) seen)\",\"detail\":{\"recordsSeen\":0,\"rejec"
+    }
+  ],
+  "notes": {
+    "hash": "0x15d036ca52b6defb603e1a33f70a2d4c01645e2143014a465d2a62249cb9a1db",
+    "seat1": "8",
+    "seat2": "9",
+    "gas": {
+      "requestMembership": {
+        "min": 310928,
+        "max": 345128,
+        "n": 2
+      }
+    }
+  },
+  "finishedAt": "2026-11-23T10:23:19.216Z"
+}

@@ -1,0 +1,16 @@
+PASS 3.0 start: owner2 seat is Active with operator op2 and a seat NFT; buyers 3 and 4 are fully verified and own no seat seat2 2, seat3 3, seat6 6, seat7 7
+PASS 3.1 transfer of an Active seat to a buyer WITHOUT acceptance is refused (reason + real mined revert); seat, status and operator unchanged The contract function "transferFrom" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat
+PASS 3.2 acceptSeatAgreement: zero hash refused; accepting the seat you already own refused; a non-existent seat id refused The contract function "acceptSeatAgreement" reverted with the following reason: ValidatorsRegistry: empty agreement hash | The contract function "acceptSeatAgreement" reverted with the following reason: ValidatorsRegistry: caller already owns this seat | The contract function "acceptSeatAgreement" r
+PASS 3.3 buyer3 accepts seat3 (owner3 seat): recorded (seatAcceptedFor == seat3, hash stored, event SeatAgreementAccepted) gas 73922
+PASS 3.4 the acceptance for seat3 does NOT authorise the transfer of seat2 (refused, real mined revert); the acceptance is still recorded for seat3 The contract function "transferFrom" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat
+PASS 3.5 buyer3 signs the agreement for seat2 (kind 1) and the archive accepts it HTTP 201
+PASS 3.6 buyer3 accepts seat2 with the signed document hash (replaces the earlier acceptance of seat3) gas 39722
+PASS 3.7 transfer succeeds with the acceptance: events Transfer, SeatAgreementBound(seat, buyer3, hash), SeatTransferred(statusAfter Active) gas 494585
+PASS 3.8 the Active seat STAYS Active under the buyer; the operator key op2 now belongs to buyer3; the old owner is cleared; seatAgreementHash(seat2) == the accepted hash; the acceptance is consumed buyer3 Active, owner2 None
+PASS 3.9 old owner marked permanentlyExited (may never rejoin); active owners list holds buyer3, not owner2 
+PASS 3.10 node v2 (op2) keeps producing blocks after the sale (no interruption); the QBFT set is unchanged miners 0x69ef1f,0x6e91a5,0x46c385,0x483ced
+PASS 3.11 the archive matched the kind-1 record with the on-chain SeatAgreementAccepted / SeatAgreementBound events {"status":"recorded","block":481,"txHash":"0xb58f5f93f82a5de9165a487a8f038f5c7f028cddcc11e8b464b2526d7c6db553","event":"SeatAgreementAccepted","seatId":"2"}
+PASS 3.12 revokeSeatAcceptance clears the acceptance (event SeatAcceptanceRevoked, seatAcceptedFor 0, hash 0) gas 26508
+PASS 3.13 a second revoke is refused (no acceptance recorded); after the revoke the seat cannot be transferred to buyer4 The contract function "revokeSeatAcceptance" reverted with the following reason: ValidatorsRegistry: no acceptance recorded | The contract function "transferFrom" reverted with the following reason: ValidatorsRegistry: buyer has not accepted the validators' agreement for this seat
+PASS 3.14 a buyer that already holds a seat can record an acceptance but the transfer of a second seat to it is refused (recipient already holds a seat) did NOT revert | The contract function "transferFrom" reverted with the following reason: ValidatorSeatNFT: recipient already holds a seat
+== 15 PASS, 0 FAIL, 0 OBS ==> runs/r6-3.json

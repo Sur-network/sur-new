@@ -1,0 +1,26 @@
+PASS 6a.0 start: owner3 is an Active founder seat (op3, seat NFT, board member); the heir address is clean and not verified seat 3, status Active, board authority owner3 true heir false
+PASS 6a.1 migrateSeat before the identity migration is refused (the Verifier cannot name an address the identity oracle did not migrate to); the old owner itself cannot call it The contract function "migrateSeat" reverted with the following reason: ValidatorsRegistry: the identity of the old owner was not migrated to this address | The contract function "migrateSeat" reverted with the following reason: ValidatorsRegistry: caller is not the verifier
+PASS 6a.2 migrateIdentity(owner3, heir1) by the identity-oracle key: IdentityMigrated, migratedTo(owner3) == heir1, the heir is fully verified, the old identity is burned gas 149772
+PASS 6a.3 SurKMS: the migrateSeat rule is OFF by default (the table row says off) and a signing request is refused by the KMS while it is off; with the rule switched ON (test only, recorded) the Verifier slot signs it before disable: verifier 0x3333333333333333333333333333333333333333 0xa63a76dd migrateSeat ON; after disable: verifier 0x3333333333333333333333333333333333333333 0xa63a76dd migrateSeat off; KMS answer while off: signer refused eth_signTransaction: POLICY_DENIED: POLICY_DENIED: function-disabled: mig
+PASS 6a.4 migrateSeat(owner3, heir1) signed by SurKMS (verifier slot) and mined: event SeatMigrated(seat, owner3, heir1, Active) gas 480376, block 699
+PASS 6a.5 the validator record moved: heir1 Active with the same collateral/paid flag, owner3 cleared; the founder flag moved; the seat NFT belongs to heir1; the agreement hash of the seat is unchanged heir Active, stake 0
+PASS 6a.6 the node key stays with the seat: operatorOf(heir1) == op3, ownerOfOperator(op3) == heir1; active owners list holds heir1, not owner3; owner3 is marked permanentlyExited while heir1 is NOT 
+D:\Amir\Business\SUR\NewSur\Deployments\BesuLive\node_modules\viem\actions\public\waitForTransactionReceipt.ts:282
+        reject(new WaitForTransactionReceiptTimeoutError({ hash }))
+               ^
+
+
+WaitForTransactionReceiptTimeoutError: Timed out while waiting for transaction with hash "0xd081daa928d89054dff2103bdf6cbb6a33671db885c969c3ea82d3c302088138" to be confirmed.
+
+Version: viem@2.58.4
+    at Timeout.<anonymous> (D:\Amir\Business\SUR\NewSur\Deployments\BesuLive\node_modules\viem\actions\public\waitForTransactionReceipt.ts:282:16)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7) {
+  details: undefined,
+  docsPath: undefined,
+  metaMessages: undefined,
+  shortMessage: 'Timed out while waiting for transaction with hash "0xd081daa928d89054dff2103bdf6cbb6a33671db885c969c3ea82d3c302088138" to be confirmed.',
+  version: '2.58.4'
+}
+
+Node.js v22.18.0

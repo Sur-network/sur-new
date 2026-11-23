@@ -1,0 +1,15 @@
+{
+  "maxEntriesPerWindow": "1",
+  "probationPeriod": "604800",
+  "slashBps": "100",
+  "lastPaidActivationAt": "0",
+  "lastRateChangeTime": "0",
+  "entryWindowSeconds": "604800",
+  "nextPaidActivationAllowedAt": "0",
+  "entryCollateral": "500000000000000000000000",
+  "membershipFeeBps": "400",
+  "recoveryPeriod": "172800",
+  "exitCooldown": "604800",
+  "genesisTime": "1795429216",
+  "lastEntryWindowChange": "0"
+}

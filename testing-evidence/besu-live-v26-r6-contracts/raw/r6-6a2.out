@@ -1,0 +1,6 @@
+PASS 6a.7 votes: the old owner cannot vote any more; heir1 is a new voter from now (cannot vote on the proposal created BEFORE the migration; can propose and be counted on later ones) The contract function "voteParameterChange" reverted with the following reason: ValidatorsRegistry: caller is not an active validator | The contract function "voteParameterChange" reverted with the following reason: ValidatorsRegistry: not eligible - not Active when this proposal was created
+OBS  6a.8 OBSERVATION board authority: owner3 (founding board member) / heir1 after the migration before: owner3 true, heir1 false; after: owner3 false, heir1 false
+PASS 6a.9 no ClaimableMigrated event for an EOA owner (nothing credited); Distributor claimable of heir1 is 0 and totalClaimable unchanged totalClaimable 0
+PASS 6a.10 node v3 (op3) keeps producing blocks after the migration and stays in the QBFT set migration block 699
+PASS 6a.11 a second migration of the same (now empty) old owner is refused The contract function "migrateSeat" reverted with the following reason: ValidatorsRegistry: seat cannot be migrated in this status
+== 4 PASS, 0 FAIL, 1 OBS ==> runs/r6-6a2.json

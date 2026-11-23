@@ -1,0 +1,28 @@
+{
+  "name": "r6-0-bootstrap",
+  "startedAt": "2026-11-23T10:21:21.949Z",
+  "rows": [
+    {
+      "id": "0.1",
+      "name": "owners 2..4 activated by a SurKMS-signed recordActivation; QBFT set = op1..op4",
+      "result": "PASS",
+      "detail": "[\"0x46c38597e5ced9fdb8719b4ebbd46da77100109a\",\"0x483ceda3fa03bb82e0f2605621787a98d3de5c10\",\"0x69ef1fec4a6fe84dd1f9ab48c2a36d68b6be59f5\",\"0x6e91a503602fd6d1e8bf9634bbae6f513eecb635\"]"
+    },
+    {
+      "id": "0.2",
+      "name": "statuses: owners 1..4 Active, 5..7 Probation",
+      "result": "PASS",
+      "detail": "{\"owner1\":\"Active\",\"owner2\":\"Active\",\"owner3\":\"Active\",\"owner4\":\"Active\",\"owner5\":\"Probation\",\"owner6\":\"Probation\",\"owner7\":\"Probation\"}"
+    },
+    {
+      "id": "0.3",
+      "name": "all four nodes sign blocks (4 distinct miners in the last 9 blocks)",
+      "result": "PASS",
+      "detail": "0x6e91a503602fd6d1e8bf9634bbae6f513eecb635,0x46c38597e5ced9fdb8719b4ebbd46da77100109a,0x483ceda3fa03bb82e0f2605621787a98d3de5c10,0x69ef1fec4a6fe84dd1f9ab48c2a36d68b6be59f5"
+    }
+  ],
+  "notes": {
+    "fixture": "recordActivation for owners 2,3,4 by SurKMS verifier slot; owner4 = TEST-ONLY contract owner"
+  },
+  "finishedAt": "2026-11-23T10:21:36.932Z"
+}

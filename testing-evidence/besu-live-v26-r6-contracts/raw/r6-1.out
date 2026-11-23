@@ -1,0 +1,11 @@
+PASS 1.1 all 11 contracts of the ABI set (+ StandbyValidators = 12) have code at their genesis addresses 11/11 with code: {"FoundationDAO":28365,"BlockRewardDistributor":24777,"ValidatorsRegistry":40574,"ValidatorsBoard":21160,"ValidatorsTreasury":5755,"IdentityRegistry":5966,"FoundationMembers":5970,"ValidatorSeatNFT":6422,"GenesisClaimsVault":2120,"ValidatorLottery":8327,"KmsDirectives":952}
+PASS 1.2 StandbyValidators (0xcCcC...cCcC) has code 2937 bytes
+PASS 1.3 the net makes blocks (1 s period): head advances and the last 3 blocks are ~3 s apart head 10 -> 17; 3 blocks = 3 s; chainId 262025
+PASS 1.4 the five nodes are peered (each sees >= 3 peers) {"v1":3,"v2":4,"v3":4,"v4":4,"v5":3}
+PASS 1.5 QBFT validator set = exactly the first validator's operator key (op1) ["0x46c38597e5ced9fdb8719b4ebbd46da77100109a"]
+PASS 1.6 maxEntriesPerWindow == 1, probationPeriod == 604800 (7 d), slashBps == 100, lastPaidActivationAt == 0, lastRateChangeTime == 0 (read from the chain) {"maxEntriesPerWindow":"1","probationPeriod":"604800","slashBps":"100","lastPaidActivationAt":"0","lastRateChangeTime":"0","entryWindowSeconds":"604800","nextPaidActivationAllowedAt":"0","entryCollateral":"500000000000000000000000","membershipFeeBps":"400","recoveryPeriod":"172800","exitCooldown":"6
+PASS 1.7 entry window 7 d, nextPaidActivationAllowedAt == 0 (no paid activation yet), entry collateral 500,000 Suren, fee 4 % {"maxEntriesPerWindow":"1","probationPeriod":"604800","slashBps":"100","lastPaidActivationAt":"0","lastRateChangeTime":"0","entryWindowSeconds":"604800","nextPaidActivationAllowedAt":"0","entryCollateral":"500000000000000000000000","membershipFeeBps":"400","recoveryPeriod":"172800","exitCooldown":"6
+PASS 1.8 genesis seats: owner1 Active (first validator), owners 2..7 Probation (founders, no collateral) {"owner1":"Active","owner2":"Probation","owner3":"Probation","owner4":"Probation","owner5":"Probation","owner6":"Probation","owner7":"Probation"}
+PASS 1.9 each of the 7 founders holds one seat NFT {"owner1":"1","owner2":"1","owner3":"1","owner4":"1","owner5":"1","owner6":"1","owner7":"1"}
+PASS 1.10 StandbyValidators list at genesis = exactly [op1] and isReady ["0x46C38597E5ceD9FDB8719b4eBbD46DA77100109a"]
+== 10 PASS, 0 FAIL, 0 OBS ==> runs/r6-1.json
