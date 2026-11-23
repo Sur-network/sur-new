@@ -62,7 +62,7 @@ RtlJ $n.ParagraphFormat
 $n.ParagraphFormat.SpaceAfter = 6; $n.ParagraphFormat.SpaceBefore = 0
 $n.ParagraphFormat.LineSpacingRule = 5; $n.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.3)
 $n.LanguageID = 1065
-if($Compact){ $n.ParagraphFormat.SpaceAfter = 3; $n.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.08) }
+if($Compact){ $n.ParagraphFormat.SpaceAfter = 3; $n.ParagraphFormat.LineSpacing = $app.LinesToPoints(1.06) }
 
 $h1 = $doc.Styles.Item('Heading 1')
 SetFont $h1.Font 26 -1 $cBrand $TITLE
