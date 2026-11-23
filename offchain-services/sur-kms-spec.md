@@ -2,6 +2,7 @@
 
 > **وضعیت:** ✅ ساخته و آزموده روی شبکهٔ آزمایشی (anvil با قراردادهای واقعی، ۲۳۳ آزمون، دو دور بازبینی مستقل با رفع یافته‌ها (دور دوم: HMAC، پشتیبان، اعلام پاکت، قفل بازکردن، قراردادهای نهایی؛ `kms-review-record.md`): `kms-review-record.md`؛ کد: `Deployments/SurKMS`)؛ ⚠️ **هنوز نه روی Besu زنده، نه حسابرسی `max` و انسانی بیرونی، نه با کلید زنده**؛ انحراف‌ها و پرسش‌های ساخت: بخش ۱۸ · **تاریخ:** ۲۰۲۶-۱۱-۲۱
 > **هم‌ترازی با قراردادها (۲۰۲۶-۱۱-۲۳):** پس از کامیت‌های `11ff741` و `187c7dd` (۱۸۶ آزمون Hardhat در ۲۱ فایل) فقط یک تغییر به این سند مربوط شد: تابع تازهٔ `ValidatorsRegistry.migrateSeat` (`onlyVerifier`) که باید به فهرست مجاز slot `verifier` اضافه شود (بخش ۸.۱). `slashBps`، `probationPeriod`، `maxEntriesPerWindow` و پذیرش توافق‌نامهٔ صندلی روی سیاست امضا اثر ندارند (`acceptSeatAgreement` را خریدار با کلید خودش می‌زند، نه KMS).
+> **slot چهارم `invoiceSigner` (تصمیم مالک ۲۰۲۶-۱۱-۲۳):** KMS فاکتورهای EIP-712 درگاه پرداخت SurPay را هم امضا می‌کند: متد `eth_signTypedData_v4` فقط برای همین slot و فقط برای شکل دقیق `Invoice` (بخش ۴٫۲ و ۸٫۴). ساخته و آزموده شد، از جمله با خود قرارداد SurPay روی anvil و با کلاینت `RemoteInvoiceSigner` خود SurPay؛ کد: `Deployments/SurKMS`.
 > **نام:** `SurKMS` (پیش‌تر در کاتالوگ `SurSigner`، سرویس A4؛ شناسهٔ A4 ثابت ماند).
 > **مبنا:** تصمیم‌های `SG-1..SG-6` در `sur-offchain-decisions.md` (بخش «بازطراحی SG-1 تا SG-3»)، تصمیم `RD-21` (سیاست سمت امضاکننده)، `RD-23` (گواهی نرخ)، `RD-8` (هشدار) و قراردادهای `ValidatorsBoard`، `ValidatorsRegistry`، `BlockRewardDistributor`، `IdentityRegistry`، `FoundationDAO`.
 > **نکته:** مواردی که با «(پیشنهاد)» علامت خورده‌اند هنوز تأیید صریح مالک را نگرفته‌اند؛ بقیه تصمیم‌شده‌اند.
@@ -59,7 +60,7 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
   - `retired`: کلید قبلی؛ نگه‌داشته می‌شود برای ممیزی؛ **امضا ندارد**.
   - `orphan`: زنجیره آدرسی را برای این slot ثبت کرده که KMS ندارد؛ امضای slot متوقف و هشدار بحرانی.
   - `frozen`: توقف با رأی؛ فقط با رأی هم‌نصاب باز می‌شود.
-- **slot:** سه slot (سه کلید) در یک نمونه؛ هر slot سیاست و فهرست سرور جدا دارد (`SG-4`). `identityOracle` slot از ابتدا هست چون آدرسش در genesis می‌آید، ولی تا آماده شدن Identity Service کسی مجاز به درخواست امضا نیست (`SG-5`).
+- **slot:** سه slot زنجیره‌ای (سه کلید) در یک نمونه، به‌علاوهٔ slot اختیاری `invoiceSigner` (بخش ۴٫۲)؛ هر slot سیاست و فهرست سرور جدا دارد (`SG-4`). `identityOracle` slot از ابتدا هست چون آدرسش در genesis می‌آید، ولی تا آماده شدن Identity Service کسی مجاز به درخواست امضا نیست (`SG-5`).
 - **کلید HMAC:** نوع دوم کلید، بخش ۴٫۱ (`personKey`؛ تصمیم مالک ۲۰۲۶-۱۱-۲۱).
 - **آدرس‌های genesis:** `SurAddresses.VERIFIER`، `DISTRIBUTION_ORACLE`، `IDENTITY_ORACLE` از همین KMS گرفته می‌شود، پس KMS باید پیش از ساخت genesis کار کند (اولویت، بخش ۱۶).
 
@@ -76,6 +77,14 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
 - **پشتیبان رمزشدهٔ آفلاین (تنها export کل KMS):** `hmac backup --out فایل` فقط با عبارت نگه‌دارنده که دوباره تایپ می‌شود؛ KMS یک **عبارت پشتیبان** تازه می‌سازد (۱۶۰ بیت، **یک‌بار** روی ترمینال، با تأیید دوباره‌تایپ؛ هرگز ذخیره یا لاگ نمی‌شود) و **یک** فایل می‌نویسد: کلید با Argon2id (حداکثر حدود ۶۴ MiB) + AES-256-GCM رمز می‌شود و AAD آن نام slot و مقدار کنترل کلید است (فایل را نمی‌شود برچسب‌عوض کرد)؛ حالت فایل ۰۶۰۰ و هرگز روی فایل موجود نوشته نمی‌شود. خود کلید در هیچ خروجی نیست. دومین پشتیبان در یک ساعت رد می‌شود مگر با `--force` (ثبت‌شده). `hmac restore فایل` فقط در slot **خالی** یک نمونهٔ تازهٔ مقداردهی‌شده (`init --no-hmac`)؛ عبارت نگه‌دارندهٔ همان نمونه و عبارت پشتیبان را می‌خواهد، مقدار کنترل را می‌سنجد، و اگر slot کلید دارد رد می‌کند. هر پشتیبان و بازیابی در لاگ ثبت می‌شود و هشدار **بحرانی** می‌دهد (`HMAC_BACKUP_CREATED`، `HMAC_RESTORED`؛ ردشدن‌ها `HMAC_BACKUP_REFUSED`).
 - **مراسم و نگه‌داری پشتیبان:** **فایل نزد مدیرعامل (آقای زجاجی)** نگه‌داری می‌شود. **عبارت پشتیبان باید نزد کسی غیر از نگه‌دارندهٔ فایل باشد** تا هیچ‌کس تنها هر دو را نداشته باشد؛ دلیل اهمیت: **مدیر سرور SurKMS هم همان مدیرعامل (زجاجی) است** (و ارائه‌دهندهٔ VPS هم)، پس اگر فایل و عبارت هر دو نزد او باشد جداسازی بی‌معنا می‌شود. **توصیهٔ پیشنهادی (نه تصمیم‌شده): خانم شریف‌زاد یا آقای سپهر محمدی نگه‌دارندهٔ عبارت پشتیبان** (🔶 **پرسش باز: چه کسی نگه‌دارندهٔ عبارت پشتیبان است**). عبارت پشتیبان از عبارت نگه‌دارندهٔ KMS و از پاکت آن جداست.
 - Verifier باید بعداً با تغییر کوچکی (`KeyAccessClient` ← `kms_hmac`) از آن استفاده کند؛ **هنوز انجام نشده**.
+
+### ۴٫۲ کلید `invoiceSigner` (درگاه SurPay؛ تصمیم مالک ۲۰۲۶-۱۱-۲۳)
+
+- **وجود:** فقط وقتی `KMS_SURPAY_ADDRESS` و `KMS_INVOICE_TOKENS` تنظیم باشند. بدون آن‌ها نه کلیدی ساخته می‌شود و نه متدی جواب می‌دهد (ردیف جدول ۸٫۱ هم فقط با همین تنظیمات روشن است).
+- **نگهداری:** مثل بقیهٔ کلیدها: همان ظرف رمزشده، ساخت فقط داخل KMS، mTLS با گواهی سنجاق‌شده و IP، لاگ زنجیره‌ای، همان سقف ردها و هشدارها. فقط **typed data** امضا می‌کند، نه تراکنش و نه پیام EIP-191.
+- **زنجیره تنها حقیقت است (بخش ۹):** آدرس فعال همان است که `SurPay.invoiceSigner()` می‌گوید. کلیدی که KMS ساخته تا وقتی قرارداد آن را نگفته `pending` است و امضا نمی‌کند. اگر قرارداد آدرسی بگذارد که KMS ندارد، slot `orphan` می‌شود (امضا متوقف، هشدار بحرانی). تغییر آدرس را مالک SurPay با `scheduleInvoiceSigner` (تأخیر ۷ روز) و `executeChange` انجام می‌دهد؛ KMS برای آن رأی‌گیری یا پیشنهادی نمی‌سازد و فقط getter را در هر تطبیق (پیش‌فرض هر ۵ دقیقه) می‌خواند. برای چرخش: `keys new --slot invoiceSigner` کلید تازه می‌سازد و آدرسش را به مالک SurPay می‌دهند.
+- **freeze ندارد:** slot در `KmsDirectives` نیست (فرض، بخش ۱۸ مورد ۱۵)؛ توقف درگاه با تغییر کلید در خود SurPay انجام می‌شود. گیرندهٔ هشدارهای این slot هیأت بنیاد است (فرض).
+- **مراسم:** `init` با تنظیمات SurPay کلید را هم می‌سازد و `INVOICE_SIGNER = آدرس` را چاپ می‌کند؛ آدرس به سازندهٔ SurPay یا به `scheduleInvoiceSigner` داده می‌شود. اگر SurPay هنوز مستقر نشده یا KMS پیش‌تر ساخته شده، پس از تنظیم `KMS_SURPAY_ADDRESS` همان `keys new --slot invoiceSigner` کافی است.
 
 ## ۵. رمزنگاری در حالت ذخیره و باز کردن قفل
 
@@ -145,6 +154,7 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
 | `verifier` | `ValidatorsBoard` | `refreshBoard`، `syncBoard`، `fillVacancies`، `clearStaleVotes`، `referRecoveryRemovalToAssembly` | همان، بدون مجوز |
 | `distributionOracle` | `BlockRewardDistributor` | `openDistribution`، `payPage`، `closeDistribution`، `abortDistribution`، `certifyRateStart` | **دقیقاً** تنها توابع `onlyDistributionOracle` قرارداد نهایی (همگام‌سازی ۲۰۲۶-۱۱-۲۱، کامیت Plan `9a94fa5`)؛ `distributeRewards` دیگر نیست و آزمون انحراف در صورت بازگشتش شکست می‌خورد |
 | `identityOracle` | `IdentityRegistry` | `setPhoneVerified`، `setTelegramVerified`، `setBaleVerified`، `setEmailVerified`، `setKycVerified`، `migrateIdentity` | تنها توابع `onlyIdentityOracle` قرارداد؛ تا نهایی‌شدن Identity Service غیرفعال (SG-5) |
+| `invoiceSigner` | — (فقط typed data با `eth_signTypedData_v4`؛ هیچ تراکنش و پیام EIP-191) | `Invoice` در دامنهٔ EIP-712 قرارداد SurPay | سیاست بخش ۸٫۴؛ **فقط وقتی** `KMS_SURPAY_ADDRESS` تنظیم باشد روشن است؛ هیچ تابع قراردادی در آن نیست |
 
 همهٔ ردیف‌ها: `value` صفر، `chainId` شبکهٔ Sur، `from` برابر آدرس فعال slot. نوع تراکنش: legacy با EIP-155 (Verifier اکنون با `gasPrice` می‌فرستد) و EIP-1559؛ legacy بدون `chainId` رد می‌شود. تابع تازه یا مقصد تازه را مدیر سرور با ثبت لاگ و هشدار به فهرست اضافه می‌کند (بخش ۱۰).
 
@@ -159,6 +169,20 @@ Verifier برای توابعی که هر کسی می‌تواند بزند (`PER
 ### ۸٫۳ متد `kms_hmac` (کلید HMAC، تصمیم مالک ۲۰۲۶-۱۱-۲۱)
 
 `{"method":"kms_hmac","params":["personKey","0x<ورودی hex>"]}` ← `"0x<۳۲ بایت>"` = `HMAC-SHA256(key, ورودی)`. ترتیب بررسی: سرور (گواهی و IP) ← شکل درخواست و نام slot ← دسترسی سرور به slot `personKey` ← قفل ← اندازه و قالب ورودی (۱ تا ۱۰۲۴ بایت) ← وضعیت (خاموش یا ساخته‌نشده = `NOT_ACTIVE`). موتور سیاست امضا برای این slot کاری نمی‌کند: `eth_sign*` و تراکنش با نام یا «آدرس» آن رد می‌شود. جزئیات در بخش ۴٫۱.
+
+### ۸٫۴ متد `eth_signTypedData_v4` (slot `invoiceSigner`، تصمیم مالک ۲۰۲۶-۱۱-۲۳)
+
+`{"method":"eth_signTypedData_v4","params":["<آدرس invoiceSigner>","<JSON داده>"]}` ← `"0x<۶۵ بایت r‖s‖v>"` با `v` برابر ۲۷ یا ۲۸ (۱۳۰ نویسهٔ hex، همان قالبی که `RemoteInvoiceSigner` در SurPay و ethers/viem می‌پذیرند). ترتیب بررسی مثل بقیه: سرور (گواهی و IP) ← شکل درخواست ← کلید و دسترسی سرور به slot ← **slot باید `invoiceSigner` باشد** ← قفل ← ORPHAN/NOT_ACTIVE (freeze در کار نیست) ← سیاست زیر ← امضا. امضا قطعی است (همان ورودی، همان امضا).
+
+**سیاست (پیش‌فرض رد؛ `src/policy/invoice.ts`):**
+- JSON دقیقاً چهار عضو دارد: `types`، `primaryType`، `domain`، `message` (حداکثر ۴ KiB). `primaryType` دقیقاً `Invoice`.
+- `types` دقیقاً `EIP712Domain{string name, string version, uint256 chainId, address verifyingContract}` و `Invoice{bytes32 invoiceId, address merchant, address token, uint256 amount, uint8 feePayer, uint16 feeBps, uint64 expiresAt}` است، به همین ترتیب؛ نوع اضافه، فیلد اضافه یا کم، یا ترتیب و نوع دیگر ← رد (هر کدام typehash و چیزی را که امضا می‌شود عوض می‌کرد).
+- `domain` دقیقاً `name="SurPay"`، `version="1"`، `chainId` برابر `KMS_CHAIN_ID`، `verifyingContract` برابر `KMS_SURPAY_ADDRESS`، بدون عضو اضافه (مثل `salt`).
+- `message` دقیقاً هفت فیلد: `feePayer` فقط ۰ یا ۱؛ `feeBps ≤ 200` (سقف ثابت قرارداد)؛ `۰ < amount ≤ (2²⁵⁶−1)/10200` (همان سقف سرریز سرویس SurPay)؛ `merchant` غیرصفر؛ `token` در فهرست مجاز `KMS_INVOICE_TOKENS` (آدرس صفر = Suren بومی)؛ `expiresAt` در آینده و حداکثر ۶ روز (یا کمتر با `KMS_INVOICE_MAX_TTL_SEC`) از اکنونِ KMS؛ `invoiceId` ۳۲ بایت؛ اعداد فقط اعشاری ساده (نه `0x`، نه علمی).
+- **هش امضاشده از مقادیر بررسی‌شده دوباره ساخته می‌شود**، نه از چیزی که درخواست‌دهنده فرستاده؛ پس هر فرق بین «آنچه دیدیم» و «آنچه امضا شد» ممکن نیست.
+- هر slot دیگر این متد را رد می‌کند (`POLICY_DENIED: typed-data-not-allowed`)؛ `invoiceSigner` هم `eth_signTransaction` و `eth_sign` را رد می‌کند (`slot-typed-data-only`) و `kms_hmac` برایش وجود ندارد.
+
+**لاگ:** هر درخواست (امضاشده یا ردشده) با فیلدهای رمزگشایی‌شدهٔ فاکتور (invoiceId، merchant، token، amount، feePayer، feeBps، expiresAt)، هش درخواست و در امضاشده‌ها هش EIP-712 ثبت می‌شود؛ در ردشده‌ها دلیل رد هم هست. خود امضا و هیچ چیز سری ثبت نمی‌شود. سقف ثبت ردها (۲۰ در دقیقه برای هر منبع) و هشدار (`SIGN_REFUSED`، پس از ۵ رد در ۱۰ دقیقه بحرانی) مثل بقیهٔ slotها.
 
 ## ۹. تعویض کلید: «زنجیره تنها رأی است»
 
@@ -369,3 +393,4 @@ KMS نمی‌تواند به‌جای اعضا روی زنجیره رأی بده
 13. **دور دوم بازبینی (۲۰۲۶-۱۱-۲۲):** (الف) شمارش منبع IPv6 اکنون عددی روی ۶۴ بیت بالاست (پیش‌تر از روی متن بود و با آدرس فشرده‌شده دور زده می‌شد). (ب) صف بازکردن: حداکثر **یک** تلاش منتظر برای هر منبع و ۵ تلاش کل؛ «مشغول» در لاگ و هشدار می‌آید (حداکثر یک بار در دقیقه برای هر منبع)؛ نگاشت‌ها با حذف منقضی‌ها و قدیمی‌ترین‌ها کران‌دارند. (پ) نمونه‌ای که با `init --no-hmac` ساخته شده منتظر `hmac restore` است و `hmac init` را رد می‌کند مگر با `--new-key` و تأیید تایپ‌شدهٔ yes (جلوگیری از ساخت تصادفی کلید تازه که تاریخچهٔ یکتایی را می‌شکند). (ت) خطای بازیابی فقط وقتی «عبارت نادرست یا فایل دست‌کاری‌شده» گزارش می‌شود که احراز GCM شکست خورده باشد.
 
 14. **همگام‌سازی با قراردادهای Plan تا کامیت `73c0c3e` (۲۰۲۶-۱۱-۲۳):** ABIها دوباره تولید شد. تغییرها برای KMS: `migrateSeat` تابع تازهٔ `onlyVerifier` است و به جدول `verifier` افزوده شد (خاموش پیش‌فرض)؛ `distributionOracle` بدون تغییر (همان پنج تابع)؛ `requestMembership(operator, agreementHash)`، `recordActivation` (پنجرهٔ ورود، همان امضا) و `proposeRateChange` / `executeRateChange` را سرویس‌های ما با کلید سرویس نمی‌فرستند (عضو، یا آزاد برای همه) و در جدول نیستند. `probationPeriod`، `maxEntriesPerWindow` و `slashBps` ثابت شدند و config آزمون دیگر آن‌ها را نمی‌گذارد؛ چون هفت‌روزهٔ ثابت و پایان ماه تقویمی هیأت را می‌شکند، آزمون‌ها چهار بنیان‌گذار را مستقیم در storage رجیستری واقعی «فعال» می‌کنند و رأی‌ها از کد واقعی ValidatorsBoard و FoundationDAO می‌گذرد. (Besu زنده: مجموعهٔ آزمون opt-in `test/besu` از جلسهٔ دیگر در همین پوشه است و از lint کنار گذاشته شد.)
+15. **slot `invoiceSigner` برای SurPay (۲۰۲۶-۱۱-۲۳، تصمیم مالک):** ساخته شد (بخش ۴٫۲ و ۸٫۴). **فرض‌هایی که مالک تأیید کند:** (الف) هیأت این slot هیأت بنیاد فرض شد (فقط برای گیرندهٔ هشدار؛ رأی‌گیری ندارد)؛ (ب) در `KmsDirectives` نیست و freeze ندارد (enum آن سه slot دارد و تغییرش قرارداد را عوض می‌کند)؛ توقف اضطراری درگاه = تغییر کلید در SurPay یا خاموش‌کردن slot برای سرور با `server add`؛ (پ) چرخش را SurPay دارد، پس صفحهٔ وب KMS برایش پیشنهاد نمی‌سازد و KMS آن را با خواندن getter `SurPay.invoiceSigner()` دنبال می‌کند (نه رویداد)؛ (ت) فهرست مجاز `token` و حداکثر مهلت در تنظیمات KMS است، نه در قرارداد (قرارداد خودش `allowedToken` دارد؛ KMS فقط دومین لایه است)؛ (ث) ساعت KMS مرجع `expiresAt` است. **آنچه آزموده شد:** هر قاعدهٔ سیاست جدا رد می‌شود (آزمون واحد)؛ امضای KMS در `SurPay.pay` واقعی (artifact کامپایل‌شدهٔ خود SurPay، روی anvil) پذیرفته می‌شود و فاکتور دست‌کاری‌شده را قرارداد رد می‌کند؛ کلاینت واقعی SurPay (`RemoteInvoiceSigner`، کپی بی‌تغییر با آزمون هش) روی mTLS واقعی امضا می‌گیرد؛ پس از `scheduleInvoiceSigner` + `executeChange` کلید KMS `orphan` می‌شود. **آنچه نیازمند تغییر در SurPay نیست ولی بهتر است:** توضیح بالای `RemoteInvoiceSigner` هنوز می‌گوید سمت KMS «ساخته نشده»؛ باید به‌روز شود. **آزموده نشده:** Besu زنده، گواهی و IP واقعی، حجم زیاد فاکتور.
