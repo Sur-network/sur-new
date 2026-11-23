@@ -2,7 +2,10 @@
   [string]$BlocksPath,   # JSON from md2blocks.mjs
   [string]$Out,          # output .docx
   [string]$Cover,        # full-page cover image (png, A5 portrait) from cover.ps1
-  [string]$Pdf = ''      # optional PDF export for checking
+  [string]$Pdf = '',     # optional PDF export for checking
+  [string]$HeaderText = 'سپیدنامهٔ بلاک‌چین سور',
+  [string]$DocTitle = 'سپیدنامهٔ بلاک‌چین سور (غیر قابل انتشار)',
+  [switch]$NoChapterBreaks   # short documents: chapters do not start on a new page
 )
 $ErrorActionPreference = 'Stop'
 function RGBc($r,$g,$b){ return [int]($r + $g*256 + $b*65536) }
@@ -55,7 +58,7 @@ $n.LanguageID = 1065
 $h1 = $doc.Styles.Item('Heading 1')
 SetFont $h1.Font 26 -1 $cBrand $TITLE
 Rtl $h1.ParagraphFormat
-$h1.ParagraphFormat.PageBreakBefore = -1; $h1.ParagraphFormat.KeepWithNext = -1
+$h1.ParagraphFormat.PageBreakBefore = $(if($NoChapterBreaks){0}else{-1}); $h1.ParagraphFormat.KeepWithNext = -1
 $h1.ParagraphFormat.SpaceBefore = 0; $h1.ParagraphFormat.SpaceAfter = 14
 $h1.ParagraphFormat.LineSpacingRule = 0
 $bb = $h1.ParagraphFormat.Borders.Item(-3); $bb.LineStyle = 1; $bb.LineWidth = 12; $bb.Color = $cAcc
@@ -164,7 +167,7 @@ function AddTable($rows){
   $hr.HeadingFormat = -1
   for($i=2;$i -le $nr;$i++){ if($i % 2 -eq 1){ $t.Rows.Item($i).Shading.BackgroundPatternColor = (RGBc 247 248 255) } }
   $t.Rows.AllowBreakAcrossPages = 0
-  $t.AutoFitBehavior(2)
+  $t.AutoFitBehavior(1); $t.AutoFitBehavior(2)   # size columns to content, then fit the page width
   $script:afterTable = $true
 }
 
@@ -253,7 +256,7 @@ $doc.Content.ParagraphFormat.ReadingOrder = 0
 # ---------- running header / page number / watermark (section 2 only) ----------
 $hf = $sec2.Headers.Item(1); $hf.LinkToPrevious = $false
 $ff = $sec2.Footers.Item(1); $ff.LinkToPrevious = $false
-$hr = $hf.Range; $hr.Text = 'سپیدنامهٔ بلاک‌چین سور'
+$hr = $hf.Range; $hr.Text = $HeaderText
 SetFont $hr.Font 7.5 0 $cGrey $HEAD
 Rtl $hr.ParagraphFormat; $hr.ParagraphFormat.SpaceAfter = 0
 $hb = $hr.ParagraphFormat.Borders.Item(-3); $hb.LineStyle = 1; $hb.LineWidth = 4; $hb.Color = $cLine
@@ -282,7 +285,7 @@ $doc.EmbedTrueTypeFonts = -1; $doc.SaveSubsetFonts = -1
 try{
   $props = $doc.BuiltInDocumentProperties; $bt = [System.__ComObject]
   $ti = $bt.InvokeMember('Item','GetProperty',$null,$props,@('Title'))
-  $bt.InvokeMember('Value','SetProperty',$null,$ti,@('سپیدنامهٔ بلاک‌چین سور (غیر قابل انتشار)'))
+  $bt.InvokeMember('Value','SetProperty',$null,$ti,@($DocTitle))
 }catch{}
 $app.ScreenUpdating = $true
 $doc.SaveAs2($Out, 16)

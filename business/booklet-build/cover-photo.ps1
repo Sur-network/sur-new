@@ -3,6 +3,7 @@
   [string]$Logo,          # white logo png (transparent background)
   [string]$Out,           # cover png
   [string]$TitleFont = 'Adobe Arabic',
+  [string]$Eyebrow = 'سپیدنامه  ·  نسخهٔ ۲٫۵',   # small line above the title
   [string]$MainTitleFont = 'B Titr', # font of the big title on the cover
   [single]$MainScale = 0.78,        # size factor for the big title (B Titr is optically larger)
   [int]$PxW = 1748, [int]$PxH = 2480   # A5 at 300 dpi
@@ -55,7 +56,7 @@ try {
   [void](Txt 'BLOCKCHAIN' ($R-60-110) 64 110 12 'Segoe UI' 6.5 0 (RGBc 170 200 255) 3 $false 3)
 
   # title block (upper area)
-  [void](Txt 'سپیدنامه  ·  نسخهٔ ۲٫۵' 40 94 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
+  [void](Txt $Eyebrow 40 94 ($R-40) 24 $TitleFont 15 0 (RGBc 120 220 255) 3 $true 0)
   $t1 = (Txt 'بلاک‌چین' 40 110 ($R-40) 86 $MainTitleFont (68*$MainScale) -1 (RGBc 255 255 255) 3 $true 0)
   $t2 = Txt 'سور' 40 156 ($R-40) 104 $MainTitleFont (92*$MainScale) -1 (RGBc 255 255 255) 3 $true 0
   # stretch «سور» with kashida (ـ) until it is as wide as «بلاک‌چین», then close the last gap with letter spacing
