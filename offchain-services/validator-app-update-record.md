@@ -62,7 +62,7 @@
 | سرویس هویت (`IdentityRegistry/src`) | مسیرهایش از قرارداد مشخصات هم فرق دارد (`?address=` به‌جای `?ethAddress=`، `destination`) | یک ناهمخوانی میان IdentityApp و Verifier-spec است، نه این اپ؛ همین دلیل دیگر برای نساختن OTP در این اپ |
 | ثبت‌نام اولیه `POST /register` با phone/telegram | `register` فقط `{ethAddress, signature, nodeId}` و فقط برای آدرس دارای صندلی (۴۰۹ `NOT_A_VALIDATOR`) | `/register` حذف؛ nodeID در `/node` |
 | پاسخ `status`: `phoneVerified، telegramVerified، lastLivenessConfirmation، isCurrentlyLive` | + `baleVerified، emailVerified، kycVerified، nodeIdRegistered، waitingFor`؛ `isCurrentlyLive` ممکن است `null` باشد | تایپ و UI به‌روز؛ `null` = نامشخص، نه شکست |
-| بریف: بنر هیئت، رأی هیئت، وضعیت «امضای توافق‌نامه» | وضعیت امضا روی زنجیره نیست؛ صفحهٔ هیئت در این اپ نیست (داشبورد حکمرانی) | فقط: هشدار عضو هیئت هنگام خروج و منع تعلیق داوطلبانهٔ عضو هیئت |
+| بریف: بنر هیئت، رأی هیئت، وضعیت «امضای توافق‌نامه» | وضعیت امضا روی زنجیره نیست؛ صفحهٔ هیئت در این اپ نیست (داشبورد حکمرانی) (به‌روزشده ۲۰۲۶-۱۱-۲۴: برگ قبولی اکنون روی زنجیره در `SurDocSign` ثبت می‌شود و هر نسخهٔ تازهٔ توافق‌نامه امضای تازهٔ هر ولیدیتور می‌خواهد؛ نمایش «نسخهٔ امضاشده/امضانشده» در اپ لازم است و هنوز پیاده نشده؛ `sur-validator-app-claudecode-brief.md`) | فقط: هشدار عضو هیئت هنگام خروج و منع تعلیق داوطلبانهٔ عضو هیئت |
 | `ValidatorStatus` ۵ مقدار | ۷ مقدار | به‌روز |
 
 ## ۵. آنچه آزموده **نشده** است

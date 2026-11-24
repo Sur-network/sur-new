@@ -164,6 +164,13 @@ function AddPara($segs,$style,$baseSize){
 function AddTable($rows){
   $nr = $rows.Count
   $nc = 0; foreach($r in $rows){ if($r.Count -gt $nc){ $nc = $r.Count } }
+  if($script:afterTable){
+    # two tables with nothing between them would be merged by Word: keep a thin empty paragraph between them
+    $sp = $doc.Paragraphs.Last
+    $sp.Range.Style = 'Normal'; $sp.Range.ParagraphFormat.Reset(); $sp.Range.Font.Size = 2; $sp.SpaceAfter = 0; $sp.SpaceBefore = 0
+    $doc.Content.InsertParagraphAfter()
+    $script:afterTable = $false
+  }
   $p = $doc.Paragraphs.Last
   $p.Range.Style = 'Normal'; $p.Range.ParagraphFormat.Reset()
   $t = $doc.Tables.Add($p.Range, $nr, $nc)
@@ -194,7 +201,12 @@ function AddTable($rows){
   $lens = @(); for($j=0;$j -lt $nc;$j++){ $mx = 4; foreach($row in $rows){ if($j -lt $row.Count){ $l = ((@($row[$j] | % { [string]$_.s }) -join '').Length); if($l -gt $mx){ $mx = $l } } }; $lens += [Math]::Sqrt($mx) }
   $sum = ($lens | Measure-Object -Sum).Sum
   $pcts = @($lens | % { [Math]::Max(14, 100 * $_ / $sum) }); $ps2 = ($pcts | Measure-Object -Sum).Sum
-  for($j=0;$j -lt $nc;$j++){ $col = $t.Columns.Item($j+1); $col.PreferredWidthType = 2; $col.PreferredWidth = [single](100 * $pcts[$j] / $ps2) }
+  try {
+    for($j=0;$j -lt $nc;$j++){ $col = $t.Columns.Item($j+1); $col.PreferredWidthType = 2; $col.PreferredWidth = [single](100 * $pcts[$j] / $ps2) }
+  } catch {
+    # tables with mixed cell widths (long documents): set the width cell by cell
+    for($i=1;$i -le $nr;$i++){ for($j=0;$j -lt $nc;$j++){ $c = $t.Cell($i,$j+1); $c.PreferredWidthType = 2; $c.PreferredWidth = [single](100 * $pcts[$j] / $ps2) } }
+  }
   $t.PreferredWidthType = 2; $t.PreferredWidth = [single]100
   $script:afterTable = $true
 }
