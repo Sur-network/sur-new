@@ -133,3 +133,18 @@ contract MockRateRegistry {
     function getActiveValidatorCount() external pure returns (uint256) { return 1; }
     function membershipEpoch(address) external pure returns (uint256) { return 0; }
 }
+
+/// @dev SurDocSign tests: stands in for IdentityRegistry at its fixed genesis address.
+contract MockSignIdentity {
+    mapping(address => bool) public hasIdentity;
+    mapping(address => bool) public isFullyVerified;
+    function set(address who, bool has_, bool full) external { hasIdentity[who] = has_; isFullyVerified[who] = full; }
+}
+
+/// @dev SurDocSign tests: stands in for FoundationDAO at its fixed genesis address (only the three role getters).
+contract MockFoundationRoles {
+    address public ceo;
+    address public chair;
+    address public treasurer;
+    function set(address c, address ch, address t) external { ceo = c; chair = ch; treasurer = t; }
+}
