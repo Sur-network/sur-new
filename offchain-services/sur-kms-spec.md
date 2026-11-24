@@ -2,6 +2,8 @@
 
 > **وضعیت:** ✅ ساخته و آزموده روی شبکهٔ آزمایشی (anvil با قراردادهای واقعی، ۲۳۳ آزمون، دو دور بازبینی مستقل با رفع یافته‌ها (دور دوم: HMAC، پشتیبان، اعلام پاکت، قفل بازکردن، قراردادهای نهایی؛ `kms-review-record.md`): `kms-review-record.md`؛ کد: `Deployments/SurKMS`)؛ ⚠️ **هنوز نه روی Besu زنده، نه حسابرسی `max` و انسانی بیرونی، نه با کلید زنده**؛ انحراف‌ها و پرسش‌های ساخت: بخش ۱۸ · **تاریخ:** ۲۰۲۶-۱۱-۲۱
 > **هم‌ترازی با قراردادها (۲۰۲۶-۱۱-۲۳):** پس از کامیت‌های `11ff741` و `187c7dd` (۱۸۶ آزمون Hardhat در ۲۱ فایل) فقط یک تغییر به این سند مربوط شد: تابع تازهٔ `ValidatorsRegistry.migrateSeat` (`onlyVerifier`) که باید به فهرست مجاز slot `verifier` اضافه شود (بخش ۸.۱). `slashBps`، `probationPeriod`، `maxEntriesPerWindow` و پذیرش توافق‌نامهٔ صندلی روی سیاست امضا اثر ندارند (`acceptSeatAgreement` را خریدار با کلید خودش می‌زند، نه KMS).
+> **slot پنجم `docRelayer` (تصمیم مالک ۲۰۲۶-۱۱-۲۴):** کلید گس‌دهندهٔ relayer سرویس SurSign؛ فقط تراکنش به قرارداد `SurDocSign` با چهار تابع ارسال‌شده، بدون اشاره‌گر روی زنجیره، freeze و رأی هیأت؛ تعویض با `keys new` و `keys activate` (بخش ۴٫۳).
+>
 > **slot چهارم `invoiceSigner` (تصمیم مالک ۲۰۲۶-۱۱-۲۳):** KMS فاکتورهای EIP-712 درگاه پرداخت SurPay را هم امضا می‌کند: متد `eth_signTypedData_v4` فقط برای همین slot و فقط برای شکل دقیق `Invoice` (بخش ۴٫۲ و ۸٫۴). ساخته و آزموده شد، از جمله با خود قرارداد SurPay روی anvil و با کلاینت `RemoteInvoiceSigner` خود SurPay؛ کد: `Deployments/SurKMS`.
 > **نام:** `SurKMS` (پیش‌تر در کاتالوگ `SurSigner`، سرویس A4؛ شناسهٔ A4 ثابت ماند).
 > **مبنا:** تصمیم‌های `SG-1..SG-6` در `sur-offchain-decisions.md` (بخش «بازطراحی SG-1 تا SG-3»)، تصمیم `RD-21` (سیاست سمت امضاکننده)، `RD-23` (گواهی نرخ)، `RD-8` (هشدار) و قراردادهای `ValidatorsBoard`، `ValidatorsRegistry`، `BlockRewardDistributor`، `IdentityRegistry`، `FoundationDAO`.
@@ -86,6 +88,18 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
 - **freeze ندارد:** slot در `KmsDirectives` نیست (فرض، بخش ۱۸ مورد ۱۵)؛ توقف درگاه با تغییر کلید در خود SurPay انجام می‌شود. گیرندهٔ هشدارهای این slot هیأت بنیاد است (فرض).
 - **مراسم:** `init` با تنظیمات SurPay کلید را هم می‌سازد و `INVOICE_SIGNER = آدرس` را چاپ می‌کند؛ آدرس به سازندهٔ SurPay یا به `scheduleInvoiceSigner` داده می‌شود. اگر SurPay هنوز مستقر نشده یا KMS پیش‌تر ساخته شده، پس از تنظیم `KMS_SURPAY_ADDRESS` همان `keys new --slot invoiceSigner` کافی است.
 
+### ۴٫۳ کلید `docRelayer` (سرویس امضای اسناد SurSign؛ تصمیم مالک ۲۰۲۶-۱۱-۲۴)
+
+slot پنجم و **اختیاری**: گس‌دهندهٔ relayer سرویس SurSign. فقط وقتی وجود دارد که `KMS_SURDOCSIGN_ADDRESS` (آدرس قرارداد `SurDocSign`) تنظیم شده باشد؛ بدون آن هیچ کلیدی ساخته نمی‌شود و رفتار KMS تغییری نمی‌کند. ساخته و آزموده شد: `Deployments/SurKMS` (کد، ۱۶ آزمون واحد تازه) و آزمون سرتاسری با KMS واقعی در `Deployments/SurSign/service/test/integration/kms.test.ts`.
+
+- **فقط تراکنش:** `eth_signTransaction` (legacy با EIP-155)؛ `eth_sign` و `eth_signTypedData_v4` برای آن رد می‌شود.
+- **فهرست مجاز (بخش ۸٫۱، ردیف تازه):** مقصد = همان قرارداد `KMS_SURDOCSIGN_ADDRESS` و بس؛ فقط `register`، `signWithSig`، `createEnvelopeWithSig`، `cancelEnvelopeWithSig`؛ `value` صفر. تابع‌های مستقیم `sign`، `createEnvelope` و `cancelEnvelope` **در فهرست نیستند** (اگر relayer آن‌ها را صدا بزند خودش امضاکننده، سازنده یا لغوکننده می‌شود). selectorها از ABI ساخته می‌شوند و آزمون آن‌ها را با قرارداد کامپایل‌شده مقایسه می‌کند؛ آزمون همچنین ثابت می‌کند کل سطح تغییردهندهٔ قرارداد همین هفت تابع است.
+- **بدون اشاره‌گر روی زنجیره، بدون freeze، بدون رأی هیأت:** `SurDocSign` مالک و relayer ثبت‌شده ندارد (هر کس می‌تواند relay کند و فاعل از امضای داخل فراخوانی بازیابی می‌شود)، پس چیزی برای دنبال‌کردن نیست؛ slot در `KmsDirectives` هم نیست، پس هیأت‌ها نمی‌توانند آن را freeze کنند. اگر کلید لو برود بدترین حالت سوزاندن گس relayer است (قرارداد جعل نمی‌پذیرد).
+- **عوض‌کردن کلید با مدیر سرور:** `init` اولین کلید را می‌سازد و **فوراً فعال می‌کند** و `DOC_RELAYER = 0x...` را چاپ می‌کند (همان `SURSIGN_RELAYER_ADDRESS`). کلید بعدی: `keys new --slot docRelayer` (کلید در انتظار)، آدرس جدید را گس‌دار و در SurSign تنظیم کنید، سپس `keys activate --slot docRelayer` (کلید قبلی همان لحظه بازنشسته می‌شود؛ بدون عبارت نگه‌دارنده چون کلیدی لمس نمی‌شود). هر دو در لاگ حسابرسی ثبت و به هیأت بنیاد هشدار داده می‌شوند (`key_activated` با `source: local`).
+- **توقف اضطراری:** برداشتن slot از فهرست سرور SurSign (`server`)، یا خاموش‌کردن یک تابع (`rule disable --slot docRelayer ...`)؛ هر دو لاگ و هشدار دارند.
+- **دسترسی:** سرور SurSign با گواهی سنجاق‌شده و IP و ورودی `--slot docRelayer` در فهرست سرورها (مثل بقیهٔ slotها؛ سرور دارای فقط slot دیگر نمی‌تواند از این کلید استفاده کند و برعکس).
+- 🔶 **فرض‌هایی که مالک تأیید کند:** (الف) گیرندهٔ هشدارهای این slot هیأت بنیاد است (مثل `invoiceSigner`)؛ (ب) تعویض کلید بدون رأی هیأت است چون کلید اختیاری جز پرداخت گس ندارد؛ (پ) سقف گس و نرخ ندارد، چون بودجهٔ روزانه و حداقل موجودی را خود SurSign اعمال می‌کند.
+
 ## ۵. رمزنگاری در حالت ذخیره و باز کردن قفل
 
 **تصمیم SG-1 (الف):** کلید اصلی رمزنگاری هرگز روی دیسک یا نزد ارائه‌دهندهٔ VPS ذخیره نمی‌شود.
@@ -154,6 +168,7 @@ Verifier / RewardRouter / IdentityService ──(JSON-RPC، mTLS)──► SurKM
 | `verifier` | `ValidatorsBoard` | `refreshBoard`، `syncBoard`، `fillVacancies`، `clearStaleVotes`، `moveReceivedVotes`، `referRecoveryRemovalToAssembly` | همان، بدون مجوز |
 | `distributionOracle` | `BlockRewardDistributor` | `openDistribution`، `payPage`، `closeDistribution`، `abortDistribution`، `certifyRateStart` | **دقیقاً** تنها توابع `onlyDistributionOracle` قرارداد نهایی (همگام‌سازی ۲۰۲۶-۱۱-۲۱، کامیت Plan `9a94fa5`)؛ `distributeRewards` دیگر نیست و آزمون انحراف در صورت بازگشتش شکست می‌خورد |
 | `identityOracle` | `IdentityRegistry` | `setPhoneVerified`، `setTelegramVerified`، `setBaleVerified`، `setEmailVerified`، `setKycVerified`، `migrateIdentity` | تنها توابع `onlyIdentityOracle` قرارداد؛ تا نهایی‌شدن Identity Service غیرفعال (SG-5) |
+| `docRelayer` | `SurDocSign` (آدرس از `KMS_SURDOCSIGN_ADDRESS`) | `register`، `signWithSig`، `createEnvelopeWithSig`، `cancelEnvelopeWithSig` | فقط تراکنش، `value` صفر؛ تابع‌های مستقیم `sign` / `createEnvelope` / `cancelEnvelope` عمداً نیستند (بخش ۴٫۳)؛ **فقط وقتی** `KMS_SURDOCSIGN_ADDRESS` تنظیم باشد |
 | `invoiceSigner` | — (فقط typed data با `eth_signTypedData_v4`؛ هیچ تراکنش و پیام EIP-191) | `Invoice` در دامنهٔ EIP-712 قرارداد SurPay | سیاست بخش ۸٫۴؛ **فقط وقتی** `KMS_SURPAY_ADDRESS` تنظیم باشد روشن است؛ هیچ تابع قراردادی در آن نیست |
 
 همهٔ ردیف‌ها: `value` صفر، `chainId` شبکهٔ Sur، `from` برابر آدرس فعال slot. نوع تراکنش: legacy با EIP-155 (Verifier اکنون با `gasPrice` می‌فرستد) و EIP-1559؛ legacy بدون `chainId` رد می‌شود. تابع تازه یا مقصد تازه را مدیر سرور با ثبت لاگ و هشدار به فهرست اضافه می‌کند (بخش ۱۰).
