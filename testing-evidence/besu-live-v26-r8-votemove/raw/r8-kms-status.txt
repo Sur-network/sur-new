@@ -1,0 +1,9 @@
+initialised: true   key store: encrypted   vault: initialised (locked until the passphrase is typed at the unlock page; ask the running service: /healthz)
+custodians: besu-live (Besu live test)
+verifier             active         active=0x2e180d1c55f7c09f1d8722e344f3a405c0d148e2 pending=-
+distributionOracle   active         active=0x08aa64373508125f90d729e531fc4d68e9db0b36 pending=-
+identityOracle       orphan         active=- pending=- ORPHAN chain=0x32f47fa693215d94dee574d0e2dbe9351531480a
+personKey (HMAC): check value d1735be9
+servers: router-signer[distributionOracle], verifier-signer[verifier]
+chain seen: false   scan cursor: 5324
+audit: chain OK (123 records), not yet copied outside: 123; alerts waiting: 0

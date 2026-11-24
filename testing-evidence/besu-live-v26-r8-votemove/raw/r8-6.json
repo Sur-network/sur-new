@@ -1,0 +1,45 @@
+{
+  "name": "r8-6-fresh-pending",
+  "startedAt": "2026-11-24T08:06:25.809Z",
+  "rows": [
+    {
+      "id": "6.0",
+      "name": "precondition: no pending move on the chain (the Verifier finished X's move), owner1 Active with its board seat",
+      "result": "PASS",
+      "detail": "{\"total\":0,\"moves\":{\"owner1\":\"none\",\"owner2\":\"none\",\"owner3\":\"none\",\"owner4\":\"none\",\"owner5\":\"none\"}}"
+    },
+    {
+      "id": "6.1",
+      "name": "owner1 -> heir4 migrated (SurKMS-signed): BoardSeatMigrated(held=true, votesReceivedPending >= 3); pendingVoteMoves == 1; pendingVoteMove(owner1) == heir4; the votes are NOT moved (old address still lists them)",
+      "result": "PASS",
+      "detail": "gas 1036150; pending 4; owner1: count 4, list 4 [heir1,heir3,heir2,owner4] | heir4: count 1, list 1 [heir4]"
+    },
+    {
+      "id": "6.2",
+      "name": "board action A3 proposed by heir3 (1 vote of 3, not executed); the board kept its five seats (heir4 holds owner1's seat in place)",
+      "result": "PASS",
+      "detail": "A3 id 3"
+    }
+  ],
+  "notes": {
+    "migrateSeatGas": 1036150,
+    "pending": {
+      "total": 1,
+      "moves": {
+        "owner1": "heir4",
+        "owner2": "none",
+        "owner3": "none",
+        "owner4": "none",
+        "owner5": "none"
+      }
+    },
+    "remaining": [
+      "heir1",
+      "heir3",
+      "heir2",
+      "owner4"
+    ],
+    "A3": "3"
+  },
+  "finishedAt": "2026-11-24T08:06:28.507Z"
+}

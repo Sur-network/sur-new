@@ -1,0 +1,92 @@
+{
+  "ValidatorsRegistry.setOperator": {
+    "n": 3,
+    "min": 77594,
+    "max": 77594,
+    "reverted": 0
+  },
+  "ValidatorsRegistry.recordActivation": {
+    "n": 4,
+    "min": 312269,
+    "max": 346673,
+    "reverted": 0
+  },
+  "x.exec": {
+    "n": 5,
+    "min": 76172,
+    "max": 169948,
+    "reverted": 0
+  },
+  "IdentityRegistry.registerIdentity": {
+    "n": 4,
+    "min": 71764,
+    "max": 71764,
+    "reverted": 0
+  },
+  "IdentityRegistry.setPhoneVerified": {
+    "n": 5,
+    "min": 52100,
+    "max": 52304,
+    "reverted": 0
+  },
+  "IdentityRegistry.setTelegramVerified": {
+    "n": 5,
+    "min": 35082,
+    "max": 35286,
+    "reverted": 0
+  },
+  "IdentityRegistry.setBaleVerified": {
+    "n": 5,
+    "min": 35061,
+    "max": 35265,
+    "reverted": 0
+  },
+  "IdentityRegistry.setEmailVerified": {
+    "n": 5,
+    "min": 35083,
+    "max": 35287,
+    "reverted": 0
+  },
+  "IdentityRegistry.setKycVerified": {
+    "n": 5,
+    "min": 57751,
+    "max": 57955,
+    "reverted": 0
+  },
+  "ValidatorsBoard.voteFor": {
+    "n": 13,
+    "min": 146470,
+    "max": 288264,
+    "reverted": 0
+  },
+  "ValidatorsBoard.proposeRotateOracle": {
+    "n": 3,
+    "min": 336866,
+    "max": 353966,
+    "reverted": 0
+  },
+  "ValidatorsBoard.voteAction": {
+    "n": 2,
+    "min": 202334,
+    "max": 202344,
+    "reverted": 1
+  },
+  "IdentityRegistry.migrateIdentity": {
+    "n": 5,
+    "min": 149772,
+    "max": 149772,
+    "reverted": 0
+  },
+  "ValidatorsRegistry.migrateSeat": {
+    "n": 4,
+    "min": 843779,
+    "max": 1049508,
+    "reverted": 1
+  },
+  "ValidatorsBoard.moveReceivedVotes": {
+    "n": 3,
+    "min": 145125,
+    "max": 199192,
+    "reverted": 0
+  }
+}

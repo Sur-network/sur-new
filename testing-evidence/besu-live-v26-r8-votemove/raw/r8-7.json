@@ -1,0 +1,14 @@
+{
+  "name": "r8-7-final-state",
+  "startedAt": "2026-11-24T08:07:31.408Z",
+  "rows": [
+    {
+      "id": "7.1",
+      "name": "final state on chain: exactly ONE pending move (owner1 -> heir4), five QBFT validators, five board seats",
+      "result": "PASS",
+      "detail": "{\"total\":1,\"moves\":{\"owner1\":\"heir4\",\"owner2\":\"none\",\"owner3\":\"none\",\"owner4\":\"none\",\"owner5\":\"none\"}}"
+    }
+  ],
+  "notes": {},
+  "finishedAt": "2026-11-24T08:07:32.303Z"
+}

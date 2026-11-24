@@ -1,0 +1,4 @@
+containers: 32 running: 31
+networks: 17
+volumes: 65
+8

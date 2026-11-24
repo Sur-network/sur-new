@@ -1,0 +1,133 @@
+{
+  "name": "r8-3-cand-migrate",
+  "startedAt": "2026-11-24T07:55:35.083Z",
+  "rows": [
+    {
+      "id": "3.0",
+      "name": "start: owner2 (Y) Active with 5 received votes (owner1, owner2, owner3, owner4, heir3), pendingVoteMoves == 0; heir2 clean",
+      "result": "PASS",
+      "detail": "owner1: count 5, list 5 [owner1,owner2,owner3,owner4,heir3] | owner2: count 5, list 5 [owner1,owner2,owner3,owner4,heir3] | owner3: count 5, list 5 [owner1,owner2,owner3,owner4,heir3] | heir2: count 0, list 0 [] | heir1: count 0, list 0 []"
+    },
+    {
+      "id": "3.1",
+      "name": "migrateSeat(owner2 -> heir2) mined (SurKMS-signed): BoardSeatMigrated(held=true, votesGivenMoved=3 (owner3, itself, owner1), votesReceivedPending=4)",
+      "result": "PASS",
+      "detail": "gas 1049508, block 367; event: given 3, pending 4"
+    },
+    {
+      "id": "3.2",
+      "name": "PENDING: pendingVoteMoves == 1, pendingVoteMove(owner2) == heir2; the old address still lists 4 received votes (count 4), heir2 holds the moved self vote (count 1): 4 + 1 = the 5 of before",
+      "result": "PASS",
+      "detail": "{\"total\":1,\"moves\":{\"owner1\":\"none\",\"owner2\":\"heir2\",\"owner3\":\"none\",\"owner4\":\"none\",\"owner5\":\"none\"}} | owner1: count 5, list 5 [owner1,heir3,owner3,owner4,heir2] | owner2: count 4, list 4 [owner1,heir3,owner3,owner4] | owner3: count 5, list 5 [owner1,heir3,owner3,owner4,heir2] | heir2: count 1, list 1 [heir2]"
+    },
+    {
+      "id": "3.3",
+      "name": "board seat followed in place (heir2 authority, owner2 none); boardVoterKey(heir2) == owner2; heir2 casts owner3/itself/owner1; a vote for the migrated address owner2 is refused (not an active validator any more)",
+      "result": "PASS",
+      "detail": "heir2 casts owner3,heir2,owner1"
+    },
+    {
+      "id": "3.4",
+      "name": "ON HOLD while pending: fillVacancies reverts 'ValidatorsBoard: move pending' (eth_call)",
+      "result": "PASS",
+      "detail": "The contract function \"fillVacancies\" reverted with the following reason: ValidatorsBoard: move pending"
+    },
+    {
+      "id": "3.5",
+      "name": "OBSERVATION refreshBoard in the SAME month is refused by the month rule BEFORE the pending guard (this month's board is already set), so the 'move pending' text of refreshBoard is reachable only in a new month (not testable here); syncBoard is NOT held by the contract (simulation: does not revert)",
+      "result": "OBSERVATION",
+      "detail": "refreshBoard: The contract function \"refreshBoard\" reverted with the following reason: ValidatorsBoard: this month's board is already set | syncBoard: did NOT revert"
+    },
+    {
+      "id": "3.6",
+      "name": "moveReceivedVotes refusals: an address with nothing pending (owner1) -> 'nothing pending'; max = 0 -> 'max is zero'",
+      "result": "PASS",
+      "detail": "The contract function \"moveReceivedVotes\" reverted with the following reason: ValidatorsBoard: nothing pending | The contract function \"moveReceivedVotes\" reverted with the following reason: ValidatorsBoard: max is zero"
+    },
+    {
+      "id": "3.7",
+      "name": "SETUP for the 'merged' case: owner1 votes for heir2 directly while its vote for owner2 is still listed (count heir2 = 2; old address still 4)",
+      "result": "PASS",
+      "detail": "owner2: count 4, list 4 [owner1,heir3,owner3,owner4] | heir2: count 2, list 2 [heir2,owner1]"
+    },
+    {
+      "id": "3.8",
+      "name": "SECOND migration while Y's move is pending is ALLOWED (owner3 -> heir1, owner3 is not the target of a pending move): BoardSeatMigrated(held=true, votesGivenMoved=3, votesReceivedPending=4); pendingVoteMoves == 2; heir1's vote for owner2 (old address) joins Y's pending list",
+      "result": "PASS",
+      "detail": "gas 1034896; {\"total\":2,\"moves\":{\"owner1\":\"none\",\"owner2\":\"heir2\",\"owner3\":\"heir1\",\"owner4\":\"none\",\"owner5\":\"none\"}} | owner2: count 4, list 4 [owner1,heir3,owner4,heir1] | owner3: count 4, list 4 [owner1,heir3,heir2,owner4] | heir1: count 1, list 1 [heir1]"
+    },
+    {
+      "id": "3.9",
+      "name": "REFUSED: migrating the TARGET of an unfinished move (heir2 -> buyer1, identity migrated first) reverts 'ValidatorsBoard: move pending' in eth_call and as a real mined transaction (status reverted, SurKMS-signed); heir2 is unchanged (Active, owns its seat NFT), pendingVoteMoves still 2",
+      "result": "PASS",
+      "detail": "The contract function \"migrateSeat\" reverted with the following reason: ValidatorsBoard: move pending | mined revert tx 0x3527f556fa0027b89031d2d0ba5125d3d3fd47cd470cd4aae6fee104032d6da8 gas 568190"
+    },
+    {
+      "id": "3.10",
+      "name": "still on hold with two pending moves (fillVacancies 'move pending'); the chain keeps producing blocks, five validators",
+      "result": "PASS",
+      "detail": "The contract function \"fillVacancies\" reverted with the following reason: ValidatorsBoard: move pending; block 373"
+    }
+  ],
+  "notes": {
+    "migrateSeatGasY_pending4": 1049508,
+    "migrateSeatGasX_pending4": 1034896,
+    "minedRevertTx": "0x3527f556fa0027b89031d2d0ba5125d3d3fd47cd470cd4aae6fee104032d6da8",
+    "minedRevertGas": 568190,
+    "pendingAfter": {
+      "total": 2,
+      "moves": {
+        "owner1": "none",
+        "owner2": "heir2",
+        "owner3": "heir1",
+        "owner4": "none",
+        "owner5": "none"
+      }
+    },
+    "snapshot": {
+      "owner1": {
+        "count": 5,
+        "voters": [
+          "owner1",
+          "heir3",
+          "heir2",
+          "owner4",
+          "heir1"
+        ]
+      },
+      "owner2": {
+        "count": 4,
+        "voters": [
+          "owner1",
+          "heir3",
+          "owner4",
+          "heir1"
+        ]
+      },
+      "owner3": {
+        "count": 4,
+        "voters": [
+          "owner1",
+          "heir3",
+          "heir2",
+          "owner4"
+        ]
+      },
+      "heir2": {
+        "count": 2,
+        "voters": [
+          "heir2",
+          "owner1"
+        ]
+      },
+      "heir1": {
+        "count": 1,
+        "voters": [
+          "heir1"
+        ]
+      }
+    },
+    "blockAtEnd": "373"
+  },
+  "finishedAt": "2026-11-24T07:55:43.956Z"
+}

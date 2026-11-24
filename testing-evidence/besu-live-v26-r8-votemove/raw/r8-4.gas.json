@@ -1,0 +1,26 @@
+[
+  {
+    "fn": "ValidatorsBoard.moveReceivedVotes",
+    "from": "outsider",
+    "gas": 145125,
+    "block": 423,
+    "status": "success",
+    "tx": "0xaaf365cc5e6f4ae2cc49c51b22dc5e6541b8fd825d4855b4b38a7ae3be7cb85c"
+  },
+  {
+    "fn": "ValidatorsBoard.moveReceivedVotes",
+    "from": "outsider",
+    "gas": 145125,
+    "block": 424,
+    "status": "success",
+    "tx": "0x464a119da1f944a9f1316d1c67d82810014daa26ca9a0c41824b3ca3ff5e8558"
+  },
+  {
+    "fn": "ValidatorsBoard.moveReceivedVotes",
+    "from": "outsider",
+    "gas": 199192,
+    "block": 425,
+    "status": "success",
+    "tx": "0x3107fc055f144826f2f4f6dfb8d14885ecb484fe88a444c1129dac42a9d35af9"
+  }
+]

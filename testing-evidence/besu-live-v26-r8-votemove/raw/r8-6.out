@@ -1,0 +1,4 @@
+PASS 6.0 precondition: no pending move on the chain (the Verifier finished X's move), owner1 Active with its board seat {"total":0,"moves":{"owner1":"none","owner2":"none","owner3":"none","owner4":"none","owner5":"none"}}
+PASS 6.1 owner1 -> heir4 migrated (SurKMS-signed): BoardSeatMigrated(held=true, votesReceivedPending >= 3); pendingVoteMoves == 1; pendingVoteMove(owner1) == heir4; the votes are NOT moved (old address still lists them) gas 1036150; pending 4; owner1: count 4, list 4 [heir1,heir3,heir2,owner4] | heir4: count 1, list 1 [heir4]
+PASS 6.2 board action A3 proposed by heir3 (1 vote of 3, not executed); the board kept its five seats (heir4 holds owner1's seat in place) A3 id 3
+== 3 PASS, 0 FAIL, 0 OBS ==> runs/r8-6.json

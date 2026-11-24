@@ -1,0 +1,66 @@
+[
+  {
+    "fn": "ValidatorsRegistry.setOperator",
+    "from": "owner2",
+    "gas": 77594,
+    "block": 83,
+    "status": "success",
+    "tx": "0x6867594dbe7d0ca9c66ef587391416913e763e5978c731e899a4e744938850c0"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 346673,
+    "block": 84,
+    "status": "success",
+    "tx": "0x86bac41242d1a4605a044da454df10d0571d7f301427ff372978a8288a87a039"
+  },
+  {
+    "fn": "ValidatorsRegistry.setOperator",
+    "from": "owner3",
+    "gas": 77594,
+    "block": 85,
+    "status": "success",
+    "tx": "0xdd93cf66969cfde7cd192083e13c8e53f3a5d31d2e8c154d8a9aca3038f8e829"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 312473,
+    "block": 86,
+    "status": "success",
+    "tx": "0x2152c2059e691b30cdb96349608dfffe86ce352575df70e236cae9c494829500"
+  },
+  {
+    "fn": "x.exec",
+    "from": "deployer",
+    "gas": 81972,
+    "block": 87,
+    "status": "success",
+    "tx": "0xd05fbd9072773d593b3679825f31031d2da1a5c444b87da8691ab067359d44d1"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 312269,
+    "block": 88,
+    "status": "success",
+    "tx": "0x74b7ece9f15e41087679b5bbd56731cb369508dbbcb322584e28df5c021c6dda"
+  },
+  {
+    "fn": "ValidatorsRegistry.setOperator",
+    "from": "owner5",
+    "gas": 77594,
+    "block": 89,
+    "status": "success",
+    "tx": "0x3c525b44a3e9683308e62093b8099b6ace289789a01df94cf71ef176771de42e"
+  },
+  {
+    "fn": "ValidatorsRegistry.recordActivation",
+    "from": "verifier",
+    "gas": 312473,
+    "block": 90,
+    "status": "success",
+    "tx": "0xf2dadb3932da378d472f8f7a42861540893948dab1abc9c63514a949f7b2d1a0"
+  }
+]

@@ -1,0 +1,15 @@
+--- alerts_log (2)
+{"id":1,"at":"2026-11-24 07:57:47","severity":"warning","code":"BOARD_VOTE_MOVE_PENDING","message":"a board seat was migrated and its received votes are still being moved: 1 pending move(s): 0xae476387e6c208722cc5bd38ea60dc82e74e5ba2 -> 0xeb81ced2c2b58820364989630fe8daaa08c606be (4 vote(s) left). refreshBoard, syncBoard and fillVacancies are on hold until mo"}
+{"id":2,"at":"2026-11-24 08:03:56","severity":"critical","code":"SIGNER_FAILED","message":"the signer did not produce a valid signed transaction: signer refused eth_signTransaction: POLICY_DENIED: POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it"}
+--- tx_outbox (1)
+{"id":1,"intent_key":"hk:moveReceivedVotes:0xae476387e6c208722cc5bd38ea60dc82e74e5ba2:4:498752","role":"permissionless","kind":"housekeeping","function_name":"moveReceivedVotes","args_json":"[\"0xae476387e6c208722cc5bd38ea60dc82e74e5ba2\",\"50\"]","flag":"HOUSEKEEPING","state":"confirmed","attempts":1,"last_error":null,"tx_hash":"0xc2dcb86bc2a9adeed4a4f6210c2f64ecf67c164170af7ddb1a5dd82539ef74f4","gas":"1296719","receipt_block":929,"receipt_status":"success"}
+--- signature_ledger (1)
+{"id":1,"at":"2026-11-24 08:04:59","signer":"0x2e180d1c55f7c09f1d8722e344f3a405c0d148e2","kind":"tx","digest":"0xc2dcb86bc2a9adeed4a4f6210c2f64ecf67c164170af7ddb1a5dd82539ef74f4","outbox_id":1,"note":"housekeeping:moveReceivedVotes"}
+--- registry_events SeatMigrated (3)
+{"block_number":294,"name":"SeatMigrated","args_json":"{\"seatId\":\"5\",\"from\":\"0xDEFB9d38a823B141549aa5c5dfD9C0D90E0C41A9\",\"to\":\"0xd35cf7af2a59DAe83b7878d741fB674F6a4bF8f7\",\"statusAfter\":2}"}
+{"block_number":367,"name":"SeatMigrated","args_json":"{\"seatId\":\"2\",\"from\":\"0xD565D783c7Fee91d6350D9A08eb267354928Ad07\",\"to\":\"0xE33102d76C6e229A2490e6a316fbee90ba9F424E\",\"statusAfter\":2}"}
+{"block_number":371,"name":"SeatMigrated","args_json":"{\"seatId\":\"3\",\"from\":\"0xaE476387E6c208722cC5Bd38eA60Dc82e74E5ba2\",\"to\":\"0xEb81cED2C2b58820364989630fE8DAAa08C606be\",\"statusAfter\":2}"}
+--- cycle_log (last 3) (3)
+{"id":17,"started_at":1795507571,"finished_at":1795507573,"head_number":1001,"head_ts":1795507571,"ok":1,"monitor_healthy":1,"replay_ok":1,"notes":null}
+{"id":16,"started_at":1795507559,"finished_at":1795507561,"head_number":989,"head_ts":1795507559,"ok":1,"monitor_healthy":1,"replay_ok":1,"notes":null}
+{"id":15,"started_at":1795507546,"finished_at":1795507549,"head_number":976,"head_ts":1795507546,"ok":1,"monitor_healthy":1,"replay_ok":1,"notes":null}

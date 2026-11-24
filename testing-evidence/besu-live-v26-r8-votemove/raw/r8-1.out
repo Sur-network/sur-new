@@ -1,0 +1,7 @@
+PASS 1.1 identity (register + 5 oracle flags) for owners 1,2,3,5 and the contract owner4 (through exec): all fully verified ok
+PASS 1.2 refusals: a non-validator cannot vote; an owner cannot vote for a candidate that is not an active validator (owner6 is in Probation) The contract function "voteFor" reverted with the following reason: ValidatorsBoard: caller is not an active validator | The contract function "voteFor" reverted with the following reason: ValidatorsBoard: candidate is not an active validator
+PASS 1.3 every voter voted for X=owner3, Y=owner2, Z=owner1: voteCount = 5 each, owner4/owner5 = 0; the lists of received votes hold all five voters owner1: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner2: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner3: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner4: count 0, list 0 [] | owner5: count 0, list 0 []
+PASS 1.4 a second vote for the same candidate is refused The contract function "voteFor" reverted with the following reason: ValidatorsBoard: already voted for this candidate
+PASS 1.5 board actions: A1 (proposed by owner5, voted by owner1) has 2 of 3 votes, A2 (proposed by owner1) has 1 vote; none executed A1 id 1: votes 2/3 executed false; A2 id 2: votes 1/3 executed false
+PASS 1.6 baseline: owner5 voting twice on A1 is refused (already voted) The contract function "voteAction" reverted with the following reason: ValidatorsBoard: already voted
+== 6 PASS, 0 FAIL, 0 OBS ==> runs/r8-1.json

@@ -1,0 +1,68 @@
+{
+  "name": "r8-2-voter-migrate",
+  "startedAt": "2026-11-24T07:54:16.759Z",
+  "rows": [
+    {
+      "id": "2.0",
+      "name": "start: owner5 Active, board seat and authority; heir3 clean (key of heir3 = heir3); owner5 cast 3 votes and received none",
+      "result": "PASS",
+      "detail": "cast by owner5: owner3,owner2,owner1; owner1: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner2: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner3: count 5, list 5 [owner1,owner2,owner3,owner4,owner5]"
+    },
+    {
+      "id": "2.1",
+      "name": "migrateSeat(owner5 -> heir3) signed by SurKMS and mined: SeatMigrated + BoardSeatMigrated(held=true, votesGivenMoved=3, votesReceivedPending=0)",
+      "result": "PASS",
+      "detail": "gas 843779 (migrateIdentity 149772), block 294; rule before: verifier 0x3333333333333333333333333333333333333333 0xa63a76dd migrateSeat off | after enable: verifier 0x3333333333333333333333333333333333333333 0xa63a76dd migrateSeat ON"
+    },
+    {
+      "id": "2.2",
+      "name": "the votes owner5 CAST moved at once to heir3: owner5 casts none, heir3 casts owner3/owner2/owner1; counters of X, Y, Z unchanged (5 each); the lists hold heir3 instead of owner5",
+      "result": "PASS",
+      "detail": "owner1: count 5, list 5 [owner1,owner2,owner3,owner4,heir3] | owner2: count 5, list 5 [owner1,owner2,owner3,owner4,heir3] | owner3: count 5, list 5 [owner1,owner2,owner3,owner4,heir3]"
+    },
+    {
+      "id": "2.3",
+      "name": "no pending move: a voter that received no votes leaves nothing to move (pendingVoteMoves == 0, pendingVoteMove(owner5) == 0)",
+      "result": "PASS",
+      "detail": "{\"total\":0,\"moves\":{\"owner1\":\"none\",\"owner2\":\"none\",\"owner3\":\"none\",\"owner4\":\"none\",\"owner5\":\"none\"}}"
+    },
+    {
+      "id": "2.4",
+      "name": "boardVoterKey(heir3) == owner5 (the first address of the chain); board seat followed in place: heir3 has authority, owner5 not; boardVersion unchanged",
+      "result": "PASS",
+      "detail": "board now: owner1,owner2,owner3,owner4,heir3"
+    },
+    {
+      "id": "2.5",
+      "name": "ONE PERSON, ONE VOTE: heir3 voting on A1 (owner5 already voted) is refused in eth_call AND as a real mined transaction (status reverted); A1 still has 2 votes",
+      "result": "PASS",
+      "detail": "The contract function \"voteAction\" reverted with the following reason: ValidatorsBoard: already voted | mined revert tx 0xaf0643af45addc94ac0733fba0e19b59dbdaf88b66667fc88890a4ba638e4bab gas 172509"
+    },
+    {
+      "id": "2.6",
+      "name": "heir3 MAY vote on A2 (owner5 had not voted on it): vote counted (A2 = 2 votes), not executed",
+      "result": "PASS",
+      "detail": "gas 202344"
+    },
+    {
+      "id": "2.7",
+      "name": "a second vote by heir3 on A2 is refused, and the old owner5 key can no longer act on the board",
+      "result": "PASS",
+      "detail": "The contract function \"voteAction\" reverted with the following reason: ValidatorsBoard: already voted | The contract function \"voteAction\" reverted with the following reason: ValidatorsBoard: caller has no board authority"
+    },
+    {
+      "id": "2.8",
+      "name": "election votes: heir3 cannot vote again for owner3 (moved vote kept); owner5 can no longer vote (not an active validator)",
+      "result": "PASS",
+      "detail": "The contract function \"voteFor\" reverted with the following reason: ValidatorsBoard: already voted for this candidate | The contract function \"voteFor\" reverted with the following reason: ValidatorsBoard: caller is not an active validator"
+    }
+  ],
+  "notes": {
+    "migrateSeatGas": 843779,
+    "migrateIdentityGas": 149772,
+    "migrationBlock": "294",
+    "minedRevertTx": "0xaf0643af45addc94ac0733fba0e19b59dbdaf88b66667fc88890a4ba638e4bab",
+    "voteA2Gas": 202344
+  },
+  "finishedAt": "2026-11-24T07:54:26.535Z"
+}

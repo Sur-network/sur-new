@@ -1,0 +1,58 @@
+[
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149772,
+    "block": 366,
+    "status": "success",
+    "tx": "0x135ed6162b78433d8918e32a731809585bca1a6016ad4be820434563fbd7c92d"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 1049508,
+    "block": 367,
+    "status": "success",
+    "tx": "0x5d42782279ab4b9a5b5fdd6928d3ad25e93537f3ceacbe0d73a42fcb43e4f789"
+  },
+  {
+    "fn": "ValidatorsBoard.voteFor",
+    "from": "owner1",
+    "gas": 148470,
+    "block": 369,
+    "status": "success",
+    "tx": "0x603e0146ffb96b44786311f9f26712d8be120b07e20645efc8e6256c8600821a"
+  },
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149772,
+    "block": 370,
+    "status": "success",
+    "tx": "0x21cbd093c12831b7caf63efc76ac1bbc2d26c1e5afa9f5c2292c061d10e2af3b"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 1034896,
+    "block": 371,
+    "status": "success",
+    "tx": "0x0c4db898e8bcf447c868096c8a889fd20661a1292a2ddd1c174a7bcff3b78a9f"
+  },
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149772,
+    "block": 372,
+    "status": "success",
+    "tx": "0x023c6f286cee752138791f42c2ae4addadd04619b6ea36cee41d3b0b3dfcd1dc"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 568190,
+    "block": 373,
+    "status": "reverted",
+    "tx": "0x3527f556fa0027b89031d2d0ba5125d3d3fd47cd470cd4aae6fee104032d6da8"
+  }
+]

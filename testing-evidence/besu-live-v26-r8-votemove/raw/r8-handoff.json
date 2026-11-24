@@ -1,0 +1,126 @@
+{
+  "note": "ROUND 8 HAND-OFF: ONE pending received-vote move is left on the live Besu chain for the browser test of the GovernanceDashboard. Nothing moves it (the Verifier is stopped). All keys are throw-away test keys.",
+  "rpc": {
+    "chainId": 262025,
+    "nodes": {
+      "v1": "http://127.0.0.1:19931",
+      "v2": "http://127.0.0.1:19932",
+      "v3": "http://127.0.0.1:19933",
+      "v4": "http://127.0.0.1:19934",
+      "v5": "http://127.0.0.1:19935"
+    },
+    "tunnel": "BesuLive/tunnel-v.sh (ssh -N -L 1993x:127.0.0.1:1993x the test-server SSH account (see sync-v.sh); RPC listens only on 127.0.0.1 of the server)",
+    "blockTime": "1 s"
+  },
+  "contracts": {
+    "ValidatorsBoard": "0x4444444444444444444444444444444444444444",
+    "ValidatorsRegistry": "0x3333333333333333333333333333333333333333",
+    "IdentityRegistry": "0x6666666666666666666666666666666666666666",
+    "BlockRewardDistributor": "0x2222222222222222222222222222222222222222"
+  },
+  "pendingMove": {
+    "oldOwner": "0x413764122ac374d41248C4F9643684d09fA8D71f",
+    "newOwner": "0xfE953091b4676E735044B74BD5aB091162513D93",
+    "oldOwnerName": "owner1",
+    "newOwnerName": "heir4",
+    "remainingVotes": 4,
+    "remainingVoters": [
+      "0xEb81cED2C2b58820364989630fE8DAAa08C606be",
+      "0xd35cf7af2a59DAe83b7878d741fB674F6a4bF8f7",
+      "0xE33102d76C6e229A2490e6a316fbee90ba9F424E",
+      "0xc0dE000000000000000000000000000000000004"
+    ],
+    "remainingVoterNames": [
+      "heir1",
+      "heir3",
+      "heir2",
+      "owner4"
+    ],
+    "pendingVoteMoves": 1,
+    "call": "moveReceivedVotes(0x413764122ac374d41248C4F9643684d09fA8D71f, max)",
+    "expectedGasPerMovedVote": "about 95000 gas per moved entry plus about 50000 fixed (measured: 1 entry 145125, 4 entries 431131)"
+  },
+  "wallets": {
+    "stranger": {
+      "name": "outsider",
+      "address": "0x952aA9BC7CAE6fe2FaEDD4bB8205303f3DD8A4Ce",
+      "privateKey": "0xe5f34b752cdcb8623845ecb73e1653b0604aa2e4b6e35e3d0137b07ef54f5f29",
+      "use": "any non-validator funded wallet (1,000,000 SUR): moveReceivedVotes is permissionless"
+    },
+    "heir4": {
+      "address": "0xfE953091b4676E735044B74BD5aB091162513D93",
+      "privateKey": "0xbb318fcde858690c8d5ad77ff98cb885acffb32bb63db470d2a2eb734818e401",
+      "use": "NEW owner of owner1's seat: Active validator, board member (in place), boardVoterKey = owner1; voted on A1 through owner1's key (cannot vote on A1 again)"
+    },
+    "heir3": {
+      "address": "0xd35cf7af2a59DAe83b7878d741fB674F6a4bF8f7",
+      "privateKey": "0x2059ad95b1ab7ac5bdd162d89b98103a3e53cfb909d22f623773ccbe0ba332b8",
+      "use": "migrated voter (old key owner5): board member; boardVoterKey = owner5; voted A1 and A2 (and proposed A3); cannot vote twice"
+    },
+    "heir1": {
+      "address": "0xEb81cED2C2b58820364989630fE8DAAa08C606be",
+      "privateKey": "0x989b1ad6291c74b2586b50a9a84af8a916bdc26772688ae6befe9f7a737f0a4d",
+      "use": "new owner of owner3 (X) - its move was finished by the Verifier"
+    },
+    "heir2": {
+      "address": "0xE33102d76C6e229A2490e6a316fbee90ba9F424E",
+      "privateKey": "0x5a3d7a52d0862531ebf9c7f936cf4fb7985cdeebea46e86178d2717ad7251f1a",
+      "use": "new owner of owner2 (Y) - its move was finished by hand; its identity was burned by the refusal test (cannot vote)"
+    }
+  },
+  "boardActions": {
+    "A1": {
+      "id": 1,
+      "proposer": "owner5 (now heir3)",
+      "voters": "owner5/heir3, owner1/heir4",
+      "votes": "2 of 3"
+    },
+    "A2": {
+      "id": 2,
+      "proposer": "owner1 (now heir4)",
+      "voters": "owner1/heir4, heir3",
+      "votes": "2 of 3"
+    },
+    "A3": {
+      "id": 3,
+      "proposer": "heir3",
+      "votes": "1 of 3 (heir4/owner1's key has NOT voted: heir4 may vote; three votes would EXECUTE the oracle rotation to user1)"
+    }
+  },
+  "board": {
+    "members": [
+      {
+        "address": "0xfE953091b4676E735044B74BD5aB091162513D93",
+        "name": "heir4"
+      },
+      {
+        "address": "0xE33102d76C6e229A2490e6a316fbee90ba9F424E",
+        "name": "heir2"
+      },
+      {
+        "address": "0xEb81cED2C2b58820364989630fE8DAAa08C606be",
+        "name": "heir1"
+      },
+      {
+        "address": "0xc0dE000000000000000000000000000000000004",
+        "name": "owner4"
+      },
+      {
+        "address": "0xd35cf7af2a59DAe83b7878d741fB674F6a4bF8f7",
+        "name": "heir3"
+      }
+    ],
+    "boardVersion": "1",
+    "boardMonthId": "24322",
+    "currentMonthId": "24322",
+    "warning": "the board term is the calendar month (UTC): from 2026-12-01 00:00 UTC board actions need refreshBoard, which is on hold while this move is pending"
+  },
+  "seatMigrations": {
+    "owner5 -> heir3": "voter, no received votes (no pending)",
+    "owner2 -> heir2": "candidate, moved by hand in 3 chunks",
+    "owner3 -> heir1": "candidate, moved by the real Verifier",
+    "owner1 -> heir4": "PENDING (this hand-off)"
+  },
+  "migrationBlock": "1017",
+  "headBlockAtHandoff": "1018"
+}

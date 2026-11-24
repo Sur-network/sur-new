@@ -1,0 +1,138 @@
+{
+  "head": "1081",
+  "qbftValidators": 5,
+  "pending": {
+    "total": 1,
+    "moves": {
+      "owner1": "heir4",
+      "owner2": "none",
+      "owner3": "none",
+      "owner4": "none",
+      "owner5": "none"
+    }
+  },
+  "pendingVoteMoves": "1",
+  "board": [
+    "heir4",
+    "heir2",
+    "heir1",
+    "owner4",
+    "heir3"
+  ],
+  "boardVersion": "1",
+  "boardMonthId": "24322",
+  "currentMonthId": "24322",
+  "actionCount": "3",
+  "owners": {
+    "owner1": {
+      "status": "None",
+      "boardAuthority": false,
+      "isBoardMember": false,
+      "voterKey": "owner1",
+      "voteCount": "4",
+      "casts": [],
+      "hasIdentity": false,
+      "pendingVoteMove": "heir4"
+    },
+    "owner2": {
+      "status": "None",
+      "boardAuthority": false,
+      "isBoardMember": false,
+      "voterKey": "owner2",
+      "voteCount": "0",
+      "casts": [],
+      "hasIdentity": false,
+      "pendingVoteMove": "none"
+    },
+    "owner3": {
+      "status": "None",
+      "boardAuthority": false,
+      "isBoardMember": false,
+      "voterKey": "owner3",
+      "voteCount": "0",
+      "casts": [],
+      "hasIdentity": false,
+      "pendingVoteMove": "none"
+    },
+    "owner4": {
+      "status": "Active",
+      "boardAuthority": true,
+      "isBoardMember": true,
+      "voterKey": "owner4",
+      "voteCount": "0",
+      "casts": [
+        "heir2",
+        "owner1",
+        "heir1"
+      ],
+      "hasIdentity": true,
+      "pendingVoteMove": "none"
+    },
+    "owner5": {
+      "status": "None",
+      "boardAuthority": false,
+      "isBoardMember": false,
+      "voterKey": "owner5",
+      "voteCount": "0",
+      "casts": [],
+      "hasIdentity": false,
+      "pendingVoteMove": "none"
+    },
+    "heir1": {
+      "status": "Active",
+      "boardAuthority": true,
+      "isBoardMember": true,
+      "voterKey": "owner3",
+      "voteCount": "5",
+      "casts": [
+        "heir1",
+        "owner1",
+        "heir2"
+      ],
+      "hasIdentity": true,
+      "pendingVoteMove": "none"
+    },
+    "heir2": {
+      "status": "Active",
+      "boardAuthority": true,
+      "isBoardMember": true,
+      "voterKey": "owner2",
+      "voteCount": "5",
+      "casts": [
+        "owner1",
+        "heir2",
+        "heir1"
+      ],
+      "hasIdentity": false,
+      "pendingVoteMove": "none"
+    },
+    "heir3": {
+      "status": "Active",
+      "boardAuthority": true,
+      "isBoardMember": true,
+      "voterKey": "owner5",
+      "voteCount": "0",
+      "casts": [
+        "heir2",
+        "owner1",
+        "heir1"
+      ],
+      "hasIdentity": true,
+      "pendingVoteMove": "none"
+    },
+    "heir4": {
+      "status": "Active",
+      "boardAuthority": true,
+      "isBoardMember": true,
+      "voterKey": "owner1",
+      "voteCount": "1",
+      "casts": [
+        "heir4",
+        "heir2",
+        "heir1"
+      ],
+      "hasIdentity": true,
+      "pendingVoteMove": "none"
+    }
+  }
+}

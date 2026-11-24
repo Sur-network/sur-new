@@ -1,0 +1,26 @@
+[
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149772,
+    "block": 1016,
+    "status": "success",
+    "tx": "0x44f64300384b56b1c26a40233aaa6479f5bc4cd1aed0451a0cef69c41fec4e06"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 1036150,
+    "block": 1017,
+    "status": "success",
+    "tx": "0x2fdffab3aeab6410a88cbd0b5b8126fe63b5aa79b389b74843afa4b6416227a0"
+  },
+  {
+    "fn": "ValidatorsBoard.proposeRotateOracle",
+    "from": "heir3",
+    "gas": 336876,
+    "block": 1018,
+    "status": "success",
+    "tx": "0x8ecc249c725a9c52d389702493539b38c4fcf917a49adba1fc0b3f5a77965501"
+  }
+]

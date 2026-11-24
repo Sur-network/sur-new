@@ -1,0 +1,122 @@
+{
+  "name": "r8-1-votes",
+  "startedAt": "2026-11-24T07:53:02.426Z",
+  "rows": [
+    {
+      "id": "1.1",
+      "name": "identity (register + 5 oracle flags) for owners 1,2,3,5 and the contract owner4 (through exec): all fully verified",
+      "result": "PASS",
+      "detail": "ok"
+    },
+    {
+      "id": "1.2",
+      "name": "refusals: a non-validator cannot vote; an owner cannot vote for a candidate that is not an active validator (owner6 is in Probation)",
+      "result": "PASS",
+      "detail": "The contract function \"voteFor\" reverted with the following reason: ValidatorsBoard: caller is not an active validator | The contract function \"voteFor\" reverted with the following reason: ValidatorsBoard: candidate is not an active validator"
+    },
+    {
+      "id": "1.3",
+      "name": "every voter voted for X=owner3, Y=owner2, Z=owner1: voteCount = 5 each, owner4/owner5 = 0; the lists of received votes hold all five voters",
+      "result": "PASS",
+      "detail": "owner1: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner2: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner3: count 5, list 5 [owner1,owner2,owner3,owner4,owner5] | owner4: count 0, list 0 [] | owner5: count 0, list 0 []"
+    },
+    {
+      "id": "1.4",
+      "name": "a second vote for the same candidate is refused",
+      "result": "PASS",
+      "detail": "The contract function \"voteFor\" reverted with the following reason: ValidatorsBoard: already voted for this candidate"
+    },
+    {
+      "id": "1.5",
+      "name": "board actions: A1 (proposed by owner5, voted by owner1) has 2 of 3 votes, A2 (proposed by owner1) has 1 vote; none executed",
+      "result": "PASS",
+      "detail": "A1 id 1: votes 2/3 executed false; A2 id 2: votes 1/3 executed false"
+    },
+    {
+      "id": "1.6",
+      "name": "baseline: owner5 voting twice on A1 is refused (already voted)",
+      "result": "PASS",
+      "detail": "The contract function \"voteAction\" reverted with the following reason: ValidatorsBoard: already voted"
+    }
+  ],
+  "notes": {
+    "counts": {
+      "owner1": {
+        "count": 5,
+        "voters": [
+          "owner1",
+          "owner2",
+          "owner3",
+          "owner4",
+          "owner5"
+        ]
+      },
+      "owner2": {
+        "count": 5,
+        "voters": [
+          "owner1",
+          "owner2",
+          "owner3",
+          "owner4",
+          "owner5"
+        ]
+      },
+      "owner3": {
+        "count": 5,
+        "voters": [
+          "owner1",
+          "owner2",
+          "owner3",
+          "owner4",
+          "owner5"
+        ]
+      },
+      "owner4": {
+        "count": 0,
+        "voters": []
+      },
+      "owner5": {
+        "count": 0,
+        "voters": []
+      }
+    },
+    "cast": {
+      "owner1": [
+        "owner3",
+        "owner2",
+        "owner1"
+      ],
+      "owner2": [
+        "owner3",
+        "owner2",
+        "owner1"
+      ],
+      "owner3": [
+        "owner3",
+        "owner2",
+        "owner1"
+      ],
+      "owner4": [
+        "owner3",
+        "owner2",
+        "owner1"
+      ],
+      "owner5": [
+        "owner3",
+        "owner2",
+        "owner1"
+      ]
+    },
+    "A1": "1",
+    "A2": "2",
+    "boardVersion": "1",
+    "board": [
+      "owner1",
+      "owner2",
+      "owner3",
+      "owner4",
+      "owner5"
+    ]
+  },
+  "finishedAt": "2026-11-24T07:53:55.115Z"
+}

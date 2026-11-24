@@ -1,0 +1,35 @@
+{
+  "name": "r8-0-bootstrap",
+  "startedAt": "2026-11-24T07:50:52.679Z",
+  "rows": [
+    {
+      "id": "0.1",
+      "name": "owners 2..5 activated by a SurKMS-signed recordActivation; QBFT set = op1..op5",
+      "result": "PASS",
+      "detail": "[\"0x46c38597e5ced9fdb8719b4ebbd46da77100109a\",\"0x483ceda3fa03bb82e0f2605621787a98d3de5c10\",\"0x69ef1fec4a6fe84dd1f9ab48c2a36d68b6be59f5\",\"0x6e91a503602fd6d1e8bf9634bbae6f513eecb635\",\"0x729faf093dd265db04fe5807f6ff48f4d4e6d3de\"]"
+    },
+    {
+      "id": "0.2",
+      "name": "statuses: owners 1..5 Active, 6..7 Probation (no node)",
+      "result": "PASS",
+      "detail": "{\"owner1\":\"Active\",\"owner2\":\"Active\",\"owner3\":\"Active\",\"owner4\":\"Active\",\"owner5\":\"Active\",\"owner6\":\"Probation\",\"owner7\":\"Probation\"}"
+    },
+    {
+      "id": "0.3",
+      "name": "all five nodes sign blocks (5 distinct miners in the last 13 blocks)",
+      "result": "PASS",
+      "detail": "0x46c38597e5ced9fdb8719b4ebbd46da77100109a,0x483ceda3fa03bb82e0f2605621787a98d3de5c10,0x6e91a503602fd6d1e8bf9634bbae6f513eecb635,0x69ef1fec4a6fe84dd1f9ab48c2a36d68b6be59f5,0x729faf093dd265db04fe5807f6ff48f4d4e6d3de"
+    },
+    {
+      "id": "0.4",
+      "name": "start state of the board: members = owner1..5 (genesis board), board month == current month, no pending vote move",
+      "result": "PASS",
+      "detail": "board 5, month 24322/24322, boardVersion 1"
+    }
+  ],
+  "notes": {
+    "fixture": "recordActivation for owners 2,3,4,5 by SurKMS verifier slot; owner4 = TEST-ONLY contract owner",
+    "startBlock": "82"
+  },
+  "finishedAt": "2026-11-24T07:51:09.405Z"
+}

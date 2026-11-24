@@ -1,0 +1,22 @@
+containers: 37 running: 36
+networks: 18
+volumes: 70
+mine:
+sur25v-v5 Up 19 minutes (healthy)
+sur25v-v4 Up 19 minutes (healthy)
+sur25v-v3 Up 19 minutes (healthy)
+sur25v-v2 Up 19 minutes (healthy)
+sur25v-v1 Up 19 minutes (healthy)
+sur25v-net
+sur25v-v1-data
+sur25v-v2-data
+sur25v-v3-data
+sur25v-v4-data
+sur25v-v5-data
+~/sur25v-live
+9
+sur25v-v5 329.6MiB / 768MiB
+sur25v-v4 324MiB / 768MiB
+sur25v-v3 325.9MiB / 768MiB
+sur25v-v2 359.4MiB / 768MiB
+sur25v-v1 357.1MiB / 768MiB

@@ -1,0 +1,83 @@
+{
+  "name": "r8-5-verify-verifier",
+  "startedAt": "2026-11-24T08:05:53.714Z",
+  "rows": [
+    {
+      "id": "5.1",
+      "name": "the Verifier's housekeeping transaction is on chain: from the SurKMS verifier address, to ValidatorsBoard, status success; the outbox row is housekeeping/moveReceivedVotes, role permissionless, state confirmed, args (owner3, 50)",
+      "result": "PASS",
+      "detail": "tx 0xc2dcb86bc2a9adeed4a4f6210c2f64ecf67c164170af7ddb1a5dd82539ef74f4 block 929 gas used 431131 (signed gas limit 1296719); outbox row 1 confirmed attempts 1"
+    },
+    {
+      "id": "5.2",
+      "name": "ReceivedVotesMoved(owner3 -> heir1) + ReceivedVotesMoveCompleted in that transaction: all pending entries processed in ONE call",
+      "result": "PASS",
+      "detail": "moved 4, dropped 0, merged 0, remaining 0"
+    },
+    {
+      "id": "5.3",
+      "name": "chain after the Verifier's call: pendingVoteMoves == 0 (the hold is over), voteCount(owner3) == 0, voteCount(heir1) == 5 == the 5 votes owner3 had before it was migrated",
+      "result": "PASS",
+      "detail": "{\"total\":0,\"moves\":{\"owner1\":\"none\",\"owner2\":\"none\",\"owner3\":\"none\",\"owner4\":\"none\",\"owner5\":\"none\"}} | owner3: count 0, list 0 [] | heir1: count 5, list 5 [heir1,owner4,heir2,heir3,owner1]"
+    },
+    {
+      "id": "5.4",
+      "name": "while the move was pending the Verifier never tried refreshBoard / syncBoard / fillVacancies: no such outbox row and no 'would send' log line; the only outbox function is moveReceivedVotes",
+      "result": "PASS",
+      "detail": "outbox: [{\"function_name\":\"moveReceivedVotes\",\"c\":1}]; log lines: moveReceivedVotes 5, refreshBoard 0, syncBoard 0, fillVacancies 0"
+    }
+  ],
+  "notes": {
+    "outboxRow": {
+      "id": 1,
+      "intent_key": "hk:moveReceivedVotes:0xae476387e6c208722cc5bd38ea60dc82e74e5ba2:4:498752",
+      "role": "permissionless",
+      "kind": "housekeeping",
+      "target": "0x4444444444444444444444444444444444444444",
+      "function_name": "moveReceivedVotes",
+      "args_json": "[\"0xae476387e6c208722cc5bd38ea60dc82e74e5ba2\",\"50\"]",
+      "calldata": "0xc6356e85000000000000000000000000ae476387e6c208722cc5bd38ea60dc82e74e5ba20000000000000000000000000000000000000000000000000000000000000032",
+      "evidence_hash": null,
+      "decision_key": null,
+      "flag": "HOUSEKEEPING",
+      "state": "confirmed",
+      "nonce": 8,
+      "raw_tx": "0xf8ae08865af3107a40008313c94f94444444444444444444444444444444444444444480b844c6356e85000000000000000000000000ae476387e6c208722cc5bd38ea60dc82e74e5ba200000000000000000000000000000000000000000000000000000000000000328307ff35a0492ccf712af4e9e92d11fef6c7f2c4b4182ac8bace1a15a3dc0d28f8f8c29013a048f942e20ee66ade63f9e1c59132a75044a140d3af450b106c1c9d8915b131c9",
+      "tx_hash": "0xc2dcb86bc2a9adeed4a4f6210c2f64ecf67c164170af7ddb1a5dd82539ef74f4",
+      "gas": "1296719",
+      "signed_block": 928,
+      "created_at": 1795507436,
+      "updated_at": 1795507500,
+      "attempts": 1,
+      "last_error": null,
+      "receipt_block": 929,
+      "receipt_status": "success",
+      "onchain_decision_id": null
+    },
+    "receipt": {
+      "hash": "0xc2dcb86bc2a9adeed4a4f6210c2f64ecf67c164170af7ddb1a5dd82539ef74f4",
+      "block": "929",
+      "gasUsed": "431131"
+    },
+    "event": {
+      "moved": "4",
+      "dropped": "0",
+      "merged": "0",
+      "remaining": "0"
+    },
+    "alerts": [
+      {
+        "code": "BOARD_VOTE_MOVE_PENDING",
+        "severity": "warning",
+        "c": 1
+      },
+      {
+        "code": "SIGNER_FAILED",
+        "severity": "critical",
+        "c": 1
+      }
+    ],
+    "sinceMove": "see runs-v/verifier-r8-d2.log"
+  },
+  "finishedAt": "2026-11-24T08:05:53.923Z"
+}

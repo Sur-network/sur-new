@@ -1,0 +1,100 @@
+24 2026-11-22T12:07:06.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+25 2026-11-22T12:07:39.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+26 2026-11-22T12:07:40.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+27 2026-11-22T12:08:14.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+28 2026-11-22T12:08:15.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+29 2026-11-22T12:08:48.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+30 2026-11-22T12:08:49.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+31 2026-11-22T12:09:22.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+32 2026-11-22T12:09:23.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: confirmOperatorReady is switched off until the server admin enables it
+33 2026-11-22T12:09:55.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x3333333333333333333333333333333333333333 confirmOperatorReady (round-2 live test)
+34 2026-11-22T12:09:56.000Z sign_transaction verifier verifier-signer ok 
+35 2026-11-22T12:09:57.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x3333333333333333333333333333333333333333 recordRecoveryRemoval (round-2 live test)
+36 2026-11-22T12:12:43.000Z sign_message verifier verifier-signer ok 
+37 2026-11-22T12:12:44.000Z sign_transaction verifier verifier-signer ok 
+38 2026-11-22T12:18:44.000Z sign_transaction distributionOracle router-signer ok 
+39 2026-11-22T12:18:46.000Z sign_transaction distributionOracle router-signer ok 
+40 2026-11-22T12:18:47.000Z sign_transaction distributionOracle router-signer ok 
+41 2026-11-22T12:18:50.000Z sign_transaction distributionOracle router-signer ok 
+42 2026-11-22T12:18:51.000Z sign_transaction distributionOracle router-signer ok 
+43 2026-11-22T12:26:34.000Z slot_frozen distributionOracle chain ok 
+44 2026-11-22T12:26:44.000Z sign_refused distributionOracle router-signer denied FROZEN: the slot is frozen by a board decision
+45 2026-11-22T12:26:44.000Z sign_transaction verifier verifier-signer ok 
+46 2026-11-22T12:27:03.000Z slot_unfrozen distributionOracle chain ok 
+47 2026-11-22T12:27:13.000Z sign_transaction distributionOracle router-signer ok 
+48 2026-11-22T12:52:43.000Z sign_message verifier verifier-signer ok 
+49 2026-11-22T12:52:43.000Z sign_transaction verifier verifier-signer ok 
+50 2026-11-22T13:08:19.000Z sign_message verifier verifier-signer ok 
+51 2026-11-22T13:10:25.000Z sign_transaction verifier verifier-signer ok 
+52 2026-11-22T13:53:07.000Z sign_transaction verifier verifier-signer ok 
+53 2026-11-22T13:54:47.000Z sign_message verifier verifier-signer ok 
+54 2026-11-22T13:54:47.000Z sign_transaction verifier verifier-signer ok 
+55 2026-11-22T14:06:12.000Z sign_message verifier verifier-signer ok 
+56 2026-11-22T14:06:12.000Z sign_transaction verifier verifier-signer ok 
+57 2026-11-22T14:12:13.000Z sign_message verifier verifier-signer ok 
+58 2026-11-22T14:12:14.000Z sign_transaction verifier verifier-signer ok 
+59 2026-11-22T14:36:30.000Z sign_message verifier verifier-signer ok 
+60 2026-11-22T14:36:31.000Z sign_transaction verifier verifier-signer ok 
+61 2026-11-22T14:42:03.000Z sign_message verifier verifier-signer ok 
+62 2026-11-22T14:42:03.000Z sign_transaction verifier verifier-signer ok 
+63 2026-11-22T14:43:20.000Z sign_message verifier verifier-signer ok 
+64 2026-11-22T14:43:20.000Z sign_transaction verifier verifier-signer ok 
+65 2026-11-22T16:00:30.000Z service_started  system ok 
+66 2026-11-22T16:00:42.000Z unlock_attempt  127.0.0.1 ok 
+67 2026-11-22T16:03:10.000Z sign_transaction distributionOracle router-signer ok 
+68 2026-11-22T16:03:12.000Z sign_transaction distributionOracle router-signer ok 
+69 2026-11-22T16:03:13.000Z sign_transaction distributionOracle router-signer ok 
+70 2026-11-22T22:00:39.000Z service_started  system ok 
+71 2026-11-22T22:00:48.000Z unlock_attempt  127.0.0.1 ok 
+72 2026-11-22T22:01:07.000Z sign_transaction distributionOracle router-signer ok 
+73 2026-11-22T22:01:08.000Z sign_transaction distributionOracle router-signer ok 
+74 2026-11-22T22:01:09.000Z sign_transaction distributionOracle router-signer ok 
+75 2026-11-23T10:16:06.000Z slot_orphan identityOracle chain error 
+76 2026-11-23T10:16:07.000Z service_started  system ok 
+77 2026-11-23T10:16:12.000Z unlock_attempt  127.0.0.1 ok 
+78 2026-11-23T10:16:25.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat (round 6 live test only)
+79 2026-11-23T10:20:51.000Z slot_orphan identityOracle chain error 
+80 2026-11-23T10:21:23.000Z sign_transaction verifier verifier-signer ok 
+81 2026-11-23T10:21:26.000Z sign_transaction verifier verifier-signer ok 
+82 2026-11-23T10:21:29.000Z sign_transaction verifier verifier-signer ok 
+83 2026-11-23T10:23:17.000Z sign_transaction verifier verifier-signer ok 
+84 2026-11-23T10:23:18.000Z sign_transaction verifier verifier-signer ok 
+85 2026-11-23T10:30:24.000Z sign_message verifier verifier-signer ok 
+86 2026-11-23T10:30:24.000Z sign_transaction verifier verifier-signer ok 
+87 2026-11-23T10:32:20.000Z rule_changed  admin:<os-user> ok rule disabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat
+88 2026-11-23T10:32:22.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: migrateSeat is switched off until the server admin enables it
+89 2026-11-23T10:32:23.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat (round-6-live-test-only)
+90 2026-11-23T10:32:25.000Z sign_transaction verifier verifier-signer ok 
+91 2026-11-23T10:39:15.000Z sign_transaction distributionOracle router-signer ok 
+92 2026-11-23T10:39:16.000Z sign_transaction distributionOracle router-signer ok 
+93 2026-11-23T10:39:18.000Z sign_transaction distributionOracle router-signer ok 
+94 2026-11-23T10:39:19.000Z sign_transaction distributionOracle router-signer ok 
+95 2026-11-23T10:39:21.000Z sign_transaction distributionOracle router-signer ok 
+96 2026-11-23T10:39:22.000Z sign_transaction distributionOracle router-signer ok 
+97 2026-11-23T10:40:47.000Z sign_transaction verifier verifier-signer ok 
+98 2026-11-23T10:42:22.000Z rule_changed  admin:<os-user> ok rule disabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat
+99 2026-11-24T07:50:23.000Z service_started  system ok 
+100 2026-11-24T07:50:33.000Z unlock_attempt  127.0.0.1 ok 
+101 2026-11-24T07:50:53.000Z sign_transaction verifier verifier-signer ok 
+102 2026-11-24T07:50:55.000Z sign_transaction verifier verifier-signer ok 
+103 2026-11-24T07:50:57.000Z sign_transaction verifier verifier-signer ok 
+104 2026-11-24T07:51:00.000Z sign_transaction verifier verifier-signer ok 
+105 2026-11-24T07:54:21.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat (round-8-live-test-only)
+106 2026-11-24T07:54:23.000Z sign_transaction verifier verifier-signer ok 
+107 2026-11-24T07:55:36.000Z sign_transaction verifier verifier-signer ok 
+108 2026-11-24T07:55:40.000Z sign_transaction verifier verifier-signer ok 
+109 2026-11-24T07:55:42.000Z sign_transaction verifier verifier-signer ok 
+110 2026-11-24T07:59:01.000Z rule_changed  admin:<os-user> ok rule disabled: verifier 0x4444444444444444444444444444444444444444 moveReceivedVotes (round-8: show the KMS refusal (rule missing/off))
+111 2026-11-24T08:03:56.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+112 2026-11-24T08:04:08.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+113 2026-11-24T08:04:09.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+114 2026-11-24T08:04:21.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+115 2026-11-24T08:04:21.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+116 2026-11-24T08:04:34.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+117 2026-11-24T08:04:34.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+118 2026-11-24T08:04:46.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+119 2026-11-24T08:04:47.000Z sign_refused verifier verifier-signer denied POLICY_DENIED: function-disabled: moveReceivedVotes is switched off until the server admin enables it
+120 2026-11-24T08:04:48.000Z rule_changed  admin:<os-user> ok rule enabled: verifier 0x4444444444444444444444444444444444444444 moveReceivedVotes (round-8: re-enabled after the refusal demo)
+121 2026-11-24T08:04:59.000Z sign_transaction verifier verifier-signer ok 
+122 2026-11-24T08:06:26.000Z sign_transaction verifier verifier-signer ok 
+123 2026-11-24T08:06:54.000Z rule_changed  admin:<os-user> ok rule disabled: verifier 0x3333333333333333333333333333333333333333 migrateSeat (round-8: test over, switched off again)

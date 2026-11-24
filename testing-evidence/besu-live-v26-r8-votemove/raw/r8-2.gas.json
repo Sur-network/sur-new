@@ -1,0 +1,34 @@
+[
+  {
+    "fn": "IdentityRegistry.migrateIdentity",
+    "from": "identityOracle",
+    "gas": 149772,
+    "block": 287,
+    "status": "success",
+    "tx": "0x9a1bf4750738f6176489ace43d76607e17c54cb69c093f2340d6ac23159c3ff3"
+  },
+  {
+    "fn": "ValidatorsRegistry.migrateSeat",
+    "from": "verifier",
+    "gas": 843779,
+    "block": 294,
+    "status": "success",
+    "tx": "0x6776a59f2602aff73507ef9b3910a7c8f7865d7074c8ade1fc94071d5b832960"
+  },
+  {
+    "fn": "ValidatorsBoard.voteAction",
+    "from": "heir3",
+    "gas": 172509,
+    "block": 295,
+    "status": "reverted",
+    "tx": "0xaf0643af45addc94ac0733fba0e19b59dbdaf88b66667fc88890a4ba638e4bab"
+  },
+  {
+    "fn": "ValidatorsBoard.voteAction",
+    "from": "heir3",
+    "gas": 202344,
+    "block": 296,
+    "status": "success",
+    "tx": "0x45519fc5c04153b44797dd2b3cbfd6e9c60024e728f55404df3caa1d72770faf"
+  }
+]

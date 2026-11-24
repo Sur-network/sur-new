@@ -1,0 +1,2 @@
+# TEST-ONLY geo table: the throw-away docker subnet of net V is declared Iranian so that the node-address rules (public + iran) can be exercised
+198.20.77.0/24,IR
