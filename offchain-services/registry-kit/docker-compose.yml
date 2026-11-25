@@ -1,0 +1,48 @@
+# رجیستری ایمیج داکر سور (registry.surnet.org) — registry:2 + nginx
+# مشخصات: sur-subdomain-plan.md بخش ۵ و README همین پوشه.
+#
+# دو در:
+#   5000 فقط‌خواندنی (GET/HEAD)، بدون ورود، برای ولیدیتورها (pull)
+#   5001 نوشتن با ورود (htpasswd)، فقط برای CI و مدیر؛ هرگز عمومی نشود
+#
+# فایل htpasswd و push.secret در مخزن نیستند (کنار این فایل روی سرور ساخته می‌شوند).
+name: sur-registry
+
+services:
+  registry:
+    # ایمیج با digest پین‌شده (pull روی میزبان آزمون در ۲۰۲۶-۱۱-۲۵)
+    image: registry:2@sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373
+    container_name: sur-registry
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_STORAGE_DELETE_ENABLED: "false"
+      REGISTRY_LOG_LEVEL: info
+    volumes:
+      - sur-registry-data:/var/lib/registry
+    networks: [reg]
+
+  proxy:
+    image: nginx:alpine
+    container_name: sur-registry-proxy
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
+    depends_on: [registry]
+    ports:
+      # آزمایشی: فقط روی خود میزبان. برای عمومی‌کردن، IP یا تونل را مدیر سرور تعیین می‌کند.
+      - "${SUR_REGISTRY_READ_BIND:-127.0.0.1:5000}:5000"
+      - "${SUR_REGISTRY_PUSH_BIND:-127.0.0.1:5001}:5001"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./htpasswd:/etc/nginx/htpasswd:ro
+    networks: [reg]
+
+volumes:
+  sur-registry-data:
+
+networks:
+  reg:
