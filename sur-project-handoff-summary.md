@@ -101,7 +101,7 @@ sur-comprehensive-project-document.md ← سند جامع کسب‌وکاری/م
 | سرویس Verifier (شامل پروتکل تازه‌ی بررسی نود `SUR_NODE_CHECK_V1`) | `sur-verifier-service-spec.md`, `sur-node-check-protocol-spec.md` |
 | اپ ولیدیتور | `sur-validator-app-claudecode-brief.md` |
 | ایندکسر رویدادها (سرویس ۱۸؛ تاریخچهٔ پاداش و آرا بدون خواندن زنجیره از بلوک ۰) | `sur-event-indexer-spec.md` |
-| سرویس امضای اسناد (SurSign؛ سرویس ۲۰) با ماژول «اسناد بنیاد»: نگه‌داری عمومی و دائمی متن نسخه‌های منشور و تعهدنامه، فهرست نسخه‌های امضاشده‌ی بنیاد، برگ‌های قبولی و قواعد پذیرش (تصمیم ۱۱۱)؛ آرشیو نسخه‌ها و برگ‌های قبولی (سرویس ۱۹) از ۲۰۲۶-۱۱-۲۴ در آن ادغام شد و سرویس جدا ندارد (فایل `sur-agreement-archive-spec.md` فقط تاریخچه است) | `sur-document-signing-spec.md` |
+| سرویس امضای اسناد (SurSign؛ سرویس ۲۰) با ماژول «اسناد بنیاد»: نگه‌داری عمومی و دائمی متن نسخه‌های منشور و تعهدنامه، فهرست نسخه‌های امضاشده‌ی بنیاد، برگ‌های قبولی و قواعد پذیرش (تصمیم ۱۱۱)؛ آرشیو نسخه‌ها و برگ‌های قبولی (سرویس ۱۹) از ۲۰۲۶-۱۱-۲۴ در آن ادغام شد و سرویس جدا ندارد (فایل `sur-foundation-documents-spec.md` فقط تاریخچه است) | `sur-document-signing-spec.md` |
 | داشبورد حکمرانی | `sur-governance-dashboard-claudecode-brief.md` |
 | صفحهٔ عمومی فروش و اتصال صرافی‌ها | `sur-suren-sale-portal-claudecode-brief.md` |
 | IdentityRegistry (سرویس + قرارداد) | `sur-identity-registry-spec.md` |
