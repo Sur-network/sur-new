@@ -43,7 +43,7 @@
 - **رأی دومجلسی**: تصویب هر دو لازم است: هیأت ولیدیتورها (دست‌کم ۳ رأی) و `⌈۲/۳⌉` ولیدیتورهای فعالِ واجدِ هنگام ساخت پیشنهاد.
 - **اکثریت عددی هیأت بنیاد**: دست‌کم ۳ از ۵ عضو اصلی.
 - **ابزار آف‌چین**: Verifier، RewardRouter، Identity Service، اپ همراه ولیدیتور، داشبورد حکمرانی، ابزار genesis، ابزار برنامهٔ بازیابی (نوشته‌نشده).
-- منبع هر ردیف در ستون «منبع» با این کوتاه‌نوشت‌ها آمده: **ساختار** = `governance/sur-organizational-structure.md`؛ **طراحی** = `technical-design/sur-blockchain-design-doc.md`؛ **قراردادها** = `technical-design/sur-smart-contracts-reference.md`؛ **توکنومیکس** = `economics/sur-tokenomics.md`؛ **فروش** = `offchain-services/sur-suren-sale-spec.md`؛ **توافق** = `governance/sur-validator-agreement.md`؛ **بازیابی** = `governance/sur-emergency-consensus-recovery.md`؛ **هویت** = `offchain-services/sur-identity-registry-spec.md`؛ **Verifier** = `offchain-services/sur-verifier-service-spec.md`؛ **نرم‌افزار** = `offchain-services/sur-software-inventory.md`.
+- منبع هر ردیف در ستون «منبع» با این کوتاه‌نوشت‌ها آمده: **ساختار** = `governance/sur-organizational-structure.md`؛ **طراحی** = `technical-design/sur-blockchain-design-doc.md`؛ **قراردادها** = `technical-design/sur-smart-contracts-reference.md`؛ **توکنومیکس** = `economics/sur-tokenomics.md`؛ **فروش** = `offchain-services/sur-suren-sale-spec.md`؛ **توافق** = `governance/sur-network-charter.md` و `governance/sur-validator-undertaking.md`؛ **بازیابی** = `governance/sur-emergency-consensus-recovery.md`؛ **هویت** = `offchain-services/sur-identity-registry-spec.md`؛ **Verifier** = `offchain-services/sur-verifier-service-spec.md`؛ **نرم‌افزار** = `offchain-services/sur-software-inventory.md`.
 
 ### ۰٫۳ اصول ثابت که در همهٔ جدول‌ها صادق است
 
