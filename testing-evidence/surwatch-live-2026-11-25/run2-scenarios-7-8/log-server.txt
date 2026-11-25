@@ -1,0 +1,3 @@
+{"time":"2026-11-25T16:05:44.280939596Z","level":"INFO","msg":"notifications on","telegram":true,"bale":false,"email":true}
+{"time":"2026-11-25T16:05:44.280980286Z","level":"INFO","msg":"surwatch started","listen":":8080","monitors":1,"rules":"watch-rules-v1"}
+{"time":"2026-11-25T16:10:50.525440914Z","level":"ERROR","msg":"registry refresh failed","error":"rpc eth_call: node unreachable (no route)"}

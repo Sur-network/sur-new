@@ -1,0 +1,1 @@
+{"time":"2026-11-25T15:29:48.708072717Z","level":"INFO","msg":"surwatch agent started","address":"0x62242ea66c1c57d35ae09e588f0a564795015208","version":"0.1.0","interval":"0s"}

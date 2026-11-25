@@ -1,0 +1,112 @@
+15:23:05Z == 0. sanity
+15:23:10Z PASS  the registration message of the live-test client equals the golden file
+15:23:17Z chain head 35, monitor peers "0x7"
+15:23:17Z == 0b. FIXTURE: founders 2..7 are activated like in the earlier Besu rounds (setOperator by the founder, recordActivation by the Verifier key)
+verifier funded
+activated owner2
+activated owner3
+activated owner4
+activated owner5
+activated owner6
+activated owner7
+15:24:24Z PASS  the QBFT validator set has grown to 7 (every founder now signs blocks)
+15:24:51Z chain head 82, monitor peers "0x7"
+15:24:51Z == 1. the real registry (7 founders) is read by the server
+15:27:56Z the server listed 7 validators 185 s after step 0b
+0x10e3f7133f3fc58a30b17ae57846278dbab4044f Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0x3481a641697c8706d924ede2fa2ed7fd40b25e9c Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0x6dd6c111587b2124bbd315e451216dab566c609e Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0xb0b3fff6193b77c818f3b7733e1966d60cf8239e Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0xcc7185d2082e647e2d3643596d626ab2f8f028d0 Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0xd0cb65529cd8d0907c53e6ae4d444a2c6c4c1dd2 Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+0xf8a13c5a99e617cb22eb184d14266de4b82d3577 Active UNKNOWN/NOT_REGISTERED 24h=- agent=none
+15:29:14Z PASS  7 validators are listed
+15:29:17Z PASS  all 7 are Active in the real contract
+15:29:22Z PASS  without an agent they are UNKNOWN/NOT_REGISTERED, never down
+15:29:22Z == 2. agents
+15:29:29Z owner1 registers his agent with his wallet signature: {"status":200,"agentAddress":"0xed12b46c98a13e880b86febb414a07a6af0b2aa7","message":"an older key of this owner is replaced","registered":true}
+15:29:29Z PASS  the registration signed by the owner's wallet is accepted (real operatorOf from the contract)
+15:30:48Z PASS  owner1 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:30:52Z PASS  owner2 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:30:56Z PASS  owner3 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:31:00Z PASS  owner4 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:31:05Z PASS  owner5 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:31:09Z PASS  owner6 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+15:31:13Z PASS  owner7 reaches UP (heartbeats from the real node + admin_peers of the real monitor)
+0x10e3f7133f3fc58a30b17ae57846278dbab4044f Active UP 24h=100 agent=0.1.0
+0x3481a641697c8706d924ede2fa2ed7fd40b25e9c Active UP 24h=100 agent=0.1.0
+0x6dd6c111587b2124bbd315e451216dab566c609e Active UP 24h=100 agent=0.1.0
+0xb0b3fff6193b77c818f3b7733e1966d60cf8239e Active UP 24h=100 agent=0.1.0
+0xcc7185d2082e647e2d3643596d626ab2f8f028d0 Active UP 24h=100 agent=0.1.0
+0xd0cb65529cd8d0907c53e6ae4d444a2c6c4c1dd2 Active UP 24h=100 agent=0.1.0
+0xf8a13c5a99e617cb22eb184d14266de4b82d3577 Active UP 24h=100 agent=0.1.0
+15:31:17Z == 3. contacts, manager, roles
+15:31:23Z PASS  owner1 links Telegram (code, /start CODE read by getUpdates)
+15:31:29Z PASS  owner2 links Telegram (code, /start CODE read by getUpdates)
+15:31:35Z PASS  owner3 links Telegram (code, /start CODE read by getUpdates)
+15:31:41Z PASS  owner4 links Telegram (code, /start CODE read by getUpdates)
+15:31:45Z PASS  owner3 verifies an email address through the fake SMTP
+15:31:49Z PASS  owner1 is validator, validators' board member (real getBoardMembers) and admin
+15:31:53Z set manager: {"status":200,"manager":"0xf8a13c5a99e617cb22eb184d14266de4b82d3577"}
+15:31:54Z PASS  set manager answered 200
+15:31:58Z PASS  a validator who is no board member is refused as manager
+15:32:07Z == 4. incidents: kill the node of owner3, stop the agent of owner4
+15:32:14Z T0: node n3 killed, agent4 stopped (chain head 303)
+15:33:54Z PASS  owner3 becomes NODE_DOWN (agent says RPC dead, monitor does not see the node)
+15:35:38Z PASS  owner4 becomes AGENT_SILENT (node is still seen by the monitor)
+15:36:18Z PASS  the chain goes on with 6 of 7 validators (head 359 -> 371)
+15:36:22Z PASS  owner1 is unaffected (UP)
+15:36:27Z PASS  owner2 is unaffected (UP)
+15:36:32Z PASS  owner5 is unaffected (UP)
+15:36:37Z PASS  owner6 is unaffected (UP)
+15:36:42Z PASS  owner7 is unaffected (UP)
+15:41:16Z PASS  no alert yet, 9 minutes after the kill
+15:41:16Z waiting for the NODE_DOWN alert of owner3
+15:45:00Z alert for owner3 arrived 769 s after the kill
+15:45:00Z PASS  the NODE_DOWN alert came between 10 and 14 minutes after the kill
+15:45:44Z PASS  owner3 got exactly one NODE_DOWN message
+15:45:47Z PASS  the manager (owner2) got exactly one NODE_DOWN message
+15:45:51Z PASS  the email channel of owner3 got the alert too
+15:45:54Z PASS  chat 1001 got no NODE_DOWN message
+15:45:57Z PASS  chat 1004 got no NODE_DOWN message
+15:45:57Z waiting for the AGENT_SILENT alert of owner4
+15:46:59Z PASS  owner4 got the AGENT_SILENT message
+15:47:03Z PASS  the manager did not get the AGENT_SILENT message (owner only)
+15:47:06Z == 5. the server is restarted in the middle of the incident
+15:49:18Z PASS  owner3 is still NODE_DOWN after the restart (state kept in PostgreSQL)
+15:49:25Z PASS  no second NODE_DOWN message to owner3 or to the manager after the restart
+15:49:25Z == 6. recovery
+15:50:21Z PASS  owner4 is UP again
+15:51:38Z PASS  owner3 is UP again (node restarted, synced, in the monitor's peers)
+15:51:38Z waiting for the RECOVERED messages
+15:54:39Z PASS  owner3 got the RECOVERED message
+15:54:42Z PASS  the manager got the RECOVERED message of the node alert he had received
+15:54:46Z PASS  owner4 got the RECOVERED message
+15:54:50Z == 7. the monitor node is stopped: SurWatch must say UNKNOWN, never down
+login failed for admin: 503 {"error":"chain_unavailable"}
+15:59:45Z FAIL  every Active validator is UNKNOWN while the monitor is down
+login failed for admin: 503 {"error":"chain_unavailable"}
+15:59:53Z FAIL  all of them carry the reason MONITOR_UNHEALTHY
+15:59:56Z PASS  no new message of any kind was sent during the monitor outage
+16:01:18Z PASS  owner1 is UP again once the monitor has synced and reconnected
+16:01:18Z == 8. evidence and privacy
+0x10e3f7133f3fc58a30b17ae57846278dbab4044f Active UP 24h=100 agent=0.1.0
+0x3481a641697c8706d924ede2fa2ed7fd40b25e9c Active UP 24h=100 agent=0.1.0
+0x6dd6c111587b2124bbd315e451216dab566c609e Active UP 24h=100 agent=0.1.0
+0xb0b3fff6193b77c818f3b7733e1966d60cf8239e Active UP 24h=100 agent=0.1.0
+0xcc7185d2082e647e2d3643596d626ab2f8f028d0 Active UP 24h=100 agent=0.1.0
+0xd0cb65529cd8d0907c53e6ae4d444a2c6c4c1dd2 Active UP 24h=28.3 agent=0.1.0
+0xf8a13c5a99e617cb22eb184d14266de4b82d3577 Active UP 24h=100 agent=0.1.0
+16:01:50Z PASS  owner3's 24 h uptime shows the outage (between 0 and 99.9 percent)
+16:01:54Z FAIL  owner1's 24 h uptime is high (the monitor outage is UNKNOWN, outside the denominator)
+16:02:05Z PASS  validators' board member (owner2) sees contacts, an ordinary validator (owner6) does not
+16:02:05Z FAIL  the audit log has the manager change and the contact reads
+16:02:05Z database dump: 65725 bytes
+16:02:05Z PASS  no IP address in the database (data dump)
+16:02:05Z PASS  no IP address in any API answer saved
+16:02:06Z FAIL  no IP address in the logs of the server and the agents
+surwatch-live-agent1 cpu=0.00% mem=4.504MiB / 64MiB
+surwatch-live-server cpu=1.05% mem=7.34MiB / 256MiB
+surwatch-live-n1 cpu=5.21% mem=409MiB / 800MiB
+surwatch-live-pg cpu=0.19% mem=71.49MiB / 512MiB
+16:02:16Z == DONE: 51 passed, 5 failed

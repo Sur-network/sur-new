@@ -1,0 +1,18 @@
+16:06:25Z == 7. the monitor node is stopped: SurWatch must say UNKNOWN, never down
+16:11:13Z login while the monitor is down: login failed for admin: 503 {"error":"chain_unavailable"}
+16:11:13Z PASS  every one of the 7 validators has UNKNOWN as its latest result while the monitor is down
+16:11:13Z PASS  all of them carry the reason MONITOR_UNHEALTHY
+16:11:16Z PASS  no new message of any kind was sent during the monitor outage
+16:11:16Z PASS  nobody was marked down: no NODE_DOWN or AGENT_SILENT transition in the last 5 minutes
+16:11:47Z owner1 is UP after 30 s
+16:11:47Z PASS  owner1 is UP again once the monitor has synced and reconnected
+16:11:47Z == 8. evidence and privacy
+16:12:14Z PASS  owner3's 24 h uptime shows the outage (between 0 and 99.9 percent)
+16:12:18Z PASS  owner1's 24 h uptime is high (the monitor outage is UNKNOWN, outside the denominator)
+16:12:29Z PASS  validators' board member (owner2) sees contacts, an ordinary validator (owner6) does not
+16:12:33Z PASS  the audit log has the manager change and the contact reads
+16:12:33Z database dump: 79072 bytes
+16:12:33Z PASS  no IP address in the database (data dump)
+16:12:33Z PASS  no IP address in any API answer saved
+16:12:33Z PASS  no IP address in the logs of the server and the agents
+16:12:43Z == DONE: 12 passed, 0 failed

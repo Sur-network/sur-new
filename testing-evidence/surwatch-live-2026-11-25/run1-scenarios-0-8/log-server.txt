@@ -1,0 +1,9 @@
+{"time":"2026-11-25T15:22:31.85022387Z","level":"INFO","msg":"notifications on","telegram":true,"bale":false,"email":true}
+{"time":"2026-11-25T15:22:31.850281886Z","level":"INFO","msg":"surwatch started","listen":":8080","monitors":1,"rules":"watch-rules-v1"}
+{"time":"2026-11-25T15:31:19.926605047Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xb0b3…239e"}
+{"time":"2026-11-25T15:31:26.149144523Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xf8a1…3577"}
+{"time":"2026-11-25T15:31:32.770512023Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xd0cb…1dd2"}
+{"time":"2026-11-25T15:31:38.384125586Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xcc71…28d0"}
+{"time":"2026-11-25T15:47:14.557670195Z","level":"INFO","msg":"notifications on","telegram":true,"bale":false,"email":true}
+{"time":"2026-11-25T15:47:14.557700449Z","level":"INFO","msg":"surwatch started","listen":":8080","monitors":1,"rules":"watch-rules-v1"}
+{"time":"2026-11-25T15:57:20.797502517Z","level":"ERROR","msg":"registry refresh failed","error":"Post \"http://172.29.72.19:8545\": dial tcp 172.29.72.19:8545: connect: no route to host"}
