@@ -13,11 +13,10 @@
 | `genesis-config.json` | **ورودی** ابزار GenesisBuilder با همهٔ مقدارهای تصمیم‌گرفته؛ جای‌گیر برای آنچه فقط مالک/کمیته می‌داند (آدرس‌ها، زمان genesis، فهرست طلب‌ها). ابزار آن را عمداً رد می‌کند | ✅ رد شدن آزموده شد (بخش ۴-۱) |
 | `genesis.TEST-ONLY.json` + `genesis.TEST-ONLY.config.json` + `genesis.TEST-ONLY.README.md` | genesis **آزمایشی** ساخته‌شده با ابزار واقعی از config آزمایشی (chain id 262025، داده‌های دورریختنی)؛ **هرگز برای شبکهٔ واقعی** | ✅ build و verify آزموده شد |
 | `config.toml` | پیکربندی نود ولیدیتور Besu؛ هر گزینه با کامنت فارسی: هدف، منبع، وضعیت | ✅ با Besu 26.9.0 بلند شد (بخش ۴-۳) |
-| `docker-compose.yml` | یک سرویس ولیدیتور از تصویر سنجاق‌شدهٔ `hyperledger/besu:26.9.0`؛ Prometheus اختیاری با `--profile monitoring` | ✅ اجرا شد (بخش ۴-۴) |
+| `docker-compose.yml` | یک سرویس ولیدیتور از تصویر سنجاق‌شدهٔ `hyperledger/besu:26.9.0` | ✅ اجرا شد (بخش ۴-۴) |
 | `.env.example` | متغیرهای compose (مسیرها، پورت‌ها، IP عمومی، نام‌ها)؛ بدون راز | ✅ `docker compose config` معتبر |
 | `static-nodes.json` | آرایهٔ enode همتاها؛ تحویلی `[]`. باید وجود داشته باشد (compose آن را mount می‌کند) | ✅ با فایل خالی آزموده شد |
 | `bootnodes.example.txt` | فرمت enode، روش گرفتن enode نود، دو راه اتصال (static-nodes / bootnodes) | فرمت ✅؛ نام DNS در enode ✅؛ IP و enode واقعی bootnode (نود اول) هنوز نیست |
-| `prometheus.yml` | scrape نود برای profile اختیاری | ✅ target `up` |
 | `.gitignore`، `.gitattributes` | جلوگیری از commit شدن `.env`، کلیدها و `genesis.json`؛ ثابت‌ماندن پایان‌خط‌ها (LF) تا sha256 همه‌جا یکسان باشد | — |
 | `SHA256SUMS` | sha256 همهٔ فایل‌های کیت؛ بررسی: `sha256sum -c SHA256SUMS` | — |
 
@@ -111,10 +110,10 @@ build از config آزمایشی (فقط دو patch؛ `genesis.TEST-ONLY.README.
 - کانتینر `healthy` (healthcheck خودمان)، بلاک‌ها تولید می‌شد، `eth_chainId` از `127.0.0.1:18570` = `0x3ff89`.
 - **healthcheck:** تصویر `curl`/`wget`/`nc`/`socat` ندارد و `bash` 5.2 و `timeout` دارد (بررسی شد)؛ از `bash` + `/dev/tcp` + `Host: localhost` استفاده شد؛ با chainId اشتباه exit 1 می‌دهد (آزموده)، با درست exit 0. این جایگزین healthcheck خود تصویر (`[ -f /tmp/pid ]`) است.
 - RPC و متریک روی `127.0.0.1` میزبان: از IP شبکهٔ خود میزبان وصل نشد (`curl` کد 000). P2P روی `0.0.0.0`.
-- `docker inspect` (نسخهٔ اصلاح‌شده): `privileged=false`، `User=1000:1000`، `CapDrop=[ALL]` و `CapAdd=[]` (پنج قابلیت قبلی فقط برای entrypoint ریشه بود)، `no-new-privileges`، `restart=unless-stopped`، لاگ `json-file` سقف 50m × 10. Prometheus هم `CapDrop=[ALL]` است و با آن بالا آمد (target `up`، بدون «permission denied»).
+- `docker inspect` (نسخهٔ اصلاح‌شده): `privileged=false`، `User=1000:1000`، `CapDrop=[ALL]` و `CapAdd=[]` (پنج قابلیت قبلی فقط برای entrypoint ریشه بود)، `no-new-privileges`، `restart=unless-stopped`، لاگ `json-file` سقف 50m × 10.
 - **توقف (HIGH-2، آزمون دوباره روی Besu 26.9.0 با `user: "1000:1000"` و حجم chown‌شده):** نسخهٔ قبلی (ریشه) هر `stop` را با SIGKILL می‌کشت: entrypoint تصویر با `su` به کاربر `besu` می‌رود و `su` با SIGTERM پروسهٔ Besu را می‌کشد؛ مقایسهٔ زنده: `docker stop -t 60` در 2 ثانیه، کد 143، فقط 8 خط `Shutdown-Hook` و آخر لاگ `Session terminated, killing shell... ...killed.`؛ پس `stop_grace_period: 60s` بی‌اثر بود. با `user: "1000:1000"` پروسهٔ اول کانتینر خودِ `java` است (`/proc/1/cmdline`) و بدون `su`: `docker compose stop` در حدود 2 ثانیه تمام شد، لاگ تا `Stopping eth Subprotocol` → `eth Subprotocol stopped.` → `Network stopped.` → `Shutting down Auto transaction logs caching service.` → `No NAT environment detected…` (hook کامل، بدون «killed»). **کد خروج هنوز 143 است، نه 0:** این کد معمول JVM پس از SIGTERM است (128+15) و نشانهٔ SIGKILL (137) نیست؛ `OOMKilled=false`. داده سالم ماند: بلاک 0x21 (33) پیش از توقف، پس از `start` هش همان بلاک بایت‌به‌بایت یکسان، زنجیره ادامه یافت (0x26) بدون ERROR/corrupt؛ `docker compose restart` هم چند ثانیه. آزمون روی Docker Desktop (VM لینوکس) بود؛ روی سرور اوبونتو انجام نشده (UNVERIFIED).
 - **bind mount با نحو بلند و `create_host_path: false`** (compose): روی موتور لینوکس (`docker:dind`) با مسیر ناموجود خطای `bind source path does not exist` می‌دهد و پوشه نمی‌سازد (آزموده). روی Docker Desktop ویندوز همان مسیر ناموجود را **به‌صورت پوشه ساخت** (گزینه آنجا اثر ندارد؛ فقط محیط آزمون، نه تولید لینوکس).
-- profile `monitoring`: Prometheus (تصویر محلی `prom/prometheus:v3.13.4`، pull نشد) target `validator:9545` = `up`، `ethereum_blockchain_height` = 110.
+- ⚠️ پروفایل اختیاری `monitoring` (Prometheus) و `prometheus.yml` در ۲۰۲۶-۱۱-۲۵ با تصمیم مالک از کیت حذف شد؛ پایش ولیدیتورها با SurWatch است.
 - پایان: `docker compose down -v`؛ کانتینر، شبکه و volume با پیشوند `sur25k` باقی نماند.
 
 ### ۴-۵. آزمون رفتار گزینه‌های گاز (روی چند genesis دورریختنی در scratch؛ داخل کیت نیست)
@@ -198,7 +197,7 @@ genesis دورریختنی با `gasLimit` 40,000,000 و بلاک 3 ثانیه (
 3. **`sync-min-peers=1` در soak-kit در حالت FULL بی‌اثر است** (Besu هشدار می‌دهد)؛ از `config.toml` حذف شد.
 4. **`--bootnodes` ویندوزی خطا داد (سند)؛ روی لینوکس/Docker سینتکس پذیرفته شد** ولی اتصال به bootnode واقعی آزموده نشد؛ روش آزموده‌شدهٔ پروژه `static-nodes.json` است.
 5. **entrypoint تصویر root است و کاربر را با `su` عوض می‌کند؛ `su` با SIGTERM پروسهٔ Besu را SIGKILL می‌کند** (یافتهٔ بازبین مستقل، HIGH-2، و در آزمون دوباره تأیید شد): پس هر توقف JVM را نیمه‌کاره می‌کشت و `stop_grace_period` بی‌اثر بود. راه‌حل: `user: "1000:1000"` (entrypoint در حالت غیرریشه `su` را رد می‌کند) + chown یک‌بارهٔ حجم داده + حذف `cap_add`؛ با آن shutdown hook کامل می‌شود (کد خروج 143 = رفتار عادی JVM پس از SIGTERM، نه SIGKILL). بخش ۳ و ۴-۴.
-6. **Prometheus:** Besu `host-allowlist` را روی `/metrics` هم اعمال می‌کند و Prometheus اجازهٔ تغییر Host نمی‌دهد؛ برای همین نام سرویس `validator` به `host-allowlist` اضافه شد (بدون آن 403).
+6. **`host-allowlist`:** Besu آن را روی `/metrics` هم اعمال می‌کند. نام سرویس `validator` برای پروفایل پایشِ حذف‌شده اضافه شده بود و بی‌ضرر مانده است.
 7. **`min-priority-fee` (HIGH-3؛ یافتهٔ بازبین مستقل، با آزمون دوباره تأیید شد).** `zeroBaseFee` در genesis فعال است، پس قیمت مؤثر تراکنش فقط priority fee است. بدون `min-priority-fee` در `config.toml`، `eth_maxPriorityFeePerGas` مقدار `0` می‌دهد (در حالی که `eth_gasPrice` برابر 1e14 است) و کتابخانه‌هایی مثل viem/wagmi که priority را از همین RPC می‌گیرند تراکنش type-2 با priority 0 می‌سازند: یا رد می‌شود یا (اگر maxFee دستی ≥ 1e14 باشد) هش می‌گیرد ولی هرگز استخراج نمی‌شود و nonceهای بعدی همان حساب را هم می‌بندد. `min-priority-fee=100000000000000` (1e14، برابر `min-gas-price`) **`eth_maxPriorityFeePerGas` را** درست می‌کند (VERIFIED با viem + حساب محلی). **این گزینه باید روی هر نود گذاشته شود، از جمله نودهای RPC سرویس‌ها و dApp** (آن‌ها قیمت پیشنهادی را به کیف‌پول‌ها می‌دهند) و روی همهٔ ولیدیتورها یکسان باشد.
 
    **محدودیت‌ها (یکی آزموده، یکی گزارش بازبین دور ۲):**

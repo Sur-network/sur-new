@@ -3,7 +3,7 @@
 # اجرا:   cp .env.example .env   ← مقدارها را پر کنید (فقط مسیر و پورت؛ هیچ کلیدی داخل مخزن/فایل env نیست)
 #         docker compose config            ← بررسی
 #         docker compose up --no-start validator  ← ساخت حجم؛ سپس chown یک‌باره (README بخش ۳ مرحلهٔ ۵)
-#         docker compose up -d             ← نود (Prometheus فقط با:  docker compose --profile monitoring up -d )
+#         docker compose up -d             ← نود
 # پیش از اولین up: حجم داده باید یک‌بار برای uid 1000 chown شود (README بخش ۳، مرحلهٔ ۵)؛ کانتینر با user 1000:1000 اجرا می‌شود.
 # هر سطر با برچسب VERIFIED/UNVERIFIED/OWNER: توضیح در README.md. «VERIFIED» = روی Docker Desktop (لینوکس VM) با همین فایل اجرا شد؛
 # رفتار دسترسی‌های فایل روی یک سرور اوبونتو UNVERIFIED است (آزمون Docker Desktop مجوزهای فایل را مثل لینوکس اعمال نمی‌کند).
@@ -124,48 +124,9 @@ services:
     networks:
       - sur
 
-  # ----------------------------------------------------------------------------------------------
-  # اختیاری: Prometheus فقط با  docker compose --profile monitoring up -d  (پیش‌فرض بالا نمی‌آید).
-  # تصویر سنجاق‌شده؛ در این کیت هرگز pull نشد (تصویر محلی استفاده شد)؛ prometheus.yml همین پوشه. فقط روی 127.0.0.1:9090.
-  # ----------------------------------------------------------------------------------------------
-  prometheus:
-    profiles: ["monitoring"]
-    image: prom/prometheus:${SUR_PROMETHEUS_TAG:-v3.13.4}
-    container_name: ${SUR_CONTAINER_NAME:-sur-validator}-prometheus
-    restart: unless-stopped
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-      - --storage.tsdb.retention.time=15d
-    ports:
-      - "127.0.0.1:${SUR_PROMETHEUS_PORT:-9090}:9090"
-    volumes:
-      - type: bind
-        source: ./prometheus.yml
-        target: /etc/prometheus/prometheus.yml
-        read_only: true
-        bind:
-          create_host_path: false
-      - prometheus-data:/prometheus
-    logging:
-      driver: json-file
-      options:
-        max-size: "20m"
-        max-file: "5"
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    networks:
-      - sur
-    depends_on:
-      - validator
-
 volumes:
   data:
     name: ${SUR_VOLUME_NAME:-sur-validator-data}
-  prometheus-data:
-    name: ${SUR_VOLUME_NAME:-sur-validator-data}-prometheus
 
 networks:
   sur:
