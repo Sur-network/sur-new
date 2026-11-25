@@ -21,7 +21,7 @@ interface ILotteryRegistry {
 ///         مجری، هیأت بنیاد است: قرعه‌کشی را با پیشنهاد تایپ‌شده‌ی FoundationDAO به نام
 ///         `StartLottery(ticketPrice, winnersCount, closeTime)` شروع می‌کند (دست‌کم یک سال پس از
 ///         قرعه‌کشی قبلی). برندگان وثیقه نمی‌گذارند؛ هر برنده از طریق
-///         ValidatorsRegistry.enterAsLotteryWinner جایگاه می‌گیرد (راستی‌آزمایی گره و امضای توافق‌نامه
+///         ValidatorsRegistry.enterAsLotteryWinner جایگاه می‌گیرد (راستی‌آزمایی گره و امضای برگ قبولی
 ///         همچنان خارج از زنجیره/در Registry انجام می‌شود).
 ///
 ///         تصادفی‌بودن = commit–reveal + blockhash (نه prevrandao؛ mixHash در QBFT امن نیست):
