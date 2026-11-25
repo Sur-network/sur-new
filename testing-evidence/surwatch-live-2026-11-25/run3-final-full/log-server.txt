@@ -1,0 +1,9 @@
+{"time":"2026-11-25T16:38:53.62516284Z","level":"INFO","msg":"notifications on","telegram":true,"bale":false,"email":true}
+{"time":"2026-11-25T16:38:53.625208841Z","level":"INFO","msg":"surwatch started","listen":":8080","monitors":1,"rules":"watch-rules-v1"}
+{"time":"2026-11-25T16:47:26.819878123Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xb0b3…239e"}
+{"time":"2026-11-25T16:47:32.639052211Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xf8a1…3577"}
+{"time":"2026-11-25T16:47:38.0594048Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xd0cb…1dd2"}
+{"time":"2026-11-25T16:47:44.29070862Z","level":"INFO","msg":"chat linked","channel":"telegram","owner":"0xcc71…28d0"}
+{"time":"2026-11-25T17:03:37.812762225Z","level":"INFO","msg":"notifications on","telegram":true,"bale":false,"email":true}
+{"time":"2026-11-25T17:03:37.812800039Z","level":"INFO","msg":"surwatch started","listen":":8080","monitors":1,"rules":"watch-rules-v1"}
+{"time":"2026-11-25T17:13:44.02950225Z","level":"ERROR","msg":"registry refresh failed","error":"rpc eth_call: node unreachable (no route)"}
