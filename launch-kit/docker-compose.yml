@@ -31,6 +31,11 @@ services:
     command:
       - --config-file=/config/config.toml
       - --p2p-host=${SUR_P2P_HOST:?SUR_P2P_HOST را در .env بگذارید (IP عمومی همین نود)}
+      # نام DNS در enodeِ bootnode (مثلاً boot-node.surnet.org) بدون این دو پرچم رد می‌شود: Besu 26.9.0 با «Invalid bootnode ... Invalid enode URL syntax» بالا نمی‌آید.
+      # با دو پرچم، نود از راه نام به bootnode می‌رسد و بعد از عوض‌شدن IP آن هم دوباره پیدایش می‌کند. VERIFIED (۲۰۲۶-۱۱-۲۵، شبکهٔ docker با DNS داخلی؛
+      # DNS واقعی با TTL UNVERIFIED). هر دو پرچم آزمایشی و پنهان‌اند؛ هنگام ارتقای Besu دوباره سنجیده شوند. اگر فقط IP در enode باشد بی‌اثرند و بی‌خطر.
+      - --Xdns-enabled=true
+      - --Xdns-update-enabled=true
 
     ports:
       # P2P: عمومی (TCP + UDP-discovery). فایروال: فقط IPهای ولیدیتورهای دیگر (bootnodes.example.txt)

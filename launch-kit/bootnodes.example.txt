@@ -38,4 +38,12 @@ enode://000000000000000000000000000000000000000000000000000000000000000000000000
 # (ب) bootnodes در config.toml (UNVERIFIED با bootnode واقعی؛ نیاز به discovery-enabled=true):
 #         bootnodes=["enode://<128hex>@203.0.113.11:30303"]
 #
+# نام DNS به‌جای IP (تصمیم مالک ۲۰۲۶-۱۱-۲۵: bootnode همان نود اول است و نامش boot-node.surnet.org):
+#         bootnodes=["enode://<128hex نود اول>@boot-node.surnet.org:30303"]
+#     VERIFIED (Besu 26.9.0، شبکهٔ docker با DNS داخلی؛ offchain-services/boot-node-kit/dns-enode-test.sh): کار می‌کند «فقط» با
+#     --Xdns-enabled=true و --Xdns-update-enabled=true (در docker-compose.yml هستند)؛ بدون آن‌ها Besu بالا نمی‌آید. بعد از عوض‌شدن IP بوت‌نود
+#     (همان کلید) نود تازه و نود از پیش‌وصل هر دو دوباره به آن رسیدند. DNS واقعی با TTL UNVERIFIED. کلید نود اول باید ثابت بماند وگرنه enode عوض می‌شود.
+#     روی خود بوت‌نود بعد از عوض‌شدن IP، SUR_P2P_HOST در .env را عوض و نود را ری‌استارت کنید (نام DNS در --p2p-host آزموده نشد).
+#     فایروال بوت‌نود: پورت P2P باید برای IP همهٔ ولیدیتورهای تازه (که هنوز در فهرست نیستند) هم باز باشد.
+#
 # فایروال: TCP و UDP روی پورت P2P (پیش‌فرض 30303) فقط برای IPهای ولیدیتورهای دیگر باز شود؛ RPC (8545) و متریک (9545) هرگز عمومی نشوند.

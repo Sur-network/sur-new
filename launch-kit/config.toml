@@ -60,6 +60,10 @@ static-nodes-file="/config/static-nodes.json"
 # سینتکس آرایه پذیرفته شد (VERIFIED [K]: «Resolved 1 bootnodes») ولی اتصال به یک bootnode واقعی آزموده نشد (UNVERIFIED).
 # جای‌گیر (تا تعیین enodeهای واقعی فعال نکنید؛ با یک enode ساختگی نود بلند شد ولی به‌جایی وصل نمی‌شود [K]):
 # bootnodes=["enode://<128 hex نود>@<IP عمومی>:30303"]
+# تصمیم مالک (۲۰۲۶-۱۱-۲۵): bootnode همان نود اول است و در enode به‌جای IP نام DNS می‌آید تا با عوض‌شدن IP شبکه به مشکل نخورد:
+# bootnodes=["enode://<128 hex نود اول>@boot-node.surnet.org:30303"]
+# نام DNS فقط با --Xdns-enabled=true و --Xdns-update-enabled=true کار می‌کند؛ هر دو در docker-compose.yml هستند (VERIFIED، DNS داخلی docker؛ DNS واقعی UNVERIFIED).
+# enode و IP واقعی نود اول هنوز نیست؛ تا آن موقع خط را فعال نکنید.
 
 # حالت همگام‌سازی. برای genesis سفارشی پیش‌فرض Besu همین FULL است [K]. VERIFIED. SNAP/CHECKPOINT با QBFT UNVERIFIED.
 # (sync-min-peers عمداً نیست: در حالت FULL «ignored» است؛ در soak-kit بود و هشدار می‌داد [K].)

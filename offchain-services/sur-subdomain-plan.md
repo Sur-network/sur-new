@@ -195,7 +195,7 @@
 | ۵ | 🔶 شبکهٔ آزمایشی عمومی (`faucet`، `rpc-test`) | فعلاً رزرو |
 | ۶ | 🔶 مسئول نگه‌داری `validator-nft` و محتوای metadata | باز در `sur-master-open-items.md` |
 | ۷ | 🔶 در گزینهٔ ب فقط نقش‌های خود کاربر نشان داده شود یا هر چهار نقش | فقط نقش‌های خود کاربر |
-| ۸ | 🔶 `boot-node`: ✅ نود اول است و ✅ نام DNS در enode آزموده شد؛ باز: IP عمومی نود اول؛ یک bootnode یا چند تا (چند رکورد A زیر همین نام یا `boot-node-2`)؛ افزودن دو پرچم `--Xdns-enabled` و `--Xdns-update-enabled` به `launch-kit/docker-compose.yml` و نوشتن `bootnodes` در `config.toml`؛ آزمون با DNS واقعی و TTL؛ نام DNS در `--p2p-host` خود بوت‌نود | بعد از معلوم‌شدن IP و enode نود اول |
+| ۸ | 🔶 `boot-node`: ✅ نود اول است و ✅ نام DNS در enode آزموده شد؛ ✅ دو پرچم `--Xdns-enabled` و `--Xdns-update-enabled` به `launch-kit/docker-compose.yml` اضافه شد؛ باز: IP عمومی نود اول؛ یک bootnode یا چند تا (چند رکورد A زیر همین نام یا `boot-node-2`)؛ نوشتن `bootnodes` واقعی در `config.toml`؛ آزمون با DNS واقعی و TTL؛ نام DNS در `--p2p-host` خود بوت‌نود | بعد از معلوم‌شدن IP و enode نود اول |
 
 ## ۹. اسناد هم‌ترازشده با این سند (۲۰۲۶-۱۱-۲۵)
 
@@ -211,4 +211,4 @@
 
 **بررسی‌شده و بدون تعارض:** فایل‌های Word و PDF (طرح تفصیلی، سپیدنامهٔ کتابچه و دو خلاصهٔ اجرایی)، پنج پرزنتیشن (PPTX و PDF)، وایرفریم صفحهٔ اول و نمودارهای SVG؛ در هیچ‌کدام نشانی اکسپلورر، نام رجیستری یا محل دانلود نصب ذکر نشده است.
 
-**عمداً دست‌نخورده:** `launch-kit/docker-compose.yml` ایمیج Besu را از Docker Hub می‌کشد؛ تا رجیستری مستقر نشود عوض نمی‌شود، چون مسیر تازه هنوز وجود ندارد. همچنین `launch-kit/bootnodes.example.txt` و `config.toml` دست نخورد؛ تا نود، IP و enode واقعی bootnode معلوم نشود مقدار `bootnodes` نوشته نمی‌شود (کار باز ۸).
+**عمداً دست‌نخورده:** `launch-kit/docker-compose.yml` ایمیج Besu را از Docker Hub می‌کشد؛ تا رجیستری مستقر نشود عوض نمی‌شود، چون مسیر تازه هنوز وجود ندارد. `launch-kit` فقط برای `boot-node` عوض شد: دو پرچم DNS در `docker-compose.yml`، توضیح نام DNS در `config.toml`، `bootnodes.example.txt` و README، و `SHA256SUMS`. مقدار واقعی `bootnodes` تا معلوم‌شدن IP و enode نود اول نوشته نمی‌شود (کار باز ۸).
