@@ -54,8 +54,8 @@ library SurAddresses {
     /// @dev GenesisClaimsVault — genesis claims released in 24 monthly instalments.
     address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
 
-    /// @dev ValidatorLottery — validator-seat lottery against validator monopoly.
-    address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
+    /// @dev ValidatorEntryDraw — validator-seat entry draw against validator monopoly.
+    address internal constant VALIDATOR_ENTRY_DRAW = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
 
     /// @dev KmsDirectives — per-key freeze switch for the SurKMS signing service (verifier, distributionOracle, identityOracle).
     ///      No constructor and no storage seed: only its runtime bytecode goes into the genesis `alloc`.

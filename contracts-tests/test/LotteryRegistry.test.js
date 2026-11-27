@@ -1,4 +1,4 @@
-// Integration: the real ValidatorLottery seats its winners in the real ValidatorsRegistry.
+// Integration: the real ValidatorEntryDraw seats its winners in the real ValidatorsRegistry.
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
@@ -23,7 +23,7 @@ async function fixture() {
     [board.map((s) => s.address), S[7].address, board[0].address, board[1].address, ceo.address, (await now()) + 730 * DAY], E("100"));
   const reg = await deployAtFixed("ValidatorsRegistry", "ValidatorsRegistry_GenesisSeed", ADDR.VALIDATORS_REGISTRY, [S[15].address, ethers.Wallet.createRandom().address, [S[16].address], await now()]);
   await deployAtFixed("ValidatorSeatNFT", "ValidatorSeatNFT_GenesisSeed", ADDR.VALIDATOR_SEAT_NFT, [[S[15].address, S[16].address]]);
-  const lot = await setCodeOf("ValidatorLottery", ADDR.VALIDATOR_LOTTERY);
+  const lot = await setCodeOf("ValidatorEntryDraw", ADDR.VALIDATOR_ENTRY_DRAW);
   const idr = await setCodeOf("MockIdentity", ADDR.IDENTITY_REGISTRY);
   const buyers = S.slice(10, 14);
   for (const b of buyers) await idr.setVerified(b.address, true);
@@ -37,10 +37,10 @@ async function fixture() {
   return { S, board, ceo, dao, reg, lot, idr, buyers, run };
 }
 
-describe("ValidatorLottery -> ValidatorsRegistry", () => {
-  it("only the lottery contract can seat a winner", async () => {
+describe("ValidatorEntryDraw -> ValidatorsRegistry", () => {
+  it("only the entry draw contract can seat a winner", async () => {
     const { reg, S } = await loadFixture(fixture);
-    await expect(reg.connect(S[12]).enterAsLotteryWinner(S[12].address)).to.be.revertedWith("ValidatorsRegistry: caller is not the lottery");
+    await expect(reg.connect(S[12]).enterAsLotteryWinner(S[12].address)).to.be.revertedWith("ValidatorsRegistry: caller is not the entry draw");
   });
 
   it("winners get a collateral-free Probation seat (not a paid entrant); the Registry's own rules still apply", async () => {

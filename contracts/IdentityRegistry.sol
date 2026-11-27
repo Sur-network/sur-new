@@ -140,7 +140,7 @@ contract IdentityRegistry {
     }
 
     /// @notice A registered INDIVIDUAL (Iranian natural person) whose national-ID eKYC, phone, Telegram, Bale and
-    ///         e-mail are all verified. Required to take a validator seat (entry, seat transfer, lottery).
+    ///         e-mail are all verified. Required to take a validator seat (entry, seat transfer, entry draw).
     function isFullyVerified(address who) external view returns (bool) {
         Identity storage id_ = identities[who];
         return id_.migratedTo == address(0) && id_.registered && id_.personType == PersonType.Individual &&

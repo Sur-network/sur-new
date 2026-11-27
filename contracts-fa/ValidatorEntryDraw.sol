@@ -3,20 +3,20 @@ pragma solidity ^0.8.24;
 
 import "./SurAddresses.sol";
 
-interface ILotteryIdentity {
+interface IEntryDrawIdentity {
     function isFullyVerified(address who) external view returns (bool);
 }
 
-interface ILotteryFoundation {
+interface IEntryDrawFoundation {
     function ceo() external view returns (address);
     function isBoardMember(address who) external view returns (bool);
 }
 
-interface ILotteryRegistry {
+interface IEntryDrawRegistry {
     function enterAsLotteryWinner(address winner) external;
 }
 
-/// @title ValidatorLottery
+/// @title ValidatorEntryDraw
 /// @notice قرعه‌کشی جایگاه‌های ولیدیتور برای مقابله با انحصار ولیدیتورها (تصمیم ۲۰۲۶-۱۱-۱۹، ✅ commit–reveal).
 ///         مجری، هیأت بنیاد است: قرعه‌کشی را با پیشنهاد تایپ‌شده‌ی FoundationDAO به نام
 ///         `StartLottery(ticketPrice, winnersCount, closeTime)` شروع می‌کند (دست‌کم یک سال پس از
@@ -46,10 +46,10 @@ interface ILotteryRegistry {
 ///         بنیاد (FoundationDAO) می‌رود؛ در صورت لغو، خریداران خودشان بازپرداخت می‌گیرند.
 ///
 ///         GENESIS: قرارداد ساختاری، بدون constructor (وضعیت اولیه همه صفر است).
-contract ValidatorLottery {
+contract ValidatorEntryDraw {
     address public constant FOUNDATION = SurAddresses.FOUNDATION_DAO;
-    ILotteryIdentity public constant IDENTITY = ILotteryIdentity(SurAddresses.IDENTITY_REGISTRY);
-    ILotteryRegistry public constant REGISTRY = ILotteryRegistry(SurAddresses.VALIDATORS_REGISTRY);
+    IEntryDrawIdentity public constant IDENTITY = IEntryDrawIdentity(SurAddresses.IDENTITY_REGISTRY);
+    IEntryDrawRegistry public constant REGISTRY = IEntryDrawRegistry(SurAddresses.VALIDATORS_REGISTRY);
 
     uint256 public constant MIN_INTERVAL = 365 days;
     uint256 public constant TARGET_DELAY = 10; // تعداد بلاک بین closeLottery و بلاک هدف
@@ -92,13 +92,13 @@ contract ValidatorLottery {
     event RefundClaimed(uint256 indexed id, address indexed buyer, uint256 amount);
 
     modifier onlyFoundation() {
-        require(msg.sender == FOUNDATION, "ValidatorLottery: only FoundationDAO");
+        require(msg.sender == FOUNDATION, "ValidatorEntryDraw: only FoundationDAO");
         _;
     }
 
     modifier onlyCeo() {
-        address c = ILotteryFoundation(FOUNDATION).ceo();
-        require(c != address(0) && msg.sender == c, "ValidatorLottery: only the CEO");
+        address c = IEntryDrawFoundation(FOUNDATION).ceo();
+        require(c != address(0) && msg.sender == c, "ValidatorEntryDraw: only the CEO");
         _;
     }
 
@@ -106,12 +106,12 @@ contract ValidatorLottery {
     // شروع — فقط از طریق پیشنهاد StartLottery در FoundationDAO
     // ------------------------------------------------------------------
     function startLottery(uint256 ticketPrice, uint256 winnersCount, uint256 closeTime) external onlyFoundation {
-        require(ticketPrice > 0 && winnersCount > 0, "ValidatorLottery: bad parameters");
-        require(closeTime > block.timestamp, "ValidatorLottery: closeTime in the past");
-        require(lastStartedAt == 0 || block.timestamp >= lastStartedAt + MIN_INTERVAL, "ValidatorLottery: less than a year since the last lottery");
+        require(ticketPrice > 0 && winnersCount > 0, "ValidatorEntryDraw: bad parameters");
+        require(closeTime > block.timestamp, "ValidatorEntryDraw: closeTime in the past");
+        require(lastStartedAt == 0 || block.timestamp >= lastStartedAt + MIN_INTERVAL, "ValidatorEntryDraw: less than a year since the last entry draw");
         if (lotteryCount > 0) {
             Phase p = _lotteries[lotteryCount].phase;
-            require(p == Phase.Drawn || p == Phase.Cancelled, "ValidatorLottery: previous lottery unfinished");
+            require(p == Phase.Drawn || p == Phase.Cancelled, "ValidatorEntryDraw: previous entry draw unfinished");
         }
         lotteryCount++;
         lastStartedAt = block.timestamp;
@@ -129,13 +129,13 @@ contract ValidatorLottery {
     function buyTicket() external payable {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Open && block.timestamp < l.closeTime, "ValidatorLottery: registration is not open");
-        require(msg.value == l.ticketPrice, "ValidatorLottery: wrong ticket price");
-        require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorLottery: a seat owner must be a plain wallet (EOA)"); // RD-12
-        require(!_bought[id][msg.sender], "ValidatorLottery: one ticket per address");
-        require(IDENTITY.isFullyVerified(msg.sender), "ValidatorLottery: identity not fully verified");
-        ILotteryFoundation f = ILotteryFoundation(FOUNDATION);
-        require(!f.isBoardMember(msg.sender) && msg.sender != f.ceo(), "ValidatorLottery: board members and the CEO cannot take part");
+        require(l.phase == Phase.Open && block.timestamp < l.closeTime, "ValidatorEntryDraw: registration is not open");
+        require(msg.value == l.ticketPrice, "ValidatorEntryDraw: wrong ticket price");
+        require(msg.sender.code.length == 0 && msg.sender == tx.origin, "ValidatorEntryDraw: a seat owner must be a plain wallet (EOA)"); // RD-12
+        require(!_bought[id][msg.sender], "ValidatorEntryDraw: one ticket per address");
+        require(IDENTITY.isFullyVerified(msg.sender), "ValidatorEntryDraw: identity not fully verified");
+        IEntryDrawFoundation f = IEntryDrawFoundation(FOUNDATION);
+        require(!f.isBoardMember(msg.sender) && msg.sender != f.ceo(), "ValidatorEntryDraw: board members and the CEO cannot take part");
         _bought[id][msg.sender] = true;
         _participants[id].push(msg.sender);
         l.pot += msg.value;
@@ -146,8 +146,8 @@ contract ValidatorLottery {
     function commitSecret(bytes32 commitment) external onlyCeo {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Open && block.timestamp < l.closeTime, "ValidatorLottery: registration is not open");
-        require(l.commitment == bytes32(0) && commitment != bytes32(0), "ValidatorLottery: commitment already set or empty");
+        require(l.phase == Phase.Open && block.timestamp < l.closeTime, "ValidatorEntryDraw: registration is not open");
+        require(l.commitment == bytes32(0) && commitment != bytes32(0), "ValidatorEntryDraw: commitment already set or empty");
         l.commitment = commitment;
         emit SecretCommitted(id, commitment);
     }
@@ -158,7 +158,7 @@ contract ValidatorLottery {
     function closeLottery() external {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Open && block.timestamp >= l.closeTime, "ValidatorLottery: cannot close now");
+        require(l.phase == Phase.Open && block.timestamp >= l.closeTime, "ValidatorEntryDraw: cannot close now");
         if (l.commitment == bytes32(0)) {
             l.phase = Phase.Cancelled;
             emit LotteryCancelled(id, "no commitment before closeTime");
@@ -181,12 +181,12 @@ contract ValidatorLottery {
     function reveal(bytes32 secret) external onlyCeo {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Closed, "ValidatorLottery: not waiting for the reveal");
-        require(block.number > l.targetBlock, "ValidatorLottery: target block not mined yet");
-        require(block.number <= l.targetBlock + REVEAL_WINDOW, "ValidatorLottery: reveal window over");
-        require(keccak256(abi.encodePacked(secret)) == l.commitment, "ValidatorLottery: secret does not match the commitment");
+        require(l.phase == Phase.Closed, "ValidatorEntryDraw: not waiting for the reveal");
+        require(block.number > l.targetBlock, "ValidatorEntryDraw: target block not mined yet");
+        require(block.number <= l.targetBlock + REVEAL_WINDOW, "ValidatorEntryDraw: reveal window over");
+        require(keccak256(abi.encodePacked(secret)) == l.commitment, "ValidatorEntryDraw: secret does not match the commitment");
         bytes32 bHash = blockhash(l.targetBlock);
-        require(bHash != bytes32(0), "ValidatorLottery: target blockhash expired");
+        require(bHash != bytes32(0), "ValidatorEntryDraw: target blockhash expired");
         l.seed = keccak256(abi.encode(secret, bHash));
         l.phase = Phase.Revealed;
         emit SecretRevealed(id, l.seed);
@@ -196,7 +196,7 @@ contract ValidatorLottery {
     function cancelLottery() external {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Closed && block.number > l.targetBlock + REVEAL_WINDOW, "ValidatorLottery: cannot cancel now");
+        require(l.phase == Phase.Closed && block.number > l.targetBlock + REVEAL_WINDOW, "ValidatorEntryDraw: cannot cancel now");
         l.phase = Phase.Cancelled;
         emit LotteryCancelled(id, "secret not revealed in the window");
     }
@@ -207,8 +207,8 @@ contract ValidatorLottery {
     function drawBatch(uint256 n) external {
         uint256 id = lotteryCount;
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Revealed, "ValidatorLottery: not ready to draw");
-        require(n > 0, "ValidatorLottery: empty batch");
+        require(l.phase == Phase.Revealed, "ValidatorEntryDraw: not ready to draw");
+        require(n > 0, "ValidatorEntryDraw: empty batch");
         address[] storage parts = _participants[id];
         uint256 total = parts.length;
         uint256 k = l.winnersCount < total ? l.winnersCount : total;
@@ -230,7 +230,7 @@ contract ValidatorLottery {
             l.pot = 0;
             emit LotteryDrawn(id, k, pot);
             (bool ok, ) = FOUNDATION.call{value: pot}("");
-            require(ok, "ValidatorLottery: transfer to the foundation treasury failed");
+            require(ok, "ValidatorEntryDraw: transfer to the foundation treasury failed");
         }
     }
 
@@ -262,13 +262,13 @@ contract ValidatorLottery {
     // ------------------------------------------------------------------
     function claimRefund(uint256 id) external {
         Lottery storage l = _lotteries[id];
-        require(l.phase == Phase.Cancelled, "ValidatorLottery: not cancelled");
-        require(_bought[id][msg.sender] && !_refunded[id][msg.sender], "ValidatorLottery: nothing to refund");
+        require(l.phase == Phase.Cancelled, "ValidatorEntryDraw: not cancelled");
+        require(_bought[id][msg.sender] && !_refunded[id][msg.sender], "ValidatorEntryDraw: nothing to refund");
         _refunded[id][msg.sender] = true;
         l.pot -= l.ticketPrice;
         emit RefundClaimed(id, msg.sender, l.ticketPrice);
         (bool ok, ) = msg.sender.call{value: l.ticketPrice}("");
-        require(ok, "ValidatorLottery: refund failed");
+        require(ok, "ValidatorEntryDraw: refund failed");
     }
 
     // ------------------------------------------------------------------

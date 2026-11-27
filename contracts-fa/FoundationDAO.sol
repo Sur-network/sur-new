@@ -43,7 +43,7 @@ interface IIdentityRegistryOracle {
     function setIdentityOracle(address newOracle) external;
 }
 
-interface IValidatorLottery {
+interface IValidatorEntryDraw {
     function startLottery(uint256 ticketPrice, uint256 winnersCount, uint256 closeTime) external;
 }
 
@@ -342,7 +342,7 @@ contract FoundationDAO {
     }
 
     function proposeStartLottery(uint256 ticketPrice, uint256 winnersCount, uint256 closeTime) external onlyBoard returns (uint256) {
-        require(ticketPrice > 0 && winnersCount > 0, "FoundationDAO: bad lottery parameters");
+        require(ticketPrice > 0 && winnersCount > 0, "FoundationDAO: bad entry draw parameters");
         require(closeTime > block.timestamp, "FoundationDAO: closeTime in the past");
         return _create(Params(ProposalType.StartLottery, address(0), address(0), address(0), ticketPrice, winnersCount, closeTime, "", ""));
     }
@@ -448,7 +448,7 @@ contract FoundationDAO {
         } else if (t == ProposalType.RotateIdentityOracle) {
             IIdentityRegistryOracle(SurAddresses.IDENTITY_REGISTRY).setIdentityOracle(p.addrA);
         } else if (t == ProposalType.StartLottery) {
-            IValidatorLottery(SurAddresses.VALIDATOR_LOTTERY).startLottery(p.numA, p.numB, p.numC);
+            IValidatorEntryDraw(SurAddresses.VALIDATOR_ENTRY_DRAW).startLottery(p.numA, p.numB, p.numC);
         } else if (t == ProposalType.Execute) {
             _rawCall(p.addrA, p.numA, p.data);
         } else {

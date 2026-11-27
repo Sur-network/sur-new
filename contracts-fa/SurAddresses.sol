@@ -54,8 +54,8 @@ library SurAddresses {
     /// @dev GenesisClaimsVault — مطالبات genesis که در ۲۴ قسط ماهانه آزاد می‌شوند.
     address internal constant GENESIS_CLAIMS_VAULT = 0x9999999999999999999999999999999999999999;
 
-    /// @dev ValidatorLottery — قرعه‌کشی جایگاه ولیدیتور برای مقابله با انحصار ولیدیتورها.
-    address internal constant VALIDATOR_LOTTERY = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
+    /// @dev ValidatorEntryDraw — قرعه‌کشی جایگاه ولیدیتور برای مقابله با انحصار ولیدیتورها.
+    address internal constant VALIDATOR_ENTRY_DRAW = 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa;
 
     /// @dev KmsDirectives — کلید قطع هر کلید سرویس امضای SurKMS (verifier، distributionOracle، identityOracle).
     ///      بدون constructor و بدون seed حافظه: فقط بایت‌کد اجرایی در `alloc` genesis گذاشته می‌شود.

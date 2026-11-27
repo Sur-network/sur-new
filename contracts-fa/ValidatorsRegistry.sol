@@ -1431,10 +1431,10 @@ contract ValidatorsRegistry {
     //     (VD-4: به SelfSuspended با درخواست ازسرگیریِ باز؛ فقط recordResume از Verifier، پس از سنجش سلامت گره، او را دوباره Active می‌کند).
     // ------------------------------------------------------------------
     // ------------------------------------------------------------------
-    // v2.5: برندگان قرعه‌کشی (ValidatorLottery.drawBatch برای هر برنده این را صدا می‌زند)
+    // v2.5: برندگان قرعه‌کشی (ValidatorEntryDraw.drawBatch برای هر برنده این را صدا می‌زند)
     // ------------------------------------------------------------------
-    /// @notice تنها فراخواننده‌ی enterAsLotteryWinner(): قرارداد ValidatorLottery.
-    address public constant LOTTERY = SurAddresses.VALIDATOR_LOTTERY;
+    /// @notice تنها فراخواننده‌ی enterAsLotteryWinner(): قرارداد ValidatorEntryDraw.
+    address public constant LOTTERY = SurAddresses.VALIDATOR_ENTRY_DRAW;
 
     event LotteryWinnerEntered(address indexed winner);
 
@@ -1444,9 +1444,9 @@ contract ValidatorsRegistry {
     ///         قبلاً ثبت شده یا هرگز خارج شده باشد نمی‌تواند جایگاه بگیرد (یک جایگاه برای هر نفر، ممنوعیت دائمی).
     ///         هنگام این ورود هیچ چکیدهٔ نسخه‌ای روی زنجیره ثبت نمی‌شود (امضا آف‌چین است؛ Verifier بایگانی را پیش از فعال‌سازی بررسی می‌کند).
     function enterAsLotteryWinner(address winner) external {
-        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
+        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the entry draw");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
-        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (try/catch لاتاری entryFailed را ثبت می‌کند)
+        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (try/catch قرعه‌کشی ورود ولیدیتور جدید entryFailed را ثبت می‌کند)
         require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
         validators[winner] = ValidatorInfo({
             status: Status.Probation,

@@ -26,7 +26,7 @@ interface ISeatRegistryHook {
 ///           - the seller is treated as exited and can never become a validator again (agreement 15-6);
 ///           - an Active seat STAYS Active: the buyer takes over the seat, the operator key and the position in the active set
 ///             at once, and the buyer's vote counts from the transfer (a new voter).
-///         Only ValidatorsRegistry mints (entry, lottery win, genesis founders), burns (when the owner exits) and reassigns
+///         Only ValidatorsRegistry mints (entry, entry draw win, genesis founders), burns (when the owner exits) and reassigns
 ///         (`reassignSeat`: the migration of a seat to a new address of the same person after a lost owner key).
 ///         `tokenURI(id)` = baseURI + id; the base URI (initially https://validator-nft.surnet.org/) can be changed only by
 ///         FoundationDAO (an Execute proposal calling `setBaseURI`).

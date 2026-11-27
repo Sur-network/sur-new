@@ -1,5 +1,5 @@
 // Owner decisions (round 2): (a) maxEntriesPerWindow, probationPeriod and slashBps are FIXED (no vote can change them);
-// (b) the entry window is counted at ACTIVATION of a paying entrant, not at the membership request; lottery winners and founders are exempt.
+// (b) the entry window is counted at ACTIVATION of a paying entrant, not at the membership request; entry draw winners and founders are exempt.
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
@@ -108,11 +108,11 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
     expect(await reg.getActiveOwners()).to.include.members([buyers[0].address, buyers[1].address, buyers[2].address]);
   });
 
-  it("founders and lottery winners are exempt: they neither wait for the window nor use it", async () => {
+  it("founders and entry draw winners are exempt: they neither wait for the window nor use it", async () => {
     const f = await loadFixture(fixture);
     const { reg, verifier, buyers, founders, price } = f;
-    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
-    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_ENTRY_DRAW, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_ENTRY_DRAW);
     const winner = buyers[4];
     await reg.connect(buyers[0]).requestMembership(rnd(), agr(), { value: price });
     await reg.connect(buyers[1]).requestMembership(rnd(), agr(), { value: price });
@@ -123,7 +123,7 @@ describe("Entry window counted at ACTIVATION (audit A2)", () => {
     await reg.connect(verifier).recordActivation(buyers[0].address, HASH); // the paid entrant uses the window
     const X = await reg.lastPaidActivationAt();
     await expect(reg.connect(verifier).recordActivation(buyers[1].address, HASH)).to.be.revertedWith(USED);
-    await reg.connect(verifier).recordActivation(winner.address, HASH); // lottery winner: inside the used window, no problem
+    await reg.connect(verifier).recordActivation(winner.address, HASH); // entry draw winner: inside the used window, no problem
     expect((await reg.validators(winner.address)).status).to.equal(ST.Active);
     expect(await reg.lastPaidActivationAt()).to.equal(X); // and it did not move the window
     await activateFounders(f, 1); // all four other founders, also inside the used window

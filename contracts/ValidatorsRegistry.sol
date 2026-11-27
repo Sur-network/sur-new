@@ -253,7 +253,7 @@ contract ValidatorsRegistry {
 
     /// @dev Set by the genesis tool to the real genesis timestamp (not the block.timestamp of the machine that runs the
     ///      seeding simulation); see sur-contracts-deploy-notes.md.
-    // entry window state: the time of the last PAID activation (0 = none yet). Lottery winners and founders are exempt and never set it.
+    // entry window state: the time of the last PAID activation (0 = none yet). Entry-draw winners and founders are exempt and never set it.
     uint256 public lastPaidActivationAt;
 
     // ------------------------------------------------------------------
@@ -784,7 +784,7 @@ contract ValidatorsRegistry {
         require(operatorOf[candidate] != address(0), "ValidatorsRegistry: operator key not set");
         require(isFounder[candidate] || block.timestamp >= v.periodStartedAt + probationPeriod, "ValidatorsRegistry: probation period not elapsed");
         // The entry window counts here, at activation. Only a PAYING entrant (isPaidEntrant, also after a seat sale) uses a window slot: founders
-        // and lottery winners are exempt by decision (their record has isPaidEntrant == false).
+        // and entry draw winners are exempt by decision (their record has isPaidEntrant == false).
         if (v.isPaidEntrant) _enforceEntryWindow();
         _activate(candidate);
         decisionId = _recordDecision(candidate, DecisionType.Activation, evidenceHash, 0);
@@ -1452,22 +1452,22 @@ contract ValidatorsRegistry {
     //     (VD-4: into SelfSuspended with a resume request open; only the Verifier's recordResume, after a node health check, makes it Active again).
     // ------------------------------------------------------------------
     // ------------------------------------------------------------------
-    // v2.5: lottery winners (ValidatorLottery.drawBatch calls this for every winner)
+    // v2.5: entry draw winners (ValidatorEntryDraw.drawBatch calls this for every winner)
     // ------------------------------------------------------------------
-    /// @notice The only caller of enterAsLotteryWinner(): the ValidatorLottery contract.
-    address public constant LOTTERY = SurAddresses.VALIDATOR_LOTTERY;
+    /// @notice The only caller of enterAsLotteryWinner(): the ValidatorEntryDraw contract.
+    address public constant LOTTERY = SurAddresses.VALIDATOR_ENTRY_DRAW;
 
     event LotteryWinnerEntered(address indexed winner);
 
-    /// @notice A lottery winner takes a seat WITHOUT collateral and WITHOUT membership fee, outside the entry window (its activation
+    /// @notice A entry draw winner takes a seat WITHOUT collateral and WITHOUT membership fee, outside the entry window (its activation
     ///         neither waits for nor uses a window slot) and not counted as a paid entrant. The seat starts in Probation like any entry: the node still has to be verified
     ///         (and the agreement signed) before the Verifier activates it, so the vote is not live before that. An address
     ///         that is already registered or has ever exited cannot take a seat (one seat per person, permanent ban).
     ///         No agreement hash is recorded on-chain at this entry (the signature is off-chain; the Verifier checks the archive before activation).
     function enterAsLotteryWinner(address winner) external {
-        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the lottery");
+        require(msg.sender == LOTTERY, "ValidatorsRegistry: caller is not the entry draw");
         require(winner != address(0) && validators[winner].status == Status.None, "ValidatorsRegistry: already registered");
-        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (the lottery's try/catch records entryFailed)
+        require(winner.code.length == 0, "ValidatorsRegistry: a seat owner must be a plain wallet (EOA)"); // RD-12 (the entry draw's try/catch records entryFailed)
         require(!permanentlyExited[winner], "ValidatorsRegistry: this address has exited before and may not rejoin");
         validators[winner] = ValidatorInfo({
             status: Status.Probation,
@@ -1695,9 +1695,9 @@ contract ValidatorsRegistry {
     // CONSUMED by the transfer that uses it (a later transfer of the same seat to the same address needs a fresh one). The hash travels
     // into the transfer: it is stored as the seat's agreement hash and emitted (SeatAgreementBound) so the document that binds the
     // current owner can always be found.
-    // Seats minted at entry, by the lottery or at genesis never pass through the transfer hook, so this gate does not touch those
+    // Seats minted at entry, by the entry draw or at genesis never pass through the transfer hook, so this gate does not touch those
     // paths; they never used the old post-transfer acceptance either. A direct entrant signs the same agreement BEFORE requesting
-    // membership and its hash comes in with requestMembership (EntryAgreementRecorded); lottery winners and genesis founders have no
+    // membership and its hash comes in with requestMembership (EntryAgreementRecorded); entry draw winners and genesis founders have no
     // hash recorded at entry.
 
     /// @notice The seat id for which `buyer` has recorded the acceptance of the validators' agreement (0 = none). One acceptance at a
@@ -1709,7 +1709,7 @@ contract ValidatorsRegistry {
     mapping(address => bytes32) public seatAcceptedAgreementHash;
     /// @notice The hash of the signed validators' agreement that governs the CURRENT owner of a seat, whatever the path: set at direct entry
     ///         (requestMembership), overwritten by every transfer (the buyer's accepted hash), kept by a migration after a lost owner key
-    ///         (same person, same agreement). 0 = no hash on-chain: a seat that came by the lottery or at genesis takes no hash at entry (the
+    ///         (same person, same agreement). 0 = no hash on-chain: a seat that came by the entry draw or at genesis takes no hash at entry (the
     ///         Verifier checks the off-chain archive before activation) and has none until a transfer binds one. The full history is in
     ///         the EntryAgreementRecorded and SeatAgreementBound events.
     mapping(uint256 => bytes32) public seatAgreementHash;

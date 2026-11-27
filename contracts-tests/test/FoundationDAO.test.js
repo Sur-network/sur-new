@@ -190,10 +190,10 @@ describe("FoundationDAO - typed board proposals", () => {
 
   it("StartLottery and RotateIdentityOracle reach the fixed-address contracts", async () => {
     const { dao, board, stranger } = await loadFixture(fixture);
-    const lot = await setCodeOf("MockLottery", ADDR.VALIDATOR_LOTTERY);
+    const lot = await setCodeOf("MockLottery", ADDR.VALIDATOR_ENTRY_DRAW);
     const idr = await setCodeOf("MockIdentity", ADDR.IDENTITY_REGISTRY);
     const close = (await now()) + 20 * DAY;
-    await expect(dao.connect(board[0]).proposeStartLottery(0, 5, close)).to.be.revertedWith("FoundationDAO: bad lottery parameters");
+    await expect(dao.connect(board[0]).proposeStartLottery(0, 5, close)).to.be.revertedWith("FoundationDAO: bad entry draw parameters");
     await dao.connect(board[0]).proposeStartLottery(E("10"), 7, close);
     await approve(dao, await lastId(dao), [board[1], board[2]]);
     expect(await lot.price()).to.equal(E("10"));

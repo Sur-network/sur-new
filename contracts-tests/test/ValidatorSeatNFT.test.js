@@ -345,7 +345,7 @@ describe("ValidatorSeatNFT - the buyer must accept the validators' agreement BEF
     expect(await reg.seatAcceptedFor(buyer.address)).to.equal(0);
   });
 
-  it("a genesis founder's seat is gated like any other (isFounder moves with it); the lottery winner's seat is minted WITHOUT any acceptance, but its resale needs one", async () => {
+  it("a genesis founder's seat is gated like any other (isFounder moves with it); the entry draw winner's seat is minted WITHOUT any acceptance, but its resale needs one", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, buyer, other, founders } = f;
     // founders hold seats from genesis with no acceptance on record
@@ -355,9 +355,9 @@ describe("ValidatorSeatNFT - the buyer must accept the validators' agreement BEF
     await nft.connect(founders[1]).transferFrom(founders[1].address, buyer.address, 2);
     expect(await reg.isFounder(buyer.address)).to.equal(true);
     expect(await reg.isFounder(founders[1].address)).to.equal(false);
-    // lottery path: enterAsLotteryWinner mints the seat; no acceptance is required or recorded
-    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
-    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    // entry draw path: enterAsLotteryWinner mints the seat; no acceptance is required or recorded
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_ENTRY_DRAW, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_ENTRY_DRAW);
     await reg.connect(lottery).enterAsLotteryWinner(other.address);
     const id = await nft.seatOf(other.address);
     expect(id).to.equal(6);
@@ -467,18 +467,18 @@ describe("ValidatorsRegistry.requestMembership - the entrant's signed agreement 
     expect(bound.map((e) => e.args.agreementHash)).to.deep.equal([AGR2]);
   });
 
-  it("a lottery winner and a genesis founder record no hash at entry (their signature is checked off-chain); their signatures are unchanged", async () => {
+  it("an entry draw winner and a genesis founder record no hash at entry (their signature is checked off-chain); their signatures are unchanged", async () => {
     const f = await loadFixture(fixture);
     const { reg, nft, other, founders } = f;
     for (let id = 1; id <= founders.length; id++) expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);
-    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
-    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_ENTRY_DRAW, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_ENTRY_DRAW);
     await expect(reg.connect(lottery).enterAsLotteryWinner(other.address)).to.emit(reg, "LotteryWinnerEntered").withArgs(other.address)
       .and.not.to.emit(reg, "EntryAgreementRecorded");
     const id = await nft.seatOf(other.address);
     expect(id).to.equal(6);
     expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);
-    // a direct entrant after the lottery winner still gets its own record
+    // a direct entrant after the entry draw winner still gets its own record
     await reg.connect(f.seller).requestMembership(rnd(), ENTRY, { value: f.price });
     expect(await reg.seatAgreementHash(7)).to.equal(ENTRY);
     expect(await reg.seatAgreementHash(id)).to.equal(ethers.ZeroHash);

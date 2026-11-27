@@ -1,4 +1,4 @@
-// RD-12: a validator seat owner must be a plain wallet (EOA): checked at entry (paid and lottery) and when the seat NFT moves.
+// RD-12: a validator seat owner must be a plain wallet (EOA): checked at entry (paid and entry draw) and when the seat NFT moves.
 // (RD-12b, the check at payment time that closes the gap left by a constructor-time or pre-computed-address contract, is in DeferredClaim.test.js.)
 const { expect } = require("chai");
 const hre = require("hardhat");
@@ -61,10 +61,10 @@ describe("RD-12 - the seat owner must be a plain wallet (EOA)", () => {
     expect((await reg.validators(next)).status).to.equal(0);
   });
 
-  it("Registry.enterAsLotteryWinner called as the lottery: a contract winner is refused, an EOA winner is entered (drawBatch's try/catch and entryFailed are not exercised here)", async () => {
+  it("Registry.enterAsLotteryWinner called as the entry draw: a contract winner is refused, an EOA winner is entered (drawBatch's try/catch and entryFailed are not exercised here)", async () => {
     const { reg, buyer, factory } = await loadFixture(fixture);
-    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_LOTTERY, "0x56BC75E2D63100000"]);
-    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_LOTTERY);
+    await hre.network.provider.send("hardhat_setBalance", [ADDR.VALIDATOR_ENTRY_DRAW, "0x56BC75E2D63100000"]);
+    const lottery = await ethers.getImpersonatedSigner(ADDR.VALIDATOR_ENTRY_DRAW);
     const c = await factory.deploy(ZERO, ZERO);
     await expect(reg.connect(lottery).enterAsLotteryWinner(await c.getAddress())).to.be.revertedWith(EOA_REG);
     await reg.connect(lottery).enterAsLotteryWinner(buyer.address);

@@ -13,7 +13,7 @@ async function fixture() {
   await deployAtFixed("FoundationMembers", "FoundationMembers_GenesisSeed", ADDR.FOUNDATION_MEMBERS, [[S[9].address], ["M"], [0], [ZERO], [100n]]);
   const dao = await deployAtFixed("FoundationDAO", "FoundationDAO_GenesisSeed", ADDR.FOUNDATION_DAO,
     [board.map((s) => s.address), S[7].address, board[0].address, board[1].address, ceo.address, (await now()) + 730 * DAY], E("1000"));
-  const lot = await setCodeOf("ValidatorLottery", ADDR.VALIDATOR_LOTTERY);
+  const lot = await setCodeOf("ValidatorEntryDraw", ADDR.VALIDATOR_ENTRY_DRAW);
   const idr = await setCodeOf("MockIdentity", ADDR.IDENTITY_REGISTRY);
   const reg = await setCodeOf("MockLotteryRegistry", ADDR.VALIDATORS_REGISTRY);
   const buyers = S.slice(10, 20);
@@ -47,16 +47,16 @@ async function untilClosed(f, nBuyers = 6, winners = 3) {
   return (await f.lot.getLottery(1)).targetBlock;
 }
 
-describe("ValidatorLottery", () => {
+describe("ValidatorEntryDraw", () => {
   it("starts only through the StartLottery proposal, and only once a year", async () => {
     const f = await loadFixture(fixture);
-    await expect(f.lot.connect(f.board[0]).startLottery(PRICE, 3, (await now()) + DAY)).to.be.revertedWith("ValidatorLottery: only FoundationDAO");
+    await expect(f.lot.connect(f.board[0]).startLottery(PRICE, 3, (await now()) + DAY)).to.be.revertedWith("ValidatorEntryDraw: only FoundationDAO");
     await start(f);
     const l = await f.lot.getLottery(1);
     expect(l.phase).to.equal(1);
     expect(l.ticketPrice).to.equal(PRICE);
     expect(l.winnersCount).to.equal(3);
-    // finish it as a cancelled lottery, then a second start inside a year must fail
+    // finish it as a cancelled entry draw, then a second start inside a year must fail
     await increaseTime(21 * DAY);
     await f.lot.closeLottery(); // no commitment -> cancelled
     await expect(start(f)).to.be.reverted;
@@ -69,28 +69,28 @@ describe("ValidatorLottery", () => {
     const f = await loadFixture(fixture);
     await start(f);
     const { lot, idr, buyers, board, ceo, S } = f;
-    await expect(lot.connect(buyers[0]).buyTicket({ value: PRICE - 1n })).to.be.revertedWith("ValidatorLottery: wrong ticket price");
+    await expect(lot.connect(buyers[0]).buyTicket({ value: PRICE - 1n })).to.be.revertedWith("ValidatorEntryDraw: wrong ticket price");
     await idr.setVerified(S[19].address, false);
-    await expect(lot.connect(S[19]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorLottery: identity not fully verified");
+    await expect(lot.connect(S[19]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorEntryDraw: identity not fully verified");
     await idr.setVerified(board[3].address, true);
-    await expect(lot.connect(board[3]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorLottery: board members and the CEO cannot take part");
+    await expect(lot.connect(board[3]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorEntryDraw: board members and the CEO cannot take part");
     await idr.setVerified(ceo.address, true);
-    await expect(lot.connect(ceo).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorLottery: board members and the CEO cannot take part");
+    await expect(lot.connect(ceo).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorEntryDraw: board members and the CEO cannot take part");
     await lot.connect(buyers[0]).buyTicket({ value: PRICE });
-    await expect(lot.connect(buyers[0]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorLottery: one ticket per address");
+    await expect(lot.connect(buyers[0]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorEntryDraw: one ticket per address");
     expect(await lot.participantCount(1)).to.equal(1);
     await increaseTime(21 * DAY);
-    await expect(lot.connect(buyers[1]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorLottery: registration is not open");
+    await expect(lot.connect(buyers[1]).buyTicket({ value: PRICE })).to.be.revertedWith("ValidatorEntryDraw: registration is not open");
   });
 
   it("only the CEO commits, once, before closeTime", async () => {
     const f = await loadFixture(fixture);
     await start(f);
     const { lot, ceo, buyers } = f;
-    await expect(lot.connect(buyers[0]).commitSecret(COMMIT)).to.be.revertedWith("ValidatorLottery: only the CEO");
-    await expect(lot.connect(ceo).commitSecret(ethers.ZeroHash)).to.be.revertedWith("ValidatorLottery: commitment already set or empty");
+    await expect(lot.connect(buyers[0]).commitSecret(COMMIT)).to.be.revertedWith("ValidatorEntryDraw: only the CEO");
+    await expect(lot.connect(ceo).commitSecret(ethers.ZeroHash)).to.be.revertedWith("ValidatorEntryDraw: commitment already set or empty");
     await lot.connect(ceo).commitSecret(COMMIT);
-    await expect(lot.connect(ceo).commitSecret(ethers.id("other"))).to.be.revertedWith("ValidatorLottery: commitment already set or empty");
+    await expect(lot.connect(ceo).commitSecret(ethers.id("other"))).to.be.revertedWith("ValidatorEntryDraw: commitment already set or empty");
     await increaseTime(21 * DAY);
     await expect(lot.connect(ceo).commitSecret(COMMIT)).to.be.reverted;
   });
@@ -100,13 +100,13 @@ describe("ValidatorLottery", () => {
     const { lot, ceo, reg, dao, buyers } = f;
     const target = await untilClosed(f, 8, 3);
     expect((await lot.getLottery(1)).phase).to.equal(2);
-    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorLottery: target block not mined yet");
+    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorEntryDraw: target block not mined yet");
     await mine(Number(target) - (await ethers.provider.getBlockNumber()) + 1);
-    await expect(lot.connect(buyers[0]).reveal(SECRET)).to.be.revertedWith("ValidatorLottery: only the CEO");
-    await expect(lot.connect(ceo).reveal(ethers.id("wrong"))).to.be.revertedWith("ValidatorLottery: secret does not match the commitment");
+    await expect(lot.connect(buyers[0]).reveal(SECRET)).to.be.revertedWith("ValidatorEntryDraw: only the CEO");
+    await expect(lot.connect(ceo).reveal(ethers.id("wrong"))).to.be.revertedWith("ValidatorEntryDraw: secret does not match the commitment");
     await lot.connect(ceo).reveal(SECRET);
     expect((await lot.getLottery(1)).phase).to.equal(3);
-    await expect(lot.drawBatch(0)).to.be.revertedWith("ValidatorLottery: empty batch");
+    await expect(lot.drawBatch(0)).to.be.revertedWith("ValidatorEntryDraw: empty batch");
     const daoBefore = await ethers.provider.getBalance(ADDR.FOUNDATION_DAO);
     await lot.connect(buyers[9]).drawBatch(2); // anyone
     expect((await lot.winnersOf(1)).length).to.equal(2);
@@ -123,8 +123,8 @@ describe("ValidatorLottery", () => {
     }
     expect(await reg.enteredCount()).to.equal(3);
     expect(await ethers.provider.getBalance(ADDR.FOUNDATION_DAO)).to.equal(daoBefore + PRICE * 8n);
-    expect(await ethers.provider.getBalance(ADDR.VALIDATOR_LOTTERY)).to.equal(0);
-    await expect(lot.drawBatch(1)).to.be.revertedWith("ValidatorLottery: not ready to draw");
+    expect(await ethers.provider.getBalance(ADDR.VALIDATOR_ENTRY_DRAW)).to.equal(0);
+    await expect(lot.drawBatch(1)).to.be.revertedWith("ValidatorEntryDraw: not ready to draw");
   });
 
   it("reveal window: works at targetBlock+250, fails at +251; then anyone cancels and buyers are refunded", async () => {
@@ -139,25 +139,25 @@ describe("ValidatorLottery", () => {
     expect((await lot.getLottery(1)).phase).to.equal(3);
     await ethers.provider.send("evm_revert", [snap]);
     await mine(1); // now the next tx is in block target+251
-    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorLottery: reveal window over");
+    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorEntryDraw: reveal window over");
     await expect(lot.connect(buyers[0]).cancelLottery()).to.not.be.reverted;
     expect((await lot.getLottery(1)).phase).to.equal(5);
-    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorLottery: not waiting for the reveal");
+    await expect(lot.connect(ceo).reveal(SECRET)).to.be.revertedWith("ValidatorEntryDraw: not waiting for the reveal");
     const before = await ethers.provider.getBalance(buyers[0].address);
     const tx = await lot.connect(buyers[0]).claimRefund(1);
     const rc = await tx.wait();
     expect(await ethers.provider.getBalance(buyers[0].address)).to.equal(before + PRICE - rc.gasUsed * rc.gasPrice);
-    await expect(lot.connect(buyers[0]).claimRefund(1)).to.be.revertedWith("ValidatorLottery: nothing to refund");
-    await expect(lot.connect(f.S[19]).claimRefund(1)).to.be.revertedWith("ValidatorLottery: nothing to refund");
+    await expect(lot.connect(buyers[0]).claimRefund(1)).to.be.revertedWith("ValidatorEntryDraw: nothing to refund");
+    await expect(lot.connect(f.S[19]).claimRefund(1)).to.be.revertedWith("ValidatorEntryDraw: nothing to refund");
     for (const b of buyers.slice(1, 4)) await lot.connect(b).claimRefund(1);
-    expect(await ethers.provider.getBalance(ADDR.VALIDATOR_LOTTERY)).to.equal(0);
+    expect(await ethers.provider.getBalance(ADDR.VALIDATOR_ENTRY_DRAW)).to.equal(0);
   });
 
-  it("cancelling too early is refused; a lottery without a commitment is cancelled when closed", async () => {
+  it("cancelling too early is refused; an entry draw without a commitment is cancelled when closed", async () => {
     const f = await loadFixture(fixture);
     const { lot, buyers } = f;
     await untilClosed(f, 3, 1);
-    await expect(lot.cancelLottery()).to.be.revertedWith("ValidatorLottery: cannot cancel now");
+    await expect(lot.cancelLottery()).to.be.revertedWith("ValidatorEntryDraw: cannot cancel now");
   });
 
   it("no commitment before closeTime: closing cancels and refunds", async () => {
@@ -165,14 +165,14 @@ describe("ValidatorLottery", () => {
     const { lot, buyers } = f;
     await start(f);
     await lot.connect(buyers[0]).buyTicket({ value: PRICE });
-    await expect(lot.closeLottery()).to.be.revertedWith("ValidatorLottery: cannot close now");
+    await expect(lot.closeLottery()).to.be.revertedWith("ValidatorEntryDraw: cannot close now");
     await increaseTime(21 * DAY);
     await lot.closeLottery();
     expect((await lot.getLottery(1)).phase).to.equal(5);
     await lot.connect(buyers[0]).claimRefund(1);
   });
 
-  it("zero participants: nothing to draw, the lottery just ends", async () => {
+  it("zero participants: nothing to draw, the entry draw just ends", async () => {
     const f = await loadFixture(fixture);
     await start(f);
     await f.lot.connect(f.ceo).commitSecret(COMMIT);
@@ -197,7 +197,7 @@ describe("ValidatorLottery", () => {
   });
 
   it("selection is a function of (secret, blockhash): the same seed gives the same permutation prefix, different seeds differ", async () => {
-    // statistical sanity: over several lotteries with 10 participants and 1 winner, more than one distinct winner appears
+    // statistical sanity: over several entry draws with 10 participants and 1 winner, more than one distinct winner appears
     const f = await loadFixture(fixture);
     const { lot, ceo, buyers } = f;
     const seen = new Set();
